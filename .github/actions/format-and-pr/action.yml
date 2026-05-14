@@ -1,0 +1,95 @@
+name: 'Format and PR'
+description: 'Run Prettier on the working tree and commit / push (or open a PR) if changes resulted.'
+inputs:
+  branch:
+    description: 'Branch to push the formatting commit to. Defaults to the triggering branch.'
+    required: false
+    default: ''
+  commit-message:
+    description: 'Commit message for the formatting commit.'
+    required: false
+    default: 'style: apply prettier auto-format'
+  pr-title:
+    description: 'If set, open a PR with this title instead of pushing directly.'
+    required: false
+    default: ''
+  pr-body:
+    description: 'Body for the auto-opened PR.'
+    required: false
+    default: 'Automated Prettier formatting from `format-and-pr` composite action.'
+  node-version:
+    description: 'Node.js version to use.'
+    required: false
+    default: '20'
+  github-token:
+    description: 'Token used for git push / PR creation. Defaults to GITHUB_TOKEN.'
+    required: false
+    default: ${{ github.token }}
+runs:
+  using: 'composite'
+  steps:
+    - name: Set up Node
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ inputs.node-version }}
+        cache: 'npm'
+
+    - name: Install dependencies (ignore-scripts)
+      shell: bash
+      run: npm ci --ignore-scripts
+
+    - name: Run Prettier
+      shell: bash
+      run: npm run format
+
+    - name: Detect changes
+      id: changes
+      shell: bash
+      run: |
+        if [ -z "$(git status --porcelain)" ]; then
+          echo "dirty=false" >> "$GITHUB_OUTPUT"
+          echo "No formatting changes — nothing to commit."
+        else
+          echo "dirty=true" >> "$GITHUB_OUTPUT"
+        fi
+
+    - name: Configure git identity
+      if: steps.changes.outputs.dirty == 'true'
+      shell: bash
+      run: |
+        git config user.name "github-actions[bot]"
+        git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+    - name: Commit formatting changes
+      if: steps.changes.outputs.dirty == 'true'
+      shell: bash
+      run: |
+        git add -A
+        git commit -m "${{ inputs.commit-message }}"
+
+    - name: Push to branch
+      if: steps.changes.outputs.dirty == 'true' && inputs.pr-title == ''
+      shell: bash
+      env:
+        GH_TOKEN: ${{ inputs.github-token }}
+      run: |
+        TARGET="${{ inputs.branch }}"
+        if [ -z "$TARGET" ]; then
+          TARGET="${GITHUB_REF_NAME}"
+        fi
+        git push origin "HEAD:${TARGET}"
+
+    - name: Open PR
+      if: steps.changes.outputs.dirty == 'true' && inputs.pr-title != ''
+      shell: bash
+      env:
+        GH_TOKEN: ${{ inputs.github-token }}
+      run: |
+        BRANCH="format-and-pr/${{ github.run_id }}"
+        git checkout -b "$BRANCH"
+        git push -u origin "$BRANCH"
+        gh pr create \
+          --title "${{ inputs.pr-title }}" \
+          --body  "${{ inputs.pr-body }}" \
+          --base  "${{ inputs.branch || github.event.repository.default_branch }}" \
+          --head  "$BRANCH"
