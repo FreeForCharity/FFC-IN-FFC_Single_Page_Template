@@ -1,0 +1,83 @@
+name: Platform stats
+
+# Weekly snapshot of basic repo stats. Writes data/platform-stats.json
+# and opens / updates a tracker issue with the latest summary.
+#
+# Closes #210.
+
+on:
+  schedule:
+    - cron: '0 14 * * MON'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  issues: write
+
+jobs:
+  snapshot:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Collect stats
+        id: stats
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -e
+          mkdir -p data
+          repo="${{ github.repository }}"
+          info=$(gh api repos/$repo)
+          stars=$(jq '.stargazers_count' <<<"$info")
+          forks=$(jq '.forks_count'      <<<"$info")
+          issues=$(jq '.open_issues_count' <<<"$info")
+          traffic=$(gh api repos/$repo/traffic/views || echo '{}')
+          clones=$(gh api  repos/$repo/traffic/clones || echo '{}')
+          ts=$(date -u +'%Y-%m-%dT%H:%M:%SZ')
+          jq -n \
+            --arg ts "$ts" --arg repo "$repo" \
+            --argjson stars "$stars" --argjson forks "$forks" --argjson issues "$issues" \
+            --argjson traffic "$traffic" --argjson clones "$clones" \
+            '{ts:$ts, repo:$repo, stars:$stars, forks:$forks, open_issues:$issues, traffic:$traffic, clones:$clones}' \
+            > data/platform-stats.json
+          {
+            echo "## Platform stats — $ts"
+            echo ""
+            echo "- Stars: $stars"
+            echo "- Forks: $forks"
+            echo "- Open issues: $issues"
+          } > /tmp/summary.md
+
+      - name: Commit snapshot
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add data/platform-stats.json
+          git diff --cached --quiet && echo "no changes" || git commit -m "chore: update platform stats snapshot"
+          git push || true
+
+      - name: Update tracker issue
+        uses: actions/github-script@v8
+        with:
+          script: |
+            const fs = require('fs');
+            const body = fs.readFileSync('/tmp/summary.md', 'utf8');
+            const title = 'Platform stats tracker';
+            const existing = await github.paginate(github.rest.issues.listForRepo, {
+              owner: context.repo.owner, repo: context.repo.repo,
+              state: 'open', labels: 'platform-stats',
+            });
+            if (existing.length) {
+              await github.rest.issues.update({
+                owner: context.repo.owner, repo: context.repo.repo,
+                issue_number: existing[0].number, body,
+              });
+            } else {
+              await github.rest.issues.create({
+                owner: context.repo.owner, repo: context.repo.repo,
+                title, body, labels: ['platform-stats'],
+              });
+            }

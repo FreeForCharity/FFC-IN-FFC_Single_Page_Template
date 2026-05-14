@@ -1,0 +1,59 @@
+name: GA API smoke
+
+# Daily smoke test against the Google Analytics Data API to catch
+# credential rot / scope changes before the weekly report fails.
+#
+# Closes the smoke half of #212.
+
+on:
+  schedule:
+    - cron: '0 8 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    env:
+      GA_PROPERTY_ID:           ${{ secrets.GA_PROPERTY_ID }}
+      GA_SERVICE_ACCOUNT_EMAIL: ${{ secrets.GA_SERVICE_ACCOUNT_EMAIL }}
+      GA_PRIVATE_KEY:           ${{ secrets.GA_PRIVATE_KEY }}
+    steps:
+      - name: Validate secrets present
+        run: |
+          for v in GA_PROPERTY_ID GA_SERVICE_ACCOUNT_EMAIL GA_PRIVATE_KEY; do
+            if [ -z "${!v}" ]; then
+              echo "::error::Required secret $v is not set. See AGENTS.md → GA section."
+              exit 1
+            fi
+          done
+
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install GA Data API client
+        run: npm install --no-save @google-analytics/data
+
+      - name: Run smoke query
+        run: |
+          cat <<'JS' > /tmp/smoke.mjs
+          import { BetaAnalyticsDataClient } from '@google-analytics/data';
+          const credentials = {
+            client_email: process.env.GA_SERVICE_ACCOUNT_EMAIL,
+            private_key:  process.env.GA_PRIVATE_KEY.replace(/\\n/g, '\n'),
+          };
+          const client = new BetaAnalyticsDataClient({ credentials });
+          const [resp] = await client.runReport({
+            property: `properties/${process.env.GA_PROPERTY_ID}`,
+            dateRanges: [{ startDate: '7daysAgo', endDate: 'yesterday' }],
+            metrics: [{ name: 'activeUsers' }],
+          });
+          console.log('rows:', resp.rows?.length ?? 0);
+          if (!resp) { console.error('empty response'); process.exit(1); }
+          JS
+          node /tmp/smoke.mjs

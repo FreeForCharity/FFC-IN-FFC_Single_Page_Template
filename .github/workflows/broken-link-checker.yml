@@ -1,0 +1,67 @@
+name: Broken link checker (scheduled)
+
+# Weekly scan of internal + external links across the built site.
+# Opens an issue if any links are broken.
+# Complements the on-PR linkinator step in ci.yml.
+#
+# Closes #203.
+
+on:
+  schedule:
+    - cron: '0 13 * * MON' # Mondays 13:00 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  scan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - run: npm ci --ignore-scripts
+
+      - name: Build static site
+        run: npm run build
+
+      - name: Run linkinator
+        id: links
+        continue-on-error: true
+        run: |
+          npx linkinator ./out --recurse --config .linkinatorrc.json --format json > /tmp/links.json
+          BROKEN=$(jq '[.links[] | select(.state=="BROKEN")] | length' /tmp/links.json)
+          echo "broken=$BROKEN" >> "$GITHUB_OUTPUT"
+          echo "Broken count: $BROKEN"
+
+      - name: Compose report
+        if: steps.links.outputs.broken != '0'
+        run: |
+          {
+            echo "Broken links detected on $(date -u +'%Y-%m-%d')"
+            echo ""
+            jq -r '.links[] | select(.state=="BROKEN") | "- [\(.status // "?")] \(.url)  (from \(.parent // "n/a"))"' /tmp/links.json
+          } > /tmp/report.md
+          cat /tmp/report.md
+
+      - name: Open issue
+        if: steps.links.outputs.broken != '0'
+        uses: actions/github-script@v8
+        with:
+          script: |
+            const fs = require('fs');
+            const body = fs.readFileSync('/tmp/report.md', 'utf8');
+            await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo:  context.repo.repo,
+              title: `Broken links detected (weekly scan ${new Date().toISOString().slice(0,10)})`,
+              body,
+              labels: ['bug', 'broken-links'],
+            });

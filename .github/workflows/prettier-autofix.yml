@@ -1,0 +1,66 @@
+name: Prettier autofix
+
+# When CI fails due to formatting, auto-fix and push a corrective commit.
+# Same-repo PRs only. Closes #201.
+
+on:
+  workflow_run:
+    workflows: ['CI - Build and Test']
+    types: [completed]
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  autofix:
+    if: >
+      github.event.workflow_run.conclusion == 'failure'
+      && github.event.workflow_run.event == 'pull_request'
+      && github.event.workflow_run.head_repository.full_name == github.repository
+    runs-on: ubuntu-latest
+    steps:
+      - name: Resolve PR
+        id: pr
+        uses: actions/github-script@v8
+        with:
+          script: |
+            const run = context.payload.workflow_run;
+            const prs = run.pull_requests || [];
+            if (!prs.length) {
+              core.setFailed('No PR linked to this run; skipping autofix.');
+              return;
+            }
+            core.setOutput('number', prs[0].number);
+            core.setOutput('head_ref', run.head_branch);
+
+      - uses: actions/checkout@v5
+        with:
+          ref: ${{ steps.pr.outputs.head_ref }}
+          fetch-depth: 0
+
+      - name: Check if failure was a formatting failure
+        id: probe
+        run: |
+          set -e
+          # Pull the failed run's logs and look for prettier signals
+          # Heuristic: presence of 'format' or 'prettier' words in failed step name
+          # (cheap; avoids downloading the full log archive)
+          gh api repos/${{ github.repository }}/actions/runs/${{ github.event.workflow_run.id }}/jobs \
+            --jq '.jobs[] | select(.conclusion=="failure") | .steps[] | select(.conclusion=="failure") | .name' \
+            > /tmp/failed-steps.txt
+          if grep -qiE 'format|prettier' /tmp/failed-steps.txt; then
+            echo "format-failure=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "format-failure=false" >> "$GITHUB_OUTPUT"
+            echo "Not a formatting failure — exiting."
+          fi
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Run format-and-pr action
+        if: steps.probe.outputs.format-failure == 'true'
+        uses: ./.github/actions/format-and-pr
+        with:
+          branch: ${{ steps.pr.outputs.head_ref }}
+          commit-message: 'style: apply prettier auto-format'

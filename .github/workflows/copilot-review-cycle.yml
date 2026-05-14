@@ -1,0 +1,52 @@
+name: Copilot review cycle
+
+# Run up to N rounds of Copilot review for a PR with optional auto-merge.
+# Backed by scripts/copilot-review-cycle.ts.
+#
+# Closes #206 (workflow portion).
+
+on:
+  workflow_dispatch:
+    inputs:
+      pr_number:
+        description: 'PR number to review'
+        required: true
+        type: string
+      max_rounds:
+        description: 'Maximum review rounds (default 7)'
+        required: false
+        default: '7'
+        type: string
+      auto_merge:
+        description: 'Enable auto-merge when checks pass'
+        required: false
+        default: 'false'
+        type: string
+
+permissions:
+  contents: read
+  pull-requests: write
+  actions: read
+
+jobs:
+  cycle:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - run: npm ci --ignore-scripts
+
+      - name: Run review cycle
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          ARGS=(--pr "${{ inputs.pr_number }}" --max-rounds "${{ inputs.max_rounds }}")
+          if [ "${{ inputs.auto_merge }}" = "true" ]; then
+            ARGS+=(--auto-merge)
+          fi
+          npx tsx scripts/copilot-review-cycle.ts "${ARGS[@]}"

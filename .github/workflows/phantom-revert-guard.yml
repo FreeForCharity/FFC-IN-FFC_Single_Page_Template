@@ -1,0 +1,78 @@
+name: Phantom revert guard
+
+# Detect PRs that risk silently reverting changes that landed on main while
+# the PR was open. Fails when the PR is too far behind main or critical
+# paths overlap between (a) files changed on main since the fork point and
+# (b) files the PR touches.
+#
+# Closes #202.
+
+on:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  guard:
+    runs-on: ubuntu-latest
+    env:
+      MAX_BEHIND: '5'
+      CRITICAL_PATHS: 'src/ public/ .github/workflows/ package.json next.config.ts'
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - name: Compute fork point and behind count
+        id: behind
+        run: |
+          git fetch origin main
+          FORK_POINT=$(git merge-base origin/main HEAD)
+          BEHIND=$(git rev-list --count "${FORK_POINT}..origin/main")
+          echo "fork_point=$FORK_POINT" >> "$GITHUB_OUTPUT"
+          echo "behind=$BEHIND" >> "$GITHUB_OUTPUT"
+          echo "PR fork point: $FORK_POINT"
+          echo "PR is $BEHIND commits behind main."
+
+      - name: Collect file lists
+        id: files
+        run: |
+          FORK_POINT='${{ steps.behind.outputs.fork_point }}'
+          git diff --name-only "$FORK_POINT" origin/main > /tmp/main-changes.txt
+          git diff --name-only "$FORK_POINT" HEAD       > /tmp/pr-changes.txt
+          echo "Main changed since fork point:"; cat /tmp/main-changes.txt | head -50
+          echo "---"
+          echo "PR changed:"; cat /tmp/pr-changes.txt | head -50
+
+      - name: Check overlap on critical paths
+        run: |
+          OVERLAP=$(comm -12 <(sort /tmp/main-changes.txt) <(sort /tmp/pr-changes.txt))
+          if [ -n "$OVERLAP" ]; then
+            CRITICAL=""
+            for path in $CRITICAL_PATHS; do
+              MATCH=$(echo "$OVERLAP" | grep "^${path}" || true)
+              if [ -n "$MATCH" ]; then
+                CRITICAL="$CRITICAL
+$MATCH"
+              fi
+            done
+            if [ -n "$CRITICAL" ]; then
+              echo "::error::Phantom revert risk — critical paths changed on both main and this PR:"
+              echo "$CRITICAL"
+              echo ""
+              echo "Update this branch (merge or rebase main) before re-running this check."
+              exit 1
+            fi
+          fi
+          echo "No critical-path overlap detected."
+
+      - name: Enforce max-behind threshold
+        run: |
+          BEHIND='${{ steps.behind.outputs.behind }}'
+          if [ "$BEHIND" -gt "$MAX_BEHIND" ]; then
+            echo "::error::PR is $BEHIND commits behind main (max allowed: $MAX_BEHIND). Rebase or merge main into your branch."
+            exit 1
+          fi
+          echo "Behind-count ${BEHIND} is within MAX_BEHIND=${MAX_BEHIND}."

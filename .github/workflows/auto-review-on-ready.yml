@@ -1,0 +1,29 @@
+name: Auto-review on ready
+
+# When a PR transitions from draft to 'ready for review', dispatch the
+# Copilot review cycle so reviewers arrive at a pre-reviewed PR.
+#
+# Closes #205.
+
+on:
+  pull_request:
+    types: [ready_for_review]
+    branches: [main]
+
+permissions:
+  actions: write
+  pull-requests: read
+
+jobs:
+  dispatch:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger copilot-review-cycle workflow
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh workflow run copilot-review-cycle.yml \
+            --repo "${{ github.repository }}" \
+            -f pr_number="${{ github.event.pull_request.number }}" \
+            -f max_rounds=7 \
+            -f auto_merge=false

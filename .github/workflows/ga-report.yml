@@ -1,0 +1,102 @@
+name: GA report
+
+# Weekly GA report rendered as a markdown artifact + commented to a tracker issue.
+#
+# Closes the report half of #212.
+
+on:
+  schedule:
+    - cron: '0 12 * * MON'
+  workflow_dispatch:
+    inputs:
+      days:
+        description: 'Lookback window in days'
+        required: false
+        default: '7'
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  report:
+    runs-on: ubuntu-latest
+    env:
+      GA_PROPERTY_ID:           ${{ secrets.GA_PROPERTY_ID }}
+      GA_SERVICE_ACCOUNT_EMAIL: ${{ secrets.GA_SERVICE_ACCOUNT_EMAIL }}
+      GA_PRIVATE_KEY:           ${{ secrets.GA_PRIVATE_KEY }}
+      DAYS:                     ${{ inputs.days || '7' }}
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install GA Data API client
+        run: npm install --no-save @google-analytics/data
+
+      - name: Build report
+        run: |
+          mkdir -p data
+          cat <<'JS' > /tmp/report.mjs
+          import { BetaAnalyticsDataClient } from '@google-analytics/data';
+          import fs from 'node:fs';
+          const days = Number(process.env.DAYS);
+          const client = new BetaAnalyticsDataClient({
+            credentials: {
+              client_email: process.env.GA_SERVICE_ACCOUNT_EMAIL,
+              private_key:  process.env.GA_PRIVATE_KEY.replace(/\\n/g, '\n'),
+            },
+          });
+          const [resp] = await client.runReport({
+            property: `properties/${process.env.GA_PROPERTY_ID}`,
+            dateRanges: [{ startDate: `${days}daysAgo`, endDate: 'yesterday' }],
+            dimensions: [{ name: 'pagePath' }],
+            metrics: [{ name: 'screenPageViews' }, { name: 'sessions' }, { name: 'activeUsers' }],
+            orderBys: [{ metric: { metricName: 'screenPageViews' }, desc: true }],
+            limit: 25,
+          });
+          const lines = [`# GA report — last ${days} days`, ''];
+          lines.push('| Page | Pageviews | Sessions | Active users |');
+          lines.push('|---|--:|--:|--:|');
+          for (const r of resp.rows ?? []) {
+            const [page] = r.dimensionValues;
+            const [pv, ss, au] = r.metricValues;
+            lines.push(`| ${page.value} | ${pv.value} | ${ss.value} | ${au.value} |`);
+          }
+          fs.writeFileSync('data/ga-report.md', lines.join('\n'));
+          JS
+          node /tmp/report.mjs
+          cat data/ga-report.md
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ga-report
+          path: data/ga-report.md
+          retention-days: 30
+
+      - name: Update tracker issue
+        uses: actions/github-script@v8
+        with:
+          script: |
+            const fs = require('fs');
+            const body = fs.readFileSync('data/ga-report.md', 'utf8');
+            const existing = await github.paginate(github.rest.issues.listForRepo, {
+              owner: context.repo.owner, repo: context.repo.repo,
+              state: 'open', labels: 'ga-report',
+            });
+            if (existing.length) {
+              await github.rest.issues.update({
+                owner: context.repo.owner, repo: context.repo.repo,
+                issue_number: existing[0].number, body,
+              });
+            } else {
+              await github.rest.issues.create({
+                owner: context.repo.owner, repo: context.repo.repo,
+                title: 'Weekly GA report',
+                body,
+                labels: ['ga-report'],
+              });
+            }

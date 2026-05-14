@@ -1,0 +1,63 @@
+name: Jules on label
+
+# When an issue is labeled `jules`, hand it off to the Google Jules agent.
+# Requires repository secret JULES_TOKEN (placeholder; documented in
+# GITHUB_COPILOT_AGENT_SETUP.md).
+#
+# Closes #209.
+
+on:
+  issues:
+    types: [labeled]
+
+permissions:
+  issues: write
+
+jobs:
+  hand-off:
+    if: github.event.label.name == 'jules'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Validate secret
+        env:
+          JULES_TOKEN: ${{ secrets.JULES_TOKEN }}
+        run: |
+          if [ -z "$JULES_TOKEN" ]; then
+            echo "::warning::JULES_TOKEN secret is not set. Set it in repo Settings → Secrets, or remove the 'jules' label."
+            exit 0
+          fi
+
+      - name: Comment with hand-off acknowledgment
+        uses: actions/github-script@v8
+        with:
+          script: |
+            const body = [
+              `Handing this issue off to **Jules**.`,
+              ``,
+              `FFC conventions to follow when opening the PR:`,
+              `- Branch name must match: \`jules/issue-${context.payload.issue.number}-*\``,
+              `- Commit messages: Conventional Commits (\`feat:\`, \`fix:\`, \`docs:\`, ...)`,
+              `- Run before opening PR: \`npm run format\`, \`npm run lint\`, \`npm test\``,
+              `- All web folder names must be kebab-case`,
+              `- Use \`assetPath()\` for any image / asset path`,
+              ``,
+              `_Triggered by \`jules-on-label.yml\`._`,
+            ].join('\n');
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo:  context.repo.repo,
+              issue_number: context.payload.issue.number,
+              body,
+            });
+
+      - name: Invoke Jules
+        if: env.JULES_TOKEN != ''
+        env:
+          JULES_TOKEN: ${{ secrets.JULES_TOKEN }}
+          ISSUE_URL: ${{ github.event.issue.html_url }}
+          REPO: ${{ github.repository }}
+        run: |
+          # Placeholder: real invocation is per-org. Sites set this to their
+          # Jules API endpoint or to the `gh` CLI extension when available.
+          echo "Would invoke Jules for $ISSUE_URL"
+          echo "Configure your Jules webhook / API call here. See GITHUB_COPILOT_AGENT_SETUP.md."

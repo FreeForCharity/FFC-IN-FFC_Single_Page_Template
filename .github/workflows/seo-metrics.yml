@@ -1,0 +1,67 @@
+name: SEO metrics
+
+# Weekly collection of per-page SEO metrics + keywords.
+# Writes data/seo-pages.json and data/seo-keywords.json.
+# Requires GA + GSC service-account secrets (placeholders below).
+#
+# Closes the metrics half of #211.
+
+on:
+  schedule:
+    - cron: '0 15 * * MON'
+  workflow_dispatch:
+    inputs:
+      days:
+        description: 'Lookback window in days'
+        required: false
+        default: '28'
+
+permissions:
+  contents: write
+
+jobs:
+  collect:
+    runs-on: ubuntu-latest
+    env:
+      GA_PROPERTY_ID:           ${{ secrets.GA_PROPERTY_ID }}
+      GA_SERVICE_ACCOUNT_EMAIL: ${{ secrets.GA_SERVICE_ACCOUNT_EMAIL }}
+      GA_PRIVATE_KEY:           ${{ secrets.GA_PRIVATE_KEY }}
+      GSC_SITE_URL:             ${{ vars.GSC_SITE_URL }}
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+      - run: npm ci --ignore-scripts
+
+      - name: Validate secrets
+        run: |
+          missing=()
+          for v in GA_PROPERTY_ID GA_SERVICE_ACCOUNT_EMAIL GA_PRIVATE_KEY GSC_SITE_URL; do
+            [ -z "${!v}" ] && missing+=("$v")
+          done
+          if [ ${#missing[@]} -gt 0 ]; then
+            echo "::warning::Missing: ${missing[*]} — script will emit empty results."
+          fi
+
+      - name: Collect page metrics
+        run: |
+          mkdir -p data
+          npx tsx scripts/collect-page-seo-metrics.ts \
+            --days "${{ inputs.days || 28 }}" \
+            --out data/seo-pages.json
+
+      - name: Collect keywords
+        run: |
+          npx tsx scripts/collect-seo-keywords.ts \
+            --days "${{ inputs.days || 28 }}" \
+            --out data/seo-keywords.json
+
+      - name: Commit snapshots
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add data/seo-pages.json data/seo-keywords.json
+          git diff --cached --quiet && echo "no changes" || git commit -m "chore: update SEO snapshot"
+          git push || true

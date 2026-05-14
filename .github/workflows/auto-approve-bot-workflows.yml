@@ -1,0 +1,37 @@
+name: Auto-approve bot workflows
+
+# Re-run workflows that are stuck in 'action_required' state because they were
+# initiated by Copilot / Dependabot / github-actions. Without this they wait
+# forever for a manual approval.
+#
+# Closes #204.
+
+on:
+  schedule:
+    - cron: '*/15 * * * *'
+  workflow_dispatch:
+
+permissions:
+  actions: write
+
+jobs:
+  unblock:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Approve & re-run action_required runs
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -e
+          repo="${{ github.repository }}"
+          mapfile -t RUNS < <(gh api "repos/$repo/actions/runs?status=action_required&per_page=50" \
+            --jq '.workflow_runs[] | select(.actor.login=="copilot[bot]" or .actor.login=="dependabot[bot]" or .actor.login=="github-actions[bot]") | .id')
+          if [ ${#RUNS[@]} -eq 0 ]; then
+            echo "No action_required runs."
+            exit 0
+          fi
+          for id in "${RUNS[@]}"; do
+            echo "Re-running $id"
+            gh api -X POST "repos/$repo/actions/runs/$id/approve" || true
+            gh api -X POST "repos/$repo/actions/runs/$id/rerun" || true
+          done

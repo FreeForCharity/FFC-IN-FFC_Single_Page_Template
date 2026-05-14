@@ -1,0 +1,83 @@
+name: PR triage
+
+# Weekday-morning situational awareness briefing: open PRs, CI failures,
+# stalled items. Opens / updates a tracker issue.
+#
+# Closes #214.
+
+on:
+  schedule:
+    # 9am ET ≈ 13:00 UTC (EDT) / 14:00 UTC (EST). Compromise on 13:00.
+    - cron: '0 13 * * MON-FRI'
+  workflow_dispatch:
+
+permissions:
+  issues: write
+  pull-requests: read
+  actions: read
+
+jobs:
+  triage:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Build triage report
+        id: report
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -e
+          repo="${{ github.repository }}"
+          {
+            echo "## PR triage — $(date -u +'%Y-%m-%d')"
+            echo ""
+            echo "### Open PRs"
+            echo ""
+            gh pr list --repo "$repo" --state open --limit 30 \
+              --json number,title,author,isDraft,createdAt \
+              --jq '.[] | "- #\(.number) \(if .isDraft then "_(draft)_ " else "" end)\(.title) — @\(.author.login)  (\(.createdAt[:10]))"'
+            echo ""
+            echo "### Stalled PRs (>7 days old, not draft)"
+            echo ""
+            gh pr list --repo "$repo" --state open --limit 50 \
+              --json number,title,createdAt,isDraft \
+              --jq --arg cutoff "$(date -u -d '7 days ago' +'%Y-%m-%dT%H:%M:%SZ')" \
+              '.[] | select(.isDraft==false and .createdAt < $cutoff) | "- #\(.number) \(.title) (since \(.createdAt[:10]))"'
+            echo ""
+            echo "### Failed CI runs (last 24h)"
+            echo ""
+            gh run list --repo "$repo" --limit 50 --json conclusion,name,createdAt,url \
+              --jq --arg cutoff "$(date -u -d '24 hours ago' +'%Y-%m-%dT%H:%M:%SZ')" \
+              '.[] | select(.conclusion=="failure" and .createdAt >= $cutoff) | "- [\(.name)](\(.url))  \(.createdAt[:16])"'
+            echo ""
+            echo "### Agent-assigned issues"
+            echo ""
+            gh issue list --repo "$repo" --state open --assignee Copilot --limit 30 \
+              --json number,title,updatedAt \
+              --jq '.[] | "- #\(.number) \(.title) (updated \(.updatedAt[:10]))"' || true
+          } > /tmp/triage.md
+          cat /tmp/triage.md
+
+      - name: Update tracker issue
+        uses: actions/github-script@v8
+        with:
+          script: |
+            const fs = require('fs');
+            const body = fs.readFileSync('/tmp/triage.md', 'utf8');
+            const month = new Date().toISOString().slice(0, 7);
+            const title = `PR triage — ${month}`;
+            const existing = await github.paginate(github.rest.issues.listForRepo, {
+              owner: context.repo.owner, repo: context.repo.repo,
+              state: 'open', labels: 'pr-triage',
+            });
+            const match = existing.find((i) => i.title === title);
+            if (match) {
+              await github.rest.issues.update({
+                owner: context.repo.owner, repo: context.repo.repo,
+                issue_number: match.number, body,
+              });
+            } else {
+              await github.rest.issues.create({
+                owner: context.repo.owner, repo: context.repo.repo,
+                title, body, labels: ['pr-triage'],
+              });
+            }

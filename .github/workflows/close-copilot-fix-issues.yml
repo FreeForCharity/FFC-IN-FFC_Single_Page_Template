@@ -1,0 +1,49 @@
+name: Close Copilot fix issues
+
+# When a PR with title containing `fix: address Copilot review comments on PR #N`
+# merges, also close any tracking issue with the same convention pointing at
+# that PR number.
+#
+# Closes #207.
+
+on:
+  pull_request:
+    types: [closed]
+    branches: [main]
+
+permissions:
+  issues: write
+  pull-requests: read
+
+jobs:
+  close:
+    if: github.event.pull_request.merged == true
+    runs-on: ubuntu-latest
+    steps:
+      - name: Find and close matching issues
+        uses: actions/github-script@v8
+        with:
+          script: |
+            const prNumber = context.payload.pull_request.number;
+            const pattern = new RegExp(`address Copilot review comments on PR #${prNumber}\\b`, 'i');
+            const res = await github.paginate(github.rest.search.issuesAndPullRequests, {
+              q: `repo:${context.repo.owner}/${context.repo.repo} is:issue is:open in:title "Copilot review comments" "PR #${prNumber}"`,
+              per_page: 50,
+            });
+            for (const item of res) {
+              if (!pattern.test(item.title)) continue;
+              await github.rest.issues.update({
+                owner: context.repo.owner,
+                repo:  context.repo.repo,
+                issue_number: item.number,
+                state: 'closed',
+                state_reason: 'completed',
+              });
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo:  context.repo.repo,
+                issue_number: item.number,
+                body: `Closed automatically — parent PR #${prNumber} merged.`,
+              });
+              core.info(`Closed #${item.number}`);
+            }

@@ -1,0 +1,64 @@
+name: SEO dashboard sync
+
+# After seo-metrics commits new data, render the dashboard markdown and update
+# the SEO tracker issue.
+#
+# Closes the dashboard half of #211.
+
+on:
+  workflow_run:
+    workflows: ['SEO metrics']
+    types: [completed]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  sync:
+    if: ${{ github.event.workflow_run.conclusion == 'success' || github.event_name == 'workflow_dispatch' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: main
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - run: npm ci --ignore-scripts
+
+      - name: Render dashboard
+        run: |
+          mkdir -p data
+          npx tsx scripts/update-seo-dashboard-sync.ts \
+            --pages data/seo-pages.json \
+            --keywords data/seo-keywords.json \
+            --out data/seo-dashboard.md
+
+      - name: Update tracker issue
+        uses: actions/github-script@v8
+        with:
+          script: |
+            const fs = require('fs');
+            const body = fs.readFileSync('data/seo-dashboard.md', 'utf8');
+            const existing = await github.paginate(github.rest.issues.listForRepo, {
+              owner: context.repo.owner, repo: context.repo.repo,
+              state: 'open', labels: 'seo-dashboard',
+            });
+            if (existing.length) {
+              await github.rest.issues.update({
+                owner: context.repo.owner, repo: context.repo.repo,
+                issue_number: existing[0].number, body,
+              });
+            } else {
+              await github.rest.issues.create({
+                owner: context.repo.owner, repo: context.repo.repo,
+                title: 'SEO dashboard',
+                body,
+                labels: ['seo-dashboard'],
+              });
+            }

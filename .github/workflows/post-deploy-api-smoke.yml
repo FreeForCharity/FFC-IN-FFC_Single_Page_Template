@@ -1,0 +1,51 @@
+name: Post-deploy API smoke
+
+# After a successful deploy, smoke-test a configurable list of API endpoints.
+# Sites set the `API_SMOKE_URLS` repo variable (comma-separated) to opt in.
+#
+# Closes #213.
+
+on:
+  workflow_run:
+    workflows: ['Deploy to GitHub Pages']
+    types: [completed]
+  workflow_dispatch:
+    inputs:
+      urls:
+        description: 'Comma-separated URLs to smoke'
+        required: false
+        default: ''
+
+permissions:
+  contents: read
+
+jobs:
+  smoke:
+    if: ${{ github.event.workflow_run.conclusion == 'success' || github.event_name == 'workflow_dispatch' }}
+    runs-on: ubuntu-latest
+    env:
+      URLS: ${{ inputs.urls || vars.API_SMOKE_URLS }}
+    steps:
+      - name: Validate URLs
+        run: |
+          if [ -z "$URLS" ]; then
+            echo "No URLs configured. Set the repo variable API_SMOKE_URLS (comma-separated) to enable this job."
+            exit 0
+          fi
+          echo "Smoking: $URLS"
+
+      - name: Curl each URL
+        run: |
+          IFS=',' read -ra ARR <<< "$URLS"
+          fail=0
+          for raw in "${ARR[@]}"; do
+            url="$(echo "$raw" | xargs)"
+            [ -z "$url" ] && continue
+            code=$(curl -sS -o /dev/null -w '%{http_code}' --max-time 15 "$url" || echo 000)
+            echo "  $url → $code"
+            if [ "$code" -lt 200 ] || [ "$code" -ge 400 ]; then
+              echo "::error::Non-2xx for $url ($code)"
+              fail=1
+            fi
+          done
+          exit "$fail"

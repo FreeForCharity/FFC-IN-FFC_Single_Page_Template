@@ -1,0 +1,78 @@
+name: Retrigger stalled agent tasks
+
+# Detect Copilot-assigned issues with no activity > N hours and retrigger by
+# removing + re-adding the `copilot` assignee.
+#
+# Closes #208.
+
+on:
+  schedule:
+    - cron: '0 13 * * *' # 13:00 UTC daily
+  workflow_dispatch:
+    inputs:
+      issue_number:
+        description: 'Optional — target a single issue'
+        required: false
+        default: ''
+      stall_hours:
+        description: 'Stall threshold in hours'
+        required: false
+        default: '24'
+      dry_run:
+        description: 'Report only, do not retrigger'
+        required: false
+        default: 'false'
+
+permissions:
+  issues: write
+
+jobs:
+  retrigger:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Identify and retrigger
+        uses: actions/github-script@v8
+        env:
+          STALL_HOURS: ${{ inputs.stall_hours || '24' }}
+          DRY_RUN:     ${{ inputs.dry_run || 'false' }}
+          TARGET:      ${{ inputs.issue_number || '' }}
+        with:
+          script: |
+            const stallMs = Number(process.env.STALL_HOURS) * 3600_000;
+            const dryRun  = process.env.DRY_RUN === 'true';
+            const target  = process.env.TARGET;
+            const now = Date.now();
+
+            const issues = target
+              ? [(await github.rest.issues.get({ owner: context.repo.owner, repo: context.repo.repo, issue_number: Number(target) })).data]
+              : await github.paginate(github.rest.issues.listForRepo, {
+                  owner: context.repo.owner,
+                  repo:  context.repo.repo,
+                  state: 'open',
+                  assignee: 'Copilot',
+                  per_page: 100,
+                });
+
+            for (const issue of issues) {
+              if (issue.pull_request) continue;
+              const updated = new Date(issue.updated_at).getTime();
+              const ageH = Math.round((now - updated) / 3600_000);
+              if ((now - updated) < stallMs) {
+                core.info(`#${issue.number} active (${ageH}h) — skipping`);
+                continue;
+              }
+              core.warning(`#${issue.number} stalled (${ageH}h) — ${dryRun ? 'DRY RUN' : 'retriggering'}`);
+              if (dryRun) continue;
+              try {
+                await github.rest.issues.removeAssignees({
+                  owner: context.repo.owner, repo: context.repo.repo,
+                  issue_number: issue.number, assignees: ['Copilot'],
+                });
+                await github.rest.issues.addAssignees({
+                  owner: context.repo.owner, repo: context.repo.repo,
+                  issue_number: issue.number, assignees: ['Copilot'],
+                });
+              } catch (err) {
+                core.error(`Failed on #${issue.number}: ${err.message}`);
+              }
+            }
