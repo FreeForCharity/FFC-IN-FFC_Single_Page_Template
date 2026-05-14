@@ -1,0 +1,20 @@
+{
+  "$schema": "https://json.schemastore.org/serve.json",
+  "public": "out",
+  "cleanUrls": true,
+  "trailingSlash": false,
+  "rewrites": [
+    { "source": "**/*", "destination": "/index.html" }
+  ],
+  "headers": [
+    {
+      "source": "**/*.@(jpg|jpeg|gif|png|svg|webp|avif|ico|woff|woff2|ttf)",
+      "headers": [{ "key": "Cache-Control", "value": "public, max-age=86400" }]
+    },
+    {
+      "source": "**/*.@(js|css)",
+      "headers": [{ "key": "Cache-Control", "value": "public, max-age=86400" }]
+    }
+  ],
+  "directoryListing": false
+}

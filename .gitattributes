@@ -1,0 +1,51 @@
+# Normalize line endings on commit. Working tree uses LF on every platform.
+# Closes #235.
+
+* text=auto eol=lf
+
+# Source / config — explicitly text
+*.ts        text eol=lf
+*.tsx       text eol=lf
+*.js        text eol=lf
+*.jsx       text eol=lf
+*.mjs       text eol=lf
+*.cjs       text eol=lf
+*.json      text eol=lf
+*.md        text eol=lf
+*.yml       text eol=lf
+*.yaml      text eol=lf
+*.css       text eol=lf
+*.html      text eol=lf
+*.svg       text eol=lf
+*.sh        text eol=lf
+*.py        text eol=lf
+
+# Shell scripts must keep LF even on Windows checkout
+*.sh        text eol=lf
+
+# Windows-only scripts keep CRLF
+*.ps1       text eol=crlf
+*.bat       text eol=crlf
+*.cmd       text eol=crlf
+
+# Binary — never diff or merge
+*.png       binary
+*.jpg       binary
+*.jpeg      binary
+*.gif       binary
+*.webp      binary
+*.avif      binary
+*.ico       binary
+*.pdf       binary
+*.woff      binary
+*.woff2     binary
+*.ttf       binary
+*.otf       binary
+*.eot       binary
+*.mp4       binary
+*.webm      binary
+*.zip       binary
+*.gz        binary
+
+# Generated — collapse in diffs
+package-lock.json   linguist-generated=true -diff
