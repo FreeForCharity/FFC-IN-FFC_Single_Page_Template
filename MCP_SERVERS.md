@@ -10,12 +10,12 @@ for Claude Desktop and equivalent clients.
 
 ## Catalog
 
-| Server             | Publisher       | Transport | Auth                          | Risk tier | What it provides                                                  |
-|--------------------|-----------------|-----------|-------------------------------|-----------|-------------------------------------------------------------------|
-| `github`           | GitHub, Inc.    | HTTP/SSE  | OAuth (Copilot) / PAT (Desktop) | Low       | Repos, issues, PRs, code search, code security, actions          |
-| `microsoft-learn`  | Microsoft       | HTTP/SSE  | None                          | Low       | Microsoft Docs / Learn content search                            |
-| `cloudflare`       | Cloudflare      | HTTP/SSE  | `CLOUDFLARE_API_TOKEN`        | Low       | DNS, Pages, Workers, R2, KV, D1, Hyperdrive                      |
-| `google-analytics` | Google          | HTTP/SSE  | Service account               | Low       | GA Data API queries against the configured property              |
+| Server             | Publisher    | Transport | Auth                            | Risk tier | What it provides                                        |
+| ------------------ | ------------ | --------- | ------------------------------- | --------- | ------------------------------------------------------- |
+| `github`           | GitHub, Inc. | HTTP/SSE  | OAuth (Copilot) / PAT (Desktop) | Low       | Repos, issues, PRs, code search, code security, actions |
+| `microsoft-learn`  | Microsoft    | HTTP/SSE  | None                            | Low       | Microsoft Docs / Learn content search                   |
+| `cloudflare`       | Cloudflare   | HTTP/SSE  | `CLOUDFLARE_API_TOKEN`          | Low       | DNS, Pages, Workers, R2, KV, D1, Hyperdrive             |
+| `google-analytics` | Google       | HTTP/SSE  | Service account                 | Low       | GA Data API queries against the configured property     |
 
 Risk tiers follow the FFC scheme:
 

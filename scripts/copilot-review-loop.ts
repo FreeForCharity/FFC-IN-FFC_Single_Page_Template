@@ -29,9 +29,7 @@ const maxRounds = arg('max-rounds', '7')!
 type PR = { number: number; isDraft: boolean; reviewDecision: string | null; title: string }
 
 const prs: PR[] = JSON.parse(
-  sh(
-    `gh pr list --repo ${repo} --state open --json number,isDraft,reviewDecision,title --limit 50`,
-  ),
+  sh(`gh pr list --repo ${repo} --state open --json number,isDraft,reviewDecision,title --limit 50`)
 )
 
 for (const pr of prs) {
@@ -46,7 +44,7 @@ for (const pr of prs) {
   console.error(`dispatching review cycle for #${pr.number}: ${pr.title}`)
   try {
     sh(
-      `gh workflow run copilot-review-cycle.yml --repo ${repo} -f pr_number=${pr.number} -f max_rounds=${maxRounds}`,
+      `gh workflow run copilot-review-cycle.yml --repo ${repo} -f pr_number=${pr.number} -f max_rounds=${maxRounds}`
     )
   } catch (err) {
     console.error(`  failed to dispatch: ${(err as Error).message}`)

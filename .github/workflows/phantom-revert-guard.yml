@@ -54,13 +54,11 @@ jobs:
             for path in $CRITICAL_PATHS; do
               MATCH=$(echo "$OVERLAP" | grep "^${path}" || true)
               if [ -n "$MATCH" ]; then
-                CRITICAL="$CRITICAL
-$MATCH"
+                CRITICAL="${CRITICAL}${MATCH} "
               fi
             done
             if [ -n "$CRITICAL" ]; then
-              echo "::error::Phantom revert risk — critical paths changed on both main and this PR:"
-              echo "$CRITICAL"
+              echo "::error::Phantom revert risk — critical paths changed on both main and this PR: $CRITICAL"
               echo ""
               echo "Update this branch (merge or rebase main) before re-running this check."
               exit 1

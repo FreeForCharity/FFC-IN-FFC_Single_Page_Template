@@ -34,8 +34,8 @@ jobs:
         uses: actions/github-script@v8
         env:
           STALL_HOURS: ${{ inputs.stall_hours || '24' }}
-          DRY_RUN:     ${{ inputs.dry_run || 'false' }}
-          TARGET:      ${{ inputs.issue_number || '' }}
+          DRY_RUN: ${{ inputs.dry_run || 'false' }}
+          TARGET: ${{ inputs.issue_number || '' }}
         with:
           script: |
             const stallMs = Number(process.env.STALL_HOURS) * 3600_000;

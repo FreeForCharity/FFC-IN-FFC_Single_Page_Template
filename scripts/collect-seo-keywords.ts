@@ -20,7 +20,7 @@ const out = arg('out', 'data/seo-keywords.json')!
 const limit = Number(arg('limit', '100'))
 
 const missing = ['GSC_SITE_URL', 'GA_SERVICE_ACCOUNT_EMAIL', 'GA_PRIVATE_KEY'].filter(
-  (k) => !process.env[k],
+  (k) => !process.env[k]
 )
 
 writeFileSync(
@@ -31,13 +31,18 @@ writeFileSync(
       rangeDays: days,
       limit,
       site: process.env.GSC_SITE_URL ?? null,
-      keywords: [] as Array<{ query: string; clicks: number; impressions: number; position: number }>,
+      keywords: [] as Array<{
+        query: string
+        clicks: number
+        impressions: number
+        position: number
+      }>,
       notes: missing.length
         ? `Skipped fetch — missing env: ${missing.join(', ')}`
         : 'Implement Search Console fetch once googleapis is installed.',
     },
     null,
-    2,
-  ),
+    2
+  )
 )
 console.error(`wrote ${out}`)

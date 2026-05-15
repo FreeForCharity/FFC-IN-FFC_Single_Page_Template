@@ -22,13 +22,13 @@ To extend with Cloudflare / Google Analytics MCPs (already in
 [`.copilot/mcp-config.json`](./.copilot/mcp-config.json)), set the following
 repository secrets:
 
-| Secret                       | Used by                  |
-|------------------------------|--------------------------|
-| `CLOUDFLARE_API_TOKEN`       | Cloudflare MCP           |
-| `CLOUDFLARE_ACCOUNT_ID`      | Cloudflare MCP           |
-| `GA_PROPERTY_ID`             | Google Analytics MCP, GA workflows |
-| `GA_SERVICE_ACCOUNT_EMAIL`   | Google Analytics MCP, GA workflows |
-| `GA_PRIVATE_KEY`             | Google Analytics MCP, GA workflows |
+| Secret                     | Used by                            |
+| -------------------------- | ---------------------------------- |
+| `CLOUDFLARE_API_TOKEN`     | Cloudflare MCP                     |
+| `CLOUDFLARE_ACCOUNT_ID`    | Cloudflare MCP                     |
+| `GA_PROPERTY_ID`           | Google Analytics MCP, GA workflows |
+| `GA_SERVICE_ACCOUNT_EMAIL` | Google Analytics MCP, GA workflows |
+| `GA_PRIVATE_KEY`           | Google Analytics MCP, GA workflows |
 
 ## 3. Validate the config locally
 
@@ -83,12 +83,12 @@ for the shared branch-naming, commit-format, and review-cycle conventions.
 
 ## 8. Troubleshooting
 
-| Symptom                                            | Likely cause / fix                                    |
-|----------------------------------------------------|--------------------------------------------------------|
-| Workflows stuck `action_required`                  | `auto-approve-bot-workflows.yml` runs every 15 min   |
-| Copilot review cycle fails immediately             | Required secrets missing — see step 2                 |
-| Jules comment appears but no PR follows            | `JULES_TOKEN` not configured — step 6                 |
-| MCP config validation fails on commit              | Run `npm run validate:mcp` locally to see the error  |
+| Symptom                                 | Likely cause / fix                                  |
+| --------------------------------------- | --------------------------------------------------- |
+| Workflows stuck `action_required`       | `auto-approve-bot-workflows.yml` runs every 15 min  |
+| Copilot review cycle fails immediately  | Required secrets missing — see step 2               |
+| Jules comment appears but no PR follows | `JULES_TOKEN` not configured — step 6               |
+| MCP config validation fails on commit   | Run `npm run validate:mcp` locally to see the error |
 
 ## Out of scope
 

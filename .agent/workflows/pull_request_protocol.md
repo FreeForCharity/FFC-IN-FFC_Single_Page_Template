@@ -6,12 +6,12 @@ agents read it on every PR; verbose prose burns context budget.
 
 ## Branch naming
 
-| Agent     | Pattern                                |
-|-----------|----------------------------------------|
-| Claude    | `claude/<short-slug>`                  |
-| Copilot   | `copilot/<short-slug>`                 |
-| Jules     | `jules/issue-<N>-<short-slug>`         |
-| Dependabot| auto                                   |
+| Agent      | Pattern                        |
+| ---------- | ------------------------------ |
+| Claude     | `claude/<short-slug>`          |
+| Copilot    | `copilot/<short-slug>`         |
+| Jules      | `jules/issue-<N>-<short-slug>` |
+| Dependabot | auto                           |
 
 ## Commit messages
 
@@ -19,7 +19,7 @@ agents read it on every PR; verbose prose burns context budget.
 `feat:`, `fix:`, `docs:`, `style:`, `refactor:`, `test:`, `chore:`, `ci:`,
 `build:`, `perf:`.
 
-Subject ≤ 72 chars. Body explains *why*, not *what*. Wrap body at 100 chars.
+Subject ≤ 72 chars. Body explains _why_, not _what_. Wrap body at 100 chars.
 
 ## Required-before-PR-open checks
 
@@ -55,12 +55,12 @@ automatically dispatches the Copilot review cycle.
 
 ## When to use which agent
 
-| Task                             | Agent    |
-|----------------------------------|----------|
-| Workflow / data pipeline edits   | Copilot  |
-| Frontend UI / visualization      | Jules    |
-| Multi-file refactor / planning   | Claude   |
-| Dependency updates (minor)       | Dependabot |
+| Task                           | Agent      |
+| ------------------------------ | ---------- |
+| Workflow / data pipeline edits | Copilot    |
+| Frontend UI / visualization    | Jules      |
+| Multi-file refactor / planning | Claude     |
+| Dependency updates (minor)     | Dependabot |
 
 ## Anti-patterns (do not do)
 

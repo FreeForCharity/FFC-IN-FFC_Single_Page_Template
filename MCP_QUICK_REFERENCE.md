@@ -54,12 +54,12 @@ Fails when:
 
 ## 5. Tokens — where they live
 
-| Use case             | Storage                                           |
-|----------------------|---------------------------------------------------|
-| CI workflows         | `Settings → Secrets and variables → Actions`     |
-| Copilot agent        | Same as CI workflows                              |
-| Local dev (Desktop)  | `mcp.json` (gitignored)                           |
-| Local dev (bearer)   | `mcp.bearer.json` (gitignored)                    |
+| Use case            | Storage                                      |
+| ------------------- | -------------------------------------------- |
+| CI workflows        | `Settings → Secrets and variables → Actions` |
+| Copilot agent       | Same as CI workflows                         |
+| Local dev (Desktop) | `mcp.json` (gitignored)                      |
+| Local dev (bearer)  | `mcp.bearer.json` (gitignored)               |
 
 Rotate via the issuing platform first, then update the secret store.
 
@@ -67,15 +67,15 @@ Rotate via the issuing platform first, then update the secret store.
 
 ### GitHub MCP
 
-| Capability       | Toolset name           |
-|------------------|------------------------|
-| Repos            | `repos`                |
-| Issues           | `issues`               |
-| PRs              | `pull_requests`        |
-| Code security    | `code_security`        |
-| Secret scanning  | `secret_protection`    |
-| Actions          | `actions`              |
-| Web search       | `web_search`           |
+| Capability      | Toolset name        |
+| --------------- | ------------------- |
+| Repos           | `repos`             |
+| Issues          | `issues`            |
+| PRs             | `pull_requests`     |
+| Code security   | `code_security`     |
+| Secret scanning | `secret_protection` |
+| Actions         | `actions`           |
+| Web search      | `web_search`        |
 
 Set via the `X-MCP-Toolsets` header (comma-separated).
 

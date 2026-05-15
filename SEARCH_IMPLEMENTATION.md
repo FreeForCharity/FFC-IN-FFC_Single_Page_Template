@@ -14,12 +14,12 @@ nobody uses is noise.
 
 ## What ships
 
-| File                                            | Role                              |
-|-------------------------------------------------|-----------------------------------|
-| `src/components/search/Search.tsx`              | The `<Search />` React component  |
-| `src/components/search/index.ts`                | Barrel export                     |
-| `__tests__/components/search.test.tsx`          | Unit + a11y tests                 |
-| `public/search-index.json` *(you provide)*      | Static search index               |
+| File                                       | Role                             |
+| ------------------------------------------ | -------------------------------- |
+| `src/components/search/Search.tsx`         | The `<Search />` React component |
+| `src/components/search/index.ts`           | Barrel export                    |
+| `__tests__/components/search.test.tsx`     | Unit + a11y tests                |
+| `public/search-index.json` _(you provide)_ | Static search index              |
 
 ## Mounting
 
@@ -70,13 +70,13 @@ Sites that don't want it just don't import it — there's no global side effect.
 
 Strict tiered match (higher wins):
 
-| Match                     | Score |
-|---------------------------|------:|
-| Title equals query        | 100   |
-| Title starts with query   | 80    |
-| Title contains query      | 60    |
-| Summary contains query    | 40    |
-| Body contains query       | 20    |
+| Match                   | Score |
+| ----------------------- | ----: |
+| Title equals query      |   100 |
+| Title starts with query |    80 |
+| Title contains query    |    60 |
+| Summary contains query  |    40 |
+| Body contains query     |    20 |
 
 This is intentionally simple — no Levenshtein, no stemming, no synonyms. For
 small charity sites it's enough; visitors who don't find what they want via
@@ -118,7 +118,7 @@ If your site uses `NEXT_PUBLIC_BASE_PATH`, pass the prefix through `assetPath()`
 
 ```tsx
 import { assetPath } from '@/lib/assetPath'
-<Search indexUrl={assetPath('/search-index.json')} />
+;<Search indexUrl={assetPath('/search-index.json')} />
 ```
 
 ## Out of scope

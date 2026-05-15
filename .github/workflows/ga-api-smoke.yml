@@ -17,9 +17,9 @@ jobs:
   smoke:
     runs-on: ubuntu-latest
     env:
-      GA_PROPERTY_ID:           ${{ secrets.GA_PROPERTY_ID }}
+      GA_PROPERTY_ID: ${{ secrets.GA_PROPERTY_ID }}
       GA_SERVICE_ACCOUNT_EMAIL: ${{ secrets.GA_SERVICE_ACCOUNT_EMAIL }}
-      GA_PRIVATE_KEY:           ${{ secrets.GA_PRIVATE_KEY }}
+      GA_PRIVATE_KEY: ${{ secrets.GA_PRIVATE_KEY }}
     steps:
       - name: Validate secrets present
         run: |

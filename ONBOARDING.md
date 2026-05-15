@@ -70,17 +70,17 @@ section pre-filled.
 
 ## 6. Where to find things
 
-| Topic                                  | Doc                                                   |
-|----------------------------------------|-------------------------------------------------------|
-| Architecture, conventions              | [`AGENTS.md`](./AGENTS.md)                            |
-| Claude-specific instructions           | [`CLAUDE.md`](./CLAUDE.md)                            |
-| Copilot agent setup                    | [`GITHUB_COPILOT_AGENT_SETUP.md`](./GITHUB_COPILOT_AGENT_SETUP.md) |
-| Cloudflare DNS / Pages                 | [`CLOUDFLARE_SETUP.md`](./CLOUDFLARE_SETUP.md)        |
-| Release process                        | [`RELEASING.md`](./RELEASING.md)                      |
-| MCP servers                            | [`MCP_SERVERS.md`](./MCP_SERVERS.md)                  |
-| All docs, indexed                      | [`DOCUMENTATION_INDEX.md`](./DOCUMENTATION_INDEX.md)  |
-| Security                               | [`SECURITY.md`](./SECURITY.md), [`THREAT-MODEL.md`](./THREAT-MODEL.md) |
-| Governance                             | [`GOVERNANCE.md`](./GOVERNANCE.md)                    |
+| Topic                        | Doc                                                                    |
+| ---------------------------- | ---------------------------------------------------------------------- |
+| Architecture, conventions    | [`AGENTS.md`](./AGENTS.md)                                             |
+| Claude-specific instructions | [`CLAUDE.md`](./CLAUDE.md)                                             |
+| Copilot agent setup          | [`GITHUB_COPILOT_AGENT_SETUP.md`](./GITHUB_COPILOT_AGENT_SETUP.md)     |
+| Cloudflare DNS / Pages       | [`CLOUDFLARE_SETUP.md`](./CLOUDFLARE_SETUP.md)                         |
+| Release process              | [`RELEASING.md`](./RELEASING.md)                                       |
+| MCP servers                  | [`MCP_SERVERS.md`](./MCP_SERVERS.md)                                   |
+| All docs, indexed            | [`DOCUMENTATION_INDEX.md`](./DOCUMENTATION_INDEX.md)                   |
+| Security                     | [`SECURITY.md`](./SECURITY.md), [`THREAT-MODEL.md`](./THREAT-MODEL.md) |
+| Governance                   | [`GOVERNANCE.md`](./GOVERNANCE.md)                                     |
 
 ## 7. Common first issues
 

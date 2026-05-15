@@ -34,7 +34,7 @@ type Issue = {
 }
 
 const raw = sh(
-  `gh issue list --repo ${repo} --state open --limit 100 --json number,title,url,updatedAt,assignees,labels`,
+  `gh issue list --repo ${repo} --state open --limit 100 --json number,title,url,updatedAt,assignees,labels`
 )
 const issues: Issue[] = JSON.parse(raw)
 
@@ -45,7 +45,7 @@ const tasks = issues
   .filter(
     (i) =>
       i.assignees.some((a) => a.login.toLowerCase().includes('copilot')) ||
-      i.labels.some((l) => l.name === 'jules'),
+      i.labels.some((l) => l.name === 'jules')
   )
   .map((i) => {
     const ageMs = now - new Date(i.updatedAt).getTime()
@@ -65,7 +65,9 @@ if (asJson) {
 } else {
   const stalled = tasks.filter((t) => t.stalled)
   console.log(`# Agent task monitor — ${repo}`)
-  console.log(`Stall threshold: ${stallHours}h. Total agent tasks: ${tasks.length}. Stalled: ${stalled.length}.`)
+  console.log(
+    `Stall threshold: ${stallHours}h. Total agent tasks: ${tasks.length}. Stalled: ${stalled.length}.`
+  )
   console.log('')
   for (const t of tasks) {
     const marker = t.stalled ? '!!' : '  '

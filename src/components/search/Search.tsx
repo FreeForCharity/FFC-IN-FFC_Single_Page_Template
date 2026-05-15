@@ -105,6 +105,7 @@ export function Search({ indexUrl = '/search-index.json', limit = 8, className }
         id="ffc-search-input"
         ref={inputRef}
         type="search"
+        role="combobox"
         placeholder="Search…"
         value={query}
         autoComplete="off"
@@ -120,11 +121,7 @@ export function Search({ indexUrl = '/search-index.json', limit = 8, className }
         aria-autocomplete="list"
       />
       {open && (error || results.length > 0) && (
-        <ul
-          id="ffc-search-results"
-          role="listbox"
-          aria-label="Search results"
-        >
+        <ul id="ffc-search-results" role="listbox" aria-label="Search results">
           {error && <li role="alert">Search index unavailable: {error}</li>}
           {results.map((r, i) => (
             <li

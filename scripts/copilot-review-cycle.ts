@@ -27,7 +27,12 @@ function flag(name: string): boolean {
 }
 
 function sh(cmd: string, capture = true): string {
-  return execSync(cmd, { encoding: 'utf8', stdio: capture ? ['ignore', 'pipe', 'inherit'] : 'inherit' }).toString().trim()
+  return execSync(cmd, {
+    encoding: 'utf8',
+    stdio: capture ? ['ignore', 'pipe', 'inherit'] : 'inherit',
+  })
+    .toString()
+    .trim()
 }
 
 const pr = arg('pr')
@@ -44,9 +49,7 @@ async function sleep(ms: number) {
 }
 
 async function commentCount(): Promise<number> {
-  const raw = sh(
-    `gh api repos/${repo}/pulls/${pr}/comments --paginate --jq 'length'`,
-  )
+  const raw = sh(`gh api repos/${repo}/pulls/${pr}/comments --paginate --jq 'length'`)
   return Number(raw || 0)
 }
 

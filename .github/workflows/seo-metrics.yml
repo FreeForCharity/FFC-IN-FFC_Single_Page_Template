@@ -23,10 +23,10 @@ jobs:
   collect:
     runs-on: ubuntu-latest
     env:
-      GA_PROPERTY_ID:           ${{ secrets.GA_PROPERTY_ID }}
+      GA_PROPERTY_ID: ${{ secrets.GA_PROPERTY_ID }}
       GA_SERVICE_ACCOUNT_EMAIL: ${{ secrets.GA_SERVICE_ACCOUNT_EMAIL }}
-      GA_PRIVATE_KEY:           ${{ secrets.GA_PRIVATE_KEY }}
-      GSC_SITE_URL:             ${{ vars.GSC_SITE_URL }}
+      GA_PRIVATE_KEY: ${{ secrets.GA_PRIVATE_KEY }}
+      GSC_SITE_URL: ${{ vars.GSC_SITE_URL }}
     steps:
       - uses: actions/checkout@v5
       - uses: actions/setup-node@v4

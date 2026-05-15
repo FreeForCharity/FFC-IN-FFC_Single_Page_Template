@@ -28,8 +28,20 @@ function readJson<T>(p: string): T | null {
   }
 }
 
-type Pages = { generatedAt: string; pages: Array<{ path: string; pageviews: number; clicks: number; impressions: number; position: number }> }
-type Keywords = { generatedAt: string; keywords: Array<{ query: string; clicks: number; impressions: number; position: number }> }
+type Pages = {
+  generatedAt: string
+  pages: Array<{
+    path: string
+    pageviews: number
+    clicks: number
+    impressions: number
+    position: number
+  }>
+}
+type Keywords = {
+  generatedAt: string
+  keywords: Array<{ query: string; clicks: number; impressions: number; position: number }>
+}
 
 const pages = readJson<Pages>(pagesPath)
 const keywords = readJson<Keywords>(keywordsPath)
@@ -42,7 +54,9 @@ if (pages?.pages?.length) {
   lines.push('| Path | Pageviews | Clicks | Impressions | Avg position |')
   lines.push('|---|--:|--:|--:|--:|')
   for (const p of pages.pages.slice(0, 20)) {
-    lines.push(`| ${p.path} | ${p.pageviews} | ${p.clicks} | ${p.impressions} | ${p.position.toFixed(1)} |`)
+    lines.push(
+      `| ${p.path} | ${p.pageviews} | ${p.clicks} | ${p.impressions} | ${p.position.toFixed(1)} |`
+    )
   }
   lines.push('')
 } else {

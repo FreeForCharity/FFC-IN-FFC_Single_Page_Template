@@ -15,7 +15,7 @@ beforeEach(() => {
       ok: true,
       status: 200,
       json: () => Promise.resolve(SAMPLE),
-    } as Response),
+    } as Response)
   ) as unknown as typeof fetch
 })
 

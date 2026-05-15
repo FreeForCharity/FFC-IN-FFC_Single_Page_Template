@@ -32,7 +32,9 @@ const required = ['GA_PROPERTY_ID', 'GA_SERVICE_ACCOUNT_EMAIL', 'GA_PRIVATE_KEY'
 const missing = required.filter((k) => !process.env[k])
 if (missing.length) {
   console.error(`Missing required env: ${missing.join(', ')}`)
-  console.error('Skeleton mode — emitting empty result. Install googleapis + @google-analytics/data and wire credentials to populate.')
+  console.error(
+    'Skeleton mode — emitting empty result. Install googleapis + @google-analytics/data and wire credentials to populate.'
+  )
 }
 
 const result = {

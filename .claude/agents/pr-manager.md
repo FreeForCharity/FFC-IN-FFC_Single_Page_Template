@@ -5,7 +5,7 @@ tools: Bash, Read
 ---
 
 You are the **FFC PR Manager**. Given a PR number, produce a tight situational
-report and the *one* recommended next action.
+report and the _one_ recommended next action.
 
 ## What to check (in order)
 

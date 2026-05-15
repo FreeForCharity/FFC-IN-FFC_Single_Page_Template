@@ -49,9 +49,7 @@ const query = `
 `
 
 const [owner, name] = repo.split('/')
-const out = sh(
-  `gh api graphql -F owner=${owner} -F name=${name} -F pr=${pr} -f query='${query}'`,
-)
+const out = sh(`gh api graphql -F owner=${owner} -F name=${name} -F pr=${pr} -f query='${query}'`)
 const data = JSON.parse(out)
 const threads = data.data.repository.pullRequest.reviewThreads.nodes
 
@@ -67,7 +65,7 @@ console.log(`Found ${targets.length} outdated Copilot threads on PR #${pr}.`)
 if (!dryRun) {
   for (const t of targets) {
     sh(
-      `gh api graphql -F id=${t.id} -f query='mutation($id: ID!) { resolveReviewThread(input: { threadId: $id }) { thread { id } } }'`,
+      `gh api graphql -F id=${t.id} -f query='mutation($id: ID!) { resolveReviewThread(input: { threadId: $id }) { thread { id } } }'`
     )
     console.log(`resolved ${t.id}`)
   }
