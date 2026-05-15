@@ -1,0 +1,23 @@
+{
+  "_comment": "Copy to mcp.json (gitignored) and replace placeholders. Used by Claude Desktop and similar MCP-capable clients. Closes part of #222.",
+  "mcpServers": {
+    "github": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-github"],
+      "env": {
+        "GITHUB_PERSONAL_ACCESS_TOKEN": "REPLACE_WITH_PAT"
+      }
+    },
+    "cloudflare": {
+      "command": "npx",
+      "args": ["-y", "@cloudflare/mcp-server-cloudflare", "run", "REPLACE_WITH_ACCOUNT_ID"],
+      "env": {
+        "CLOUDFLARE_API_TOKEN": "REPLACE_WITH_TOKEN"
+      }
+    },
+    "microsoft-learn": {
+      "type": "http",
+      "url": "https://learn.microsoft.com/api/mcp"
+    }
+  }
+}

@@ -4,6 +4,8 @@
       "Bash(npm install)",
       "Bash(npm run *)",
       "Bash(npx playwright *)",
+      "Bash(npx prettier *)",
+      "Bash(npx tsx *)",
       "Bash(git *)",
       "Bash(gh *)"
     ],

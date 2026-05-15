@@ -1,0 +1,28 @@
+{
+  "_comment": "Reference settings demonstrating the PostToolUse Prettier auto-format hook from issue #218. Copy hooks block into your local .claude/settings.json or settings.local.json to enable. Requires bash + jq + npx in PATH. The hook only runs Prettier on file types Prettier supports.",
+  "permissions": {
+    "allow": [
+      "Bash(npm install)",
+      "Bash(npm run *)",
+      "Bash(npx playwright *)",
+      "Bash(npx prettier *)",
+      "Bash(npx tsx *)",
+      "Bash(git *)",
+      "Bash(gh *)"
+    ],
+    "deny": ["Bash(rm -rf *)", "Bash(*API_TOKEN*)", "Bash(*SECRET*)"]
+  },
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash -lc 'FILE=$(printf \"%s\" \"$CLAUDE_TOOL_INPUT\" | jq -r \".tool_input.file_path // empty\" 2>/dev/null); if [ -z \"$FILE\" ] || [ ! -f \"$FILE\" ]; then exit 0; fi; case \"$FILE\" in *.ts|*.tsx|*.js|*.jsx|*.mjs|*.cjs|*.json|*.jsonc|*.md|*.css|*.yml|*.yaml) npx --no-install prettier --write \"$FILE\" >/dev/null 2>&1 || true ;; esac'"
+          }
+        ]
+      }
+    ]
+  }
+}

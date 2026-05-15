@@ -12,6 +12,25 @@
       "type": "http",
       "url": "https://learn.microsoft.com/api/mcp",
       "tools": ["*"]
+    },
+    "cloudflare": {
+      "type": "http",
+      "url": "https://mcp.cloudflare.com/sse",
+      "tools": ["*"],
+      "env": {
+        "CLOUDFLARE_API_TOKEN": "${CLOUDFLARE_API_TOKEN}",
+        "CLOUDFLARE_ACCOUNT_ID": "${CLOUDFLARE_ACCOUNT_ID}"
+      }
+    },
+    "google-analytics": {
+      "type": "http",
+      "url": "https://analyticsdata-mcp.googleapis.com",
+      "tools": ["*"],
+      "env": {
+        "GA_PROPERTY_ID": "${GA_PROPERTY_ID}",
+        "GA_SERVICE_ACCOUNT_EMAIL": "${GA_SERVICE_ACCOUNT_EMAIL}",
+        "GA_PRIVATE_KEY": "${GA_PRIVATE_KEY}"
+      }
     }
   }
 }

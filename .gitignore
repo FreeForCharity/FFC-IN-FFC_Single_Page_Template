@@ -47,3 +47,7 @@ next-env.d.ts
 # Decap CMS uploads
 /public/uploads
 *.bak
+
+# MCP runtime configs (the .example variants ARE committed)
+/mcp.json
+/mcp.bearer.json

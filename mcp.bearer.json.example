@@ -1,0 +1,19 @@
+{
+  "_comment": "Bearer-token variant for HTTP-transport MCP servers. Copy to mcp.bearer.json (gitignored). Closes part of #222.",
+  "mcpServers": {
+    "github": {
+      "type": "http",
+      "url": "https://api.githubcopilot.com/mcp/",
+      "headers": {
+        "Authorization": "Bearer REPLACE_WITH_GITHUB_TOKEN"
+      }
+    },
+    "cloudflare": {
+      "type": "http",
+      "url": "https://mcp.cloudflare.com/sse",
+      "headers": {
+        "Authorization": "Bearer REPLACE_WITH_CLOUDFLARE_TOKEN"
+      }
+    }
+  }
+}
