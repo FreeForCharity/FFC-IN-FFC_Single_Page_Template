@@ -1,0 +1,264 @@
+name: Phantom Revert Guard
+
+# Detects PRs that would silently revert work that landed on main while the PR
+# was open. The classic failure mode (we hit it twice on 2026-05-03) is:
+#
+#   1. Branch B is forked from main at commit M0.
+#   2. PR P1, P2, ... merge into main between M0 and now (HEAD = M_now).
+#   3. Branch B is not updated; CI still passes because it tests B merged with
+#      M_now (the virtual merge commit), which is fine as a build -- but a
+#      subsequent squash- or rebase-merge of the stale branch writes B's old
+#      file tree, silently reverting everything P1, P2, ... added to files B
+#      never touched.
+#   4. The PR's "diff vs main" shows those files as deleted/reverted.
+#
+# This guard explicitly compares "files modified on main since fork" against
+# "files changed by this PR" and fails when untouched-but-updated files fall
+# in critical paths or the branch is sufficiently far behind.
+#
+# Note: this guard reruns only when a new commit is pushed to the PR branch.
+# If main advances while a PR is open and the PR author pushes nothing new,
+# the guard will not automatically rerun. For full coverage, pair this guard
+# with branch protection's "Require branches to be up to date before merging"
+# rule, which forces a fresh CI pass after updating the branch.
+# Manual reruns are supported via workflow_dispatch; supply head_sha and
+# base_ref inputs to analyze a specific branch (defaults: HEAD of the
+# dispatched ref, compared against the repository's default branch).
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+  workflow_dispatch:
+    inputs:
+      head_sha:
+        description: 'Head SHA or branch to analyze (defaults to GITHUB_SHA, the commit that triggered this run)'
+        required: false
+        default: ''
+      base_ref:
+        description: 'Base branch to compare against (defaults to repo default branch)'
+        required: false
+        default: ''
+
+permissions:
+  contents: read
+
+env:
+  # Official GitHub flag to force Node.js 24 runtime ahead of the June 2026 mandatory deadline.
+  # Ref: https://github.blog/changelog/2025-09-19-deprecation-of-node-20-on-github-actions-runners/
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
+jobs:
+  phantom-revert-guard:
+    name: Phantom Revert Guard
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    # Skip fork PRs: the PR head SHA lives in the fork's repo, so checking it
+    # out without a separate remote would fail.  Fork PRs require an explicit
+    # review from a maintainer before CI runs anyway, so this is acceptable.
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      github.event.pull_request.head.repo.full_name == github.repository
+    steps:
+      # For workflow_dispatch, github.event.pull_request.* is undefined.
+      # Resolve head SHA and base ref from inputs (or safe defaults) here so all
+      # subsequent steps can use steps.refs.outputs.* unconditionally.
+      - name: Resolve head SHA and base ref
+        id: refs
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          PR_BASE_REF: ${{ github.event.pull_request.base.ref }}
+          INPUT_HEAD_SHA: ${{ inputs.head_sha }}
+          INPUT_BASE_REF: ${{ inputs.base_ref }}
+          DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
+        run: |
+          if [ "$EVENT_NAME" = "workflow_dispatch" ]; then
+            HEAD_SHA="${INPUT_HEAD_SHA:-${GITHUB_SHA}}"
+            BASE_REF="${INPUT_BASE_REF:-${DEFAULT_BRANCH:-main}}"
+            # Strip refs/heads/ prefix so callers can pass fully-qualified refs
+            # (e.g. refs/heads/main) without later producing origin/refs/heads/main.
+            BASE_REF="${BASE_REF#refs/heads/}"
+          else
+            HEAD_SHA="$PR_HEAD_SHA"
+            BASE_REF="$PR_BASE_REF"
+          fi
+          echo "head_sha=$HEAD_SHA" >> "$GITHUB_OUTPUT"
+          echo "base_ref=$BASE_REF" >> "$GITHUB_OUTPUT"
+
+      - name: Checkout PR with full history
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+          ref: ${{ steps.refs.outputs.head_sha }}
+
+      - name: Fetch base branch
+        env:
+          BASE_REF: ${{ steps.refs.outputs.base_ref }}
+        run: |
+          # Validate BASE_REF before passing to git. Two complementary checks:
+          # 1. Reject values starting with '-': git would interpret those as
+          #    option flags even inside a quoted refspec argument.
+          # 2. Validate the refname using git's own rules (git check-ref-format
+          #    --branch) so all legal branch names (including underscores,
+          #    hyphens inside the name, etc.) are accepted without a bespoke
+          #    regex that may inadvertently reject valid refs.
+          # 3. Block '..' sequences to prevent ref-range traversal.
+          if [[ "$BASE_REF" == -* ]]; then
+            echo "::error::Invalid base_ref: '$BASE_REF' — must not start with '-'"
+            exit 1
+          fi
+          if [[ "$BASE_REF" == *..* ]]; then
+            echo "::error::Invalid base_ref: '$BASE_REF' — must not contain '..'"
+            exit 1
+          fi
+          if ! git check-ref-format --branch "$BASE_REF" 2>/dev/null; then
+            echo "::error::Invalid base_ref: '$BASE_REF' — not a valid git branch name"
+            exit 1
+          fi
+          # Use an explicit refspec mapping so origin/<branch> is guaranteed to
+          # exist as a remote-tracking ref even from a detached-SHA checkout.
+          # This matches the pattern used in daily-pipeline.yml.
+          git fetch origin "$BASE_REF:refs/remotes/origin/$BASE_REF"
+
+      - name: Detect phantom reverts
+        id: detect
+        env:
+          BASE_REF: ${{ steps.refs.outputs.base_ref }}
+        run: |
+          set -euo pipefail
+          BASE="origin/${BASE_REF}"
+          # Directories considered critical: changes here that slip through a
+          # stale-base merge can break the site, the analysis pipeline, or CI.
+          # Critical paths: src/data/, src/components/, scripts/analysis/,
+          # scripts/cross-platform-verification/, scripts/spss/,
+          # scripts/minitab/, .github/workflows/
+          CRITICAL_PATH_RE='^(src/data/|src/components/|scripts/analysis/|scripts/cross-platform-verification/|scripts/spss/|scripts/minitab/|\.github/workflows/)'
+          MERGE_BASE=$(git merge-base "$BASE" HEAD)
+          PR_HEAD=$(git rev-parse HEAD)
+          BASE_HEAD=$(git rev-parse "$BASE")
+
+          echo "merge-base: $MERGE_BASE"
+          echo "PR head:    $PR_HEAD"
+          echo "$BASE_REF head: $BASE_HEAD"
+
+          if [ "$MERGE_BASE" = "$BASE_HEAD" ]; then
+            echo "Branch is up to date with $BASE_REF -- no phantom revert possible."
+            {
+              echo "## ✅ Phantom Revert Guard: clean"
+              echo ""
+              echo "Branch is up to date with \`$BASE_REF\` — no phantom-revert risk."
+            } >> "$GITHUB_STEP_SUMMARY"
+            echo "violations=" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          # How far behind is the branch? (Only reached when the branch is NOT
+          # already up to date — the up-to-date case exits early above.)
+          BEHIND_COUNT=$(git rev-list --count "$MERGE_BASE..$BASE")
+          echo "Branch is $BEHIND_COUNT commits behind $BASE_REF."
+
+          # Files modified on base since the branch was forked.
+          BASE_TOUCHED=$(git diff --name-only "$MERGE_BASE" "$BASE" | sort -u)
+          # Files modified by this PR.
+          PR_TOUCHED=$(git diff --name-only "$MERGE_BASE" HEAD | sort -u)
+
+          # Helper: strip blank lines so wc -l and comm see 0 lines for an empty
+          # variable rather than 1 (echo/printf always emit a trailing newline).
+          strip_blank() { printf '%s\n' "$1" | sed '/^$/d'; }
+
+          # Use printf+sed to strip blank lines before counting so wc -l
+          # reports 0 for an empty variable instead of 1 (echo adds a newline).
+          BASE_COUNT=$(strip_blank "$BASE_TOUCHED" | wc -l)
+          PR_COUNT=$(strip_blank "$PR_TOUCHED" | wc -l)
+          echo "base touched: $BASE_COUNT files"
+          echo "PR touched:   $PR_COUNT files"
+
+          # Phantom-revert candidates: files base modified that the PR did NOT
+          # touch. If the PR were merged into main right now, those files would
+          # *not* change -- which is correct. But if the PR is then squash- or
+          # rebase-merged through a stale base, the PR's old version of those
+          # files (from MERGE_BASE) wins, silently reverting base's updates.
+          # Use strip_blank() to avoid the stray blank line that `printf` adds for
+          # empty variables, which would make comm see a phantom empty entry.
+          # Do NOT add || true here: a non-zero exit from comm (e.g. unsorted input)
+          # is a real error and should fail the step rather than silently treating
+          # it as "no candidates" and missing phantom reverts.
+          PHANTOM_CANDIDATES=$(comm -23 \
+            <(strip_blank "$BASE_TOUCHED") \
+            <(strip_blank "$PR_TOUCHED"))
+
+          if [ -z "$PHANTOM_CANDIDATES" ]; then
+            if [ "$BEHIND_COUNT" -gt 5 ]; then
+              {
+                echo "## Branch significantly behind $BASE_REF"
+                echo ""
+                echo "Branch is $BEHIND_COUNT commits behind \`$BASE_REF\` (threshold: 5)."
+                echo "No phantom-revert candidates found in untouched files, but the"
+                echo "stale branch still increases merge risk. Update the branch"
+                echo "(merge \`$BASE_REF\` in or rebase) before merging."
+              } >> "$GITHUB_STEP_SUMMARY"
+              echo "::error::Branch is $BEHIND_COUNT commits behind $BASE_REF (threshold: 5). Update the branch before merging."
+              echo "violations=true" >> "$GITHUB_OUTPUT"
+              exit 1
+            fi
+            echo "No phantom-revert candidates."
+            {
+              echo "## ✅ Phantom Revert Guard: clean"
+              echo ""
+              echo "Branch is $BEHIND_COUNT commits behind \`$BASE_REF\`."
+              echo "No phantom-revert candidates detected in critical paths."
+            } >> "$GITHUB_STEP_SUMMARY"
+            echo "violations=" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          # Build a categorized report.
+          {
+            echo "## Phantom-revert candidates detected"
+            echo ""
+            echo "Files updated on \`$BASE_REF\` since this branch forked at"
+            echo "\`${MERGE_BASE:0:8}\` that this PR does **not** touch."
+            echo ""
+            echo "Right now, merging this PR is safe -- GitHub will not change"
+            echo "these files. But if the PR's branch is stale (i.e. you have"
+            echo "not pulled \`$BASE_REF\` in), some merge strategies can"
+            echo "silently revert these updates. To eliminate the risk, update"
+            echo "the branch (merge \`$BASE_REF\` in or rebase) before merging."
+            echo ""
+            echo "<details><summary>Updated files (${BASE_REF}) untouched by this PR</summary>"
+            echo ""
+            echo '```'
+            echo "$PHANTOM_CANDIDATES"
+            echo '```'
+            echo "</details>"
+          } > /tmp/report.md
+          cat /tmp/report.md >> "$GITHUB_STEP_SUMMARY"
+
+          # Hard-fail if any phantom candidate falls in a critical path, or if the
+          # branch is more than 5 commits behind -- either condition alone is
+          # enough to flag the PR as risky. A handful of untouched files in
+          # non-critical paths with a fresh branch is acceptable; critical-path
+          # hits or a very stale branch are the symptoms we caught on 2026-05-03.
+          CRITICAL_PATHS_HIT=$(echo "$PHANTOM_CANDIDATES" | grep -E "$CRITICAL_PATH_RE" || true)
+
+          if [ -n "$CRITICAL_PATHS_HIT" ] || [ "$BEHIND_COUNT" -gt 5 ]; then
+            # Compose an accurate message reflecting which condition(s) fired.
+            FAIL_REASON=""
+            if [ -n "$CRITICAL_PATHS_HIT" ]; then
+              FAIL_REASON="has untouched updates in critical paths"
+            fi
+            if [ "$BEHIND_COUNT" -gt 5 ]; then
+              if [ -n "$FAIL_REASON" ]; then
+                FAIL_REASON="$FAIL_REASON and is $BEHIND_COUNT commits behind $BASE_REF (threshold: 5)"
+              else
+                FAIL_REASON="is $BEHIND_COUNT commits behind $BASE_REF (threshold: 5)"
+              fi
+            fi
+            echo ""
+            echo "::error::Phantom-revert risk: branch $FAIL_REASON. Update the branch (merge $BASE_REF in or rebase) before merging."
+            echo "violations=true" >> "$GITHUB_OUTPUT"
+            exit 1
+          fi
+
+          echo "Phantom-revert candidates exist but branch is reasonably current ($BEHIND_COUNT commits behind, no critical paths). Allowing."
+          echo "violations=" >> "$GITHUB_OUTPUT"
