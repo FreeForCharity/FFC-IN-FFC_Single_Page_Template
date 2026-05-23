@@ -3,6 +3,10 @@ name: security.txt expiry check
 # RFC 9116 requires `Expires:` to be in the future. This workflow opens
 # an issue when the date is within 30 days so the maintainers can bump it
 # before browsers and scanners start flagging the site.
+#
+# A parse failure also opens an issue (instead of just failing the job)
+# because the alert mechanism would otherwise go silent precisely when
+# the file most needs attention.
 
 on:
   schedule:
@@ -26,47 +30,107 @@ jobs:
           script: |
             const fs = require('fs');
             const path = 'public/.well-known/security.txt';
+            const owner = context.repo.owner;
+            const repo = context.repo.repo;
+            const marker = '<!-- ffc-security-txt-expiry -->';
+
+            // Strict RFC 3339 / ISO 8601 UTC timestamp required by RFC 9116.
+            // Accepts e.g. 2027-01-01T00:00:00Z or 2027-01-01T00:00:00.000Z.
+            const iso8601Utc = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?Z$/;
+
+            async function findExistingIssue() {
+              // Use list+filter rather than the Search API: search has
+              // documented indexing lag, strips HTML/punctuation when
+              // tokenizing the marker, and would let us open duplicates.
+              const issues = await github.paginate(github.rest.issues.listForRepo, {
+                owner,
+                repo,
+                state: 'open',
+                per_page: 100,
+              });
+              return issues.find(
+                (issue) => !issue.pull_request && (issue.body || '').includes(marker)
+              );
+            }
+
+            async function ensureIssue(title, body) {
+              const existing = await findExistingIssue();
+              if (existing) {
+                core.info(`Existing issue #${existing.number} found; not opening a duplicate.`);
+                return;
+              }
+              const created = await github.rest.issues.create({
+                owner,
+                repo,
+                title,
+                body,
+                labels: ['security', 'maintenance'],
+              });
+              core.info(`Created issue #${created.data.number}.`);
+            }
+
             if (!fs.existsSync(path)) {
-              core.warning(`${path} not found — skipping.`);
+              await ensureIssue(
+                'security.txt is missing',
+                [
+                  `\`${path}\` was not found in the repository.`,
+                  '',
+                  'Restore the file with a valid `Expires:` line in the future.',
+                  '',
+                  marker,
+                ].join('\n')
+              );
+              core.setFailed(`${path} not found.`);
               return;
             }
+
             const body = fs.readFileSync(path, 'utf8');
             const m = body.match(/^Expires:\s*(.+)$/mi);
             if (!m) {
+              await ensureIssue(
+                'security.txt is missing the Expires line',
+                [
+                  `\`${path}\` has no \`Expires:\` line.`,
+                  '',
+                  'RFC 9116 requires exactly one `Expires:` line with an ISO 8601 UTC datetime.',
+                  '',
+                  marker,
+                ].join('\n')
+              );
               core.setFailed(`No Expires line in ${path}.`);
               return;
             }
-            const expires = new Date(m[1].trim());
-            if (isNaN(expires.getTime())) {
-              core.setFailed(`Could not parse Expires: ${m[1]}`);
+
+            const raw = m[1].trim();
+            if (!iso8601Utc.test(raw)) {
+              await ensureIssue(
+                'security.txt Expires line is not RFC 9116 compliant',
+                [
+                  `\`${path}\` Expires value \`${raw}\` is not a strict ISO 8601 UTC datetime.`,
+                  '',
+                  'RFC 9116 requires the form `YYYY-MM-DDTHH:MM:SSZ` (optionally with fractional seconds).',
+                  '',
+                  marker,
+                ].join('\n')
+              );
+              core.setFailed(`Could not parse Expires: ${raw}`);
               return;
             }
+
+            const expires = new Date(raw);
             const now = new Date();
             const daysLeft = Math.ceil((expires - now) / (1000 * 60 * 60 * 24));
             core.info(`security.txt expires in ${daysLeft} day(s) (${expires.toISOString()}).`);
             if (daysLeft > 30) return;
 
-            const owner = context.repo.owner;
-            const repo = context.repo.repo;
-            const marker = '<!-- ffc-security-txt-expiry -->';
             const title = `security.txt Expires within ${Math.max(daysLeft, 0)} days`;
-            const search = await github.rest.search.issuesAndPullRequests({
-              q: `repo:${owner}/${repo} is:issue is:open in:body "${marker}"`,
-            });
-            if (search.data.total_count > 0) {
-              core.info('Existing issue found; not opening a duplicate.');
-              return;
-            }
-            await github.rest.issues.create({
-              owner,
-              repo,
+            await ensureIssue(
               title,
-              body: [
-                `\`public/.well-known/security.txt\` will expire on **${expires.toISOString()}** (${daysLeft} day(s) from now).`,
+              [
+                `\`${path}\` will expire on **${expires.toISOString()}** (${daysLeft} day(s) from now).`,
                 '',
                 'Update the `Expires:` line, commit, and merge to refresh.',
                 '',
                 marker,
-              ].join('\n'),
-              labels: ['security', 'maintenance'],
-            });
+              ].join('\n')
+            );

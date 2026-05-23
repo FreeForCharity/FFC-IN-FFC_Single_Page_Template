@@ -14,19 +14,21 @@ is the **map** — what changes where, and why.
 truth for site-specific values. Update the `siteConfig` export with your
 charity's name, URL, contact email, social links, etc.
 
-| Property                      | Where it shows up                                         |
-| ----------------------------- | --------------------------------------------------------- |
-| `name`                        | `<title>`, OG/Twitter `site_name`, 404 page, error page   |
-| `tagline`                     | Default `<title>` and OG title                            |
-| `description`                 | `<meta description>`, OG description, Twitter description |
-| `url`                         | `metadataBase`, sitemap entries, robots `Sitemap:` line   |
-| `twitterHandle`               | Twitter card `site` attribute                             |
-| `contactEmail`                | (used by your own pages — security.txt has its own copy)  |
-| `keywords`                    | `<meta keywords>`                                         |
-| `themeColor`                  | Reserved for the manifest / `<meta name="theme-color">`   |
-| `githubPagesBasePath`         | Deploy workflow's `NEXT_PUBLIC_BASE_PATH`                 |
-| `vulnerabilityDisclosurePath` | 404 page CTA, future security pages                       |
-| `social`                      | Footer social link rail                                   |
+| Property                      | Where it shows up                                                                      |
+| ----------------------------- | -------------------------------------------------------------------------------------- |
+| `name`                        | `<title>`, OG/Twitter `site_name`, 404 page, error page                                |
+| `tagline`                     | Default `<title>` and OG title                                                         |
+| `description`                 | `<meta description>` (long form for search engines)                                    |
+| `shortDescription`            | OG / Twitter card description (tuned for social previews; falls back to `description`) |
+| `url`                         | `metadataBase`, sitemap entries, robots `Sitemap:` line                                |
+| `twitterHandle`               | Twitter card `site` attribute (the leading `@` is added automatically)                 |
+| `contactEmail`                | Used by your own pages — security.txt has its own `Contact:` line                      |
+| `keywords`                    | `<meta keywords>`                                                                      |
+| `themeColor`                  | Reserved for the manifest / `<meta name="theme-color">`                                |
+| `vulnerabilityDisclosurePath` | 404 page CTA, future security pages                                                    |
+| `social`                      | Footer social link rail                                                                |
+
+The GitHub Pages base path is read directly from `NEXT_PUBLIC_BASE_PATH` in the deploy workflow (`.github/workflows/deploy.yml`) — there is no separate config field, so the deploy workflow is the single source of truth.
 
 After editing, **run `npm run check:drift`** to confirm nothing else still
 references the old placeholder values.

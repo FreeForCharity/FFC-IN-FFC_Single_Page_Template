@@ -70,23 +70,41 @@ async function checkKebabCaseRoutes() {
 
 async function checkAssetPathUsage() {
   const files = await walk(SRC_DIR, (n) => /\.(tsx?|jsx?)$/.test(n))
-  // Match raw string literals like "/Images/foo.png" or "/Svgs/bar.svg"
-  // that aren't immediately preceded by assetPath( or a URL-like prefix.
-  const pattern = /["'`](\/(?:Images|Svgs|videos)\/[^"'`]+)["'`]/g
-  const allowedSelfReferential = /assetPath\s*\(\s*$/
+  // Match raw string literals like "/Images/foo.png", "/Svgs/bar.svg",
+  // or "/videos/x.mp4" that aren't wrapped by assetPath(). We also flag
+  // template-literal patterns like `${basePath}/Images/...` since that
+  // is the anti-pattern assetPath() exists to replace.
+  const literalPattern = /(["'`])(\/(?:Images|Svgs|videos)\/[^"'`\n]+?)\1/g
+  const templateBasePattern = /\$\{[^}]*basePath[^}]*\}\/(?:Images|Svgs|videos)\//g
+  // Generous 200-char lookback so multi-line prettier-wrapped calls
+  // like `assetPath(\n  '/Images/x.png'\n)` are recognized.
+  const wrappedInAssetPath = /assetPath\s*\(\s*[^)]{0,40}$/
   for (const file of files) {
     const rel = relative(ROOT, file)
     if (rel.includes('__tests__') || rel.startsWith('tests' + sep)) continue
+    // The drift script itself contains the example patterns it scans for —
+    // skip the assetPath helper and this script so we don't flag ourselves.
+    if (rel === join('src', 'lib', 'assetPath.ts')) continue
     const body = await readFile(file, 'utf8')
+
+    literalPattern.lastIndex = 0
     let match
-    while ((match = pattern.exec(body))) {
-      // Look back ~20 chars to see if assetPath( is present.
-      const lookback = body.slice(Math.max(0, match.index - 20), match.index)
-      if (allowedSelfReferential.test(lookback)) continue
+    while ((match = literalPattern.exec(body))) {
+      const lookback = body.slice(Math.max(0, match.index - 200), match.index)
+      if (wrappedInAssetPath.test(lookback)) continue
       const line = body.slice(0, match.index).split('\n').length
       warnings.push(
-        `${rel}:${line} references "${match[1]}" without assetPath(). ` +
-          `Wrap in assetPath('${match[1]}') so it works on GitHub Pages subpaths.`
+        `${rel}:${line} references "${match[2]}" without assetPath(). ` +
+          `Wrap in assetPath('${match[2]}') so it works on GitHub Pages subpaths.`
+      )
+    }
+
+    templateBasePattern.lastIndex = 0
+    while ((match = templateBasePattern.exec(body))) {
+      const line = body.slice(0, match.index).split('\n').length
+      warnings.push(
+        `${rel}:${line} hand-rolls basePath concatenation ("${match[0]}…"). ` +
+          `Use assetPath('/Images/...') instead so the helper stays the single source of truth.`
       )
     }
   }
@@ -113,8 +131,10 @@ async function checkSecrets() {
       re: /\bgithub_pat_[A-Za-z0-9_]{82,}\b/,
     },
     {
-      name: 'Slack bot token',
-      re: /\bxox[abp]-[A-Za-z0-9-]{10,}\b/,
+      // Covers bot (xoxb), user (xoxp), app-level (xoxa), refresh (xoxr),
+      // legacy (xoxs), and OAuth client-secret (xoxe) tokens.
+      name: 'Slack token',
+      re: /\bxox[abeprs]-[A-Za-z0-9-]{10,}\b/,
     },
     {
       name: 'Private key block',
@@ -135,6 +155,8 @@ async function checkSecrets() {
   }
 }
 
+const PLACEHOLDER_HOST = 'ffcworkingsite1.org'
+
 async function checkPlaceholderUrl() {
   const cnamePath = join(ROOT, 'public', 'CNAME')
   let customDomain = null
@@ -143,20 +165,30 @@ async function checkPlaceholderUrl() {
   } catch {
     /* no CNAME, fine */
   }
-  if (!customDomain || customDomain === 'ffcworkingsite1.org') return
+  if (!customDomain || customDomain === PLACEHOLDER_HOST) return
 
-  // CNAME points to a real custom domain, but site config still says template default.
-  const cfgPath = join(ROOT, 'src', 'lib', 'site.config.ts')
-  try {
-    const cfg = await readFile(cfgPath, 'utf8')
-    if (cfg.includes('ffcworkingsite1.org')) {
-      warnings.push(
-        `public/CNAME points to "${customDomain}" but src/lib/site.config.ts still uses ` +
-          `ffcworkingsite1.org. Update siteConfig.url to match your custom domain.`
-      )
+  // CNAME points to a real custom domain. Surface every file that still
+  // references the template placeholder so the rebrand is actually complete.
+  // Each of these has a known good single source of truth, so a remaining
+  // reference is a drift signal — not a stylistic warning.
+  const filesToCheck = [
+    join('src', 'lib', 'site.config.ts'),
+    join('public', '.well-known', 'security.txt'),
+    join('public', '_headers'),
+    join('public', 'site.webmanifest'),
+  ]
+  for (const rel of filesToCheck) {
+    try {
+      const body = await readFile(join(ROOT, rel), 'utf8')
+      if (body.includes(PLACEHOLDER_HOST)) {
+        warnings.push(
+          `public/CNAME points to "${customDomain}" but ${rel} still references ` +
+            `${PLACEHOLDER_HOST}. Update it to match your custom domain.`
+        )
+      }
+    } catch {
+      /* file missing — not all sites carry every file */
     }
-  } catch {
-    /* config missing — handled elsewhere */
   }
 }
 

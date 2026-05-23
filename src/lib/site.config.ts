@@ -21,23 +21,33 @@ export type SiteConfig = {
   name: string
   /** Short tagline used in the default title template. */
   tagline: string
-  /** Plain-language description used for meta description and OG/Twitter. */
+  /** Plain-language description used for the <meta description> tag. */
   description: string
   /**
+   * Shorter description tuned for OG/Twitter social card previews.
+   * Falls back to `description` if empty. Aim for <= 200 chars and avoid
+   * em-dashes — some card renderers break on them.
+   */
+  shortDescription: string
+  /**
    * Canonical production URL with no trailing slash.
-   * Used by metadataBase, sitemap, robots, OG/Twitter and security.txt.
+   * Used by metadataBase, sitemap, and robots. The drift check verifies that
+   * this is updated whenever public/CNAME points to a custom domain, and
+   * that public/.well-known/security.txt no longer carries the placeholder.
    */
   url: string
-  /** Twitter / X handle including the leading @. Empty string disables the meta tag. */
+  /**
+   * Twitter / X handle including the leading @ — e.g. `@freeforcharity`.
+   * Empty string omits the twitter:site meta entirely. Handles without `@`
+   * are auto-prefixed so a typo doesn't silently break attribution.
+   */
   twitterHandle: string
-  /** Primary contact email for security disclosure and general inquiries. */
+  /** Primary contact email for general inquiries (NOT security — security.txt has its own copy). */
   contactEmail: string
   /** SEO keywords used in the root layout metadata. */
   keywords: readonly string[]
   /** Default theme color (used by manifest and meta tag). */
   themeColor: string
-  /** GitHub Pages base path used when deploying to a github.io subpath. */
-  githubPagesBasePath: string
   /** Where the vulnerability disclosure policy lives on this site. */
   vulnerabilityDisclosurePath: string
   /** Social links displayed in the footer. */
@@ -49,6 +59,8 @@ export const siteConfig: SiteConfig = {
   tagline: 'Reduce Costs, Increase Impact',
   description:
     'Free For Charity connects students, professionals, and businesses with nonprofits to reduce costs and increase revenues—putting more resources back into their missions.',
+  shortDescription:
+    'Connecting students, professionals, and businesses with nonprofits to reduce costs and increase revenues.',
   url: 'https://ffcworkingsite1.org',
   twitterHandle: '@freeforcharity',
   contactEmail: 'security@freeforcharity.org',
@@ -62,7 +74,6 @@ export const siteConfig: SiteConfig = {
     'Microsoft 365',
   ],
   themeColor: '#ffffff',
-  githubPagesBasePath: '/FFC_Single_Page_Template',
   vulnerabilityDisclosurePath: '/vulnerability-disclosure-policy',
   social: [
     { label: 'Facebook', href: 'https://www.facebook.com/freeforcharity' },
@@ -72,9 +83,31 @@ export const siteConfig: SiteConfig = {
   ],
 }
 
-/** Convenience getter for `${siteConfig.url}${path}` with safe slash handling. */
+/**
+ * Compose a fully-qualified URL on this site.
+ *
+ * The path is required to be a same-origin absolute path (starting with `/`).
+ * This rules out protocol-relative inputs like `//evil.com` that could leak
+ * into a future redirect or canonical link.
+ */
 export function siteUrl(path = '/'): string {
+  if (typeof path !== 'string' || !path.startsWith('/') || path.startsWith('//')) {
+    throw new TypeError(
+      `siteUrl: path must be a same-origin absolute path starting with a single "/" (got: ${JSON.stringify(path)})`
+    )
+  }
   const base = siteConfig.url.replace(/\/$/, '')
-  const suffix = path.startsWith('/') ? path : `/${path}`
-  return `${base}${suffix}`
+  return `${base}${path}`
+}
+
+/** Returns the Twitter handle with a guaranteed leading `@`, or `undefined` if empty. */
+export function twitterSite(): string | undefined {
+  const raw = siteConfig.twitterHandle.trim()
+  if (!raw) return undefined
+  return raw.startsWith('@') ? raw : `@${raw}`
+}
+
+/** Returns the OG/Twitter card description, falling back to the longer page description. */
+export function cardDescription(): string {
+  return siteConfig.shortDescription.trim() || siteConfig.description
 }
