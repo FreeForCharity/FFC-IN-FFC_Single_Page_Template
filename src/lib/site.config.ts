@@ -100,11 +100,16 @@ export function siteUrl(path = '/'): string {
   return `${base}${path}`
 }
 
-/** Returns the Twitter handle with a guaranteed leading `@`, or `undefined` if empty. */
+/**
+ * Returns the Twitter handle with a guaranteed leading `@`.
+ * Returns `undefined` (so the meta tag is omitted) if the handle is empty
+ * or is just an `@` with no body — emitting a bare `@` would advertise a
+ * malformed handle to Twitter's scraper.
+ */
 export function twitterSite(): string | undefined {
-  const raw = siteConfig.twitterHandle.trim()
+  const raw = siteConfig.twitterHandle.trim().replace(/^@+/, '')
   if (!raw) return undefined
-  return raw.startsWith('@') ? raw : `@${raw}`
+  return `@${raw}`
 }
 
 /** Returns the OG/Twitter card description, falling back to the longer page description. */

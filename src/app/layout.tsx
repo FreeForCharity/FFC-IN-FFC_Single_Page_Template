@@ -83,11 +83,12 @@ export default function RootLayout({
         {/* Baseline CSP for hosts that cannot serve _headers (GitHub Pages).
             Note: frame-ancestors, sandbox, and report-uri are IGNORED by the
             browser when delivered via <meta http-equiv> per the CSP spec.
-            Clickjacking defense on GitHub Pages relies on Pages' default
-            X-Frame-Options: deny; Cloudflare/Netlify deploys get the full
-            frame-ancestors directive from public/_headers. Keep the rest of
-            this list aligned with public/_headers — third-party origins
-            must be added to BOTH. */}
+            GitHub Pages also does NOT set X-Frame-Options by default, so
+            clickjacking defense is not available on a Pages-only deploy.
+            Production sites should sit behind Cloudflare/Netlify so the
+            frame-ancestors directive in public/_headers takes effect.
+            Keep the rest of this list aligned with public/_headers —
+            third-party origins must be added to BOTH. */}
         <meta
           httpEquiv="Content-Security-Policy"
           content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.googletagmanager.com https://www.google-analytics.com https://*.google-analytics.com https://www.clarity.ms https://*.clarity.ms https://widgets.guidestar.org https://connect.facebook.net https://www.zeffy.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data: blob: https:; font-src 'self' data: https://fonts.gstatic.com; connect-src 'self' https://www.google-analytics.com https://*.google-analytics.com https://stats.g.doubleclick.net https://www.googletagmanager.com https://www.clarity.ms https://*.clarity.ms; frame-src https://www.googletagmanager.com https://www.zeffy.com https://widgets.guidestar.org https://www.facebook.com https://forms.office.com https://forms.microsoft.com https://www.youtube.com https://www.youtube-nocookie.com https://widgets.sociablekit.com; media-src 'self' blob: https:; object-src 'none'; base-uri 'self'; form-action 'self' https://www.zeffy.com https://forms.office.com; upgrade-insecure-requests"

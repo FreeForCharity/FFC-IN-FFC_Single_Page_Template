@@ -4,9 +4,9 @@ name: security.txt expiry check
 # an issue when the date is within 30 days so the maintainers can bump it
 # before browsers and scanners start flagging the site.
 #
-# A parse failure also opens an issue (instead of just failing the job)
-# because the alert mechanism would otherwise go silent precisely when
-# the file most needs attention.
+# Parse failures, missing file, missing Expires line, and approaching
+# expiry each open their OWN issue (different markers) so an open
+# alert for one condition does not silently suppress another.
 
 on:
   schedule:
@@ -32,16 +32,25 @@ jobs:
             const path = 'public/.well-known/security.txt';
             const owner = context.repo.owner;
             const repo = context.repo.repo;
-            const marker = '<!-- ffc-security-txt-expiry -->';
 
-            // Strict RFC 3339 / ISO 8601 UTC timestamp required by RFC 9116.
-            // Accepts e.g. 2027-01-01T00:00:00Z or 2027-01-01T00:00:00.000Z.
-            const iso8601Utc = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?Z$/;
+            // Each alert condition uses its own marker so the listForRepo
+            // dedupe is scoped per-condition. Otherwise a lingering
+            // "file missing" issue would silently suppress a fresh
+            // "expires-soon" issue and vice versa.
+            const MARKERS = {
+              missing: '<!-- ffc-security-txt:missing -->',
+              noExpires: '<!-- ffc-security-txt:no-expires -->',
+              invalidExpires: '<!-- ffc-security-txt:invalid-expires -->',
+              expiringSoon: '<!-- ffc-security-txt:expiring-soon -->',
+            };
 
-            async function findExistingIssue() {
-              // Use list+filter rather than the Search API: search has
-              // documented indexing lag, strips HTML/punctuation when
-              // tokenizing the marker, and would let us open duplicates.
+            // RFC 9116 §2.5.5 defers to RFC 3339 §5.6 for the datetime
+            // format. RFC 3339 allows either `Z` or a numeric offset
+            // (e.g. `+00:00`). Both are accepted here.
+            const iso8601 =
+              /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|[+-]\d{2}:\d{2})$/;
+
+            async function findExistingIssue(marker) {
               const issues = await github.paginate(github.rest.issues.listForRepo, {
                 owner,
                 repo,
@@ -53,67 +62,72 @@ jobs:
               );
             }
 
-            async function ensureIssue(title, body) {
-              const existing = await findExistingIssue();
-              if (existing) {
-                core.info(`Existing issue #${existing.number} found; not opening a duplicate.`);
-                return;
+            async function ensureIssue(marker, title, body) {
+              try {
+                const existing = await findExistingIssue(marker);
+                if (existing) {
+                  core.info(`Existing issue #${existing.number} for ${marker} — skipping.`);
+                  return;
+                }
+                const created = await github.rest.issues.create({
+                  owner,
+                  repo,
+                  title,
+                  body: `${body}\n\n${marker}`,
+                  labels: ['security', 'maintenance'],
+                });
+                core.info(`Created issue #${created.data.number}.`);
+              } catch (err) {
+                core.warning(
+                  `Failed to ensure issue for marker ${marker}: ${err && err.message ? err.message : err}`
+                );
               }
-              const created = await github.rest.issues.create({
-                owner,
-                repo,
-                title,
-                body,
-                labels: ['security', 'maintenance'],
-              });
-              core.info(`Created issue #${created.data.number}.`);
             }
 
             if (!fs.existsSync(path)) {
+              // setFailed FIRST so the underlying failure is recorded
+              // even if the GitHub Issues API is unavailable.
+              core.setFailed(`${path} not found.`);
               await ensureIssue(
+                MARKERS.missing,
                 'security.txt is missing',
                 [
                   `\`${path}\` was not found in the repository.`,
                   '',
                   'Restore the file with a valid `Expires:` line in the future.',
-                  '',
-                  marker,
                 ].join('\n')
               );
-              core.setFailed(`${path} not found.`);
               return;
             }
 
             const body = fs.readFileSync(path, 'utf8');
             const m = body.match(/^Expires:\s*(.+)$/mi);
             if (!m) {
+              core.setFailed(`No Expires line in ${path}.`);
               await ensureIssue(
+                MARKERS.noExpires,
                 'security.txt is missing the Expires line',
                 [
                   `\`${path}\` has no \`Expires:\` line.`,
                   '',
-                  'RFC 9116 requires exactly one `Expires:` line with an ISO 8601 UTC datetime.',
-                  '',
-                  marker,
+                  'RFC 9116 requires exactly one `Expires:` line with an ISO 8601 datetime.',
                 ].join('\n')
               );
-              core.setFailed(`No Expires line in ${path}.`);
               return;
             }
 
             const raw = m[1].trim();
-            if (!iso8601Utc.test(raw)) {
+            if (!iso8601.test(raw)) {
+              core.setFailed(`Could not parse Expires: ${raw}`);
               await ensureIssue(
+                MARKERS.invalidExpires,
                 'security.txt Expires line is not RFC 9116 compliant',
                 [
-                  `\`${path}\` Expires value \`${raw}\` is not a strict ISO 8601 UTC datetime.`,
+                  `\`${path}\` Expires value \`${raw}\` is not a valid RFC 3339 datetime.`,
                   '',
-                  'RFC 9116 requires the form `YYYY-MM-DDTHH:MM:SSZ` (optionally with fractional seconds).',
-                  '',
-                  marker,
+                  'Use the form `YYYY-MM-DDTHH:MM:SSZ` (or `±HH:MM` offset); fractional seconds are allowed.',
                 ].join('\n')
               );
-              core.setFailed(`Could not parse Expires: ${raw}`);
               return;
             }
 
@@ -123,14 +137,12 @@ jobs:
             core.info(`security.txt expires in ${daysLeft} day(s) (${expires.toISOString()}).`);
             if (daysLeft > 30) return;
 
-            const title = `security.txt Expires within ${Math.max(daysLeft, 0)} days`;
             await ensureIssue(
-              title,
+              MARKERS.expiringSoon,
+              `security.txt Expires within ${Math.max(daysLeft, 0)} days`,
               [
                 `\`${path}\` will expire on **${expires.toISOString()}** (${daysLeft} day(s) from now).`,
                 '',
                 'Update the `Expires:` line, commit, and merge to refresh.',
-                '',
-                marker,
               ].join('\n')
             );
