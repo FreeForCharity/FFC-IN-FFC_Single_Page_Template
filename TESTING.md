@@ -596,7 +596,7 @@ GitHub Dependabot provides automated dependency management and security updates 
 
 **Status**: ✅ Enabled
 
-**Location**: `.github/workflows/codeql.yml`
+**Location**: Org-level default setup (no per-repo workflow file) via security configuration #237319
 
 **Scans**:
 
@@ -707,8 +707,8 @@ FFC_Single_Page_Template/
 ├── .github/workflows/
 │   ├── ci.yml                     # CI pipeline with linting, testing
 │   ├── deploy.yml                 # Deployment pipeline to GitHub Pages
-│   ├── codeql.yml                 # Security scanning
 │   └── lighthouse.yml             # Performance monitoring
+│   # CodeQL runs via org-level default setup (no workflow file)
 ├── public/                         # Static assets
 ├── src/data/
 │   ├── faqs/

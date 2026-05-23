@@ -4,6 +4,8 @@
 **PR Analyzed:** #83 - "Update README documentation"  
 **Commit:** 038851c79adc2a42ac7fe1616a35862b475de729
 
+> **Historical note (2026-05-23):** This report captures workflow behavior at a point in time. The "CodeQL Advanced" workflow file (`.github/workflows/codeql.yml`) referenced below has since been removed; CodeQL is now provided by the org-level default setup (security configuration #237319). References to `codeql.yml` in this document describe the workflow as it existed in December 2024.
+
 ## Executive Summary
 
 ✅ **The GitHub merge queue integration is working correctly.** All workflows executed successfully in the proper order, and the merge queue bot managed the entire process automatically.

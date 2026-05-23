@@ -236,10 +236,11 @@ This template includes four GitHub Actions workflows:
    - Purpose: Deploys built site to GitHub Pages
    - What it does: Builds site with basePath, deploys to `gh-pages` branch
 
-3. **CodeQL Security Scanning** (`.github/workflows/codeql.yml`)
+3. **CodeQL Security Scanning** (org-level default setup — no per-repo workflow)
    - Runs on: Push to main, PRs to main, weekly schedule
    - Purpose: Scans code for security vulnerabilities
    - What it does: Analyzes JavaScript/TypeScript and GitHub Actions
+   - Enabled automatically via org code security configuration #237319
 
 4. **Lighthouse CI** (`.github/workflows/lighthouse.yml`)
    - Runs on: After deployment, PRs to main

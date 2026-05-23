@@ -132,7 +132,7 @@ npm run test:e2e:ui
 
 **Purpose**: Security vulnerability scanning
 
-**Configuration**: `.github/workflows/codeql.yml`
+**Configuration**: Org-level CodeQL default setup (security configuration #237319 on the `FreeForCharity` org). No per-repo workflow file is required.
 
 **Automatic Scanning**:
 

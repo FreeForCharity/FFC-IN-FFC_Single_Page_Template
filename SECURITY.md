@@ -207,10 +207,11 @@ The repository uses automated quality checks to ensure code quality and security
   - End-to-end tests (Playwright)
 - Must pass before merging
 
-**CodeQL Code Scanning** (`.github/workflows/codeql.yml`)
+**CodeQL Code Scanning** (org-level default setup)
 
 - Runs automatically on every pull request targeting `main`
 - Scans for security vulnerabilities and code quality issues
+- Enabled via org code security configuration #237319 — no per-repo workflow file
 - Must pass before merging
 
 **Status Visibility**

@@ -1745,7 +1745,7 @@ trim_trailing_whitespace = false
 - **Risk:** Low (may reveal existing issues)
 - **Dependencies:** None
 - **Rationale:** Critical for security, free, easy to implement
-- **Status:** Implemented in `.github/workflows/codeql.yml`
+- **Status:** Implemented via org-level CodeQL default setup (security configuration #237319) — no per-repo workflow needed
 
 **GAP-1: Prettier Code Formatting** ⭐⭐⭐⭐ ✅ **COMPLETED**
 

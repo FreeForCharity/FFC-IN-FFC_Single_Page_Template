@@ -319,11 +319,12 @@ The ESLint warnings fall into three categories:
 - 📊 Monitor Dependabot PRs in the repository's Pull Requests tab
 - 📖 **Full Guide**: See [DEPENDABOT.md](./DEPENDABOT.md) for comprehensive documentation and setup instructions
 
-**CodeQL Security Scanning** (`.github/workflows/codeql.yml`)
+**CodeQL Security Scanning** (org-level default setup — no per-repo workflow)
 
 - ✅ Scans JavaScript/TypeScript code for security vulnerabilities
 - ✅ Scans GitHub Actions workflows for security issues
 - ✅ Runs on push to main, pull requests, and weekly schedule
+- ✅ Enabled automatically on every new public FFC repo via org code security configuration #237319
 - 📊 View results in repository Security → Code scanning alerts
 
 **npm audit**
