@@ -1,0 +1,72 @@
+name: security.txt expiry check
+
+# RFC 9116 requires `Expires:` to be in the future. This workflow opens
+# an issue when the date is within 30 days so the maintainers can bump it
+# before browsers and scanners start flagging the site.
+
+on:
+  schedule:
+    - cron: '0 12 * * 1' # weekly, Monday 12:00 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Inspect Expires header
+        uses: actions/github-script@v8
+        with:
+          script: |
+            const fs = require('fs');
+            const path = 'public/.well-known/security.txt';
+            if (!fs.existsSync(path)) {
+              core.warning(`${path} not found — skipping.`);
+              return;
+            }
+            const body = fs.readFileSync(path, 'utf8');
+            const m = body.match(/^Expires:\s*(.+)$/mi);
+            if (!m) {
+              core.setFailed(`No Expires line in ${path}.`);
+              return;
+            }
+            const expires = new Date(m[1].trim());
+            if (isNaN(expires.getTime())) {
+              core.setFailed(`Could not parse Expires: ${m[1]}`);
+              return;
+            }
+            const now = new Date();
+            const daysLeft = Math.ceil((expires - now) / (1000 * 60 * 60 * 24));
+            core.info(`security.txt expires in ${daysLeft} day(s) (${expires.toISOString()}).`);
+            if (daysLeft > 30) return;
+
+            const owner = context.repo.owner;
+            const repo = context.repo.repo;
+            const marker = '<!-- ffc-security-txt-expiry -->';
+            const title = `security.txt Expires within ${Math.max(daysLeft, 0)} days`;
+            const search = await github.rest.search.issuesAndPullRequests({
+              q: `repo:${owner}/${repo} is:issue is:open in:body "${marker}"`,
+            });
+            if (search.data.total_count > 0) {
+              core.info('Existing issue found; not opening a duplicate.');
+              return;
+            }
+            await github.rest.issues.create({
+              owner,
+              repo,
+              title,
+              body: [
+                `\`public/.well-known/security.txt\` will expire on **${expires.toISOString()}** (${daysLeft} day(s) from now).`,
+                '',
+                'Update the `Expires:` line, commit, and merge to refresh.',
+                '',
+                marker,
+              ].join('\n'),
+              labels: ['security', 'maintenance'],
+            });

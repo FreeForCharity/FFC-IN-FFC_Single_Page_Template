@@ -1,0 +1,53 @@
+name: OpenSSF Scorecard
+
+# Runs the OpenSSF Scorecard on a weekly cadence and on pushes to main.
+# Results are uploaded to GitHub code scanning (Security tab) so that
+# regressions in supply-chain posture are visible alongside CodeQL findings.
+#
+# Docs: https://github.com/ossf/scorecard-action
+
+on:
+  branch_protection_rule:
+  schedule:
+    - cron: '23 4 * * 1' # weekly, Monday 04:23 UTC
+  push:
+    branches: ['main']
+  workflow_dispatch:
+
+permissions: read-all
+
+jobs:
+  analysis:
+    name: Scorecard analysis
+    runs-on: ubuntu-latest
+    permissions:
+      security-events: write
+      id-token: write
+      contents: read
+      actions: read
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+
+      - name: Run analysis
+        uses: ossf/scorecard-action@v2.4.0
+        with:
+          results_file: scorecard-results.sarif
+          results_format: sarif
+          publish_results: true
+
+      - name: Upload artifact
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: scorecard-results
+          path: scorecard-results.sarif
+          retention-days: 7
+
+      - name: Upload to code scanning
+        uses: github/codeql-action/upload-sarif@v4
+        with:
+          sarif_file: scorecard-results.sarif
