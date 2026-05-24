@@ -78,18 +78,24 @@ and report any new warnings.
 
 - Display name: [CHARITY NAME]
 - One-sentence tagline: [TAGLINE]
-- SEO description (1–2 sent): [DESCRIPTION]
-- Card description (shorter): [SHORT_DESCRIPTION]
-- Production URL (no slash): [https://example.org]
-- Twitter/X handle (or ''): [@handle]
-- Security contact email: [security@example.org]
-- General contact email: [hello@example.org]
-- Vulnerability disclosure: /vulnerability-disclosure-policy (keep default)
-- Social links (Facebook, X, LinkedIn, GitHub, others):
-  - [https://www.facebook.com/example]
-  - [https://x.com/example]
-  - [https://www.linkedin.com/company/example/]
-  - [https://github.com/example]
+- SEO description (1–2 sentences): [DESCRIPTION]
+- Card description (shorter, for OG/Twitter previews): [SHORT_DESCRIPTION]
+- Production URL (no trailing slash): [https://example.org]
+- Twitter/X handle (or empty string ''): [@handle]
+- Primary contact email (drives siteConfig.contactEmail and the footer): [hello@example.org]
+- Security disclosure email (drives the Contact: line in security.txt only): [security@example.org]
+- Vulnerability disclosure path: /vulnerability-disclosure-policy (keep default)
+- Social links (used by siteConfig.social; the footer icon is resolved by label):
+  - Facebook: [https://www.facebook.com/example]
+  - X (Twitter): [https://x.com/example]
+  - LinkedIn: [https://www.linkedin.com/company/example/]
+  - GitHub: [https://github.com/example]
+
+NOTE: There is only ONE central contact field (`siteConfig.contactEmail`).
+`public/.well-known/security.txt` carries its own `Contact:` line because
+RFC 9116 requires it on the file itself — set it to the security email
+above. The drift guard does not auto-sync the two; keep them aligned by
+hand or use the same address for both.
 
 ## REQUIRED EDITS
 
@@ -136,9 +142,17 @@ and report any new warnings.
 
 ## DO NOT TOUCH
 
-- `scripts/check-drift.mjs`, `.github/workflows/*.yml` — platform contract.
-- `src/lib/assetPath.ts` — shared helper.
-- `next.config.ts` `output: 'export'` — required for GitHub Pages.
+- `scripts/check-drift.mjs` — platform contract (drift enforcement).
+- `.github/workflows/ci.yml`, `codeql.yml`, `scorecard.yml`,
+  `security-audit.yml`, `security-txt-expiry.yml`, `drift-check.yml`,
+  `phantom-revert-guard.yml` — shared CI/security workflows.
+- `.github/workflows/deploy.yml`, `.github/workflows/lighthouse.yml` —
+  you ONLY edit `NEXT_PUBLIC_BASE_PATH` in these (per step 9). Don't
+  change anything else.
+- `src/lib/assetPath.ts`, `src/app/manifest.ts`,
+  `src/app/sitemap.ts`, `src/app/robots.ts` — shared helpers that
+  derive everything from `siteConfig`. Don't hardcode values here.
+- `next.config.ts` `output: 'export'` line — required for GitHub Pages.
 - `.claude/agents/*.md`, `.claude/rules/*.md` — shared FFC tooling.
 
 ## VERIFICATION (run in order, fix any failure before proceeding)
@@ -167,7 +181,8 @@ If you encounter any of the following, STOP and ask before editing:
   backend, members area, dynamic content). Static export limits options.
 - A request to disable security headers, drift checks, or branch protection.
 - A request to embed a third-party widget — the new origin must be added to
-  BOTH public/\_headers AND the CSP meta tag in src/app/layout.tsx.
+  BOTH public/\_headers AND the CSP meta tag in src/app/layout.tsx. The
+  drift check enforces these two stay in sync; CI will fail on mismatch.
 ```
 
 </details>
