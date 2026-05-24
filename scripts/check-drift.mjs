@@ -128,7 +128,15 @@ async function checkAssetPathUsage() {
 }
 
 async function checkSecrets() {
-  const files = await walk(SRC_DIR, (n) => /\.(tsx?|jsx?|json|md|yml|yaml)$/.test(n))
+  // Scan src/ AND public/ — anything under public/ is deployed verbatim,
+  // so a token accidentally committed there leaks straight to the live site.
+  const srcFiles = await walk(SRC_DIR, (n) =>
+    /\.(tsx?|jsx?|json|md|yml|yaml|txt|webmanifest)$/.test(n)
+  )
+  const publicFiles = await walk(join(ROOT, 'public'), (n) =>
+    /\.(tsx?|jsx?|json|md|yml|yaml|txt|webmanifest)$|^_headers$|^CNAME$/.test(n)
+  )
+  const files = [...srcFiles, ...publicFiles]
   // Add patterns sparingly — false positives are noisy.
   const secretPatterns = [
     {
@@ -203,6 +211,10 @@ async function checkPlaceholderUrl() {
     const rel = relative(ROOT, full)
     try {
       const body = await readFile(full, 'utf8')
+      // lgtm [js/incomplete-url-substring-sanitization] -- intentional:
+      // we are LOOKING FOR the placeholder host anywhere in the file body
+      // (string content, comments, URLs alike). This is a drift warning, not
+      // a security filter against malicious URLs.
       if (body.includes(PLACEHOLDER_HOST)) {
         const line = lineAt(body, body.indexOf(PLACEHOLDER_HOST))
         warnings.push(

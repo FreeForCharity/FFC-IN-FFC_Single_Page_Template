@@ -12,8 +12,7 @@ export default function GlobalError({
   reset: () => void
 }) {
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      // Surface in dev only; production errors are observed via Sentry/GA.
+    if (process.env.NODE_ENV !== 'production') {
       console.error('Render error:', error)
     }
   }, [error])
@@ -32,8 +31,15 @@ export default function GlobalError({
           We hit an unexpected error
         </h1>
         <p className="mt-6 text-[16px] leading-[26px] text-[#666] max-w-[560px] mx-auto">
-          Our team has been notified. You can try the action again or return to the{' '}
-          {siteConfig.name} homepage.
+          You can try the action again, or return to the {siteConfig.name} homepage. If the problem
+          persists, please report it via our{' '}
+          <Link
+            href={siteConfig.vulnerabilityDisclosurePath}
+            className="text-[#0073e6] underline decoration-dotted hover:decoration-solid"
+          >
+            disclosure form
+          </Link>
+          .
         </p>
         {error.digest ? (
           <p className="mt-2 text-[12px] text-[#888]">Reference ID: {error.digest}</p>

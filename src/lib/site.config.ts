@@ -42,7 +42,11 @@ export type SiteConfig = {
    * are auto-prefixed so a typo doesn't silently break attribution.
    */
   twitterHandle: string
-  /** Primary contact email for general inquiries (NOT security — security.txt has its own copy). */
+  /**
+   * Primary contact email. Used by your own pages; security.txt carries
+   * its own `Contact:` line and is not auto-derived from this value.
+   * Keep them in sync manually when you change either.
+   */
   contactEmail: string
   /** SEO keywords used in the root layout metadata. */
   keywords: readonly string[]

@@ -137,6 +137,15 @@ jobs:
             core.info(`security.txt expires in ${daysLeft} day(s) (${expires.toISOString()}).`);
             if (daysLeft > 30) return;
 
+            // Already past Expires: RFC 9116 says clients MUST treat the
+            // file as invalid, so fail the job hard in addition to opening
+            // an issue. Within 30 days is just a warning.
+            if (daysLeft <= 0) {
+              core.setFailed(
+                `security.txt expired ${Math.abs(daysLeft)} day(s) ago (${expires.toISOString()}).`
+              );
+            }
+
             await ensureIssue(
               MARKERS.expiringSoon,
               `security.txt Expires within ${Math.max(daysLeft, 0)} days`,
