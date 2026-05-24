@@ -1,0 +1,124 @@
+name: Uptime smoke
+
+# Runs the post-deploy smoke check (scripts/smoke-check.mjs) against the
+# production URL on a recurring schedule, so platform-level regressions
+# that the per-deploy smoke can't catch — DNS rot, cert expiry, security.txt
+# nearing its Expires date, a third-party origin going down, Cloudflare
+# rules changing, the CDN losing a file — open an incident issue.
+#
+# The production URL comes from public/CNAME if present, otherwise from
+# the github.io Pages URL. Same convention as deploy.yml / lighthouse.yml.
+
+on:
+  schedule:
+    - cron: '0 6 * * *' # daily, 06:00 UTC
+  workflow_dispatch:
+    inputs:
+      url:
+        description: 'Override base URL (e.g. https://example.org). Leave blank to use CNAME / github.io.'
+        required: false
+
+permissions:
+  contents: read
+  issues: write
+
+concurrency:
+  group: ${{ github.workflow }}
+  cancel-in-progress: false
+
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: '20'
+
+      - name: Determine target URL
+        id: target
+        run: |
+          if [ -n "${{ github.event.inputs.url }}" ]; then
+            URL="${{ github.event.inputs.url }}"
+            echo "Using workflow_dispatch override: $URL"
+          elif [ -s "public/CNAME" ]; then
+            URL="https://$(tr -d '[:space:]' < public/CNAME)"
+            echo "Using custom domain from public/CNAME: $URL"
+          else
+            REPO_NAME="${GITHUB_REPOSITORY#*/}"
+            OWNER="${GITHUB_REPOSITORY%%/*}"
+            URL="https://${OWNER}.github.io/${REPO_NAME}"
+            echo "No CNAME; using github.io URL: $URL"
+          fi
+          echo "url=$URL" >> "$GITHUB_OUTPUT"
+
+      - name: Run smoke check
+        id: smoke
+        continue-on-error: true
+        run: node scripts/smoke-check.mjs "${{ steps.target.outputs.url }}" | tee smoke-output.txt
+
+      - name: Open / update incident issue on failure
+        if: ${{ steps.smoke.outcome == 'failure' }}
+        uses: actions/github-script@v8
+        with:
+          script: |
+            const fs = require('fs');
+            const output = fs.existsSync('smoke-output.txt')
+              ? fs.readFileSync('smoke-output.txt', 'utf8')
+              : '(no smoke output captured)';
+            const url = '${{ steps.target.outputs.url }}';
+            const marker = '<!-- ffc-uptime-smoke-failure -->';
+            const owner = context.repo.owner;
+            const repo = context.repo.repo;
+            const runUrl = `${context.serverUrl}/${owner}/${repo}/actions/runs/${context.runId}`;
+            const title = `Uptime smoke failed against ${url}`;
+            const body = [
+              `The scheduled uptime smoke check failed at ${new Date().toISOString()}.`,
+              '',
+              `Workflow run: ${runUrl}`,
+              `Target URL: ${url}`,
+              '',
+              '<details><summary>Smoke output</summary>',
+              '',
+              '```',
+              output.slice(0, 6000),
+              '```',
+              '',
+              '</details>',
+              '',
+              marker,
+            ].join('\n');
+
+            // Use list+filter (Search has indexing lag and tokenizes HTML
+            // markers, same lesson as security-txt-expiry.yml).
+            const issues = await github.paginate(github.rest.issues.listForRepo, {
+              owner,
+              repo,
+              state: 'open',
+              per_page: 100,
+            });
+            const existing = issues.find(
+              (i) => !i.pull_request && (i.body || '').includes(marker)
+            );
+            if (existing) {
+              await github.rest.issues.createComment({
+                owner,
+                repo,
+                issue_number: existing.number,
+                body: `Smoke failed again at ${new Date().toISOString()}. ${runUrl}`,
+              });
+              core.info(`Commented on existing issue #${existing.number}`);
+            } else {
+              const created = await github.rest.issues.create({
+                owner,
+                repo,
+                title,
+                body,
+                labels: ['incident', 'uptime'],
+              });
+              core.info(`Created issue #${created.data.number}`);
+            }
+            core.setFailed(`Smoke check failed; see ${runUrl}`);
