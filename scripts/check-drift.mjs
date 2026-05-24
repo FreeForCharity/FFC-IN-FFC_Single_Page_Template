@@ -196,13 +196,24 @@ async function checkSecrets() {
 
 const PLACEHOLDER_HOST = 'ffcworkingsite1.org'
 
+function hostnameOf(rawUrl) {
+  if (!rawUrl) return null
+  try {
+    return new URL(rawUrl).hostname
+  } catch {
+    return null
+  }
+}
+
 async function checkPlaceholderUrl() {
   // Trigger the scan if EITHER the CNAME or the siteConfig.url has been
   // updated away from the template default. The previous behavior — only
   // running when CNAME pointed to a custom domain — missed two real cases:
   // 1) Sites deploying only to github.io subpath (no CNAME) that still
-  //    forgot to update security.txt / webmanifest.
+  //    forgot to update security.txt or other public assets.
   // 2) Sites that updated siteConfig.url before touching CNAME.
+  // The web manifest is now generated from siteConfig, so it doesn't need
+  // a separate placeholder check — it inherits the URL automatically.
   const cnamePath = join(ROOT, 'public', 'CNAME')
   const cfgPath = join(ROOT, 'src', 'lib', 'site.config.ts')
   let customDomain = null
@@ -220,11 +231,12 @@ async function checkPlaceholderUrl() {
     /* config missing — handled elsewhere */
   }
 
+  // Compare exact hostnames rather than substring-search — avoids the
+  // CodeQL "incomplete URL substring sanitization" false positive and
+  // also avoids matching `myffcworkingsite1.org.evil.com`-style strings.
   const cnameRebranded = customDomain && customDomain !== PLACEHOLDER_HOST
-  // lgtm [js/incomplete-url-substring-sanitization] -- intentional: we are
-  // detecting whether the config still references the template placeholder
-  // anywhere in the file body, not sanitizing a URL against malicious input.
-  const cfgRebranded = cfgUrl && !cfgUrl.includes(PLACEHOLDER_HOST)
+  const cfgHost = hostnameOf(cfgUrl)
+  const cfgRebranded = cfgHost && cfgHost !== PLACEHOLDER_HOST
   if (!cnameRebranded && !cfgRebranded) return
 
   // Walk every text source under src/ and public/ (plus a small set of
@@ -300,18 +312,42 @@ async function checkCspSync() {
   let headersBody, layoutBody
   try {
     headersBody = await readFile(join(ROOT, 'public', '_headers'), 'utf8')
+  } catch {
+    errors.push(
+      'public/_headers is missing. CSP and other security headers will not be served on ' +
+        'Cloudflare/Netlify deploys. Restore the file from the template.'
+    )
+    return
+  }
+  try {
     layoutBody = await readFile(join(ROOT, 'src', 'app', 'layout.tsx'), 'utf8')
   } catch {
-    return // missing files handled elsewhere
+    errors.push('src/app/layout.tsx is missing. Restore the file from the template.')
+    return
   }
   const headersMatch = headersBody.match(/Content-Security-Policy:\s*([^\n]+)/)
-  // The CSP content uses double-quoted JSX attributes and includes nested
-  // single quotes (e.g. 'self', 'unsafe-inline'). Match the outer double
-  // quote precisely so the capture doesn't terminate on the first inner '.
-  const layoutMatch = layoutBody.match(
-    /httpEquiv=["']Content-Security-Policy["'][\s\S]*?content="([^"]+)"/
-  )
-  if (!headersMatch || !layoutMatch) return
+  // Tolerate single or double quotes around the content attribute and
+  // multi-line JSX formatting. The CSP itself contains nested quotes
+  // (e.g. 'self', 'unsafe-inline') so we match the OUTER delimiter
+  // exactly and accept either flavor.
+  const layoutMatch =
+    layoutBody.match(/httpEquiv=["']Content-Security-Policy["'][\s\S]*?content="([^"]+)"/) ||
+    layoutBody.match(/httpEquiv=["']Content-Security-Policy["'][\s\S]*?content='([^']+)'/) ||
+    layoutBody.match(/httpEquiv=["']Content-Security-Policy["'][\s\S]*?content=\{`([^`]+)`\}/)
+  if (!headersMatch) {
+    errors.push(
+      'public/_headers has no Content-Security-Policy directive. Add one to keep the site ' +
+        'protected on Cloudflare/Netlify deploys.'
+    )
+    return
+  }
+  if (!layoutMatch) {
+    errors.push(
+      'src/app/layout.tsx has no <meta http-equiv="Content-Security-Policy"> tag. Add one so ' +
+        'GitHub Pages deploys still get baseline CSP protection.'
+    )
+    return
+  }
 
   const headersCsp = extractCspDirectives(headersMatch[1])
   const layoutCsp = extractCspDirectives(layoutMatch[1])
