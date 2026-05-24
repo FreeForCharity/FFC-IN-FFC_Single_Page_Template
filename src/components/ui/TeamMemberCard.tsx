@@ -28,7 +28,7 @@ export default function TeamMemberCard({
             fill
             className="object-cover"
             sizes="(max-width: 768px) 100vw, 192px"
-            priority
+            loading="lazy"
           />
         </div>
 
@@ -49,6 +49,7 @@ export default function TeamMemberCard({
             width={63}
             height={63}
             alt="linkedin icon"
+            loading="lazy"
           ></Image>
         </a>
       </div>
