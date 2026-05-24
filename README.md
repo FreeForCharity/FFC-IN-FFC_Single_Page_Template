@@ -58,6 +58,137 @@ This repository is configured as a GitHub template, making it easy to create you
 3. **Follow the [Template Usage Guide](./TEMPLATE_USAGE.md)** for complete setup instructions
 4. **Review the [Content Replacement Guide](./CONTENT_REPLACEMENT_GUIDE.md)** to identify all content to replace
 
+### AI-Assisted Customization Prompt
+
+If you're using Claude Code (or another coding agent), paste the prompt below into a fresh session with your forked repository open. Fill in the bracketed `[VALUES]` with your charity's real information first — everything else is wired up so the agent edits the right files and runs the right checks.
+
+> **One-line summary:** "Convert this FFC template into a site for `[CHARITY NAME]` by editing `src/lib/site.config.ts`, related public assets, and content data — then run the pre-commit gauntlet."
+
+<details>
+<summary><strong>Click to expand: full copy-paste prompt</strong></summary>
+
+```markdown
+You are converting this Free For Charity template into a site for a specific
+501(c)(3) nonprofit. Read TEMPLATE_CUSTOMIZATION.md first — it maps every
+config field to where it surfaces. Then make the changes below as a single
+focused commit per logical step. After each step run `npm run check:drift`
+and report any new warnings.
+
+## CHARITY INFORMATION
+
+- Display name: [CHARITY NAME]
+- One-sentence tagline: [TAGLINE]
+- SEO description (1–2 sentences): [DESCRIPTION]
+- Card description (shorter, for OG/Twitter previews): [SHORT_DESCRIPTION]
+- Production URL (no trailing slash): [https://example.org]
+- Twitter/X handle (or empty string ''): [@handle]
+- Primary contact email (drives siteConfig.contactEmail and the footer): [hello@example.org]
+- Security disclosure email (drives the Contact: line in security.txt only): [security@example.org]
+- Vulnerability disclosure path: /vulnerability-disclosure-policy (keep default)
+- Social links (used by siteConfig.social; the footer icon is resolved by label):
+  - Facebook: [https://www.facebook.com/example]
+  - X (Twitter): [https://x.com/example]
+  - LinkedIn: [https://www.linkedin.com/company/example/]
+  - GitHub: [https://github.com/example]
+
+NOTE: There is only ONE central contact field (`siteConfig.contactEmail`).
+`public/.well-known/security.txt` carries its own `Contact:` line because
+RFC 9116 requires it on the file itself — set it to the security email
+above. The drift guard does not auto-sync the two; keep them aligned by
+hand or use the same address for both.
+
+## REQUIRED EDITS
+
+1. src/lib/site.config.ts
+   - Update siteConfig: name, tagline, description, shortDescription, url,
+     twitterHandle, contactEmail, keywords, themeColor, social.
+   - Do NOT change the helper signatures (siteUrl, twitterSite,
+     cardDescription) — they're consumed by layout/robots/sitemap.
+
+2. public/CNAME
+   - Replace with the production hostname (no scheme, no trailing slash).
+   - If launching only on github.io for now, DELETE this file.
+
+3. public/.well-known/security.txt
+   - Update Contact, Canonical, Policy, Acknowledgments to the new URL.
+   - Bump Expires to ~12 months out, formatted YYYY-MM-DDTHH:MM:SSZ.
+
+4. public/site.webmanifest
+   - Update name, short_name, theme_color, background_color.
+
+5. public/Images/ and public/Svgs/
+   - Replace branded assets. KEEP existing filenames where possible so the
+     LCP preload in layout.tsx still hits a real file.
+
+6. src/data/{faqs,team,testimonials}.ts
+   - Replace example content with the charity's real data.
+
+7. src/components/home-page/ sections
+   - Update copy, links, and CTAs. Keep accessibility intact (alt text,
+     aria-labels, focus styles).
+
+8. Legal pages under src/app/ (privacy-policy, terms-of-service,
+   cookie-policy, donation-policy)
+   - REVIEW with the charity's counsel before committing. Update org name
+     references.
+
+9. .github/workflows/deploy.yml
+   - If using a github.io subpath fallback, update NEXT_PUBLIC_BASE_PATH to
+     the new repository name. If using a custom domain only, you can leave
+     this as-is (the CNAME takes precedence).
+
+10. README.md, GitHub repo description, CITATION.cff
+    - Update organization name, repo links, and citation metadata.
+
+## DO NOT TOUCH
+
+- `scripts/check-drift.mjs` — platform contract (drift enforcement).
+- `.github/workflows/ci.yml`, `codeql.yml`, `scorecard.yml`,
+  `security-audit.yml`, `security-txt-expiry.yml`, `drift-check.yml`,
+  `phantom-revert-guard.yml` — shared CI/security workflows.
+- `.github/workflows/deploy.yml`, `.github/workflows/lighthouse.yml` —
+  you ONLY edit `NEXT_PUBLIC_BASE_PATH` in these (per step 9). Don't
+  change anything else.
+- `src/lib/assetPath.ts`, `src/app/manifest.ts`,
+  `src/app/sitemap.ts`, `src/app/robots.ts` — shared helpers that
+  derive everything from `siteConfig`. Don't hardcode values here.
+- `next.config.ts` `output: 'export'` line — required for GitHub Pages.
+- `.claude/agents/*.md`, `.claude/rules/*.md` — shared FFC tooling.
+
+## VERIFICATION (run in order, fix any failure before proceeding)
+
+1. npm install
+2. npm run format
+3. npm run lint
+4. npm run check:drift ← MUST be 0 errors; ideally fewer warnings than before
+5. npm test
+6. npm run build
+7. npm run test:e2e
+
+Open a PR titled `chore: initial customization for [CHARITY NAME]`. In the
+body include:
+
+- A checklist of every file you touched (drives reviewer focus)
+- Output of `npm run check:drift` (proves no new errors)
+- Confirmation that legal pages were reviewed by counsel
+- The custom domain (or "github.io fallback only" if no domain yet)
+
+## ESCALATION
+
+If you encounter any of the following, STOP and ask before editing:
+
+- A feature the charity needs that the template doesn't have (contact form
+  backend, members area, dynamic content). Static export limits options.
+- A request to disable security headers, drift checks, or branch protection.
+- A request to embed a third-party widget — the new origin must be added to
+  BOTH public/\_headers AND the CSP meta tag in src/app/layout.tsx. The
+  drift check enforces these two stay in sync; CI will fail on mismatch.
+```
+
+</details>
+
+The prompt is intentionally explicit about the **"do not touch"** list and the **escalation** rules so the agent doesn't drift away from FFC best practices while customizing. The `.claude/agents/onboarding.md` agent definition codifies the same flow for sessions that auto-discover available agents.
+
 ### Content Customization
 
 The **[Content Replacement Guide](./CONTENT_REPLACEMENT_GUIDE.md)** provides a comprehensive 4-column table identifying every piece of content you need to provide:
