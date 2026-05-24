@@ -160,3 +160,19 @@ body {
   -ms-overflow-style: none;
   scrollbar-width: none;
 }
+
+/* WCAG 2.3.3 — respect the user's reduced-motion preference. Collapses
+   CSS transitions and animations to near-instant. JS-driven animations
+   (e.g., framer-motion in AnimatedNumber, the setInterval auto-scroll in
+   VoicesofGratitude) read prefers-reduced-motion separately in their own
+   components and snap to the end state when it is set. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
