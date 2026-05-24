@@ -411,6 +411,43 @@ async function checkSiteConfigUrl() {
   }
 }
 
+async function checkSecurityTxtSync() {
+  const wellKnownPath = join(ROOT, 'public', '.well-known', 'security.txt')
+  const rootPath = join(ROOT, 'public', 'security.txt')
+  let wellKnownBody, rootBody
+  try {
+    wellKnownBody = await readFile(wellKnownPath, 'utf8')
+  } catch {
+    errors.push('public/.well-known/security.txt is missing. Restore it from the template.')
+    return
+  }
+  try {
+    rootBody = await readFile(rootPath, 'utf8')
+  } catch {
+    errors.push(
+      'public/security.txt is missing. It is required as a root-path fallback ' +
+        'because GitHub Pages does not serve files in dot-prefixed directories.'
+    )
+    return
+  }
+  // Compare everything from the first non-comment, non-blank line onward.
+  // The two files share the same body but have different header comments.
+  function payload(body) {
+    return body
+      .split('\n')
+      .filter((line) => !line.startsWith('#') && line.trim() !== '')
+      .join('\n')
+      .trim()
+  }
+  if (payload(wellKnownBody) !== payload(rootBody)) {
+    errors.push(
+      'public/security.txt and public/.well-known/security.txt have drifted. ' +
+        'They must serve identical Contact/Expires/Canonical/Policy/Acknowledgments lines ' +
+        'so RFC 9116 clients see the same data regardless of which path they hit.'
+    )
+  }
+}
+
 await checkSiteConfigExists()
 await checkSiteConfigUrl()
 await checkKebabCaseRoutes()
@@ -418,6 +455,7 @@ await checkAssetPathUsage()
 await checkSecrets()
 await checkPlaceholderUrl()
 await checkCspSync()
+await checkSecurityTxtSync()
 
 if (warnings.length) {
   console.warn('\n⚠️  Drift warnings:')

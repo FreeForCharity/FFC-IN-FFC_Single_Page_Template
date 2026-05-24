@@ -40,16 +40,16 @@ references the old placeholder values.
 
 ## Files you'll likely touch when rebranding
 
-| File                                                               | What to change                                                                                                                    |
-| ------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------- |
-| `public/CNAME`                                                     | Custom domain (delete if using only github.io)                                                                                    |
-| `public/.well-known/security.txt`                                  | `Contact`, `Canonical`, `Policy`, `Acknowledgments`, `Expires`                                                                    |
-| `public/Images/*`, `public/Svgs/*`                                 | Brand assets (keep filenames where possible)                                                                                      |
-| `src/components/footer/index.tsx`                                  | EIN, addresses, phone, GuideStar profile URLs, parent-org footer link — these are not in `siteConfig` (yet)                       |
-| `src/data/*`                                                       | Testimonials, FAQs, team — your real content                                                                                      |
-| `src/components/home-page/*`                                       | Home page sections                                                                                                                |
-| `src/app/privacy-policy/page.tsx` etc                              | Legal pages (have a lawyer review)                                                                                                |
-| `.github/workflows/deploy.yml`, `.github/workflows/lighthouse.yml` | `NEXT_PUBLIC_BASE_PATH` — set to `/your-repo-name` for github.io subpath deploys (or leave default if using a custom domain only) |
+| File                                                               | What to change                                                                                                                                                                                                        |
+| ------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `public/CNAME`                                                     | Custom domain (delete if using only github.io)                                                                                                                                                                        |
+| `public/.well-known/security.txt` **and** `public/security.txt`    | `Contact`, `Canonical`, `Policy`, `Acknowledgments`, `Expires`. **Both copies must stay in sync** (the drift checker enforces it). The root copy exists because GitHub Pages does not serve dot-prefixed directories. |
+| `public/Images/*`, `public/Svgs/*`                                 | Brand assets (keep filenames where possible)                                                                                                                                                                          |
+| `src/components/footer/index.tsx`                                  | EIN, addresses, phone, GuideStar profile URLs, parent-org footer link — these are not in `siteConfig` (yet)                                                                                                           |
+| `src/data/*`                                                       | Testimonials, FAQs, team — your real content                                                                                                                                                                          |
+| `src/components/home-page/*`                                       | Home page sections                                                                                                                                                                                                    |
+| `src/app/privacy-policy/page.tsx` etc                              | Legal pages (have a lawyer review)                                                                                                                                                                                    |
+| `.github/workflows/deploy.yml`, `.github/workflows/lighthouse.yml` | `NEXT_PUBLIC_BASE_PATH` — set to `/your-repo-name` for github.io subpath deploys (or leave default if using a custom domain only)                                                                                     |
 
 The web manifest is **auto-generated** from `siteConfig` at build time by `src/app/manifest.ts` — no separate file to edit.
 

@@ -86,53 +86,24 @@ jobs:
         id: deployment
         uses: actions/deploy-pages@v4
 
+      - name: Checkout (for smoke-check script)
+        uses: actions/checkout@v6
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: '20'
+
       - name: Post-deploy smoke check
         env:
           DEPLOY_URL: ${{ steps.deployment.outputs.page_url }}
         timeout-minutes: 5
-        run: |
-          python3 - <<'PY'
-          import os, sys, time, socket, urllib.request, urllib.error
-          url = os.environ.get("DEPLOY_URL")
-          if not url:
-              print("DEPLOY_URL not set", file=sys.stderr)
-              sys.exit(2)
-          total_wait_seconds = 180
-          delay_seconds = 5
-          timeout_seconds = 10
-          deadline = time.monotonic() + total_wait_seconds
-          attempt = 0
-          last = None
-          while True:
-              remaining = deadline - time.monotonic()
-              if remaining <= 0:
-                  print(f"Smoke check failed: {url} (last: {last})", file=sys.stderr)
-                  sys.exit(1)
-              attempt += 1
-              try:
-                  req = urllib.request.Request(url, method="GET", headers={"User-Agent": "gh-actions-smoke"})
-                  req_timeout = min(timeout_seconds, remaining)
-                  with urllib.request.urlopen(req, timeout=req_timeout) as resp:
-                      code = resp.getcode()
-                  print(f"Attempt {attempt}: HTTP {code}")
-                  print("Smoke check passed")
-                  sys.exit(0)
-              except urllib.error.HTTPError as e:
-                  last = f"HTTPError {e.code}"
-                  print(f"Attempt {attempt}: HTTPError {e.code}")
-                  try:
-                      e.close()
-                  except Exception:
-                      pass
-              except (urllib.error.URLError, TimeoutError, socket.timeout) as e:
-                  last = str(e)
-                  print(f"Attempt {attempt} error: {e}")
-              remaining = deadline - time.monotonic()
-              if remaining <= 0:
-                  print(f"Smoke check failed: {url} (last: {last})", file=sys.stderr)
-                  sys.exit(1)
-              time.sleep(min(delay_seconds, remaining))
-          PY
+        # Runs scripts/smoke-check.mjs against the freshly deployed URL.
+        # Verifies the home page, security.txt (with /.well-known fallback to
+        # /), robots.txt, sitemap.xml, manifest, branded 404, and favicons.
+        # The script lives in the repo so it's runnable locally too:
+        #   node scripts/smoke-check.mjs https://your-site.example
+        run: node scripts/smoke-check.mjs "$DEPLOY_URL"
 
   notify-failure:
     name: Notify on production deploy failure
