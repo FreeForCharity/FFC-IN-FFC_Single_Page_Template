@@ -24,8 +24,7 @@ You are helping a Free For Charity volunteer or charity admin stand up a new sit
    - `Canonical:` / `Policy:` / `Acknowledgments:` use the new URL
    - `Expires:` is at least 12 months out, formatted `YYYY-MM-DDTHH:MM:SSZ`
 
-5. **Update `.github/workflows/deploy.yml` and `.github/workflows/lighthouse.yml`**:
-   - Change `NEXT_PUBLIC_BASE_PATH` from `/FFC_Single_Page_Template` to `/your-repo-name` if you renamed the repo for a github.io subpath fallback. If using a custom domain only, you can leave the value as-is (the CNAME takes precedence at the host level).
+5. **Deploy workflows** — no edits required. `deploy.yml` and `lighthouse.yml` choose `NEXT_PUBLIC_BASE_PATH` automatically: empty if `public/CNAME` exists (custom-domain root deploy), otherwise `/<repo-name>` (github.io subpath fallback). Just commit the CNAME or skip it as appropriate in step 3.
 
 6. **Swap branded assets** in `public/Images/` and `public/Svgs/`. Keep filenames where possible so the LCP preload in `layout.tsx` and the manifest icons still hit real files.
 

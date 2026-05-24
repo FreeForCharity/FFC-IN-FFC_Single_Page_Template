@@ -61,12 +61,32 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Determine base path
+        id: basepath
+        # Custom-domain deploys serve from the origin root (no subpath), so
+        # NEXT_PUBLIC_BASE_PATH must be empty. Subpath-only deploys (no
+        # CNAME) need /<repo-name>. Empirically the live site at
+        # ffcworkingsite1.org/manifest.webmanifest referenced
+        # /FFC_Single_Page_Template/android-chrome-*.png because the build
+        # always set the subpath, but those paths 404 on the custom domain.
+        # This step picks the right value based on whether public/CNAME
+        # exists.
+        run: |
+          if [ -s "public/CNAME" ]; then
+            echo "Using empty basePath (public/CNAME present: $(cat public/CNAME))"
+            echo "value=" >> "$GITHUB_OUTPUT"
+          else
+            REPO_NAME="${GITHUB_REPOSITORY#*/}"
+            echo "Using /$REPO_NAME basePath (no CNAME — github.io subpath deploy)"
+            echo "value=/$REPO_NAME" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Build with Next.js
         run: npm run build
         env:
-          # Set basePath for GitHub Pages deployment
-          # This ensures images and assets work correctly at the subpath
-          NEXT_PUBLIC_BASE_PATH: /FFC_Single_Page_Template
+          # See "Determine base path" above. Set automatically based on
+          # whether public/CNAME exists.
+          NEXT_PUBLIC_BASE_PATH: ${{ steps.basepath.outputs.value }}
 
       - name: Upload artifact for Pages
         uses: actions/upload-pages-artifact@v4

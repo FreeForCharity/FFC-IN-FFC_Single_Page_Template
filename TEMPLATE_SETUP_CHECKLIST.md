@@ -35,9 +35,10 @@ Quick reference checklist for setting up a new repository from the FFC Single Pa
 - [ ] Custom domain (if applicable): Enter domain name and click "Save"
 - [ ] Wait for DNS check to complete
 - [ ] Enable "Enforce HTTPS" (after DNS configured)
-- [ ] If using a github.io subpath fallback, also update
-      `NEXT_PUBLIC_BASE_PATH` in `.github/workflows/deploy.yml` and
-      `.github/workflows/lighthouse.yml` to `/your-repo-name`
+- [ ] `NEXT_PUBLIC_BASE_PATH` is now selected automatically by
+      `deploy.yml` and `lighthouse.yml` from `public/CNAME` (empty when
+      CNAME is present, `/<repo-name>` when it's not). No manual edit
+      required.
 
 ### Actions Permissions (Settings → Actions → General)
 
@@ -76,13 +77,17 @@ Create ruleset named "Protect Main":
 
 ## Update Repository Configuration Files
 
-### Update basePath in Workflows
+### basePath in Workflows — automatic
 
-- [ ] Edit `.github/workflows/deploy.yml`
-  - In the job that builds the Next.js site (look for the `env` section where `NEXT_PUBLIC_BASE_PATH` is set), change `/FFC_Single_Page_Template` to `/YOUR-REPO-NAME`
-- [ ] Edit `.github/workflows/lighthouse.yml`
-  - In the job that runs the Lighthouse checks (look for the `env` section where `NEXT_PUBLIC_BASE_PATH` is set), change `/FFC_Single_Page_Template` to `/YOUR-REPO-NAME`
-- [ ] OR remove `NEXT_PUBLIC_BASE_PATH` if using custom domain
+`deploy.yml` and `lighthouse.yml` derive `NEXT_PUBLIC_BASE_PATH` from
+`public/CNAME` at build time:
+
+- **Custom domain** (CNAME file present): build uses empty basePath so
+  asset URLs resolve from the origin root.
+- **github.io subpath** (no CNAME): build uses `/<repo-name>` so asset
+  URLs resolve under the Pages subpath.
+
+You don't have to edit either workflow when you rename the repo.
 
 ### Update CODEOWNERS
 
@@ -269,15 +274,20 @@ Create ruleset named "Protect Main":
 1. Verify Pages source is set to **"GitHub Actions"** (Settings → Pages → Source)
 2. Wait 2-5 minutes for propagation
 3. Check Actions tab for the "Deploy to GitHub Pages" workflow status
-4. Verify `NEXT_PUBLIC_BASE_PATH` in `.github/workflows/deploy.yml` matches the repo name (e.g. `/my-charity-site`)
-5. If you have a custom domain, confirm `public/CNAME` contains it (no scheme, no trailing slash)
+4. Confirm the "Determine base path" step in the deploy run printed the
+   expected value (empty for custom-domain deploys, `/<repo-name>` for
+   subpath deploys)
+5. If you have a custom domain, confirm `public/CNAME` contains it
+   (no scheme, no trailing slash)
 
 ### Images don't load on GitHub Pages
 
 ✅ **Solution**:
 
-1. Verify `NEXT_PUBLIC_BASE_PATH` is correct in deploy.yml
-2. Check images use `assetPath()` helper
+1. Check the deploy run's "Determine base path" step printed the
+   expected value for your setup (empty with CNAME, `/<repo-name>` without)
+2. Confirm all image references use the `assetPath()` helper — `npm run
+check:drift` will fail if any are missing
 3. Rebuild and redeploy
 
 ### Commits rejected (unsigned)
