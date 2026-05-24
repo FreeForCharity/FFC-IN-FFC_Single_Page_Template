@@ -46,9 +46,10 @@ All changes follow this process:
 4. **Pre-commit checklist** (run in this order):
    1. `npm run format` -- Auto-fix formatting
    2. `npm run lint` -- Catch code quality issues
-   3. `npm test` -- Run unit tests
-   4. `npm run build` -- Verify the static export succeeds
-   5. `npm run test:e2e` -- Run end-to-end tests
+   3. `npm run check:drift` -- FFC best-practice enforcement (kebab-case routes, assetPath usage, CSP sync, committed-secret patterns, placeholder URLs)
+   4. `npm test` -- Run unit tests
+   5. `npm run build` -- Verify the static export succeeds
+   6. `npm run test:e2e` -- Run end-to-end tests
 5. **PR** -- Open a Pull Request, link to the issue with `Fixes #NNN` or `Refs #NNN`
 6. **Merge** -- Merge via merge queue (no direct commits to `main`)
 

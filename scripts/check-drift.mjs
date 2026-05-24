@@ -285,7 +285,11 @@ async function checkSiteConfigExists() {
 // CSP directives that are honored in <meta http-equiv> AND in HTTP headers.
 // We diff each of these between public/_headers and src/app/layout.tsx so
 // the two stay in lockstep on third-party origins.
+// Includes the security-floor directives (default-src, object-src, base-uri)
+// alongside the third-party allowlists — a one-sided tightening of object-src
+// or base-uri would silently degrade one host while leaving the other safe.
 const SYNCED_CSP_DIRECTIVES = [
+  'default-src',
   'script-src',
   'style-src',
   'img-src',
@@ -294,6 +298,8 @@ const SYNCED_CSP_DIRECTIVES = [
   'frame-src',
   'media-src',
   'form-action',
+  'object-src',
+  'base-uri',
 ]
 
 function extractCspDirectives(policy) {
@@ -369,7 +375,44 @@ async function checkCspSync() {
   }
 }
 
+async function checkSiteConfigUrl() {
+  const cfgPath = join(ROOT, 'src', 'lib', 'site.config.ts')
+  let cfg
+  try {
+    cfg = await readFile(cfgPath, 'utf8')
+  } catch {
+    return // missing config handled in checkSiteConfigExists
+  }
+  const m = cfg.match(/url:\s*['"]([^'"]+)['"]/)
+  if (!m) return
+  const raw = m[1]
+  if (!raw.startsWith('https://')) {
+    errors.push(
+      `src/lib/site.config.ts: siteConfig.url "${raw}" must start with "https://". ` +
+        `metadataBase = new URL(siteConfig.url) will throw at build time otherwise.`
+    )
+  }
+  if (raw.endsWith('/')) {
+    errors.push(
+      `src/lib/site.config.ts: siteConfig.url "${raw}" must not end with "/". ` +
+        `The siteUrl helper assumes no trailing slash; OG/Twitter card URLs will be malformed.`
+    )
+  }
+  try {
+    const u = new URL(raw)
+    if (u.pathname !== '/' && u.pathname !== '') {
+      errors.push(
+        `src/lib/site.config.ts: siteConfig.url "${raw}" should be the bare origin (no path). ` +
+          `Move any path component into the helpers that consume it.`
+      )
+    }
+  } catch {
+    errors.push(`src/lib/site.config.ts: siteConfig.url "${raw}" is not a parseable URL.`)
+  }
+}
+
 await checkSiteConfigExists()
+await checkSiteConfigUrl()
 await checkKebabCaseRoutes()
 await checkAssetPathUsage()
 await checkSecrets()

@@ -37,11 +37,12 @@ You have full terminal access via the Bash tool. Use it for all CLI operations.
 Run these in order before committing:
 
 ```bash
-npm run format    # Fix formatting
-npm run lint      # Check for lint errors
-npm test          # Run unit tests
-npm run build     # Verify static export
-npm run test:e2e  # Run E2E tests
+npm run format       # Fix formatting
+npm run lint         # Check for lint errors
+npm run check:drift  # FFC best-practice enforcement (kebab-case routes, assetPath usage, CSP sync, secret patterns, placeholder URLs)
+npm test             # Run unit tests
+npm run build        # Verify static export
+npm run test:e2e     # Run E2E tests
 ```
 
 If any step fails, fix the issue and re-run from that step forward.
