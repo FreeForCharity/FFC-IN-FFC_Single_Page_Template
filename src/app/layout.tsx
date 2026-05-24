@@ -131,9 +131,16 @@ export default function RootLayout({
         suppressHydrationWarning={true}
       >
         <GoogleTagManagerNoScript />
+        {/* Skip-to-content link (WCAG 2.4.1). First focusable element in the
+            body so keyboard users tabbing in can jump past the header
+            navigation. Visually hidden until focused — see .skip-to-content
+            styles in src/app/globals.css. */}
+        <a href="#main-content" className="skip-to-content">
+          Skip to main content
+        </a>
         {/* <PopupProvider> */}
         <Header />
-        {children}
+        <main id="main-content">{children}</main>
         <Footer />
         <CookieConsent />
         {/* <PopupsRootClient /> */}

@@ -10,9 +10,8 @@ export const metadata: Metadata = {
 
 export default function NotFound() {
   return (
-    <main
+    <div
       className="pt-[130px] pb-[80px] min-h-[60vh] flex items-center"
-      role="main"
       aria-labelledby="not-found-heading"
     >
       <div className="w-[90%] md:w-[80%] mx-auto text-center">
@@ -42,6 +41,6 @@ export default function NotFound() {
           </Link>
         </div>
       </div>
-    </main>
+    </div>
   )
 }
