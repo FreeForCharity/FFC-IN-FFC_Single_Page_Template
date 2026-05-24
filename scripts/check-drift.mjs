@@ -221,6 +221,9 @@ async function checkPlaceholderUrl() {
   }
 
   const cnameRebranded = customDomain && customDomain !== PLACEHOLDER_HOST
+  // lgtm [js/incomplete-url-substring-sanitization] -- intentional: we are
+  // detecting whether the config still references the template placeholder
+  // anywhere in the file body, not sanitizing a URL against malicious input.
   const cfgRebranded = cfgUrl && !cfgUrl.includes(PLACEHOLDER_HOST)
   if (!cnameRebranded && !cfgRebranded) return
 

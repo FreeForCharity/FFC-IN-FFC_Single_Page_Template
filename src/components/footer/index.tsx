@@ -2,20 +2,21 @@
 
 import React from 'react'
 import Link from 'next/link'
-import { Mail, Phone, MapPin, ArrowRight } from 'lucide-react'
-import { assetPath } from '@/lib/assetPath'
+import { Mail, Phone, MapPin, ArrowRight, Link2 } from 'lucide-react'
 
 import { FaFacebookF, FaLinkedinIn, FaGithub } from 'react-icons/fa'
 import { FaXTwitter } from 'react-icons/fa6'
 import type { IconType } from 'react-icons'
+import type { LucideIcon } from 'lucide-react'
 
 import { siteConfig } from '@/lib/site.config'
 import { assetPath } from '@/lib/assetPath'
 
 // Maps a social link's label (as defined in siteConfig.social) to an icon.
-// Unknown labels fall back to a generic link icon so the footer never breaks
-// when a child site adds a new social network.
-const socialIconByLabel: Record<string, IconType> = {
+// Unknown labels fall back to a generic link icon (Link2 from lucide-react)
+// so a charity that adds a new social network — Bluesky, Mastodon, YouTube,
+// etc. — gets a sensible placeholder instead of a misleading GitHub mark.
+const socialIconByLabel: Record<string, IconType | LucideIcon> = {
   Facebook: FaFacebookF,
   'X (Twitter)': FaXTwitter,
   Twitter: FaXTwitter,
@@ -217,10 +218,10 @@ const Footer: React.FC = () => {
 
             <div className="flex gap-3 pt-4">
               {socialLinks.map(({ href, label }) => {
-                const Icon = socialIconByLabel[label] ?? FaGithub
+                const Icon = socialIconByLabel[label] ?? Link2
                 return (
                   <a
-                    key={label}
+                    key={`${label}-${href}`}
                     href={href}
                     target="_blank"
                     rel="noopener noreferrer"
