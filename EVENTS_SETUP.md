@@ -28,6 +28,13 @@ If you have no sources configured yet, the section shows a friendly empty state 
 | `EVENTS_FACEBOOK_PAGE_ID`      | Facebook     | Numeric Page ID of the charity's Facebook page                                    |
 | `EVENTS_FACEBOOK_ACCESS_TOKEN` | Facebook     | Long-lived Page Access Token with `pages_read_engagement` (rotate every ~60 days) |
 
+> ⚠️ **Before you connect a calendar:** every event in the source feeds — title,
+> description, location — will be published on the charity's public website and
+> committed into the repo's git history. **Do not** point this at a staff-only
+> calendar, fundraiser planning calendar, donor list, or anything containing
+> attendee emails or personal data. Create a dedicated "Public Events" calendar
+> and put only outward-facing events on it.
+
 ## Google Workspace for Nonprofits
 
 1. Open [Google Calendar](https://calendar.google.com) signed in as the charity's nonprofit Workspace user.

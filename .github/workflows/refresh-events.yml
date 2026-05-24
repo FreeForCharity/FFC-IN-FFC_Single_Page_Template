@@ -11,15 +11,18 @@ permissions:
 
 concurrency:
   group: refresh-events
-  cancel-in-progress: false
+  cancel-in-progress: true
 
 jobs:
   refresh:
     name: Fetch latest events
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - name: Checkout repository
         uses: actions/checkout@v6
+        with:
+          fetch-depth: 1
 
       - name: Setup Node.js
         uses: actions/setup-node@v6
@@ -41,7 +44,27 @@ jobs:
             git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
             git add src/data/events.generated.json
             git commit -m "chore(events): refresh snapshot from calendar sources"
-            git push
+            # Re-base on latest main in case a concurrent push landed (rare with
+            # cancel-in-progress: true, but cheap defence).
+            git pull --rebase origin "${GITHUB_REF_NAME}" || true
+            git push origin "HEAD:${GITHUB_REF_NAME}"
           else
             echo "No changes to events snapshot."
           fi
+
+      - name: Trigger Pages deploy
+        if: success()
+        uses: actions/github-script@v8
+        with:
+          script: |
+            try {
+              await github.rest.actions.createWorkflowDispatch({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                workflow_id: 'deploy.yml',
+                ref: context.ref,
+              })
+              core.info('Dispatched deploy.yml')
+            } catch (err) {
+              core.warning(`Could not dispatch deploy: ${err.message}`)
+            }
