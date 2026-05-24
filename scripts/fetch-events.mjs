@@ -483,6 +483,16 @@ async function fetchFacebookSource(pageId, token, secrets) {
       const payload = JSON.parse(text)
       if (payload.error) {
         const msg = scrubSecrets(payload.error.message ?? 'unknown', secrets)
+        // Codes 190 (token expired) and 102 (session invalidated) are the
+        // common rotation signals — surface them as a GitHub Actions
+        // warning annotation so admins see them in the workflow UI.
+        if (payload.error.code === 190 || payload.error.code === 102) {
+          console.log(
+            '::warning title=Facebook token needs rotation::' +
+              'The Facebook access token has expired or been invalidated. ' +
+              'Rotate per EVENTS_SETUP.md and update EVENTS_FACEBOOK_ACCESS_TOKEN.'
+          )
+        }
         console.warn(`[events] Facebook error: ${msg}; skipping.`)
         return { ok: events.length > 0, events }
       }
