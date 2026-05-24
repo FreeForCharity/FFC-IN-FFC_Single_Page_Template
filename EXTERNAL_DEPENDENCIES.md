@@ -63,23 +63,19 @@ These are services we directly integrate into our application code.
 - **Privacy Policy:** https://www.facebook.com/privacy/policy/
 - **Opt-out:** https://www.facebook.com/settings/?tab=ads
 
-#### 5. SociableKit Facebook Events Widget
+#### 5. Events Aggregation (Google Calendar / Microsoft 365 / Facebook Graph)
 
-- **Purpose:** Display Facebook events via third-party widget
-- **Implementation:** SociableKit iframe widget embedded in the site
-- **Domain:** `widgets.sociablekit.com`
-- **Load Strategy:** Lazy-loaded iframe (loaded only when the events section is visible)
-- **Data Collected:** User interactions, page views, browser/device information (as determined by SociableKit)
-- **User Control:** Requires explicit user consent via cookie banner before loading
-- **Privacy Policy:** https://www.sociablekit.com/privacy-policy/
-- **Opt-out:** See SociableKit privacy policy for data subject rights
-- **Status:** Documented - Implementation complete
-
-**Technical Details:**
-
-- Integration: Embedded via iframe from SociableKit
-- No Facebook SDK or direct Facebook domain requests are made; all event data is proxied through SociableKit
-- Privacy Considerations: Loading the widget may send user data (IP address, browser info, etc.) to SociableKit. Users should review SociableKit's privacy policy for details. Widget is only loaded after user consents to marketing cookies.
+- **Purpose:** Display upcoming charity events from any combination of Google Calendar, Microsoft 365, and Facebook in a single unified section (`#events`).
+- **Implementation:** Build-time aggregation only. `scripts/fetch-events.mjs` runs in CI (or via `prebuild`), pulls each source server-side, normalizes the results, and writes `src/data/events.generated.json`. The React component renders that static JSON.
+- **Runtime domains contacted from the browser:** _None._ All sources are fetched from Node during the build/refresh workflow, not from the client.
+- **Build-time domains contacted:**
+  - `calendar.google.com` (public iCal feed)
+  - `outlook.live.com` / `outlook.office365.com` (published Microsoft 365 ICS feed)
+  - `graph.facebook.com` (Facebook Graph API)
+- **Data Collected:** None at runtime. The browser never speaks to these origins because no iframe or client-side fetch is used.
+- **Tokens / Secrets:** `EVENTS_GOOGLE_ICS_URL`, `EVENTS_MICROSOFT_ICS_URL`, `EVENTS_FACEBOOK_PAGE_ID`, `EVENTS_FACEBOOK_ACCESS_TOKEN` (all optional, all stored as GitHub Secrets, never bundled).
+- **Setup guide:** [`EVENTS_SETUP.md`](./EVENTS_SETUP.md)
+- **Status:** Active
 
 ### Forms & User Input
 
@@ -305,11 +301,12 @@ For questions about our external dependencies or privacy practices:
 
 ## Updates to This Document
 
-| Date       | Changes                                                             |
-| ---------- | ------------------------------------------------------------------- |
-| 2024-12-11 | Added SociableKit Facebook Events Widget - implementation complete  |
-| 2024-12-09 | Added Facebook Events integration documentation                     |
-| 2024-12-07 | Initial documentation of all external dependencies and integrations |
+| Date       | Changes                                                                                                 |
+| ---------- | ------------------------------------------------------------------------------------------------------- |
+| 2026-05-24 | Replaced SociableKit iframe with unified build-time Google / Microsoft 365 / Facebook events aggregator |
+| 2024-12-11 | Added SociableKit Facebook Events Widget - implementation complete                                      |
+| 2024-12-09 | Added Facebook Events integration documentation                                                         |
+| 2024-12-07 | Initial documentation of all external dependencies and integrations                                     |
 
 ---
 

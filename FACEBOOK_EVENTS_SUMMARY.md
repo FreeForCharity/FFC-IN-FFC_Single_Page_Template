@@ -1,5 +1,7 @@
 # Facebook Events Integration - Executive Summary
 
+> ⚠️ **Superseded.** The events section is now a unified Google + Microsoft + Facebook aggregator. See **[EVENTS_SETUP.md](./EVENTS_SETUP.md)** for the current architecture and setup. This summary is kept for historical context only.
+
 **Date:** December 9, 2024  
 **Status:** Requirements Complete - Ready for Implementation
 
