@@ -27,7 +27,6 @@
     "**/*.ts",
     "**/*.tsx",
     ".next/types/**/*.ts",
-    "src/components/UI/BlogCard.tsx",
     ".next/dev/types/**/*.ts"
   ],
   "exclude": ["node_modules"]
