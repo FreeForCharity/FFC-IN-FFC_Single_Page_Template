@@ -187,6 +187,105 @@ function escapeId(value) {
   return value.replace(/[\r\n]+/g, '_')
 }
 
+const BYDAY_TO_DOW = { SU: 0, MO: 1, TU: 2, WE: 3, TH: 4, FR: 5, SA: 6 }
+const EXPANSION_WINDOW_MS = 18 * 30 * 24 * 60 * 60 * 1000
+const MAX_INSTANCES_PER_RULE = 200
+
+function parseRRule(value) {
+  const out = { interval: 1 }
+  for (const part of value.split(';')) {
+    const eq = part.indexOf('=')
+    if (eq === -1) continue
+    const key = part.slice(0, eq).toUpperCase()
+    const val = part.slice(eq + 1)
+    if (key === 'FREQ') {
+      const u = val.toUpperCase()
+      if (u === 'DAILY' || u === 'WEEKLY' || u === 'MONTHLY' || u === 'YEARLY') out.freq = u
+    } else if (key === 'INTERVAL') {
+      const n = parseInt(val, 10)
+      if (Number.isFinite(n) && n > 0) out.interval = n
+    } else if (key === 'COUNT') {
+      const n = parseInt(val, 10)
+      if (Number.isFinite(n) && n > 0) out.count = n
+    } else if (key === 'UNTIL') {
+      const m = val.match(/^(\d{4})(\d{2})(\d{2})(?:T(\d{2})(\d{2})(\d{2})Z?)?$/)
+      if (m) {
+        const [, y, mo, d, h = '23', mi = '59', s = '59'] = m
+        out.untilMs = Date.UTC(+y, +mo - 1, +d, +h, +mi, +s)
+      }
+    } else if (key === 'BYDAY') {
+      const days = []
+      for (const t of val.split(',')) {
+        const code = t.slice(-2).toUpperCase()
+        if (code in BYDAY_TO_DOW) days.push(BYDAY_TO_DOW[code])
+      }
+      if (days.length) out.byDay = days
+    }
+  }
+  return out
+}
+
+function expandRRule(seedIso, rruleValue, exDates, untilMs, cap) {
+  const seedMs = Date.parse(seedIso)
+  if (!Number.isFinite(seedMs)) return [seedIso]
+  if (!rruleValue) return exDates.has(seedIso) ? [] : [seedIso]
+  const rule = parseRRule(rruleValue)
+  if (!rule.freq) return [seedIso]
+  const limit = Math.min(rule.count ?? Infinity, cap)
+  const stop = Math.min(rule.untilMs ?? untilMs, untilMs)
+  const out = []
+  const push = (ms) => {
+    const iso = new Date(ms).toISOString()
+    if (!exDates.has(iso)) out.push(iso)
+  }
+  let cursor = seedMs
+  let emitted = 0
+  let safety = 0
+  while (cursor <= stop && emitted < limit && safety < 10_000) {
+    safety++
+    if (rule.freq === 'WEEKLY' && rule.byDay && rule.byDay.length > 0) {
+      const dow = new Date(cursor).getUTCDay()
+      for (const day of [...rule.byDay].sort((a, b) => a - b)) {
+        const offset = day - dow
+        if (offset < 0) continue
+        const candidate = cursor + offset * 86_400_000
+        if (candidate < seedMs) continue
+        if (candidate > stop) break
+        push(candidate)
+        emitted++
+        if (emitted >= limit) break
+      }
+      cursor += (7 * rule.interval - new Date(cursor).getUTCDay()) * 86_400_000
+      continue
+    }
+    push(cursor)
+    emitted++
+    if (rule.freq === 'DAILY') cursor += rule.interval * 86_400_000
+    else if (rule.freq === 'WEEKLY') cursor += 7 * rule.interval * 86_400_000
+    else if (rule.freq === 'MONTHLY') {
+      const d = new Date(cursor)
+      d.setUTCMonth(d.getUTCMonth() + rule.interval)
+      cursor = d.getTime()
+    } else if (rule.freq === 'YEARLY') {
+      const d = new Date(cursor)
+      d.setUTCFullYear(d.getUTCFullYear() + rule.interval)
+      cursor = d.getTime()
+    } else break
+  }
+  return out
+}
+
+function collectExDates(raw) {
+  const out = new Set()
+  for (const prop of raw.props.get('EXDATE') ?? []) {
+    for (const part of prop.value.split(',')) {
+      const parsed = parseIcsDate({ name: 'EXDATE', params: prop.params, value: part })
+      if (parsed) out.add(parsed.iso)
+    }
+  }
+  return out
+}
+
 function toUnifiedEventFromIcs(raw, source) {
   const summary = firstProp(raw, 'SUMMARY')
   const dtstart = firstProp(raw, 'DTSTART')
@@ -213,17 +312,42 @@ function toUnifiedEventFromIcs(raw, source) {
   }
 }
 
+function expandSeed(seed, raw) {
+  const rrule = firstProp(raw, 'RRULE')?.value
+  if (!rrule) return [seed]
+  const exDates = collectExDates(raw)
+  const startMs = Date.parse(seed.startUtc)
+  const durationMs = seed.endUtc ? Date.parse(seed.endUtc) - startMs : 0
+  const untilMs = Date.now() + EXPANSION_WINDOW_MS
+  const occurrences = expandRRule(seed.startUtc, rrule, exDates, untilMs, MAX_INSTANCES_PER_RULE)
+  return occurrences.map((iso, idx) => {
+    if (idx === 0) return { ...seed, startUtc: iso, endUtc: seed.endUtc }
+    const occMs = Date.parse(iso)
+    return {
+      ...seed,
+      id: `${seed.id}::${iso}`,
+      startUtc: iso,
+      endUtc: durationMs > 0 ? new Date(occMs + durationMs).toISOString() : undefined,
+    }
+  })
+}
+
 function parseIcs(raw, source) {
   const lines = unfoldLines(raw)
   const rawEvents = extractEvents(lines)
   const cutoff = Date.now() - 24 * 60 * 60 * 1000
-  return rawEvents
-    .map((event) => toUnifiedEventFromIcs(event, source))
-    .filter(Boolean)
-    .filter((event) => {
-      const end = event.endUtc ? Date.parse(event.endUtc) : Date.parse(event.startUtc)
-      return Number.isFinite(end) && end >= cutoff
-    })
+  const out = []
+  for (const rawEvent of rawEvents) {
+    const seed = toUnifiedEventFromIcs(rawEvent, source)
+    if (!seed) continue
+    for (const occurrence of expandSeed(seed, rawEvent)) {
+      const end = occurrence.endUtc
+        ? Date.parse(occurrence.endUtc)
+        : Date.parse(occurrence.startUtc)
+      if (Number.isFinite(end) && end >= cutoff) out.push(occurrence)
+    }
+  }
+  return out
 }
 
 function formatPlace(place) {

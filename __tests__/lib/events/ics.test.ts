@@ -111,6 +111,69 @@ describe('parseIcs', () => {
     expect(events[0].id).not.toMatch(/[\r\n]/)
   })
 
+  it('expands an RRULE seed into multiple occurrences', () => {
+    const start = farFutureDate(7)
+    // Build a DAILY RRULE with 5 occurrences starting at `start`. The seed
+    // event lasts 1 hour; each expanded instance should keep that duration.
+    const oneHourLater = new Date(Date.parse(start.iso) + 60 * 60 * 1000).toISOString()
+    const formatRaw = (iso: string): string => {
+      const d = new Date(iso)
+      const yy = d.getUTCFullYear()
+      const mm = String(d.getUTCMonth() + 1).padStart(2, '0')
+      const dd = String(d.getUTCDate()).padStart(2, '0')
+      const hh = String(d.getUTCHours()).padStart(2, '0')
+      const mi = String(d.getUTCMinutes()).padStart(2, '0')
+      return `${yy}${mm}${dd}T${hh}${mi}00Z`
+    }
+    const ics = buildIcs([
+      'BEGIN:VEVENT',
+      'UID:weekly-standup@example.com',
+      `DTSTART:${start.raw}`,
+      `DTEND:${formatRaw(oneHourLater)}`,
+      'SUMMARY:Weekly Standup',
+      'RRULE:FREQ=DAILY;COUNT=5',
+      'END:VEVENT',
+    ])
+    const events = parseIcs(ics, 'google')
+    expect(events).toHaveLength(5)
+    // First occurrence uses the seed UID; subsequent ones get derived ids.
+    expect(events[0].id).toBe('google:weekly-standup@example.com')
+    expect(events[1].id).toMatch(/^google:weekly-standup@example\.com::/)
+    // Spacing is 24h.
+    const day0 = Date.parse(events[0].startUtc)
+    const day1 = Date.parse(events[1].startUtc)
+    expect(day1 - day0).toBe(24 * 60 * 60 * 1000)
+  })
+
+  it('honours EXDATE inside a recurring event', () => {
+    const start = farFutureDate(3)
+    const secondDayIso = new Date(Date.parse(start.iso) + 24 * 60 * 60 * 1000).toISOString()
+    const formatRaw = (iso: string): string => {
+      const d = new Date(iso)
+      return (
+        d.getUTCFullYear().toString() +
+        String(d.getUTCMonth() + 1).padStart(2, '0') +
+        String(d.getUTCDate()).padStart(2, '0') +
+        'T' +
+        String(d.getUTCHours()).padStart(2, '0') +
+        String(d.getUTCMinutes()).padStart(2, '0') +
+        '00Z'
+      )
+    }
+    const ics = buildIcs([
+      'BEGIN:VEVENT',
+      'UID:exdate@example.com',
+      `DTSTART:${start.raw}`,
+      'SUMMARY:Daily with one skip',
+      'RRULE:FREQ=DAILY;COUNT=4',
+      `EXDATE:${formatRaw(secondDayIso)}`,
+      'END:VEVENT',
+    ])
+    const events = parseIcs(ics, 'google')
+    expect(events).toHaveLength(3)
+    expect(events.some((e) => e.startUtc === secondDayIso)).toBe(false)
+  })
+
   it('rejects unsafe URL schemes', () => {
     const start = farFutureDate(4)
     const ics = buildIcs([

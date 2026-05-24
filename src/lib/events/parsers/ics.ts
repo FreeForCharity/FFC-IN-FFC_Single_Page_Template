@@ -1,6 +1,10 @@
 import type { EventSource, UnifiedEvent } from '../types'
 import { safeHttpUrl } from '../safeUrl'
 import { wallTimeToUtc } from '../timezone'
+import { expandRRule } from '../rrule'
+
+const EXPANSION_WINDOW_MS = 18 * 30 * 24 * 60 * 60 * 1000 // ~18 months
+const MAX_INSTANCES_PER_RULE = 200
 
 interface RawProperty {
   name: string
@@ -127,7 +131,7 @@ function firstProp(raw: RawEvent, name: string): RawProperty | undefined {
   return raw.props.get(name)?.[0]
 }
 
-function toUnifiedEvent(raw: RawEvent, source: EventSource): UnifiedEvent | null {
+function buildSeedEvent(raw: RawEvent, source: EventSource): UnifiedEvent | null {
   const summary = firstProp(raw, 'SUMMARY')
   const dtstart = firstProp(raw, 'DTSTART')
   const uid = firstProp(raw, 'UID')
@@ -155,16 +159,54 @@ function toUnifiedEvent(raw: RawEvent, source: EventSource): UnifiedEvent | null
   }
 }
 
+function collectExDates(raw: RawEvent): Set<string> {
+  const out = new Set<string>()
+  for (const prop of raw.props.get('EXDATE') ?? []) {
+    for (const part of prop.value.split(',')) {
+      const synthetic: RawProperty = { name: 'EXDATE', params: prop.params, value: part }
+      const parsed = parseIcsDate(synthetic)
+      if (parsed) out.add(parsed.iso)
+    }
+  }
+  return out
+}
+
+function expandSeed(seed: UnifiedEvent, raw: RawEvent): UnifiedEvent[] {
+  const rrule = firstProp(raw, 'RRULE')?.value
+  if (!rrule) return [seed]
+  const exDates = collectExDates(raw)
+  const startMs = Date.parse(seed.startUtc)
+  const durationMs = seed.endUtc ? Date.parse(seed.endUtc) - startMs : 0
+  const occurrences = expandRRule(seed.startUtc, rrule, exDates, {
+    untilMs: Date.now() + EXPANSION_WINDOW_MS,
+    maxInstances: MAX_INSTANCES_PER_RULE,
+  })
+  return occurrences.map((iso, idx) => {
+    if (idx === 0) return { ...seed, startUtc: iso, endUtc: seed.endUtc }
+    const occMs = Date.parse(iso)
+    return {
+      ...seed,
+      id: `${seed.id}::${iso}`,
+      startUtc: iso,
+      endUtc: durationMs > 0 ? new Date(occMs + durationMs).toISOString() : undefined,
+    }
+  })
+}
+
 export function parseIcs(raw: string, source: EventSource): UnifiedEvent[] {
   const lines = unfoldLines(raw)
   const rawEvents = extractEvents(lines)
-  const now = Date.now()
-  const cutoff = now - 24 * 60 * 60 * 1000
-  return rawEvents
-    .map((event) => toUnifiedEvent(event, source))
-    .filter((event): event is UnifiedEvent => event !== null)
-    .filter((event) => {
-      const end = event.endUtc ? Date.parse(event.endUtc) : Date.parse(event.startUtc)
-      return Number.isFinite(end) && end >= cutoff
-    })
+  const cutoff = Date.now() - 24 * 60 * 60 * 1000
+  const out: UnifiedEvent[] = []
+  for (const rawEvent of rawEvents) {
+    const seed = buildSeedEvent(rawEvent, source)
+    if (!seed) continue
+    for (const occurrence of expandSeed(seed, rawEvent)) {
+      const end = occurrence.endUtc
+        ? Date.parse(occurrence.endUtc)
+        : Date.parse(occurrence.startUtc)
+      if (Number.isFinite(end) && end >= cutoff) out.push(occurrence)
+    }
+  }
+  return out
 }
