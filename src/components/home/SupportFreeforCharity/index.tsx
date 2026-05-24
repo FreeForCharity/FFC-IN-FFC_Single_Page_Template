@@ -2,6 +2,7 @@ import React from 'react'
 import TrainingCard from '../../ui/trainingcard'
 import BlueBtn from '../../ui/Bluebtn'
 import Transparentbtn from '@/components/ui/Transparentbtn'
+import { assetPath } from '@/lib/assetPath'
 
 const SupportFreeForCharity: React.FC = () => {
   return (
@@ -40,7 +41,7 @@ const SupportFreeForCharity: React.FC = () => {
               TRAINING PROGRAM.
             </h1>
             <TrainingCard
-              src="/Svgs/tickmark.svg"
+              src={assetPath('/Svgs/tickmark.svg')}
               heading="FREE TRAINING PROGRAMS"
               text="Are you looking to gain marketable skills in technology and business services? Are you looking to start building a portfolio showing real world support to small, medium, and large organizations? If so, this is the place for you."
             />
@@ -57,7 +58,7 @@ const SupportFreeForCharity: React.FC = () => {
               PROJECTS.
             </h1>
             <TrainingCard
-              src="/Svgs/home.svg"
+              src={assetPath('/Svgs/home.svg')}
               heading="CHARITY ONBOARDING"
               text="If you are representing a charity or you currently work for a charity and want to improve your own skills start here to get help for your organization. You get instant access to many of our free tools and products right away!"
             />
@@ -73,7 +74,7 @@ const SupportFreeForCharity: React.FC = () => {
               ARE YOU A BUSINESS OR INDIVIDUAL LOOKING TO DONATE OR PARTNER WITH FREE FOR CHARITY?
             </h1>
             <TrainingCard
-              src="/Svgs/heart.svg"
+              src={assetPath('/Svgs/heart.svg')}
               heading="VOLUNTEER AND/OR DONATE"
               text="We are always looking for individuals and business to support our training programs. Both donations as well as performing volunteer work for our training programs are critical to the success of Free For Charity and it’s mission."
             />

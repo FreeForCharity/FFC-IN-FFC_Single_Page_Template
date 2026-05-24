@@ -1,5 +1,6 @@
 import React from 'react'
 import Image from 'next/image'
+import { assetPath } from '@/lib/assetPath'
 
 const index = () => {
   return (
@@ -32,7 +33,7 @@ const index = () => {
         </a>
 
         <Image
-          src="/Images/Volunteer-with-Us.webp"
+          src={assetPath('/Images/Volunteer-with-Us.webp')}
           alt="Volunteer-with-Us"
           width={1083}
           height={607}

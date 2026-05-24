@@ -91,6 +91,10 @@ async function checkAssetPathUsage() {
   // or "/videos/x.mp4" that aren't wrapped by assetPath(). We also flag
   // template-literal patterns like `${basePath}/Images/...` since that
   // is the anti-pattern assetPath() exists to replace.
+  //
+  // As of the round-2 cleanup these are ERRORS rather than warnings —
+  // the codebase is clean and any new occurrence is a real bug
+  // (the resource will 404 on GitHub Pages subpath deploys).
   const literalPattern = /(["'`])(\/(?:Images|Svgs|videos)\/[^"'`\n]+?)\1/g
   const templateBasePattern = /\$\{[^}]*basePath[^}]*\}\/(?:Images|Svgs|videos)\//g
   // 400-char lookback covers prettier-wrapped multi-line calls with
@@ -110,7 +114,7 @@ async function checkAssetPathUsage() {
       if (insideComment(body, match.index)) continue
       const lookback = body.slice(Math.max(0, match.index - 400), match.index)
       if (wrappedInAssetPath.test(lookback)) continue
-      warnings.push(
+      errors.push(
         `${rel}:${lineAt(body, match.index)} references "${match[2]}" without assetPath(). ` +
           `Wrap in assetPath('${match[2]}') so it works on GitHub Pages subpaths.`
       )
@@ -119,7 +123,7 @@ async function checkAssetPathUsage() {
     templateBasePattern.lastIndex = 0
     while ((match = templateBasePattern.exec(body))) {
       if (insideComment(body, match.index)) continue
-      warnings.push(
+      errors.push(
         `${rel}:${lineAt(body, match.index)} hand-rolls basePath concatenation ("${match[0]}…"). ` +
           `Use assetPath('/Images/...') instead so the helper stays the single source of truth.`
       )

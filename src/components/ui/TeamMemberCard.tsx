@@ -2,6 +2,7 @@
 
 import React from 'react'
 import Image from 'next/image'
+import { assetPath } from '@/lib/assetPath'
 
 interface TeamMemberCardProps {
   imageUrl: string
@@ -43,7 +44,12 @@ export default function TeamMemberCard({
 
         {/* LinkedIn Button */}
         <a href={linkedinUrl} target="_blank" rel="noopener noreferrer" className="mt-6">
-          <Image src="/Svgs/linkedin-icon.svg" width={63} height={63} alt="linkedin icon"></Image>
+          <Image
+            src={assetPath('/Svgs/linkedin-icon.svg')}
+            width={63}
+            height={63}
+            alt="linkedin icon"
+          ></Image>
         </a>
       </div>
 

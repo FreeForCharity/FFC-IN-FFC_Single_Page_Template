@@ -1,5 +1,6 @@
 import React from 'react'
 import Image from 'next/image'
+import { assetPath } from '@/lib/assetPath'
 
 const Index = () => {
   return (
@@ -29,7 +30,7 @@ const Index = () => {
         {/* Responsive Image with Proper Dimensions */}
         <div className="relative w-full h-auto">
           <Image
-            src="/Images/free-for-charity.webp"
+            src={assetPath('/Images/free-for-charity.webp')}
             alt="Free For Charity GuideStar onboarding requirements and highlighted fields"
             width={780}
             height={100}

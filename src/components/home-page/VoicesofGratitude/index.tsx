@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react'
 import Image from 'next/image'
+import { assetPath } from '@/lib/assetPath'
 
 export default function TestimonialSlider() {
   const testimonials = [
@@ -77,7 +78,7 @@ export default function TestimonialSlider() {
                           {[...Array(testimonial.rating)].map((_, i) => (
                             <Image
                               key={i}
-                              src="/Svgs/start-icon.svg"
+                              src={assetPath('/Svgs/start-icon.svg')}
                               width={29}
                               height={29}
                               alt="start icon"

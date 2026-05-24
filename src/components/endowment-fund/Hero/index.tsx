@@ -1,5 +1,6 @@
 import React from 'react'
 import Link from 'next/link'
+import { assetPath } from '@/lib/assetPath'
 
 const Index = () => {
   return (
@@ -32,7 +33,7 @@ const Index = () => {
         {/* Image Section */}
         <div className="flex justify-center md:justify-start pt-[50px] md:pt-[64px]">
           <img
-            src="/Images/hero-img.webp"
+            src={assetPath('/Images/hero-img.webp')}
             alt="Person signing donation agreement"
             className="w-full max-w-[512px] rounded-[6px] shadow-2xl object-cover"
           />

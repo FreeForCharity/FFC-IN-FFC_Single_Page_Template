@@ -1,5 +1,6 @@
 import React from 'react'
 import Image from 'next/image'
+import { assetPath } from '@/lib/assetPath'
 
 const Index = () => {
   return (
@@ -11,7 +12,7 @@ const Index = () => {
           {/* Image Section */}
           <div className="relative w-full md:w-[48.5%] h-[350px] mb-[25px] md:mb-0 md:mr-[32px]">
             <Image
-              src="/Images/domains-black-section.webp"
+              src={assetPath('/Images/domains-black-section.webp')}
               alt="domains-blue-section"
               fill
               className="object-contain rounded-[10px]"
