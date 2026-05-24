@@ -83,6 +83,7 @@ export default function TestimonialSlider() {
                               height={29}
                               alt="start icon"
                               className="mx-[5px]"
+                              loading="lazy"
                             ></Image>
                           ))}
                         </div>
