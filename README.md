@@ -113,12 +113,20 @@ hand or use the same address for both.
    - Update Contact, Canonical, Policy, Acknowledgments to the new URL.
    - Bump Expires to ~12 months out, formatted YYYY-MM-DDTHH:MM:SSZ.
 
-4. public/site.webmanifest
-   - Update name, short_name, theme_color, background_color.
+4. Web manifest — NO direct edits needed.
+   - The manifest is auto-generated from siteConfig by src/app/manifest.ts
+     and served at /manifest.webmanifest at build time. Editing
+     siteConfig.{name, shortDescription, themeColor} (step 1) updates it.
+   - DO NOT add a static public/site.webmanifest back — it was deleted on
+     purpose so the values can't drift from siteConfig.
 
 5. public/Images/ and public/Svgs/
    - Replace branded assets. KEEP existing filenames where possible so the
      LCP preload in layout.tsx still hits a real file.
+   - Header logo: src/components/header/index.tsx still hardcodes an image
+     from a third-party URL (freeforcharity.org WordPress). Replace it
+     with a self-hosted asset under /Images/ or /Svgs/ and use
+     assetPath().
 
 6. src/data/{faqs,team,testimonials}.ts
    - Replace example content with the charity's real data.

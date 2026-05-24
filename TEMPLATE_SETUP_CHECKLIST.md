@@ -99,24 +99,45 @@ Create ruleset named "Protect Main":
 
 ## Customize Content and Branding
 
-### Organization Information
+### Organization Information (use `siteConfig`, NOT find-and-replace)
 
-- [ ] Search and replace "Free For Charity" with your org name
-- [ ] Search and replace EIN "46-2471893" with your EIN
-- [ ] Search and replace "ffcworkingsite1.org" with your domain
+- [ ] Edit `src/lib/site.config.ts` — sets the name, URL, description,
+      twitter handle, contact email, social links, theme color
+      everywhere they're consumed (title, OG/Twitter, footer, 404,
+      manifest, sitemap, robots, security headers)
+- [ ] Run `npm run check:drift` after editing — the placeholder-URL
+      and CSP-sync rules will flag anything still pointing at
+      `ffcworkingsite1.org` or out of sync
+- [ ] Update the EIN, mailing addresses, phone number, and GuideStar
+      profile link still hardcoded in `src/components/footer/index.tsx`
+      (these are not in siteConfig yet)
 
 ### Contact Information
 
-- [ ] Update `src/components/footer/index.tsx` - Footer contact
-- [ ] Update `SECURITY.md` - Security contact
-- [ ] Update `CODE_OF_CONDUCT.md` - Conduct reporting contact
-- [ ] Update `SUPPORT.md` - Support resources
+- [ ] `siteConfig.contactEmail` drives the footer e-mail link
+- [ ] Update `public/.well-known/security.txt` `Contact:` line (RFC
+      9116 requires it on the file itself; drift check warns on stale)
+- [ ] Update `SECURITY.md` — Security contact
+- [ ] Update `CODE_OF_CONDUCT.md` — Conduct reporting contact
+- [ ] Update `SUPPORT.md` — Support resources
 
 ### Branding Assets
 
-- [ ] Replace `/public/logo.svg` with your logo
-- [ ] Replace `/public/favicon.ico` with your favicon
-- [ ] Update Open Graph images (if present)
+- [ ] Replace `public/favicon.ico`, `public/icon.png`,
+      `public/apple-icon.png`, `public/android-chrome-{192,512}.png`,
+      and `public/web-app-manifest-512x512.png` with the charity's
+      branded assets (KEEP the filenames so layout.tsx and manifest.ts
+      pick them up automatically)
+- [ ] Replace the header logo: `src/components/header/index.tsx`
+      currently hardcodes an external `https://freeforcharity.org/...`
+      WordPress URL. Self-host a logo under `public/Images/` and use
+      `assetPath('/Images/your-logo.png')` instead.
+- [ ] Replace the OG / Twitter card image — `layout.tsx` references
+      `/web-app-manifest-512x512.png` (a square 512×512). For proper
+      social cards, drop a 1200×630 image at the same filename or
+      update both layout.tsx references to point at a new asset.
+- [ ] Replace branded images and SVGs under `public/Images/` and
+      `public/Svgs/`
 - [ ] Update color scheme in `src/app/globals.css`
 - [ ] Update fonts in `src/app/layout.tsx` (if needed)
 
