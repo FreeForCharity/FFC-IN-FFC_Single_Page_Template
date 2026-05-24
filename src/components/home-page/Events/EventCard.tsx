@@ -4,12 +4,13 @@ import { Calendar, Clock, MapPin } from 'lucide-react'
 import type { UnifiedEvent } from '@/lib/events/types'
 import { SOURCE_LABELS } from '@/lib/events/types'
 import {
-  formatDayNumber,
-  formatFullDate,
-  formatMonthShort,
-  formatTimeRange,
+  formatEventDay,
+  formatEventFullDate,
+  formatEventMonthShort,
+  formatEventTimeRange,
   truncate,
 } from '@/lib/events/format'
+import { safeHttpUrl, safeHttpsImageUrl } from '@/lib/events/safeUrl'
 import SourceBadge from './SourceBadge'
 import AddToCalendarMenu from './AddToCalendarMenu'
 
@@ -18,21 +19,24 @@ interface Props {
 }
 
 export default function EventCard({ event }: Props) {
-  const day = formatDayNumber(event.startUtc)
-  const month = formatMonthShort(event.startUtc)
-  const fullDate = formatFullDate(event.startUtc)
-  const timeRange = formatTimeRange(event)
+  const day = formatEventDay(event)
+  const month = formatEventMonthShort(event)
+  const fullDate = formatEventFullDate(event)
+  const timeRange = formatEventTimeRange(event)
   const description = event.description ? truncate(event.description, 160) : undefined
+  const safeUrl = safeHttpUrl(event.url)
+  const safeImage = safeHttpsImageUrl(event.imageUrl)
+  const sourceLabel = SOURCE_LABELS[event.source]
 
   return (
     <article
       className="flex flex-col h-full overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm hover:shadow-md transition-shadow"
       aria-labelledby={`event-${event.id}-title`}
     >
-      {event.imageUrl ? (
+      {safeImage ? (
         <div className="relative w-full h-40 bg-gray-100">
           <Image
-            src={event.imageUrl}
+            src={safeImage}
             alt=""
             fill
             sizes="(max-width: 768px) 100vw, 33vw"
@@ -87,7 +91,6 @@ export default function EventCard({ event }: Props) {
               <span>
                 <span className="sr-only">Time: </span>
                 {timeRange}
-                {event.timezone && <span className="text-gray-500"> ({event.timezone})</span>}
               </span>
             </li>
             {event.location && (
@@ -113,15 +116,16 @@ export default function EventCard({ event }: Props) {
       </div>
 
       <div className="flex flex-wrap items-center justify-between gap-2 px-5 pb-5 pt-0 mt-auto">
-        {event.url ? (
+        {safeUrl ? (
           <a
-            href={event.url}
+            href={safeUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center justify-center rounded-md bg-[#2B627B] px-4 py-2 text-sm font-[500] text-white hover:bg-[#1f4a5d] transition-colors"
+            aria-label={`View "${event.title}" on ${sourceLabel} (opens in new tab)`}
+            className="inline-flex items-center justify-center rounded-md bg-[#2B627B] px-4 py-2 text-sm font-[500] text-white hover:bg-[#1f4a5d] transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[#2B627B]"
             id="lato-font"
           >
-            View on {SOURCE_LABELS[event.source]}
+            View on {sourceLabel}
           </a>
         ) : (
           <span />

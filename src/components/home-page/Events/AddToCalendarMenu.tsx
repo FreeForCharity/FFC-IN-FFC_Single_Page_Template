@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useId, useRef, useState } from 'react'
 import {
   googleCalendarUrl,
   icsDataUri,
@@ -16,6 +16,8 @@ interface Props {
 export default function AddToCalendarMenu({ event }: Props) {
   const [open, setOpen] = useState(false)
   const containerRef = useRef<HTMLDivElement>(null)
+  const buttonRef = useRef<HTMLButtonElement>(null)
+  const menuId = useId()
 
   useEffect(() => {
     if (!open) return
@@ -25,7 +27,10 @@ export default function AddToCalendarMenu({ event }: Props) {
       }
     }
     function onKey(e: KeyboardEvent) {
-      if (e.key === 'Escape') setOpen(false)
+      if (e.key === 'Escape') {
+        setOpen(false)
+        buttonRef.current?.focus()
+      }
     }
     document.addEventListener('mousedown', onPointer)
     document.addEventListener('keydown', onKey)
@@ -46,11 +51,13 @@ export default function AddToCalendarMenu({ event }: Props) {
   return (
     <div ref={containerRef} className="relative inline-block">
       <button
+        ref={buttonRef}
         type="button"
         aria-haspopup="menu"
         aria-expanded={open}
+        aria-controls={menuId}
         onClick={() => setOpen((v) => !v)}
-        className="inline-flex items-center gap-1 rounded-md border border-[#2B627B] px-3 py-2 text-sm font-[500] text-[#2B627B] hover:bg-[#2B627B] hover:text-white transition-colors"
+        className="inline-flex items-center gap-1 rounded-md border border-[#2B627B] px-3 py-2 text-sm font-[500] text-[#2B627B] hover:bg-[#2B627B] hover:text-white transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[#2B627B]"
         id="lato-font"
       >
         Add to calendar
@@ -60,9 +67,10 @@ export default function AddToCalendarMenu({ event }: Props) {
       </button>
       {open && (
         <ul
+          id={menuId}
           role="menu"
-          className="absolute z-10 mt-2 right-0 w-56 rounded-md border border-gray-200 bg-white shadow-lg py-1 text-sm"
-          id="lato-font"
+          aria-label={`Add "${event.title}" to your calendar`}
+          className="absolute z-10 mt-2 left-0 sm:left-auto sm:right-0 w-56 max-w-[calc(100vw-2rem)] rounded-md border border-gray-200 bg-white shadow-lg py-1 text-sm"
         >
           <li role="none">
             <a
@@ -70,7 +78,7 @@ export default function AddToCalendarMenu({ event }: Props) {
               href={googleCalendarUrl(event)}
               target="_blank"
               rel="noopener noreferrer"
-              className="block px-4 py-2 hover:bg-gray-50"
+              className="block px-4 py-2 hover:bg-gray-50 focus:outline-none focus-visible:bg-gray-100"
             >
               Google Calendar
             </a>
@@ -81,7 +89,7 @@ export default function AddToCalendarMenu({ event }: Props) {
               href={office365Url(event)}
               target="_blank"
               rel="noopener noreferrer"
-              className="block px-4 py-2 hover:bg-gray-50"
+              className="block px-4 py-2 hover:bg-gray-50 focus:outline-none focus-visible:bg-gray-100"
             >
               Outlook 365
             </a>
@@ -92,7 +100,7 @@ export default function AddToCalendarMenu({ event }: Props) {
               href={outlookLiveUrl(event)}
               target="_blank"
               rel="noopener noreferrer"
-              className="block px-4 py-2 hover:bg-gray-50"
+              className="block px-4 py-2 hover:bg-gray-50 focus:outline-none focus-visible:bg-gray-100"
             >
               Outlook.com
             </a>
@@ -102,7 +110,7 @@ export default function AddToCalendarMenu({ event }: Props) {
               role="menuitem"
               href={icsHref}
               download={`${safeSlug}.ics`}
-              className="block px-4 py-2 hover:bg-gray-50"
+              className="block px-4 py-2 hover:bg-gray-50 focus:outline-none focus-visible:bg-gray-100"
             >
               Apple Calendar (.ics)
             </a>

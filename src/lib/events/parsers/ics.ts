@@ -1,4 +1,6 @@
 import type { EventSource, UnifiedEvent } from '../types'
+import { safeHttpUrl } from '../safeUrl'
+import { wallTimeToUtc } from '../timezone'
 
 interface RawProperty {
   name: string
@@ -74,11 +76,12 @@ function parseIcsDate(prop: RawProperty): { iso: string; allDay: boolean; tzid?:
   if (z === 'Z') {
     return { iso: `${y}-${mo}-${d}T${h}:${mi}:${s}.000Z`, allDay: false }
   }
-  // Floating or zoned local time. Without a tz database we treat as the
-  // naive wall-clock time and emit it as if it were UTC; the consumer is
-  // responsible for showing the original timezone label.
+  // Zoned local time per RFC 5545 §3.3.5: convert the wall-clock time
+  // into true UTC using the TZID offset. Without a TZID we keep the
+  // floating instant as-is.
+  const utcMs = wallTimeToUtc(+y, +mo, +d, +h, +mi, +s, tzid)
   return {
-    iso: `${y}-${mo}-${d}T${h}:${mi}:${s}.000Z`,
+    iso: new Date(utcMs).toISOString(),
     allDay: false,
     tzid: tzid || undefined,
   }
@@ -133,11 +136,12 @@ function toUnifiedEvent(raw: RawEvent, source: EventSource): UnifiedEvent | null
   if (!start) return null
   const dtend = firstProp(raw, 'DTEND')
   const end = dtend ? parseIcsDate(dtend) : null
-  const url = firstProp(raw, 'URL')?.value.trim()
+  const rawUrl = firstProp(raw, 'URL')?.value
   const location = firstProp(raw, 'LOCATION')
   const description = firstProp(raw, 'DESCRIPTION')
+  const safeUid = uid.value.trim().replace(/[\r\n]+/g, ' ')
   return {
-    id: `${source}:${uid.value.trim()}`,
+    id: `${source}:${safeUid}`,
     source,
     title: decodeText(summary.value).trim(),
     description: description ? decodeText(description.value).trim() : undefined,
@@ -146,7 +150,7 @@ function toUnifiedEvent(raw: RawEvent, source: EventSource): UnifiedEvent | null
     timezone: start.tzid,
     allDay: start.allDay,
     location: location ? decodeText(location.value).trim() : undefined,
-    url: url || '',
+    url: safeHttpUrl(rawUrl) ?? '',
     imageUrl: undefined,
   }
 }

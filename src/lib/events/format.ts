@@ -1,62 +1,113 @@
 import type { UnifiedEvent } from './types'
 
-const DAY_FORMATTER = new Intl.DateTimeFormat('en-US', {
-  day: '2-digit',
-  timeZone: 'UTC',
-})
-
-const MONTH_SHORT_FORMATTER = new Intl.DateTimeFormat('en-US', {
-  month: 'short',
-  timeZone: 'UTC',
-})
-
-const WEEKDAY_FORMATTER = new Intl.DateTimeFormat('en-US', {
-  weekday: 'long',
-  timeZone: 'UTC',
-})
-
-const DATE_FORMATTER = new Intl.DateTimeFormat('en-US', {
-  weekday: 'long',
-  month: 'long',
-  day: 'numeric',
-  year: 'numeric',
-  timeZone: 'UTC',
-})
-
-const TIME_FORMATTER = new Intl.DateTimeFormat('en-US', {
-  hour: 'numeric',
-  minute: '2-digit',
-  timeZone: 'UTC',
-})
-
-export function formatDayNumber(iso: string): string {
-  return DAY_FORMATTER.format(new Date(iso))
+interface FormatOptions {
+  /** IANA zone the time should be rendered in. */
+  timeZone?: string
 }
 
-export function formatMonthShort(iso: string): string {
-  return MONTH_SHORT_FORMATTER.format(new Date(iso)).toUpperCase()
+function dayFormatter(timeZone: string): Intl.DateTimeFormat {
+  return new Intl.DateTimeFormat('en-US', { day: '2-digit', timeZone })
 }
 
-export function formatWeekday(iso: string): string {
-  return WEEKDAY_FORMATTER.format(new Date(iso))
+function monthShortFormatter(timeZone: string): Intl.DateTimeFormat {
+  return new Intl.DateTimeFormat('en-US', { month: 'short', timeZone })
 }
 
-export function formatFullDate(iso: string): string {
-  return DATE_FORMATTER.format(new Date(iso))
+function weekdayFormatter(timeZone: string): Intl.DateTimeFormat {
+  return new Intl.DateTimeFormat('en-US', { weekday: 'long', timeZone })
 }
 
-export function formatTimeRange(event: UnifiedEvent): string {
+function dateFormatter(timeZone: string): Intl.DateTimeFormat {
+  return new Intl.DateTimeFormat('en-US', {
+    weekday: 'long',
+    month: 'long',
+    day: 'numeric',
+    year: 'numeric',
+    timeZone,
+  })
+}
+
+function timeFormatter(timeZone: string): Intl.DateTimeFormat {
+  return new Intl.DateTimeFormat('en-US', {
+    hour: 'numeric',
+    minute: '2-digit',
+    timeZone,
+  })
+}
+
+function shortTimezoneLabel(timeZone: string): string {
+  try {
+    const fmt = new Intl.DateTimeFormat('en-US', {
+      timeZone,
+      timeZoneName: 'short',
+    })
+    const part = fmt.formatToParts(new Date()).find((p) => p.type === 'timeZoneName')
+    return part?.value ?? timeZone
+  } catch {
+    return timeZone
+  }
+}
+
+function effectiveZone(event: UnifiedEvent, opts?: FormatOptions): string {
+  return opts?.timeZone || event.timezone || 'UTC'
+}
+
+export function formatDayNumber(iso: string, opts?: FormatOptions): string {
+  return dayFormatter(opts?.timeZone || 'UTC').format(new Date(iso))
+}
+
+export function formatMonthShort(iso: string, opts?: FormatOptions): string {
+  return monthShortFormatter(opts?.timeZone || 'UTC')
+    .format(new Date(iso))
+    .toUpperCase()
+}
+
+export function formatWeekday(iso: string, opts?: FormatOptions): string {
+  return weekdayFormatter(opts?.timeZone || 'UTC').format(new Date(iso))
+}
+
+export function formatFullDate(iso: string, opts?: FormatOptions): string {
+  return dateFormatter(opts?.timeZone || 'UTC').format(new Date(iso))
+}
+
+export function formatEventDay(event: UnifiedEvent): string {
+  return formatDayNumber(event.startUtc, { timeZone: effectiveZone(event) })
+}
+
+export function formatEventMonthShort(event: UnifiedEvent): string {
+  return formatMonthShort(event.startUtc, { timeZone: effectiveZone(event) })
+}
+
+export function formatEventFullDate(event: UnifiedEvent): string {
+  return formatFullDate(event.startUtc, { timeZone: effectiveZone(event) })
+}
+
+export function formatEventTimeRange(event: UnifiedEvent): string {
   if (event.allDay) return 'All day'
-  const start = TIME_FORMATTER.format(new Date(event.startUtc))
-  if (!event.endUtc) return start
-  const sameDay = event.startUtc.slice(0, 10) === event.endUtc.slice(0, 10)
-  const end = TIME_FORMATTER.format(new Date(event.endUtc))
-  if (sameDay) return `${start} – ${end}`
-  return `${start} – ${formatFullDate(event.endUtc)} ${end}`
+  const zone = effectiveZone(event)
+  const tf = timeFormatter(zone)
+  const start = tf.format(new Date(event.startUtc))
+  if (!event.endUtc) return appendZoneLabel(start, event)
+  const sameDay =
+    formatFullDate(event.startUtc, { timeZone: zone }) ===
+    formatFullDate(event.endUtc, { timeZone: zone })
+  const end = tf.format(new Date(event.endUtc))
+  const range = sameDay
+    ? `${start} – ${end}`
+    : `${start} – ${formatFullDate(event.endUtc, { timeZone: zone })} ${end}`
+  return appendZoneLabel(range, event)
+}
+
+function appendZoneLabel(value: string, event: UnifiedEvent): string {
+  if (!event.timezone) return value
+  return `${value} ${shortTimezoneLabel(event.timezone)}`
 }
 
 export function truncate(value: string, max = 160): string {
   const trimmed = value.trim()
   if (trimmed.length <= max) return trimmed
-  return `${trimmed.slice(0, max - 1).trimEnd()}…`
+  let cut = trimmed.slice(0, max - 1)
+  const lastSpace = cut.lastIndexOf(' ')
+  if (lastSpace > max * 0.6) cut = cut.slice(0, lastSpace)
+  return `${cut.replace(/[\s,;:—.]+$/, '')}…`
 }

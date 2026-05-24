@@ -1,4 +1,7 @@
 import type { UnifiedEvent } from '../types'
+import { safeHttpsImageUrl } from '../safeUrl'
+
+const FACEBOOK_ID_RE = /^[A-Za-z0-9._-]+$/
 
 interface FacebookEventPlace {
   name?: string
@@ -56,6 +59,7 @@ export function normalizeFacebookEvents(payload: FacebookEventsResponse): Unifie
   const cutoff = now - 24 * 60 * 60 * 1000
   const out: UnifiedEvent[] = []
   for (const node of payload.data) {
+    if (typeof node.id !== 'string' || !FACEBOOK_ID_RE.test(node.id)) continue
     const startUtc = toIsoUtc(node.start_time)
     if (!startUtc) continue
     const endUtc = toIsoUtc(node.end_time)
@@ -71,8 +75,8 @@ export function normalizeFacebookEvents(payload: FacebookEventsResponse): Unifie
       timezone: undefined,
       allDay: false,
       location: node.is_online ? 'Online event' : formatPlace(node.place),
-      url: `https://www.facebook.com/events/${node.id}`,
-      imageUrl: node.cover?.source,
+      url: `https://www.facebook.com/events/${encodeURIComponent(node.id)}`,
+      imageUrl: safeHttpsImageUrl(node.cover?.source),
     })
   }
   return out

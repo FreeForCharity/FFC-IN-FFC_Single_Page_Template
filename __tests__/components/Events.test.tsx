@@ -55,7 +55,8 @@ import Events from '../../src/components/home-page/Events'
 describe('Events component', () => {
   it('renders the section heading and intro', () => {
     render(<Events />)
-    expect(screen.getByRole('heading', { name: /upcoming events/i, level: 1 })).toBeInTheDocument()
+    // h2 because the page-level h1 lives in the Hero section.
+    expect(screen.getByRole('heading', { name: /upcoming events/i, level: 2 })).toBeInTheDocument()
     expect(screen.getByText(/aggregated from our Google Calendar/i)).toBeInTheDocument()
   })
 
@@ -66,12 +67,16 @@ describe('Events component', () => {
     expect(screen.getByText('Volunteer Orientation')).toBeInTheDocument()
     expect(screen.getByText('Quarterly Training')).toBeInTheDocument()
     expect(screen.getByText('Annual Gala')).toBeInTheDocument()
-    expect(screen.getByRole('link', { name: /view on google calendar/i })).toBeInTheDocument()
-    expect(screen.getByRole('link', { name: /view on microsoft 365/i })).toBeInTheDocument()
-    expect(screen.getByRole('link', { name: /view on facebook/i })).toHaveAttribute(
-      'href',
-      'https://www.facebook.com/events/gala-3'
-    )
+    // Each card's CTA aria-label contains "View ... on {source} (opens in new tab)".
+    expect(
+      screen.getByRole('link', { name: /view .*orientation.*google calendar.*opens/i })
+    ).toBeInTheDocument()
+    expect(
+      screen.getByRole('link', { name: /view .*training.*microsoft 365.*opens/i })
+    ).toBeInTheDocument()
+    expect(
+      screen.getByRole('link', { name: /view .*annual gala.*facebook.*opens/i })
+    ).toHaveAttribute('href', 'https://www.facebook.com/events/gala-3')
   })
 
   it('exposes Add to calendar controls for each event', () => {
@@ -80,13 +85,15 @@ describe('Events component', () => {
     expect(buttons).toHaveLength(3)
     for (const button of buttons) {
       expect(button).toHaveAttribute('aria-haspopup', 'menu')
+      expect(button).toHaveAttribute('aria-controls')
     }
   })
 
   it('groups events under month headings', () => {
     render(<Events />)
-    const h2s = screen.getAllByRole('heading', { level: 2 })
-    expect(h2s.length).toBeGreaterThan(0)
+    // Month buckets are h3 now (Events section heading is h2).
+    const h3s = screen.getAllByRole('heading', { level: 3 })
+    expect(h3s.length).toBeGreaterThan(0)
   })
 
   it('has no detectable accessibility violations', async () => {

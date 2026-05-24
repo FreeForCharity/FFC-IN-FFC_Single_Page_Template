@@ -17,7 +17,8 @@ export default function EmptyState() {
         href="https://www.facebook.com/freeforcharity"
         target="_blank"
         rel="noopener noreferrer"
-        className="inline-flex items-center justify-center rounded-md bg-[#2B627B] px-5 py-2.5 text-sm font-[500] text-white hover:bg-[#1f4a5d] transition-colors"
+        aria-label="Follow us on Facebook (opens in new tab)"
+        className="inline-flex items-center justify-center rounded-md bg-[#2B627B] px-5 py-2.5 text-sm font-[500] text-white hover:bg-[#1f4a5d] transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[#2B627B]"
         id="lato-font"
       >
         Follow us on Facebook

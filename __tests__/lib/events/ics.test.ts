@@ -78,7 +78,7 @@ describe('parseIcs', () => {
     expect(events[0].source).toBe('microsoft')
   })
 
-  it('captures TZID parameter for zoned start times', () => {
+  it('captures TZID and offsets zoned wall-time into true UTC', () => {
     const ics = buildIcs([
       'BEGIN:VEVENT',
       'UID:zoned@example.com',
@@ -89,6 +89,41 @@ describe('parseIcs', () => {
     const events = parseIcs(ics, 'google')
     expect(events).toHaveLength(1)
     expect(events[0].timezone).toBe('America/New_York')
+    // 2 PM in NY on March 15 (after DST starts) is EDT = 18:00 UTC.
+    expect(events[0].startUtc).toBe('2099-03-15T18:00:00.000Z')
+  })
+
+  it('sanitises a CR/LF-injecting UID', () => {
+    const start = farFutureDate(3)
+    const ics = buildIcs([
+      'BEGIN:VEVENT',
+      'UID:abc\\r\\nDTSTART:19700101T000000Z',
+      `DTSTART:${start.raw}`,
+      'SUMMARY:Injection attempt',
+      'END:VEVENT',
+    ])
+    const events = parseIcs(ics, 'google')
+    expect(events).toHaveLength(1)
+    // The UID is line-folded by us when the raw line contains CR/LF. In this
+    // synthetic test we use escaped \r\n in the property value; the parser
+    // accepts that string and our escapeId helper replaces any literal CR/LF
+    // it produces. The important assertion: the id has no newline characters.
+    expect(events[0].id).not.toMatch(/[\r\n]/)
+  })
+
+  it('rejects unsafe URL schemes', () => {
+    const start = farFutureDate(4)
+    const ics = buildIcs([
+      'BEGIN:VEVENT',
+      'UID:hostile-url@example.com',
+      `DTSTART:${start.raw}`,
+      'URL:javascript:alert(1)',
+      'SUMMARY:Hostile URL',
+      'END:VEVENT',
+    ])
+    const events = parseIcs(ics, 'google')
+    expect(events).toHaveLength(1)
+    expect(events[0].url).toBe('')
   })
 
   it('unfolds long lines per RFC 5545', () => {

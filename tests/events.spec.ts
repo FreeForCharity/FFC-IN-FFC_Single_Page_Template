@@ -19,7 +19,8 @@ test.describe('Events Section', () => {
     await page.goto('/')
     const section = page.locator(`#${testConfig.events.sectionId}`)
     await expect(section).toBeVisible()
-    const heading = section.locator('h1')
+    // The page-level h1 lives in the Hero; Events section heading is h2.
+    const heading = section.locator('h2#events-heading')
     await expect(heading).toBeVisible()
     await expect(heading).toContainText(testConfig.events.heading)
   })
@@ -99,6 +100,6 @@ test.describe('Events Section', () => {
     const section = page.locator(`#${testConfig.events.sectionId}`)
     await section.scrollIntoViewIfNeeded()
     await expect(section).toBeVisible()
-    await expect(section.locator('h1')).toBeVisible()
+    await expect(section.locator('h2#events-heading')).toBeVisible()
   })
 })

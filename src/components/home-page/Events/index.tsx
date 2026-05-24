@@ -1,25 +1,48 @@
 import React from 'react'
 import snapshot from '@/data/events.generated.json'
-import type { EventsSnapshot } from '@/lib/events/types'
+import type { EventsSnapshot, UnifiedEvent } from '@/lib/events/types'
 import { groupByMonth } from '@/lib/events/grouping'
+import { safeHttpUrl, safeHttpsImageUrl } from '@/lib/events/safeUrl'
 import EventCard from './EventCard'
 import EmptyState from './EmptyState'
+
+function eventJsonLd(event: UnifiedEvent) {
+  const url = safeHttpUrl(event.url)
+  const image = safeHttpsImageUrl(event.imageUrl)
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'Event',
+    name: event.title,
+    description: event.description,
+    startDate: event.startUtc,
+    endDate: event.endUtc,
+    eventAttendanceMode:
+      event.location === 'Online event'
+        ? 'https://schema.org/OnlineEventAttendanceMode'
+        : 'https://schema.org/OfflineEventAttendanceMode',
+    eventStatus: 'https://schema.org/EventScheduled',
+    ...(event.location && { location: { '@type': 'Place', name: event.location } }),
+    ...(url && { url }),
+    ...(image && { image }),
+  }
+}
 
 const Events = () => {
   const data = snapshot as EventsSnapshot
   const buckets = groupByMonth(data.events ?? [])
   const hasEvents = buckets.length > 0
+  const updatedAt = data.updatedAt ? new Date(data.updatedAt) : null
 
   return (
     <section id="events" className="py-[52px]" aria-labelledby="events-heading">
       <div className="w-[90%] mx-auto max-w-[1280px]">
-        <h1
+        <h2
           id="events-heading"
           className="font-[400] text-[40px] lg:text-[48px] leading-[100%] tracking-[0] text-center mx-auto mb-[20px]"
           data-font="faustina-font"
         >
           Upcoming Events
-        </h1>
+        </h2>
 
         <p
           className="text-center mx-auto mb-[50px] max-w-3xl text-[18px] lg:text-[20px] font-[400] text-gray-700"
@@ -33,12 +56,12 @@ const Events = () => {
           <div className="space-y-12">
             {buckets.map((bucket) => (
               <div key={bucket.monthKey}>
-                <h2
+                <h3
                   className="mb-6 border-b border-gray-200 pb-2 text-2xl font-semibold text-[#2B627B]"
                   id="lato-font"
                 >
                   {bucket.monthLabel}
-                </h2>
+                </h3>
                 <ul
                   className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3"
                   role="list"
@@ -57,9 +80,26 @@ const Events = () => {
           <EmptyState />
         )}
 
+        {hasEvents && (
+          <script
+            type="application/ld+json"
+            // Event JSON-LD for Google rich results. Static at build time;
+            // no user input flows into this block.
+            dangerouslySetInnerHTML={{
+              __html: JSON.stringify((data.events ?? []).map(eventJsonLd).filter(Boolean)),
+            }}
+          />
+        )}
+
         <p className="text-center mt-10 text-sm text-gray-500" id="lato-font">
-          {data.updatedAt ? (
-            <>Events last refreshed {new Date(data.updatedAt).toLocaleString('en-US')}.</>
+          {updatedAt ? (
+            <>
+              Events last refreshed{' '}
+              <time dateTime={updatedAt.toISOString()}>
+                {updatedAt.toLocaleString('en-US', { timeZone: 'UTC' })} UTC
+              </time>
+              .
+            </>
           ) : (
             <>Events are aggregated automatically from our calendar sources.</>
           )}{' '}
@@ -67,7 +107,8 @@ const Events = () => {
             href="https://www.facebook.com/freeforcharity"
             target="_blank"
             rel="noopener noreferrer"
-            className="text-[#2B627B] underline hover:no-underline"
+            aria-label="View all events on Facebook (opens in new tab)"
+            className="text-[#2B627B] underline hover:no-underline focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[#2B627B]"
           >
             View all events on Facebook
           </a>

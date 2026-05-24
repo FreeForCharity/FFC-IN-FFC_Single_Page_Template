@@ -1,4 +1,5 @@
 import type { UnifiedEvent } from './types'
+import { safeHttpUrl } from './safeUrl'
 
 function pad(n: number): string {
   return n.toString().padStart(2, '0')
@@ -50,12 +51,13 @@ function outlookComposeUrl(event: UnifiedEvent, base: string): string {
 }
 
 export function icsDataUri(event: UnifiedEvent): string {
+  const safeUrl = safeHttpUrl(event.url)
   const lines = [
     'BEGIN:VCALENDAR',
     'VERSION:2.0',
     'PRODID:-//Free For Charity//Events//EN',
     'BEGIN:VEVENT',
-    `UID:${event.id}`,
+    `UID:${escapeIcsId(event.id)}`,
     `DTSTAMP:${toCompactUtc(new Date().toISOString())}`,
     `DTSTART:${toCompactUtc(event.startUtc)}`,
     `DTEND:${toCompactUtc(event.endUtc ?? new Date(new Date(event.startUtc).getTime() + 60 * 60 * 1000).toISOString())}`,
@@ -63,7 +65,7 @@ export function icsDataUri(event: UnifiedEvent): string {
   ]
   if (event.description) lines.push(`DESCRIPTION:${escapeIcsText(event.description)}`)
   if (event.location) lines.push(`LOCATION:${escapeIcsText(event.location)}`)
-  if (event.url) lines.push(`URL:${event.url}`)
+  if (safeUrl) lines.push(`URL:${safeUrl}`)
   lines.push('END:VEVENT', 'END:VCALENDAR')
   return `data:text/calendar;charset=utf-8,${encodeURIComponent(lines.join('\r\n'))}`
 }
@@ -74,4 +76,12 @@ function escapeIcsText(value: string): string {
     .replace(/\n/g, '\\n')
     .replace(/,/g, '\\,')
     .replace(/;/g, '\\;')
+}
+
+/**
+ * UID is a single line of structured text (RFC 5545 § 3.8.4.7); CR/LF would
+ * end the property and let an attacker inject sibling VEVENT properties.
+ */
+function escapeIcsId(value: string): string {
+  return value.replace(/[\r\n]+/g, '_')
 }
