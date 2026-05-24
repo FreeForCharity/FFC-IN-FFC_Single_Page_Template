@@ -3,21 +3,31 @@
  * FFC drift guard — runs in CI and as a pre-commit hook.
  *
  * Catches common ways a child site can drift away from FFC best practices:
- *  1. Route folders that are not kebab-case (SEO requirement)
- *  2. Hardcoded `/Images/...` or `/Svgs/...` paths missing `assetPath()`
- *  3. Common secret patterns committed by accident
- *  4. The template's placeholder URL `ffcworkingsite1.org` left behind in
- *     non-config files after a child site rebrands
- *  5. `src/lib/site.config.ts` left at template defaults but with a custom
- *     domain pushed via CNAME (warn only)
+ *  1. Top-level route folders under src/app/ that are not kebab-case
+ *     (SEO requirement per Google Search Central).
+ *  2. Hardcoded `/Images/...`, `/Svgs/...`, or `/videos/...` paths and
+ *     `${basePath}/...` template literals missing `assetPath()`.
+ *  3. Common secret patterns committed under src/ or public/.
+ *  4. The template's placeholder URL `ffcworkingsite1.org` left in source
+ *     or public files after a child site rebrands.
+ *  5. Two CSPs (public/_headers and src/app/layout.tsx meta tag) drifting
+ *     out of sync on third-party origins.
  *
  * Run: `node scripts/check-drift.mjs` or `npm run check:drift`.
+ * Always resolves paths relative to the repo root, so it works regardless
+ * of the CWD a developer invokes it from.
  * Exits non-zero on errors; warnings do not fail the check.
  */
 import { readdir, readFile, stat } from 'node:fs/promises'
-import { join, relative, sep } from 'node:path'
+import { dirname, join, relative, sep } from 'node:path'
+import { fileURLToPath } from 'node:url'
 
-const ROOT = process.cwd()
+// Anchor everything to the repo root (scripts/check-drift.mjs lives one
+// level down) so the check produces the same result no matter where it's
+// invoked from. Previously this used process.cwd() which silently scanned
+// nothing if you ran the script from a subdirectory.
+const SCRIPT_DIR = dirname(fileURLToPath(import.meta.url))
+const ROOT = join(SCRIPT_DIR, '..')
 const APP_DIR = join(ROOT, 'src', 'app')
 const SRC_DIR = join(ROOT, 'src')
 const errors = []
@@ -187,20 +197,35 @@ async function checkSecrets() {
 const PLACEHOLDER_HOST = 'ffcworkingsite1.org'
 
 async function checkPlaceholderUrl() {
+  // Trigger the scan if EITHER the CNAME or the siteConfig.url has been
+  // updated away from the template default. The previous behavior — only
+  // running when CNAME pointed to a custom domain — missed two real cases:
+  // 1) Sites deploying only to github.io subpath (no CNAME) that still
+  //    forgot to update security.txt / webmanifest.
+  // 2) Sites that updated siteConfig.url before touching CNAME.
   const cnamePath = join(ROOT, 'public', 'CNAME')
+  const cfgPath = join(ROOT, 'src', 'lib', 'site.config.ts')
   let customDomain = null
+  let cfgUrl = null
   try {
     customDomain = (await readFile(cnamePath, 'utf8')).trim()
   } catch {
-    /* no CNAME, fine */
+    /* no CNAME — OK, may be github.io-only */
   }
-  if (!customDomain || customDomain === PLACEHOLDER_HOST) return
+  try {
+    const cfg = await readFile(cfgPath, 'utf8')
+    const m = cfg.match(/url:\s*['"]([^'"]+)['"]/)
+    cfgUrl = m ? m[1] : null
+  } catch {
+    /* config missing — handled elsewhere */
+  }
 
-  // CNAME points to a real custom domain. Walk every text source under
-  // src/ and public/ (plus a small set of well-known config files at the
-  // repo root) for the placeholder host. Walking — rather than a fixed
-  // file list — means stale references in component READMEs, future docs,
-  // or freshly-added config files don't get missed.
+  const cnameRebranded = customDomain && customDomain !== PLACEHOLDER_HOST
+  const cfgRebranded = cfgUrl && !cfgUrl.includes(PLACEHOLDER_HOST)
+  if (!cnameRebranded && !cfgRebranded) return
+
+  // Walk every text source under src/ and public/ (plus a small set of
+  // well-known config files at the repo root) for the placeholder host.
   const interestingExt = /\.(tsx?|jsx?|md|mdx|txt|json|yml|yaml|webmanifest)$|^_headers$|^CNAME$/
   const roots = [join(ROOT, 'src'), join(ROOT, 'public')]
   const rootFiles = ['next.config.ts', 'package.json', 'README.md']
@@ -211,6 +236,7 @@ async function checkPlaceholderUrl() {
   for (const name of rootFiles) {
     candidates.push(join(ROOT, name))
   }
+  const customRef = cnameRebranded ? customDomain : cfgUrl
   for (const full of candidates) {
     const rel = relative(ROOT, full)
     try {
@@ -222,8 +248,8 @@ async function checkPlaceholderUrl() {
       if (body.includes(PLACEHOLDER_HOST)) {
         const line = lineAt(body, body.indexOf(PLACEHOLDER_HOST))
         warnings.push(
-          `public/CNAME points to "${customDomain}" but ${rel}:${line} still references ` +
-            `${PLACEHOLDER_HOST}. Update it to match your custom domain.`
+          `${rel}:${line} still references the template placeholder ${PLACEHOLDER_HOST} ` +
+            `(this site has rebranded to "${customRef}"). Update it.`
         )
       }
     } catch {
@@ -241,11 +267,75 @@ async function checkSiteConfigExists() {
   }
 }
 
+// CSP directives that are honored in <meta http-equiv> AND in HTTP headers.
+// We diff each of these between public/_headers and src/app/layout.tsx so
+// the two stay in lockstep on third-party origins.
+const SYNCED_CSP_DIRECTIVES = [
+  'script-src',
+  'style-src',
+  'img-src',
+  'font-src',
+  'connect-src',
+  'frame-src',
+  'media-src',
+  'form-action',
+]
+
+function extractCspDirectives(policy) {
+  const out = new Map()
+  if (!policy) return out
+  for (const part of policy.split(';')) {
+    const trimmed = part.trim()
+    if (!trimmed) continue
+    const [name, ...sources] = trimmed.split(/\s+/)
+    out.set(name, new Set(sources))
+  }
+  return out
+}
+
+async function checkCspSync() {
+  let headersBody, layoutBody
+  try {
+    headersBody = await readFile(join(ROOT, 'public', '_headers'), 'utf8')
+    layoutBody = await readFile(join(ROOT, 'src', 'app', 'layout.tsx'), 'utf8')
+  } catch {
+    return // missing files handled elsewhere
+  }
+  const headersMatch = headersBody.match(/Content-Security-Policy:\s*([^\n]+)/)
+  // The CSP content uses double-quoted JSX attributes and includes nested
+  // single quotes (e.g. 'self', 'unsafe-inline'). Match the outer double
+  // quote precisely so the capture doesn't terminate on the first inner '.
+  const layoutMatch = layoutBody.match(
+    /httpEquiv=["']Content-Security-Policy["'][\s\S]*?content="([^"]+)"/
+  )
+  if (!headersMatch || !layoutMatch) return
+
+  const headersCsp = extractCspDirectives(headersMatch[1])
+  const layoutCsp = extractCspDirectives(layoutMatch[1])
+
+  for (const directive of SYNCED_CSP_DIRECTIVES) {
+    const hSet = headersCsp.get(directive) || new Set()
+    const lSet = layoutCsp.get(directive) || new Set()
+    const onlyInHeaders = [...hSet].filter((s) => !lSet.has(s))
+    const onlyInLayout = [...lSet].filter((s) => !hSet.has(s))
+    if (onlyInHeaders.length || onlyInLayout.length) {
+      const detail = []
+      if (onlyInHeaders.length) detail.push(`only in _headers: ${onlyInHeaders.join(' ')}`)
+      if (onlyInLayout.length) detail.push(`only in layout.tsx: ${onlyInLayout.join(' ')}`)
+      errors.push(
+        `CSP "${directive}" drifted between public/_headers and src/app/layout.tsx — ${detail.join(' / ')}. ` +
+          `Resource will load on one host and fail on the other. Update both files together.`
+      )
+    }
+  }
+}
+
 await checkSiteConfigExists()
 await checkKebabCaseRoutes()
 await checkAssetPathUsage()
 await checkSecrets()
 await checkPlaceholderUrl()
+await checkCspSync()
 
 if (warnings.length) {
   console.warn('\n⚠️  Drift warnings:')

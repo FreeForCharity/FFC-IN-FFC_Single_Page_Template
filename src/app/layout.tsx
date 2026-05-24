@@ -70,7 +70,8 @@ export const metadata: Metadata = {
     ],
     apple: [{ url: assetPath('/apple-icon.png'), sizes: '180x180', type: 'image/png' }],
   },
-  manifest: assetPath('/site.webmanifest'),
+  // Manifest is generated dynamically from siteConfig via src/app/manifest.ts;
+  // Next.js auto-wires the <link rel="manifest"> tag, so we don't set it here.
 }
 export default function RootLayout({
   children,
