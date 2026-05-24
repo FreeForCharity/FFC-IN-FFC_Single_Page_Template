@@ -1,0 +1,157 @@
+name: security.txt expiry check
+
+# RFC 9116 requires `Expires:` to be in the future. This workflow opens
+# an issue when the date is within 30 days so the maintainers can bump it
+# before browsers and scanners start flagging the site.
+#
+# Parse failures, missing file, missing Expires line, and approaching
+# expiry each open their OWN issue (different markers) so an open
+# alert for one condition does not silently suppress another.
+
+on:
+  schedule:
+    - cron: '0 12 * * 1' # weekly, Monday 12:00 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Inspect Expires header
+        uses: actions/github-script@v8
+        with:
+          script: |
+            const fs = require('fs');
+            const path = 'public/.well-known/security.txt';
+            const owner = context.repo.owner;
+            const repo = context.repo.repo;
+
+            // Each alert condition uses its own marker so the listForRepo
+            // dedupe is scoped per-condition. Otherwise a lingering
+            // "file missing" issue would silently suppress a fresh
+            // "expires-soon" issue and vice versa.
+            const MARKERS = {
+              missing: '<!-- ffc-security-txt:missing -->',
+              noExpires: '<!-- ffc-security-txt:no-expires -->',
+              invalidExpires: '<!-- ffc-security-txt:invalid-expires -->',
+              expiringSoon: '<!-- ffc-security-txt:expiring-soon -->',
+            };
+
+            // RFC 9116 §2.5.5 defers to RFC 3339 §5.6 for the datetime
+            // format. RFC 3339 allows either `Z` or a numeric offset
+            // (e.g. `+00:00`). Both are accepted here.
+            const iso8601 =
+              /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|[+-]\d{2}:\d{2})$/;
+
+            async function findExistingIssue(marker) {
+              const issues = await github.paginate(github.rest.issues.listForRepo, {
+                owner,
+                repo,
+                state: 'open',
+                per_page: 100,
+              });
+              return issues.find(
+                (issue) => !issue.pull_request && (issue.body || '').includes(marker)
+              );
+            }
+
+            async function ensureIssue(marker, title, body) {
+              try {
+                const existing = await findExistingIssue(marker);
+                if (existing) {
+                  core.info(`Existing issue #${existing.number} for ${marker} — skipping.`);
+                  return;
+                }
+                const created = await github.rest.issues.create({
+                  owner,
+                  repo,
+                  title,
+                  body: `${body}\n\n${marker}`,
+                  labels: ['security', 'maintenance'],
+                });
+                core.info(`Created issue #${created.data.number}.`);
+              } catch (err) {
+                core.warning(
+                  `Failed to ensure issue for marker ${marker}: ${err && err.message ? err.message : err}`
+                );
+              }
+            }
+
+            if (!fs.existsSync(path)) {
+              // setFailed FIRST so the underlying failure is recorded
+              // even if the GitHub Issues API is unavailable.
+              core.setFailed(`${path} not found.`);
+              await ensureIssue(
+                MARKERS.missing,
+                'security.txt is missing',
+                [
+                  `\`${path}\` was not found in the repository.`,
+                  '',
+                  'Restore the file with a valid `Expires:` line in the future.',
+                ].join('\n')
+              );
+              return;
+            }
+
+            const body = fs.readFileSync(path, 'utf8');
+            const m = body.match(/^Expires:\s*(.+)$/mi);
+            if (!m) {
+              core.setFailed(`No Expires line in ${path}.`);
+              await ensureIssue(
+                MARKERS.noExpires,
+                'security.txt is missing the Expires line',
+                [
+                  `\`${path}\` has no \`Expires:\` line.`,
+                  '',
+                  'RFC 9116 requires exactly one `Expires:` line with an ISO 8601 datetime.',
+                ].join('\n')
+              );
+              return;
+            }
+
+            const raw = m[1].trim();
+            if (!iso8601.test(raw)) {
+              core.setFailed(`Could not parse Expires: ${raw}`);
+              await ensureIssue(
+                MARKERS.invalidExpires,
+                'security.txt Expires line is not RFC 9116 compliant',
+                [
+                  `\`${path}\` Expires value \`${raw}\` is not a valid RFC 3339 datetime.`,
+                  '',
+                  'Use the form `YYYY-MM-DDTHH:MM:SSZ` (or `±HH:MM` offset); fractional seconds are allowed.',
+                ].join('\n')
+              );
+              return;
+            }
+
+            const expires = new Date(raw);
+            const now = new Date();
+            const daysLeft = Math.ceil((expires - now) / (1000 * 60 * 60 * 24));
+            core.info(`security.txt expires in ${daysLeft} day(s) (${expires.toISOString()}).`);
+            if (daysLeft > 30) return;
+
+            // Already past Expires: RFC 9116 says clients MUST treat the
+            // file as invalid, so fail the job hard in addition to opening
+            // an issue. Within 30 days is just a warning.
+            if (daysLeft <= 0) {
+              core.setFailed(
+                `security.txt expired ${Math.abs(daysLeft)} day(s) ago (${expires.toISOString()}).`
+              );
+            }
+
+            await ensureIssue(
+              MARKERS.expiringSoon,
+              `security.txt Expires within ${Math.max(daysLeft, 0)} days`,
+              [
+                `\`${path}\` will expire on **${expires.toISOString()}** (${daysLeft} day(s) from now).`,
+                '',
+                'Update the `Expires:` line, commit, and merge to refresh.',
+              ].join('\n')
+            );

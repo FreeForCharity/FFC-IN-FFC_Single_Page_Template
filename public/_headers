@@ -1,0 +1,46 @@
+# Security and caching headers for Cloudflare Pages / Netlify-compatible hosts.
+# GitHub Pages does NOT read this file; CSP meta tag in <head> covers that case.
+# Keep in sync with the meta http-equiv tag in src/app/layout.tsx.
+#
+# CSP rationale:
+# - 'unsafe-inline' on script/style is required for Next.js inline runtime
+#   chunks and Tailwind. Tighten with nonces if you migrate off static export.
+# - GTM, GA4 (incl. regional collectors), Clarity, Zeffy, GuideStar, Facebook
+#   Pixel, Microsoft Forms, SociableKit (Facebook events widget), and YouTube
+#   are whitelisted because they are loaded by the layout, cookie-consent,
+#   and home-page components. Add new third parties here when you integrate
+#   them, and update src/app/layout.tsx in the same commit.
+#
+# Header notes:
+# - HSTS does NOT set `preload`; that flag is a binding promise template
+#   users cannot honor without submitting their domain to hstspreload.org.
+#   Child sites that want preload should opt in explicitly after submission.
+# - COOP is `same-origin-allow-popups` so OAuth popups from Microsoft Forms,
+#   Zeffy, and other embedded payment / signup flows can postMessage back.
+# - CORP is `cross-origin` so the open graph image and SVG/PNG assets remain
+#   embeddable on Facebook scraper, partner sites, and Lighthouse.
+/*
+  X-Frame-Options: SAMEORIGIN
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: strict-origin-when-cross-origin
+  Permissions-Policy: accelerometer=(), camera=(), geolocation=(), gyroscope=(), magnetometer=(), microphone=(), payment=(), usb=(), interest-cohort=()
+  Strict-Transport-Security: max-age=63072000; includeSubDomains
+  Cross-Origin-Opener-Policy: same-origin-allow-popups
+  Cross-Origin-Resource-Policy: cross-origin
+  X-DNS-Prefetch-Control: on
+  Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.googletagmanager.com https://www.google-analytics.com https://*.google-analytics.com https://www.clarity.ms https://*.clarity.ms https://widgets.guidestar.org https://connect.facebook.net https://www.zeffy.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data: blob: https:; font-src 'self' data: https://fonts.gstatic.com; connect-src 'self' https://www.google-analytics.com https://*.google-analytics.com https://stats.g.doubleclick.net https://www.googletagmanager.com https://www.clarity.ms https://*.clarity.ms; frame-src https://www.googletagmanager.com https://www.zeffy.com https://widgets.guidestar.org https://www.facebook.com https://forms.office.com https://forms.microsoft.com https://www.youtube.com https://www.youtube-nocookie.com https://widgets.sociablekit.com; media-src 'self' blob: https:; object-src 'none'; base-uri 'self'; form-action 'self' https://www.zeffy.com https://forms.office.com; frame-ancestors 'self'; upgrade-insecure-requests
+
+# Long-cache fingerprinted Next.js assets.
+/_next/static/*
+  Cache-Control: public, max-age=31536000, immutable
+
+# Static images and svgs are versioned by deploy; cache for a day.
+/Images/*
+  Cache-Control: public, max-age=86400, must-revalidate
+/Svgs/*
+  Cache-Control: public, max-age=86400, must-revalidate
+
+# security.txt should not be cached for long.
+/.well-known/security.txt
+  Cache-Control: public, max-age=3600
+  Content-Type: text/plain; charset=utf-8

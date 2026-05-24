@@ -4,6 +4,8 @@ import Header from './../components/header'
 import Footer from './../components/footer'
 import CookieConsent from './../components/cookie-consent'
 import GoogleTagManager, { GoogleTagManagerNoScript } from './../components/google-tag-manager'
+import { siteConfig, siteUrl, twitterSite, cardDescription } from '@/lib/site.config'
+import { assetPath } from '@/lib/assetPath'
 import {
   openSans,
   lato,
@@ -15,26 +17,16 @@ import {
   cinzel,
 } from '@/lib/fonts'
 
-// Get basePath for GitHub Pages deployment
-const basePath = process.env.NEXT_PUBLIC_BASE_PATH || ''
+const defaultTitle = `${siteConfig.name} | ${siteConfig.tagline}`
 
 export const metadata: Metadata = {
-  metadataBase: new URL('https://ffcworkingsite1.org'),
+  metadataBase: new URL(siteConfig.url),
   title: {
-    default: 'Free For Charity | Reduce Costs, Increase Impact',
-    template: '%s | Free For Charity',
+    default: defaultTitle,
+    template: `%s | ${siteConfig.name}`,
   },
-  description:
-    'Free For Charity connects students, professionals, and businesses with nonprofits to reduce costs and increase revenues—putting more resources back into their missions.',
-  keywords: [
-    'nonprofit',
-    'charity',
-    'volunteer',
-    'donate',
-    'free hosting',
-    'domains',
-    'Microsoft 365',
-  ],
+  description: siteConfig.description,
+  keywords: [...siteConfig.keywords],
   robots: {
     index: true,
     follow: true,
@@ -51,36 +43,34 @@ export const metadata: Metadata = {
   },
   openGraph: {
     type: 'website',
-    url: 'https://ffcworkingsite1.org/',
-    siteName: 'Free For Charity',
-    title: 'Free For Charity | Reduce Costs, Increase Impact',
-    description:
-      'Connecting students, professionals, and businesses with nonprofits to reduce costs and increase revenues.',
+    url: siteUrl('/'),
+    siteName: siteConfig.name,
+    title: defaultTitle,
+    description: cardDescription(),
     images: [
       {
-        url: '/web-app-manifest-512x512.png',
+        url: assetPath('/web-app-manifest-512x512.png'),
         width: 512,
         height: 512,
-        alt: 'Free For Charity',
+        alt: siteConfig.name,
       },
     ],
   },
   twitter: {
     card: 'summary_large_image',
-    site: '@freeforcharity',
-    title: 'Free For Charity | Reduce Costs, Increase Impact',
-    description:
-      'Connecting students, professionals, and businesses with nonprofits to reduce costs and increase revenues.',
-    images: ['/web-app-manifest-512x512.png'],
+    site: twitterSite(),
+    title: defaultTitle,
+    description: cardDescription(),
+    images: [assetPath('/web-app-manifest-512x512.png')],
   },
   icons: {
     icon: [
-      { url: `${basePath}/favicon.ico`, sizes: '32x32' },
-      { url: `${basePath}/icon.png`, type: 'image/png', sizes: '32x32' },
+      { url: assetPath('/favicon.ico'), sizes: '32x32' },
+      { url: assetPath('/icon.png'), type: 'image/png', sizes: '32x32' },
     ],
-    apple: [{ url: `${basePath}/apple-icon.png`, sizes: '180x180', type: 'image/png' }],
+    apple: [{ url: assetPath('/apple-icon.png'), sizes: '180x180', type: 'image/png' }],
   },
-  manifest: `${basePath}/site.webmanifest`,
+  manifest: assetPath('/site.webmanifest'),
 }
 export default function RootLayout({
   children,
@@ -90,6 +80,22 @@ export default function RootLayout({
   return (
     <html lang="en">
       <head>
+        {/* Baseline CSP for hosts that cannot serve _headers (GitHub Pages).
+            Note: frame-ancestors, sandbox, and report-uri are IGNORED by the
+            browser when delivered via <meta http-equiv> per the CSP spec.
+            GitHub Pages also does NOT set X-Frame-Options by default, so
+            clickjacking defense is not available on a Pages-only deploy.
+            Production sites should sit behind Cloudflare/Netlify so the
+            frame-ancestors directive in public/_headers takes effect.
+            Keep the rest of this list aligned with public/_headers —
+            third-party origins must be added to BOTH. */}
+        <meta
+          httpEquiv="Content-Security-Policy"
+          content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.googletagmanager.com https://www.google-analytics.com https://*.google-analytics.com https://www.clarity.ms https://*.clarity.ms https://widgets.guidestar.org https://connect.facebook.net https://www.zeffy.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data: blob: https:; font-src 'self' data: https://fonts.gstatic.com; connect-src 'self' https://www.google-analytics.com https://*.google-analytics.com https://stats.g.doubleclick.net https://www.googletagmanager.com https://www.clarity.ms https://*.clarity.ms; frame-src https://www.googletagmanager.com https://www.zeffy.com https://widgets.guidestar.org https://www.facebook.com https://forms.office.com https://forms.microsoft.com https://www.youtube.com https://www.youtube-nocookie.com https://widgets.sociablekit.com; media-src 'self' blob: https:; object-src 'none'; base-uri 'self'; form-action 'self' https://www.zeffy.com https://forms.office.com; upgrade-insecure-requests"
+        />
+        <meta name="referrer" content="strict-origin-when-cross-origin" />
+        <meta name="color-scheme" content="light" />
+
         {/* Preconnect to external domains for faster resource loading */}
         <link rel="preconnect" href="https://www.googletagmanager.com" />
         <link rel="preconnect" href="https://ffcsites.org" />
@@ -104,7 +110,7 @@ export default function RootLayout({
         <link
           rel="preload"
           as="image"
-          href={`${basePath}/Images/figma-hero-img.webp`}
+          href={assetPath('/Images/figma-hero-img.webp')}
           fetchPriority="high"
         />
 
