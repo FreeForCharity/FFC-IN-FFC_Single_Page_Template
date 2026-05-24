@@ -29,11 +29,15 @@ Quick reference checklist for setting up a new repository from the FFC Single Pa
 
 ### GitHub Pages (Settings → Pages)
 
-- [ ] Source: Deploy from a branch
-- [ ] Branch: Select `gh-pages` and `/ (root)`
-- [ ] Custom domain (if applicable): Enter domain name
+- [ ] **Source: GitHub Actions** (NOT "Deploy from a branch" — this repo's
+      `.github/workflows/deploy.yml` uploads a Pages artifact via
+      `actions/deploy-pages`; there is no `gh-pages` branch)
+- [ ] Custom domain (if applicable): Enter domain name and click "Save"
 - [ ] Wait for DNS check to complete
 - [ ] Enable "Enforce HTTPS" (after DNS configured)
+- [ ] If using a github.io subpath fallback, also update
+      `NEXT_PUBLIC_BASE_PATH` in `.github/workflows/deploy.yml` and
+      `.github/workflows/lighthouse.yml` to `/your-repo-name`
 
 ### Actions Permissions (Settings → Actions → General)
 
@@ -241,10 +245,11 @@ Create ruleset named "Protect Main":
 
 ✅ **Solution**:
 
-1. Verify Pages source is `gh-pages` branch
+1. Verify Pages source is set to **"GitHub Actions"** (Settings → Pages → Source)
 2. Wait 2-5 minutes for propagation
-3. Check Actions tab for deployment status
-4. Verify `NEXT_PUBLIC_BASE_PATH` matches repo name
+3. Check Actions tab for the "Deploy to GitHub Pages" workflow status
+4. Verify `NEXT_PUBLIC_BASE_PATH` in `.github/workflows/deploy.yml` matches the repo name (e.g. `/my-charity-site`)
+5. If you have a custom domain, confirm `public/CNAME` contains it (no scheme, no trailing slash)
 
 ### Images don't load on GitHub Pages
 
