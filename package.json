@@ -31,6 +31,7 @@
     "swiper": "^12.1.4"
   },
   "devDependencies": {
+    "@axe-core/playwright": "^4.11.3",
     "@axe-core/react": "^4.11.1",
     "@commitlint/cli": "^20.5.0",
     "@commitlint/config-conventional": "^20.5.0",
