@@ -463,6 +463,22 @@ npm run lint
 npm run build
 ```
 
+### Bundle Analysis
+
+When evaluating dependency changes or hunting for unexpected bundle growth, run the analyzer:
+
+```bash
+npm run analyze
+```
+
+This sets `ANALYZE=true` and runs `next build --webpack` (the `--webpack` flag is required because `@next/bundle-analyzer` is not yet compatible with the default Turbopack build). The script writes three interactive HTML treemap reports:
+
+- `.next/analyze/client.html` — what ships to the browser
+- `.next/analyze/nodejs.html` — Node runtime chunks
+- `.next/analyze/edge.html` — edge runtime chunks
+
+Open `client.html` first — that's the bundle visitors actually download. The default `npm run build` is unchanged and does not invoke the analyzer; the analyzer is opt-in, developer-local only, and is not wired into CI.
+
 ## Security Testing
 
 ### GitHub Dependabot
