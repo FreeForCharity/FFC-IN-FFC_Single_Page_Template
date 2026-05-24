@@ -1,4 +1,5 @@
 import SlidingCard from '@/components/ui/SlidingCard'
+import { assetPath } from '@/lib/assetPath'
 
 export default function Page() {
   return (
@@ -18,7 +19,7 @@ export default function Page() {
           }
           buttonText="Available Here"
           buttonLink="https://lastpass.com/friendwelcome.php?og=1&ref=47075402"
-          imageSrc="/Images/LastPass-Logo-Color.webp"
+          imageSrc={assetPath('/Images/LastPass-Logo-Color.webp')}
         />
         <SlidingCard
           direction="left"
@@ -33,7 +34,7 @@ export default function Page() {
           }
           buttonText="Available Here"
           buttonLink="mint.com"
-          imageSrc="/Images/mint-logo.webp" // 👈 image passed as prop
+          imageSrc={assetPath('/Images/mint-logo.webp')} // 👈 image passed as prop
         />
       </div>
     </div>

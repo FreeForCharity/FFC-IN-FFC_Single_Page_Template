@@ -1,6 +1,7 @@
 'use client'
 import React, { useEffect, useRef, useState } from 'react'
 import Image from 'next/image'
+import { assetPath } from '@/lib/assetPath'
 
 interface Step {
   number: number
@@ -45,7 +46,7 @@ const StepCard: React.FC<{ step: Step }> = ({ step }) => {
         <div className="flex justify-center mb-[30px]">
           <div className="relative w-[100px] h-[100px]">
             <Image
-              src={`/Images/${step.number}.webp`}
+              src={assetPath(`/Images/${step.number}.webp`)}
               alt={`Step ${step.number}`}
               fill
               className={`object-contain drop-shadow-lg transition-all duration-700 ${

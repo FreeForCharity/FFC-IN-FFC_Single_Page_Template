@@ -1,5 +1,6 @@
 import React from 'react'
 import Image from 'next/image'
+import { assetPath } from '@/lib/assetPath'
 
 const Hero: React.FC = () => {
   return (
@@ -21,7 +22,7 @@ const Hero: React.FC = () => {
         {/* Right Image Section */}
         <div className="w-full md:w-[60%] flex items-center justify-center md:justify-end pt-[50px] md:pt-[50px]">
           <Image
-            src="/Images/hero-image.webp"
+            src={assetPath('/Images/hero-image.webp')}
             alt="Hero"
             width={800}
             height={540}

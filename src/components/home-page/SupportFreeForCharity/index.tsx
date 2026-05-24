@@ -1,5 +1,6 @@
 import React, { CSSProperties, IframeHTMLAttributes } from 'react'
 import Image from 'next/image'
+import { assetPath } from '@/lib/assetPath'
 
 interface ExtendedIframeProps extends IframeHTMLAttributes<HTMLIFrameElement> {
   allowpaymentrequest?: string
@@ -50,7 +51,7 @@ const Index = () => {
             <div className="w-full flex justify-center lg:justify-end">
               <div className="relative w-full max-w-[400px] aspect-[578/386]">
                 <Image
-                  src="/Images/support-free-for-charity.webp"
+                  src={assetPath('/Images/support-free-for-charity.webp')}
                   alt="support free for charity image"
                   fill
                   className="object-contain scale-x-[-1]"

@@ -1,5 +1,6 @@
 import React from 'react'
 import Image from 'next/image'
+import { assetPath } from '@/lib/assetPath'
 
 const index = () => {
   return (
@@ -61,7 +62,7 @@ const index = () => {
           {/* Circle Image */}
           <div className="mx-auto flex-shrink-0 w-[100px] h-[100px] overflow-hidden mb-[30px]">
             <Image
-              src="/Images/1.webp"
+              src={assetPath('/Images/1.webp')}
               alt="Step Illustration"
               width={56}
               height={56}
@@ -93,7 +94,7 @@ const index = () => {
           {/* Circle Image */}
           <div className="mx-auto flex-shrink-0 w-[100px] h-[100px] overflow-hidden mb-[30px]">
             <Image
-              src="/Images/2.webp"
+              src={assetPath('/Images/2.webp')}
               alt="Step Illustration"
               width={56}
               height={56}

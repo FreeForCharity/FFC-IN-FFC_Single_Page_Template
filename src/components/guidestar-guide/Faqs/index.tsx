@@ -2,6 +2,7 @@ import React from 'react'
 import AccordionBold from '@/components/ui/AccordionBold'
 import Image from 'next/image'
 import Transparentbtn from '@/components/ui/Transparentbtn'
+import { assetPath } from '@/lib/assetPath'
 
 const index = () => {
   return (
@@ -230,7 +231,7 @@ const index = () => {
             as well as some option for posting this badge to your website that we will need later.
           </p>
           <Image
-            src="/Images/preparing-to-share.webp"
+            src={assetPath('/Images/preparing-to-share.webp')}
             alt="Free For Charity GuideStar onboarding requirements and highlighted fields"
             width={780}
             height={100}

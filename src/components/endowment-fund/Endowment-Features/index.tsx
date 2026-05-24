@@ -1,6 +1,7 @@
 import React from 'react'
 import Image from 'next/image'
 import { FaInfoCircle, FaChartPie, FaCreditCard } from 'react-icons/fa'
+import { assetPath } from '@/lib/assetPath'
 
 const Index = () => {
   return (
@@ -11,7 +12,7 @@ const Index = () => {
           <div className="w-full md:w-[47.25%] md:mr-[60px]">
             <div className="relative w-full h-[350px] sm:h-[500px] md:h-[685px]">
               <Image
-                src="/Images/Endowment-Features.webp"
+                src={assetPath('/Images/Endowment-Features.webp')}
                 alt="Endowment Features"
                 fill
                 className="object-cover rounded-[6px] shadow-[0px_40px_112px_-24px_rgba(0,0,0,0.12)]"
