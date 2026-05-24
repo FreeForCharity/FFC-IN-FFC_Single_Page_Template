@@ -100,11 +100,9 @@ export default function RootLayout({
 
         {/* Preconnect to external domains for faster resource loading */}
         <link rel="preconnect" href="https://www.googletagmanager.com" />
-        <link rel="preconnect" href="https://ffcsites.org" />
         <link rel="preconnect" href="https://www.zeffy.com" />
         <link rel="preconnect" href="https://widgets.guidestar.org" />
         <link rel="dns-prefetch" href="https://www.googletagmanager.com" />
-        <link rel="dns-prefetch" href="https://ffcsites.org" />
         <link rel="dns-prefetch" href="https://www.zeffy.com" />
         <link rel="dns-prefetch" href="https://www.idealist.org" />
 

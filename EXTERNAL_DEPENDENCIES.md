@@ -244,7 +244,6 @@ To improve performance, we preconnect to frequently used domains:
 ```typescript
 // src/app/layout.tsx
 <link rel="preconnect" href="https://www.googletagmanager.com" />
-<link rel="preconnect" href="https://ffcsites.org" />
 <link rel="preconnect" href="https://www.zeffy.com" />
 <link rel="preconnect" href="https://widgets.guidestar.org" />
 ```
