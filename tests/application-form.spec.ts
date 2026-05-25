@@ -43,10 +43,19 @@ test.describe('Application Form Button', () => {
   })
 
   test('should display loading indicator before iframe loads', async ({ page }) => {
-    // Click the button
+    // Hold the Microsoft Forms iframe request open so its onLoad handler can't
+    // fire during the assertion window — that keeps isLoading=true and the
+    // indicator visible deterministically. Aborting doesn't work: Chromium
+    // fires onLoad for a failed iframe, hiding the indicator. Without this the
+    // test raced the live forms.office.com load and flaked in CI, which
+    // blocked the deploy pipeline.
+    await page.route('**/forms.office.com/**', async (route) => {
+      await new Promise((resolve) => setTimeout(resolve, 10000))
+      await route.abort().catch(() => {}) // page may already be closed at teardown
+    })
+
     await page.getByRole('button', { name: testConfig.applicationForm.buttonText }).click()
 
-    // Loading indicator should be visible initially
     const loadingIndicator = page.getByText(testConfig.applicationForm.loadingText)
     await expect(loadingIndicator).toBeVisible()
   })
@@ -252,23 +261,26 @@ test.describe('Application Form Iframe Loading', () => {
   })
 
   test('should display loading indicator and iframe elements', async ({ page }) => {
-    // Open modal
+    // Hold the iframe request open so onLoad can't fire and hide the
+    // indicator during the assertion (see the sibling test for why aborting
+    // doesn't work). Removes the dependency on live forms.office.com timing.
+    await page.route('**/forms.office.com/**', async (route) => {
+      await new Promise((resolve) => setTimeout(resolve, 10000))
+      await route.abort().catch(() => {})
+    })
+
     await page.getByRole('button', { name: testConfig.applicationForm.buttonText }).click()
 
     const modal = page.locator('[role="dialog"][aria-modal="true"]')
     await expect(modal).toBeVisible()
 
-    // Loading indicator should be visible initially
+    // Loading indicator should be visible (iframe load is blocked above).
     const loadingIndicator = page.getByText(testConfig.applicationForm.loadingText)
     await expect(loadingIndicator).toBeVisible()
 
-    // Verify iframe element exists
+    // The iframe element itself should exist in the DOM (its src points at
+    // the Microsoft Form; we don't require the remote content to load).
     const iframe = page.locator(`iframe[title="${testConfig.applicationForm.modalTitle}"]`)
     await expect(iframe).toBeVisible()
-
-    // Note: The loading indicator behavior is environment-dependent.
-    // In some environments (especially CI), external iframes may be blocked by privacy settings,
-    // causing the loading indicator to remain visible. This test verifies the component structure
-    // is correct (both loading indicator and iframe are present), not the iframe loading behavior.
   })
 })
