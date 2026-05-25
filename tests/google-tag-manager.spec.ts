@@ -24,18 +24,22 @@ import { testConfig } from './test.config'
  */
 
 // Wait for the lazyOnload GTM script element to be attached to the DOM.
+// lazyOnload fires after the window `load` event + a browser-idle tick, so
+// we explicitly wait for `load` first, then poll for the injected element
+// with a generous timeout (CI runners can be slow to fire load when many
+// third-party resources are in flight).
 async function waitForGtmScript(page: import('@playwright/test').Page) {
-  await page.waitForSelector('script#gtm-script', { state: 'attached', timeout: 15000 })
+  await page.waitForLoadState('load')
+  await page.waitForSelector('script#gtm-script', { state: 'attached', timeout: 30000 })
 }
 
 // Wait for the inline bootstrap to have created window.dataLayer.
 async function waitForDataLayer(page: import('@playwright/test').Page) {
+  await page.waitForLoadState('load')
   await page.waitForFunction(
     () => typeof window.dataLayer !== 'undefined' && Array.isArray(window.dataLayer),
     null,
-    {
-      timeout: 15000,
-    }
+    { timeout: 30000 }
   )
 }
 
