@@ -14,36 +14,43 @@ is the **map** — what changes where, and why.
 truth for site-specific values. Update the `siteConfig` export with your
 charity's name, URL, contact email, social links, etc.
 
-| Property                      | Where it shows up                                                                      |
-| ----------------------------- | -------------------------------------------------------------------------------------- |
-| `name`                        | `<title>`, OG/Twitter `site_name`, 404 page, error page                                |
-| `tagline`                     | Default `<title>` and OG title                                                         |
-| `description`                 | `<meta description>` (long form for search engines)                                    |
-| `shortDescription`            | OG / Twitter card description (tuned for social previews; falls back to `description`) |
-| `url`                         | `metadataBase`, sitemap entries, robots `Sitemap:` line                                |
-| `twitterHandle`               | Twitter card `site` attribute (the leading `@` is added automatically)                 |
-| `contactEmail`                | Used by your own pages — security.txt has its own `Contact:` line                      |
-| `keywords`                    | `<meta keywords>`                                                                      |
-| `themeColor`                  | Reserved for the manifest / `<meta name="theme-color">`                                |
-| `vulnerabilityDisclosurePath` | 404 page CTA, future security pages                                                    |
-| `social`                      | Footer social link rail                                                                |
+| Property                      | Where it shows up                                                                           |
+| ----------------------------- | ------------------------------------------------------------------------------------------- |
+| `name`                        | `<title>`, OG/Twitter `site_name`, 404 page, error page, footer copyright, manifest         |
+| `tagline`                     | Default `<title>` and OG title                                                              |
+| `description`                 | `<meta description>` (long form for search engines), manifest fallback                      |
+| `shortDescription`            | OG / Twitter card description (tuned for social previews; falls back to `description`)      |
+| `url`                         | `metadataBase`, sitemap entries, robots `Sitemap:` line                                     |
+| `twitterHandle`               | Twitter card `site` attribute (the leading `@` is added automatically)                      |
+| `contactEmail`                | Footer e-mail link. `security.txt` has its own `Contact:` line — keep them in sync.         |
+| `keywords`                    | `<meta keywords>`                                                                           |
+| `themeColor`                  | Web manifest `theme_color` and `background_color`                                           |
+| `vulnerabilityDisclosurePath` | 404 page CTA, error page disclosure link                                                    |
+| `social`                      | Footer social-link rail (icon resolved by `label`: Facebook, X (Twitter), LinkedIn, GitHub) |
 
-The GitHub Pages base path is read directly from `NEXT_PUBLIC_BASE_PATH` in the deploy workflow (`.github/workflows/deploy.yml`) — there is no separate config field, so the deploy workflow is the single source of truth.
+### Things `siteConfig` does NOT yet drive
+
+- **EIN, mailing addresses, phone numbers** — still hardcoded in `src/components/footer/index.tsx`. Add to siteConfig if your charity wants them.
+- **Hero/section copy** — lives in component files under `src/components/home-page/` and `src/data/`.
+- **GitHub Pages base path** — chosen automatically by `deploy.yml` and `lighthouse.yml` based on whether `public/CNAME` exists. With a CNAME the build uses an empty basePath (custom-domain root). Without a CNAME the build uses `/<repo-name>` for github.io subpath deploys. No manual workflow edit required when you rename the repo.
+- **OG/Twitter card image** — `layout.tsx` points at `/web-app-manifest-512x512.png` (square 512×512). For a proper social-card preview, replace the file with a 1200×630 image keeping the same filename, or update both layout.tsx references to point at a new asset.
 
 After editing, **run `npm run check:drift`** to confirm nothing else still
 references the old placeholder values.
 
 ## Files you'll likely touch when rebranding
 
-| File                                  | What to change                                                 |
-| ------------------------------------- | -------------------------------------------------------------- |
-| `public/CNAME`                        | Custom domain (delete if using only github.io)                 |
-| `public/.well-known/security.txt`     | `Contact`, `Canonical`, `Policy`, `Acknowledgments`, `Expires` |
-| `public/site.webmanifest`             | `name`, `short_name`, theme/background colors                  |
-| `public/Images/*`, `public/Svgs/*`    | Brand assets (keep filenames where possible)                   |
-| `src/data/*`                          | Testimonials, FAQs, team — your real content                   |
-| `src/components/home-page/*`          | Home page sections                                             |
-| `src/app/privacy-policy/page.tsx` etc | Legal pages (have a lawyer review)                             |
+| File                                                            | What to change                                                                                                                                                                                                        |
+| --------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `public/CNAME`                                                  | Custom domain (delete if using only github.io)                                                                                                                                                                        |
+| `public/.well-known/security.txt` **and** `public/security.txt` | `Contact`, `Canonical`, `Policy`, `Acknowledgments`, `Expires`. **Both copies must stay in sync** (the drift checker enforces it). The root copy exists because GitHub Pages does not serve dot-prefixed directories. |
+| `public/Images/*`, `public/Svgs/*`                              | Brand assets (keep filenames where possible)                                                                                                                                                                          |
+| `src/components/footer/index.tsx`                               | EIN, addresses, phone, GuideStar profile URLs, parent-org footer link — these are not in `siteConfig` (yet)                                                                                                           |
+| `src/data/*`                                                    | Testimonials, FAQs, team — your real content                                                                                                                                                                          |
+| `src/components/home-page/*`                                    | Home page sections                                                                                                                                                                                                    |
+| `src/app/privacy-policy/page.tsx` etc                           | Legal pages (have a lawyer review)                                                                                                                                                                                    |
+
+The web manifest is **auto-generated** from `siteConfig` at build time by `src/app/manifest.ts` — no separate file to edit.
 
 ## Files you should NOT touch on a per-site basis
 

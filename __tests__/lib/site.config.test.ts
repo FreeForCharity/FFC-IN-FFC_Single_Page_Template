@@ -34,10 +34,17 @@ describe('siteUrl', () => {
   })
 
   it('strips a trailing slash from siteConfig.url before joining', () => {
-    // The function reads siteConfig.url at call time. Confirm that the
-    // helper does not double-up trailing slashes if the caller's path
-    // already begins with one (which it must).
-    expect(siteUrl('/x').endsWith('//x')).toBe(false)
+    // Mutate siteConfig.url to actually exercise the trailing-slash
+    // branch in siteUrl(). Without this the previous assertion was
+    // testing the no-slash default path and giving false confidence.
+    const original = siteConfig.url
+    try {
+      siteConfig.url = original.replace(/\/?$/, '/') // ensure trailing slash
+      expect(siteUrl('/x')).toBe(original.replace(/\/$/, '') + '/x')
+      expect(siteUrl('/x').includes('//x')).toBe(false)
+    } finally {
+      siteConfig.url = original
+    }
   })
 })
 

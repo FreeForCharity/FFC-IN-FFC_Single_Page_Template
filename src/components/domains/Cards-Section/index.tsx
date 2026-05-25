@@ -1,5 +1,6 @@
 import StepsCard from '@/components/ui/StepContentCard'
 import Image from 'next/image'
+import { assetPath } from '@/lib/assetPath'
 
 export default function CloudflareSetup() {
   return (
@@ -90,7 +91,7 @@ export default function CloudflareSetup() {
         {/* Screenshot Image – You can change the src */}
         <div className="mt-10 mb-[34px] -mx-10 md:-mx-15">
           <Image
-            src="/Images/Card-section-1.webp" // Change this path
+            src={assetPath('/Images/Card-section-1.webp')} // Change this path
             alt="User Management - Invite New User"
             width={1200}
             height={800}
@@ -102,7 +103,7 @@ export default function CloudflareSetup() {
       <StepsCard title="Change your DNS to point to Cloudflare" id="orderstep4">
         <div className="mt-10 mb-[34px] -mx-10 md:-mx-15">
           <Image
-            src="/Images/Card-section-2.webp" // Change this path
+            src={assetPath('/Images/Card-section-2.webp')} // Change this path
             alt="User Management - Invite New User"
             width={1200}
             height={800}
@@ -111,7 +112,7 @@ export default function CloudflareSetup() {
         </div>
         <div className="mt-10 mb-[34px] -mx-10 md:-mx-15">
           <Image
-            src="/Images/Card-section-3.webp" // Change this path
+            src={assetPath('/Images/Card-section-3.webp')} // Change this path
             alt="User Management - Invite New User"
             width={1200}
             height={800}
@@ -120,7 +121,7 @@ export default function CloudflareSetup() {
         </div>
         <div className="mt-10 mb-[34px] -mx-10 md:-mx-15">
           <Image
-            src="/Images/Card-section-4.webp" // Change this path
+            src={assetPath('/Images/Card-section-4.webp')} // Change this path
             alt="User Management - Invite New User"
             width={1200}
             height={800}
@@ -129,7 +130,7 @@ export default function CloudflareSetup() {
         </div>
         <div className="mt-10 mb-[34px] -mx-10 md:-mx-15">
           <Image
-            src="/Images/Card-section-5.webp" // Change this path
+            src={assetPath('/Images/Card-section-5.webp')} // Change this path
             alt="User Management - Invite New User"
             width={1200}
             height={800}

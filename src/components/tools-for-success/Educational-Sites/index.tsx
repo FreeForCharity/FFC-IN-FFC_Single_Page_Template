@@ -4,6 +4,7 @@ import React from 'react'
 import Image from 'next/image'
 import { IoIosArrowForward } from 'react-icons/io'
 import { motion, Variants } from 'framer-motion'
+import { assetPath } from '@/lib/assetPath'
 
 const cardVariants: Variants = {
   offscreen: { opacity: 0, scale: 0.8 },
@@ -19,12 +20,12 @@ const EducationalSitesSection = () => {
     {
       title: 'iwillteachyoutoberich.com Best for automation and earning more',
       link: 'https://www.iwillteachyoutoberich.com/blog/',
-      image: '/Images/googleLogo.webp',
+      image: assetPath('/Images/googleLogo.webp'),
     },
     {
       title: 'fourhourworkweek.com Another prime automation book and website',
       link: 'https://tim.blog/overview/',
-      image: '/Images/googleLogo.webp',
+      image: assetPath('/Images/googleLogo.webp'),
     },
   ]
 

@@ -373,6 +373,16 @@ docs: update README with new deployment instructions
 
 **Verdict**: ✅ Right tool for the right job.
 
+### Microsoft Forms (and the HubSpot investigation)
+
+**Context**: A page-speed audit in December 2025 flagged third-party cookies from `app.hubspot.com/feedback-web-fetcher`. Initial worry: a tracking dependency had slipped into the codebase.
+
+**Investigation**: A full sweep of `package.json`, source, GTM, and HTML found **no direct HubSpot integration anywhere in the project**. The cookies originated from the **Microsoft Forms** iframe embedded for the application-form modal (`https://forms.office.com/r/vePxGq6JqG`). Microsoft Forms internally loads HubSpot for its own product analytics, and that behavior is outside our control short of replacing Microsoft Forms wholesale.
+
+**Outcome**: Disclosed in the Privacy Policy (section 3.4) and Cookie Policy (section 3.2) as a transitive dependency, and documented in `EXTERNAL_DEPENDENCIES.md`. The CSP allowlist already covered Microsoft Forms origins. No code changes were required.
+
+**Verdict**: ✅ Issue closed. Investigation file `HUBSPOT_INVESTIGATION.md` was removed once the conclusion landed here — this section is now the canonical record. If we ever replace Microsoft Forms, the HubSpot row in `EXTERNAL_DEPENDENCIES.md` goes away automatically.
+
 ---
 
 ## Deployment Challenges

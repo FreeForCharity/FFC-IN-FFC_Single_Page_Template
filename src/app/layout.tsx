@@ -70,7 +70,8 @@ export const metadata: Metadata = {
     ],
     apple: [{ url: assetPath('/apple-icon.png'), sizes: '180x180', type: 'image/png' }],
   },
-  manifest: assetPath('/site.webmanifest'),
+  // Manifest is generated dynamically from siteConfig via src/app/manifest.ts;
+  // Next.js auto-wires the <link rel="manifest"> tag, so we don't set it here.
 }
 export default function RootLayout({
   children,
@@ -95,14 +96,13 @@ export default function RootLayout({
         />
         <meta name="referrer" content="strict-origin-when-cross-origin" />
         <meta name="color-scheme" content="light" />
+        <meta name="theme-color" content={siteConfig.themeColor} />
 
         {/* Preconnect to external domains for faster resource loading */}
         <link rel="preconnect" href="https://www.googletagmanager.com" />
-        <link rel="preconnect" href="https://ffcsites.org" />
         <link rel="preconnect" href="https://www.zeffy.com" />
         <link rel="preconnect" href="https://widgets.guidestar.org" />
         <link rel="dns-prefetch" href="https://www.googletagmanager.com" />
-        <link rel="dns-prefetch" href="https://ffcsites.org" />
         <link rel="dns-prefetch" href="https://www.zeffy.com" />
         <link rel="dns-prefetch" href="https://www.idealist.org" />
 
@@ -131,9 +131,16 @@ export default function RootLayout({
         suppressHydrationWarning={true}
       >
         <GoogleTagManagerNoScript />
+        {/* Skip-to-content link (WCAG 2.4.1). First focusable element in the
+            body so keyboard users tabbing in can jump past the header
+            navigation. Visually hidden until focused — see .skip-to-content
+            styles in src/app/globals.css. */}
+        <a href="#main-content" className="skip-to-content">
+          Skip to main content
+        </a>
         {/* <PopupProvider> */}
         <Header />
-        {children}
+        <main id="main-content">{children}</main>
         <Footer />
         <CookieConsent />
         {/* <PopupsRootClient /> */}
