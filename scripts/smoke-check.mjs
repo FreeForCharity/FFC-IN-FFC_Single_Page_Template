@@ -188,6 +188,25 @@ async function smoke() {
         'manifest has theme_color or background_color',
         !!(manifest.theme_color || manifest.background_color)
       )
+      // Verify every icon URL the manifest advertises actually resolves.
+      // Catches the bug fixed in #319: a custom-domain deploy with
+      // NEXT_PUBLIC_BASE_PATH=/repo would emit icon srcs like
+      // /repo/android-chrome-192x192.png that 404 on the root-served
+      // custom domain. The PWA install prompt fails silently otherwise.
+      if (Array.isArray(manifest.icons)) {
+        for (const icon of manifest.icons) {
+          if (!icon?.src) continue
+          const iconUrl = icon.src.startsWith('http')
+            ? icon.src
+            : icon.src.startsWith('/')
+              ? icon.src
+              : `/${icon.src}`
+          const iconPath = iconUrl.startsWith('http') ? iconUrl.replace(BASE, '') : iconUrl
+          const r = await fetchWithRetry(iconPath).catch(() => null)
+          const ok = r && r.status === 200
+          record(`manifest icon ${icon.src} resolves`, ok, r ? `HTTP ${r.status}` : 'fetch failed')
+        }
+      }
     }
   }
 
