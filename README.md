@@ -140,10 +140,11 @@ hand or use the same address for both.
    - REVIEW with the charity's counsel before committing. Update org name
      references.
 
-9. .github/workflows/deploy.yml
-   - If using a github.io subpath fallback, update NEXT_PUBLIC_BASE_PATH to
-     the new repository name. If using a custom domain only, you can leave
-     this as-is (the CNAME takes precedence).
+9. .github/workflows/deploy.yml, .github/workflows/lighthouse.yml
+   - NO edits required. `NEXT_PUBLIC_BASE_PATH` is now chosen automatically
+     based on whether `public/CNAME` is present (empty if CNAME exists,
+     `/<repo-name>` if not). Renaming the repo doesn't require a workflow
+     edit.
 
 10. README.md, GitHub repo description, CITATION.cff
     - Update organization name, repo links, and citation metadata.

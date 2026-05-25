@@ -32,7 +32,7 @@ charity's name, URL, contact email, social links, etc.
 
 - **EIN, mailing addresses, phone numbers** — still hardcoded in `src/components/footer/index.tsx`. Add to siteConfig if your charity wants them.
 - **Hero/section copy** — lives in component files under `src/components/home-page/` and `src/data/`.
-- **GitHub Pages base path** — read directly from `NEXT_PUBLIC_BASE_PATH` in `.github/workflows/deploy.yml` and `.github/workflows/lighthouse.yml`. Update the workflow value when you rename the repo.
+- **GitHub Pages base path** — chosen automatically by `deploy.yml` and `lighthouse.yml` based on whether `public/CNAME` exists. With a CNAME the build uses an empty basePath (custom-domain root). Without a CNAME the build uses `/<repo-name>` for github.io subpath deploys. No manual workflow edit required when you rename the repo.
 - **OG/Twitter card image** — `layout.tsx` points at `/web-app-manifest-512x512.png` (square 512×512). For a proper social-card preview, replace the file with a 1200×630 image keeping the same filename, or update both layout.tsx references to point at a new asset.
 
 After editing, **run `npm run check:drift`** to confirm nothing else still
@@ -40,16 +40,15 @@ references the old placeholder values.
 
 ## Files you'll likely touch when rebranding
 
-| File                                                               | What to change                                                                                                                                                                                                        |
-| ------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `public/CNAME`                                                     | Custom domain (delete if using only github.io)                                                                                                                                                                        |
-| `public/.well-known/security.txt` **and** `public/security.txt`    | `Contact`, `Canonical`, `Policy`, `Acknowledgments`, `Expires`. **Both copies must stay in sync** (the drift checker enforces it). The root copy exists because GitHub Pages does not serve dot-prefixed directories. |
-| `public/Images/*`, `public/Svgs/*`                                 | Brand assets (keep filenames where possible)                                                                                                                                                                          |
-| `src/components/footer/index.tsx`                                  | EIN, addresses, phone, GuideStar profile URLs, parent-org footer link — these are not in `siteConfig` (yet)                                                                                                           |
-| `src/data/*`                                                       | Testimonials, FAQs, team — your real content                                                                                                                                                                          |
-| `src/components/home-page/*`                                       | Home page sections                                                                                                                                                                                                    |
-| `src/app/privacy-policy/page.tsx` etc                              | Legal pages (have a lawyer review)                                                                                                                                                                                    |
-| `.github/workflows/deploy.yml`, `.github/workflows/lighthouse.yml` | `NEXT_PUBLIC_BASE_PATH` — set to `/your-repo-name` for github.io subpath deploys (or leave default if using a custom domain only)                                                                                     |
+| File                                                            | What to change                                                                                                                                                                                                        |
+| --------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `public/CNAME`                                                  | Custom domain (delete if using only github.io)                                                                                                                                                                        |
+| `public/.well-known/security.txt` **and** `public/security.txt` | `Contact`, `Canonical`, `Policy`, `Acknowledgments`, `Expires`. **Both copies must stay in sync** (the drift checker enforces it). The root copy exists because GitHub Pages does not serve dot-prefixed directories. |
+| `public/Images/*`, `public/Svgs/*`                              | Brand assets (keep filenames where possible)                                                                                                                                                                          |
+| `src/components/footer/index.tsx`                               | EIN, addresses, phone, GuideStar profile URLs, parent-org footer link — these are not in `siteConfig` (yet)                                                                                                           |
+| `src/data/*`                                                    | Testimonials, FAQs, team — your real content                                                                                                                                                                          |
+| `src/components/home-page/*`                                    | Home page sections                                                                                                                                                                                                    |
+| `src/app/privacy-policy/page.tsx` etc                           | Legal pages (have a lawyer review)                                                                                                                                                                                    |
 
 The web manifest is **auto-generated** from `siteConfig` at build time by `src/app/manifest.ts` — no separate file to edit.
 
