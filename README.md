@@ -113,12 +113,20 @@ hand or use the same address for both.
    - Update Contact, Canonical, Policy, Acknowledgments to the new URL.
    - Bump Expires to ~12 months out, formatted YYYY-MM-DDTHH:MM:SSZ.
 
-4. public/site.webmanifest
-   - Update name, short_name, theme_color, background_color.
+4. Web manifest — NO direct edits needed.
+   - The manifest is auto-generated from siteConfig by src/app/manifest.ts
+     and served at /manifest.webmanifest at build time. Editing
+     siteConfig.{name, shortDescription, themeColor} (step 1) updates it.
+   - DO NOT add a static public/site.webmanifest back — it was deleted on
+     purpose so the values can't drift from siteConfig.
 
 5. public/Images/ and public/Svgs/
    - Replace branded assets. KEEP existing filenames where possible so the
      LCP preload in layout.tsx still hits a real file.
+   - Header logo: src/components/header/index.tsx still hardcodes an image
+     from a third-party URL (freeforcharity.org WordPress). Replace it
+     with a self-hosted asset under /Images/ or /Svgs/ and use
+     assetPath().
 
 6. src/data/{faqs,team,testimonials}.ts
    - Replace example content with the charity's real data.
@@ -132,10 +140,11 @@ hand or use the same address for both.
    - REVIEW with the charity's counsel before committing. Update org name
      references.
 
-9. .github/workflows/deploy.yml
-   - If using a github.io subpath fallback, update NEXT_PUBLIC_BASE_PATH to
-     the new repository name. If using a custom domain only, you can leave
-     this as-is (the CNAME takes precedence).
+9. .github/workflows/deploy.yml, .github/workflows/lighthouse.yml
+   - NO edits required. `NEXT_PUBLIC_BASE_PATH` is now chosen automatically
+     based on whether `public/CNAME` is present (empty if CNAME exists,
+     `/<repo-name>` if not). Renaming the repo doesn't require a workflow
+     edit.
 
 10. README.md, GitHub repo description, CITATION.cff
     - Update organization name, repo links, and citation metadata.

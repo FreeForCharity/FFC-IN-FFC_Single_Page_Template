@@ -2,6 +2,7 @@
 
 import React from 'react'
 import Image from 'next/image'
+import { assetPath } from '@/lib/assetPath'
 
 const HeroSection = () => {
   return (
@@ -26,7 +27,7 @@ const HeroSection = () => {
         <div className="w-full md:w-[47%] mx-auto">
           <div className="w-full md:w-[80%] mx-auto relative h-[400px] md:h-[272px] rounded-[15px] overflow-hidden shadow-[0px_2px_18px_0px_rgba(0,0,0,0.3)]">
             <Image
-              src="/Images/heart-in-hands.webp"
+              src={assetPath('/Images/heart-in-hands.webp')}
               alt="hero image"
               fill
               className="object-cover"

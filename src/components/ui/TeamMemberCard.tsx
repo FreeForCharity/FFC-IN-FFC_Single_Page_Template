@@ -2,6 +2,7 @@
 
 import React from 'react'
 import Image from 'next/image'
+import { assetPath } from '@/lib/assetPath'
 
 interface TeamMemberCardProps {
   imageUrl: string
@@ -27,7 +28,7 @@ export default function TeamMemberCard({
             fill
             className="object-cover"
             sizes="(max-width: 768px) 100vw, 192px"
-            priority
+            loading="lazy"
           />
         </div>
 
@@ -43,7 +44,13 @@ export default function TeamMemberCard({
 
         {/* LinkedIn Button */}
         <a href={linkedinUrl} target="_blank" rel="noopener noreferrer" className="mt-6">
-          <Image src="/Svgs/linkedin-icon.svg" width={63} height={63} alt="linkedin icon"></Image>
+          <Image
+            src={assetPath('/Svgs/linkedin-icon.svg')}
+            width={63}
+            height={63}
+            alt="linkedin icon"
+            loading="lazy"
+          ></Image>
         </a>
       </div>
 

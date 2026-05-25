@@ -29,11 +29,16 @@ Quick reference checklist for setting up a new repository from the FFC Single Pa
 
 ### GitHub Pages (Settings → Pages)
 
-- [ ] Source: Deploy from a branch
-- [ ] Branch: Select `gh-pages` and `/ (root)`
-- [ ] Custom domain (if applicable): Enter domain name
+- [ ] **Source: GitHub Actions** (NOT "Deploy from a branch" — this repo's
+      `.github/workflows/deploy.yml` uploads a Pages artifact via
+      `actions/deploy-pages`; there is no `gh-pages` branch)
+- [ ] Custom domain (if applicable): Enter domain name and click "Save"
 - [ ] Wait for DNS check to complete
 - [ ] Enable "Enforce HTTPS" (after DNS configured)
+- [ ] `NEXT_PUBLIC_BASE_PATH` is now selected automatically by
+      `deploy.yml` and `lighthouse.yml` from `public/CNAME` (empty when
+      CNAME is present, `/<repo-name>` when it's not). No manual edit
+      required.
 
 ### Actions Permissions (Settings → Actions → General)
 
@@ -72,13 +77,17 @@ Create ruleset named "Protect Main":
 
 ## Update Repository Configuration Files
 
-### Update basePath in Workflows
+### basePath in Workflows — automatic
 
-- [ ] Edit `.github/workflows/deploy.yml`
-  - In the job that builds the Next.js site (look for the `env` section where `NEXT_PUBLIC_BASE_PATH` is set), change `/FFC_Single_Page_Template` to `/YOUR-REPO-NAME`
-- [ ] Edit `.github/workflows/lighthouse.yml`
-  - In the job that runs the Lighthouse checks (look for the `env` section where `NEXT_PUBLIC_BASE_PATH` is set), change `/FFC_Single_Page_Template` to `/YOUR-REPO-NAME`
-- [ ] OR remove `NEXT_PUBLIC_BASE_PATH` if using custom domain
+`deploy.yml` and `lighthouse.yml` derive `NEXT_PUBLIC_BASE_PATH` from
+`public/CNAME` at build time:
+
+- **Custom domain** (CNAME file present): build uses empty basePath so
+  asset URLs resolve from the origin root.
+- **github.io subpath** (no CNAME): build uses `/<repo-name>` so asset
+  URLs resolve under the Pages subpath.
+
+You don't have to edit either workflow when you rename the repo.
 
 ### Update CODEOWNERS
 
@@ -95,24 +104,45 @@ Create ruleset named "Protect Main":
 
 ## Customize Content and Branding
 
-### Organization Information
+### Organization Information (use `siteConfig`, NOT find-and-replace)
 
-- [ ] Search and replace "Free For Charity" with your org name
-- [ ] Search and replace EIN "46-2471893" with your EIN
-- [ ] Search and replace "ffcworkingsite1.org" with your domain
+- [ ] Edit `src/lib/site.config.ts` — sets the name, URL, description,
+      twitter handle, contact email, social links, theme color
+      everywhere they're consumed (title, OG/Twitter, footer, 404,
+      manifest, sitemap, robots, security headers)
+- [ ] Run `npm run check:drift` after editing — the placeholder-URL
+      and CSP-sync rules will flag anything still pointing at
+      `ffcworkingsite1.org` or out of sync
+- [ ] Update the EIN, mailing addresses, phone number, and GuideStar
+      profile link still hardcoded in `src/components/footer/index.tsx`
+      (these are not in siteConfig yet)
 
 ### Contact Information
 
-- [ ] Update `src/components/footer/index.tsx` - Footer contact
-- [ ] Update `SECURITY.md` - Security contact
-- [ ] Update `CODE_OF_CONDUCT.md` - Conduct reporting contact
-- [ ] Update `SUPPORT.md` - Support resources
+- [ ] `siteConfig.contactEmail` drives the footer e-mail link
+- [ ] Update `public/.well-known/security.txt` `Contact:` line (RFC
+      9116 requires it on the file itself; drift check warns on stale)
+- [ ] Update `SECURITY.md` — Security contact
+- [ ] Update `CODE_OF_CONDUCT.md` — Conduct reporting contact
+- [ ] Update `SUPPORT.md` — Support resources
 
 ### Branding Assets
 
-- [ ] Replace `/public/logo.svg` with your logo
-- [ ] Replace `/public/favicon.ico` with your favicon
-- [ ] Update Open Graph images (if present)
+- [ ] Replace `public/favicon.ico`, `public/icon.png`,
+      `public/apple-icon.png`, `public/android-chrome-{192,512}.png`,
+      and `public/web-app-manifest-512x512.png` with the charity's
+      branded assets (KEEP the filenames so layout.tsx and manifest.ts
+      pick them up automatically)
+- [ ] Replace the header logo: `src/components/header/index.tsx`
+      currently hardcodes an external `https://freeforcharity.org/...`
+      WordPress URL. Self-host a logo under `public/Images/` and use
+      `assetPath('/Images/your-logo.png')` instead.
+- [ ] Replace the OG / Twitter card image — `layout.tsx` references
+      `/web-app-manifest-512x512.png` (a square 512×512). For proper
+      social cards, drop a 1200×630 image at the same filename or
+      update both layout.tsx references to point at a new asset.
+- [ ] Replace branded images and SVGs under `public/Images/` and
+      `public/Svgs/`
 - [ ] Update color scheme in `src/app/globals.css`
 - [ ] Update fonts in `src/app/layout.tsx` (if needed)
 
@@ -241,17 +271,23 @@ Create ruleset named "Protect Main":
 
 ✅ **Solution**:
 
-1. Verify Pages source is `gh-pages` branch
+1. Verify Pages source is set to **"GitHub Actions"** (Settings → Pages → Source)
 2. Wait 2-5 minutes for propagation
-3. Check Actions tab for deployment status
-4. Verify `NEXT_PUBLIC_BASE_PATH` matches repo name
+3. Check Actions tab for the "Deploy to GitHub Pages" workflow status
+4. Confirm the "Determine base path" step in the deploy run printed the
+   expected value (empty for custom-domain deploys, `/<repo-name>` for
+   subpath deploys)
+5. If you have a custom domain, confirm `public/CNAME` contains it
+   (no scheme, no trailing slash)
 
 ### Images don't load on GitHub Pages
 
 ✅ **Solution**:
 
-1. Verify `NEXT_PUBLIC_BASE_PATH` is correct in deploy.yml
-2. Check images use `assetPath()` helper
+1. Check the deploy run's "Determine base path" step printed the
+   expected value for your setup (empty with CNAME, `/<repo-name>` without)
+2. Confirm all image references use the `assetPath()` helper — `npm run
+check:drift` will fail if any are missing
 3. Rebuild and redeploy
 
 ### Commits rejected (unsigned)

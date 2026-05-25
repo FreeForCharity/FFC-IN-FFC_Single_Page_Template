@@ -2,6 +2,7 @@
 
 import React, { useState, useRef, useLayoutEffect } from 'react'
 import Image from 'next/image'
+import { assetPath } from '@/lib/assetPath'
 
 interface AccordionItemProps {
   title: string
@@ -45,9 +46,9 @@ const AccordionItem: React.FC<AccordionItemProps> = ({ title, children }) => {
 
         <span className="flex-shrink-0 w-8 h-8 flex items-center justify-center">
           {isOpen ? (
-            <Image width={51} height={51} src="/Svgs/minus.svg" alt="Minus" />
+            <Image width={51} height={51} src={assetPath('/Svgs/minus.svg')} alt="Minus" />
           ) : (
-            <Image width={51} height={51} src="/Svgs/plus.svg" alt="Plus" />
+            <Image width={51} height={51} src={assetPath('/Svgs/plus.svg')} alt="Plus" />
           )}
         </span>
       </button>

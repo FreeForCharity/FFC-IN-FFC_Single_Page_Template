@@ -3,6 +3,7 @@
 import React from 'react'
 import EducationalSitesCard from '@/components/ui/EducationalSitesCard'
 import { motion, Variants } from 'framer-motion'
+import { assetPath } from '@/lib/assetPath'
 
 const cardVariants: Variants = {
   offscreen: { opacity: 0, scale: 0.8 },
@@ -16,17 +17,17 @@ const cardVariants: Variants = {
 const index = () => {
   const firstGrid = [
     {
-      imageSrc: '/Images/upwork.webp',
+      imageSrc: assetPath('/Images/upwork.webp'),
       title: 'ittybiz.com Great site for ultra small business info',
       link: 'http://ittybiz.com/about/',
     },
     {
-      imageSrc: '/Images/upwork.webp',
+      imageSrc: assetPath('/Images/upwork.webp'),
       title: 'earn1k.com Program for earning your for $1000 on the side by Ramit',
       link: 'http://earn1k.com/',
     },
     {
-      imageSrc: '/Images/upwork.webp',
+      imageSrc: assetPath('/Images/upwork.webp'),
       title: 'appsumo.com Another program for earning your first money online',
       link: 'https://appsumo.com/courses-learning/',
     },
@@ -34,12 +35,12 @@ const index = () => {
 
   const secondGrid = [
     {
-      imageSrc: '/Images/upwork.webp',
+      imageSrc: assetPath('/Images/upwork.webp'),
       title: '100startup.com First book on starting a business',
       link: 'https://100startup.com/',
     },
     {
-      imageSrc: '/Images/upwork.webp',
+      imageSrc: assetPath('/Images/upwork.webp'),
       title: 'theleanstartup.com The next step up book on starting a business',
       link: 'http://theleanstartup.com/',
     },

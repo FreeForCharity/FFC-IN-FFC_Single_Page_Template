@@ -1,0 +1,18 @@
+# RFC 9116 security.txt — root-path copy.
+# This file MUST stay byte-for-byte identical to public/.well-known/security.txt
+# below the header block. The drift checker enforces it.
+#
+# Why two copies: GitHub Pages does not serve files inside dot-prefixed
+# directories like `.well-known/`. Cloudflare Pages, Netlify, and plain nginx
+# do — those hosts serve both paths. The /security.txt fallback ensures bots
+# and scanners that only hit the well-known path on GH-Pages still find a
+# reachable file via the root. RFC 9116 §2.5.2 allows multiple Canonical
+# lines to advertise both URLs.
+
+Contact: mailto:security@freeforcharity.org
+Expires: 2027-01-01T00:00:00.000Z
+Preferred-Languages: en
+Canonical: https://ffcworkingsite1.org/.well-known/security.txt
+Canonical: https://ffcworkingsite1.org/security.txt
+Policy: https://ffcworkingsite1.org/vulnerability-disclosure-policy
+Acknowledgments: https://ffcworkingsite1.org/security-acknowledgements

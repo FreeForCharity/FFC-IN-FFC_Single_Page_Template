@@ -70,3 +70,32 @@ jobs:
             .next/
             out/
           retention-days: 7
+
+  link-check:
+    name: Link check (soft-fail)
+    runs-on: ubuntu-latest
+    # Soft-fail today so we can see what linkinator surfaces without
+    # blocking merges. Flip to hard-fail once the noise is understood
+    # — tracked as a follow-up to #289.
+    continue-on-error: true
+    # Kept as a separate job (not inside test-and-build) so it does not
+    # multiply across the Playwright shard matrix introduced by #133.
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build Next.js site
+        run: npm run build
+
+      - name: Check for broken links
+        run: npm run check-links

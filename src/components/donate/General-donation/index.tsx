@@ -1,5 +1,6 @@
 import React from 'react'
 import GeneralDonationCard from '@/components/ui/General-Donation-Card'
+import { assetPath } from '@/lib/assetPath'
 
 const index = () => {
   return (
@@ -15,19 +16,19 @@ const index = () => {
           <GeneralDonationCard
             title="Monthly Donations"
             description="Monthly donations help by providing a predictable cash flow and are generally put towards expenses that are paid by free for charity each month like hosting and software licenses. By matching up our monthly bills to our monthly donations we can then scale up in tandem to produce more and more for charities."
-            img="/Images/payment.gif"
+            img={assetPath('/Images/payment.gif')}
             href="/donate"
           />
           <GeneralDonationCard
             title="One Time Donations"
             description="On time donations of any amount are placed in the general fund and used to help fund special projects as they become available throughout the year."
-            img="/Images/payment.gif"
+            img={assetPath('/Images/payment.gif')}
             href="/donate"
           />
           <GeneralDonationCard
             title="Large Donations"
             description="For large donations we can work directly with the donor and earmark the funds for a particular project of personal significance. This can be as simple as saying that your donation should be used for the technology programs vs. the business programs or more involved such as that the funds should be used to assist one particular local charity you support"
-            img="/Images/payment.gif"
+            img={assetPath('/Images/payment.gif')}
             href="https://example.com/donate"
           />
         </div>

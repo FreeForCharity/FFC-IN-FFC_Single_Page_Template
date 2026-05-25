@@ -2,27 +2,32 @@
 
 import React from 'react'
 import Link from 'next/link'
-import { Mail, Phone, MapPin, ArrowRight } from 'lucide-react'
+import { Mail, Phone, MapPin, ArrowRight, Link2 } from 'lucide-react'
 
 import { FaFacebookF, FaLinkedinIn, FaGithub } from 'react-icons/fa'
 import { FaXTwitter } from 'react-icons/fa6'
+import type { IconType } from 'react-icons'
+import type { LucideIcon } from 'lucide-react'
+
+import { siteConfig } from '@/lib/site.config'
+import { assetPath } from '@/lib/assetPath'
+
+// Maps a social link's label (as defined in siteConfig.social) to an icon.
+// Unknown labels fall back to a generic link icon (Link2 from lucide-react)
+// so a charity that adds a new social network — Bluesky, Mastodon, YouTube,
+// etc. — gets a sensible placeholder instead of a misleading GitHub mark.
+const socialIconByLabel: Record<string, IconType | LucideIcon> = {
+  Facebook: FaFacebookF,
+  'X (Twitter)': FaXTwitter,
+  Twitter: FaXTwitter,
+  X: FaXTwitter,
+  LinkedIn: FaLinkedinIn,
+  GitHub: FaGithub,
+}
 
 const Footer: React.FC = () => {
   const currentYear = React.useMemo(() => new Date().getFullYear(), [])
-  const socialLinks = [
-    { icon: FaFacebookF, href: 'https://www.facebook.com/freeforcharity', label: 'Facebook' },
-    { icon: FaXTwitter, href: 'https://x.com/freeforcharity1', label: 'X (Twitter)' },
-    {
-      icon: FaLinkedinIn,
-      href: 'https://www.linkedin.com/company/freeforcharity/',
-      label: 'LinkedIn',
-    },
-    {
-      icon: FaGithub,
-      href: 'https://github.com/FreeForCharity/FFC_Single_Page_Template',
-      label: 'GitHub',
-    },
-  ]
+  const socialLinks = siteConfig.social.filter((s) => s.href)
   return (
     <footer className="bg-black text-white">
       <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 py-12 px-4 md:px-6 lg:px-8">
@@ -33,9 +38,12 @@ const Footer: React.FC = () => {
           <div className="space-y-4">
             <a
               href="https://www.guidestar.org/profile/46-2471893"
-              aria-label="View Free For Charity GuideStar Profile"
+              aria-label={`View ${siteConfig.name} GuideStar Profile`}
             >
-              <img src="/Svgs/footerImage.svg" alt="GuideStar Platinum Seal of Transparency" />
+              <img
+                src={assetPath('/Svgs/footerImage.svg')}
+                alt="GuideStar Platinum Seal of Transparency"
+              />
             </a>
             <Link
               href="https://www.guidestar.org/profile/shared/bbbe173a-87b9-4af9-a8a2-cae255a95742"
@@ -147,11 +155,11 @@ const Footer: React.FC = () => {
               <div>
                 <p className="font-[500] text-[22px]">E-mail</p>
                 <a
-                  href="mailto:clarkemoyer@freeforcharity.org"
+                  href={`mailto:${siteConfig.contactEmail}`}
                   className="font-[500] text-[15px] hover:text-cyan-400 transition-colors break-all"
                   id="aria-font"
                 >
-                  clarkemoyer@freeforcharity.org
+                  {siteConfig.contactEmail}
                 </a>
               </div>
             </div>
@@ -209,18 +217,21 @@ const Footer: React.FC = () => {
             </a>
 
             <div className="flex gap-3 pt-4">
-              {socialLinks.map(({ icon: Icon, href, label }, index) => (
-                <a
-                  key={index}
-                  href={href}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  aria-label={label}
-                  className="bg-orange-500 p-2 rounded-full hover:bg-orange-600 transition-colors"
-                >
-                  <Icon className="w-6 h-6 text-white" />
-                </a>
-              ))}
+              {socialLinks.map(({ href, label }) => {
+                const Icon = socialIconByLabel[label] ?? Link2
+                return (
+                  <a
+                    key={`${label}-${href}`}
+                    href={href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    aria-label={label}
+                    className="bg-orange-500 p-2 rounded-full hover:bg-orange-600 transition-colors"
+                  >
+                    <Icon className="w-6 h-6 text-white" />
+                  </a>
+                )
+              })}
             </div>
           </div>
         </div>
@@ -232,7 +243,7 @@ const Footer: React.FC = () => {
         id="aria-font"
       >
         <p>
-          © {currentYear} All Rights Are Reserved by Free For Charity a US 501c3 Non Profit | A
+          © {currentYear} All Rights Are Reserved by {siteConfig.name} a US 501c3 Non Profit | A
           project of{' '}
           <Link
             href="https://freeforcharity.org"
