@@ -39,10 +39,23 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Determine base path
+        id: basepath
+        # Match deploy.yml: custom-domain deploys (public/CNAME present)
+        # serve from root with empty basePath; subpath-only deploys use
+        # /<repo-name>. Lighthouse must audit the same URL structure the
+        # production deploy uses or it'll measure 404 pages.
+        run: |
+          if [ -s "public/CNAME" ]; then
+            echo "value=" >> "$GITHUB_OUTPUT"
+          else
+            echo "value=/${GITHUB_REPOSITORY#*/}" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Build site
         run: npm run build
         env:
-          NEXT_PUBLIC_BASE_PATH: /FFC_Single_Page_Template
+          NEXT_PUBLIC_BASE_PATH: ${{ steps.basepath.outputs.value }}
 
       - name: Run Lighthouse CI
         run: |

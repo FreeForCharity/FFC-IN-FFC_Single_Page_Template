@@ -1,5 +1,6 @@
 import React from 'react'
 import Image from 'next/image'
+import { assetPath } from '@/lib/assetPath'
 
 const Index = () => {
   return (
@@ -30,7 +31,7 @@ const Index = () => {
         {/* Right Section */}
         <div className="w-full md:w-[58%] relative h-[400px] md:h-[500px]">
           <Image
-            src="/Images/hero-charity.webp"
+            src={assetPath('/Images/hero-charity.webp')}
             alt="hero image"
             fill
             className="object-cover w-full h-full"

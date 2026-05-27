@@ -1,5 +1,6 @@
 import React from 'react'
 import SlidingCard from '@/components/ui/SlidingCard'
+import { assetPath } from '@/lib/assetPath'
 
 const index = () => {
   return (
@@ -32,7 +33,7 @@ const index = () => {
             }
             buttonText="Available Here"
             buttonLink="https://www.guidestar.org/"
-            imageSrc="/Images/guidestar.webp" // 👈 image passed as prop
+            imageSrc={assetPath('/Images/guidestar.webp')} // 👈 image passed as prop
           />
           <SlidingCard
             direction="left"
@@ -48,7 +49,7 @@ const index = () => {
             }
             buttonText="Available Here"
             buttonLink="https://www.techsoup.org/"
-            imageSrc="/Images/TechSouplogo.webp" // 👈 image passed as prop
+            imageSrc={assetPath('/Images/TechSouplogo.webp')} // 👈 image passed as prop
           />
 
           <div className="py-[6px] w-[80%] mx-auto">

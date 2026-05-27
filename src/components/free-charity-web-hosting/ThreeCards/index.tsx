@@ -2,6 +2,7 @@
 
 import React from 'react'
 import Image from 'next/image'
+import { assetPath } from '@/lib/assetPath'
 
 const DonateSection: React.FC = () => {
   return (
@@ -11,7 +12,7 @@ const DonateSection: React.FC = () => {
         <div className="w-full bg-[#0d7ff8] rounded-[10px] overflow-hidden pt-[30px] pr-[20px] pb-[30px] pl-[20px] shadow-[0px_2px_18px_0px_rgba(0,0,0,0.3)] flex flex-col items-center">
           <div className="mb-[30px] w-full relative h-[128px]">
             <Image
-              src="/Images/donate-now.webp"
+              src={assetPath('/Images/donate-now.webp')}
               alt="Donate Now"
               fill
               className="object-contain"
@@ -44,7 +45,7 @@ const DonateSection: React.FC = () => {
         <div className="w-full bg-[#0d7ff8] rounded-[10px] overflow-hidden pt-[30px] pr-[20px] pb-[30px] pl-[20px] shadow-[0px_2px_18px_0px_rgba(0,0,0,0.3)] flex flex-col items-center">
           <div className="mb-[30px] w-full relative h-[128px]">
             <Image
-              src="/Images/Be-a-volunteer.webp"
+              src={assetPath('/Images/Be-a-volunteer.webp')}
               alt="Be a Volunteer"
               fill
               className="object-contain"

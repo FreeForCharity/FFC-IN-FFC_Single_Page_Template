@@ -1,4 +1,5 @@
 import type { NextConfig } from 'next'
+import withBundleAnalyzer from '@next/bundle-analyzer'
 
 const nextConfig: NextConfig = {
   output: 'export',
@@ -31,4 +32,11 @@ const nextConfig: NextConfig = {
   assetPrefix: process.env.NEXT_PUBLIC_BASE_PATH || '',
 }
 
-export default nextConfig
+// Wrap with @next/bundle-analyzer when ANALYZE=true. The wrapper is a no-op
+// otherwise, so default builds and production output are unchanged. Run with
+// `npm run analyze` to generate the HTML report under .next/analyze/.
+const bundleAnalyzer = withBundleAnalyzer({
+  enabled: process.env.ANALYZE === 'true',
+})
+
+export default bundleAnalyzer(nextConfig)

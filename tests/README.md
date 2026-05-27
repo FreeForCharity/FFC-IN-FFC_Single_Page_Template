@@ -131,6 +131,11 @@ These tests use values from `test.config.ts`:
 - **`logo.spec.ts`** - Logo visibility in header and hero
 - **`image-loading.spec.ts`** - Image loading validation
 
+### Guardrail Tests
+
+- **`axe.spec.ts`** - Runs `@axe-core/playwright` against the homepage and fails on NEW serious/critical WCAG 2.x A/AA violations. Pre-existing baseline violations are explicitly allowlisted at the top of the spec (currently: `color-contrast`); the allowlist is intended to shrink over time as accessibility issues are fixed in dedicated PRs. The spec exists to catch regressions, not to score a11y comprehensively.
+- **`head-meta.spec.ts`** - Pins the head metadata contract (CSP, OG, manifest link, robots, sitemap, security.txt).
+
 ## Test Performance
 
 ### Current Performance

@@ -141,7 +141,7 @@ These are third-party services loaded by our direct integrations. We do not dire
 - **Privacy Policy:** https://legal.hubspot.com/privacy-policy
 - **Note:** This is a Microsoft-controlled service, not directly integrated by Free For Charity
 
-**Discovery:** Identified through page speed analysis. See [HUBSPOT_INVESTIGATION.md](./HUBSPOT_INVESTIGATION.md) for full investigation report.
+**Discovery:** Identified through page speed analysis. See the [Microsoft Forms (and the HubSpot investigation)](./LESSONS_LEARNED.md#microsoft-forms-and-the-hubspot-investigation) section of `LESSONS_LEARNED.md` for the full summary.
 
 ### Other Potential Transitive Dependencies
 
@@ -244,7 +244,6 @@ To improve performance, we preconnect to frequently used domains:
 ```typescript
 // src/app/layout.tsx
 <link rel="preconnect" href="https://www.googletagmanager.com" />
-<link rel="preconnect" href="https://ffcsites.org" />
 <link rel="preconnect" href="https://www.zeffy.com" />
 <link rel="preconnect" href="https://widgets.guidestar.org" />
 ```
@@ -301,7 +300,7 @@ For questions about our external dependencies or privacy practices:
 - [Privacy Policy](/privacy-policy) - How we handle user data
 - [Cookie Policy](/cookie-policy) - Detailed cookie information
 - [Security Policy](./SECURITY.md) - Security practices and reporting
-- [HubSpot Investigation](./HUBSPOT_INVESTIGATION.md) - Detailed analysis of HubSpot usage
+- [HubSpot Investigation summary](./LESSONS_LEARNED.md#microsoft-forms-and-the-hubspot-investigation) - Why HubSpot cookies appear (Microsoft Forms transitive dependency)
 
 ## Updates to This Document
 

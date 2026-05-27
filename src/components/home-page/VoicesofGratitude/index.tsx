@@ -2,8 +2,11 @@
 
 import React, { useState, useEffect } from 'react'
 import Image from 'next/image'
+import { useReducedMotion } from 'framer-motion'
+import { assetPath } from '@/lib/assetPath'
 
 export default function TestimonialSlider() {
+  const prefersReducedMotion = useReducedMotion()
   const testimonials = [
     {
       name: 'Name',
@@ -25,16 +28,18 @@ export default function TestimonialSlider() {
   const [currentIndex, setCurrentIndex] = useState(0)
   const [isPaused, setIsPaused] = useState(false)
 
-  // Auto-scroll behavior
+  // Auto-scroll behavior. Disabled entirely when the user prefers reduced
+  // motion (WCAG 2.3.3) — slides only change when they tap a pagination
+  // dot. Also disabled while a pointer hovers the slider (existing behavior).
   useEffect(() => {
-    if (isPaused) return
+    if (isPaused || prefersReducedMotion) return
 
     const interval = setInterval(() => {
       setCurrentIndex((prev) => (prev + 1) % testimonials.length)
     }, 4000) // Change slide every 4 seconds
 
     return () => clearInterval(interval)
-  }, [isPaused, testimonials.length])
+  }, [isPaused, prefersReducedMotion, testimonials.length])
 
   const goToSlide = (index: number) => {
     setCurrentIndex(index)
@@ -77,11 +82,12 @@ export default function TestimonialSlider() {
                           {[...Array(testimonial.rating)].map((_, i) => (
                             <Image
                               key={i}
-                              src="/Svgs/start-icon.svg"
+                              src={assetPath('/Svgs/start-icon.svg')}
                               width={29}
                               height={29}
                               alt="start icon"
                               className="mx-[5px]"
+                              loading="lazy"
                             ></Image>
                           ))}
                         </div>

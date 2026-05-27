@@ -1,5 +1,6 @@
 import React from 'react'
 import Image from 'next/image'
+import { assetPath } from '@/lib/assetPath'
 
 const Index = () => {
   return (
@@ -33,7 +34,7 @@ const Index = () => {
           {/* Right Image */}
           <div className="w-full md:w-[38.2%] flex justify-center md:justify-start">
             <Image
-              src="/Images/about-us-card-section-image.webp"
+              src={assetPath('/Images/about-us-card-section-image.webp')}
               width={500}
               height={500}
               alt="About Us Card Section Image"

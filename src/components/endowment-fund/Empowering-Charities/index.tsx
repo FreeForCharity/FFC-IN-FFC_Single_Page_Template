@@ -1,6 +1,7 @@
 import React from 'react'
 import Image from 'next/image'
 import ProgressBar from '@/components/ui/ProgressBar'
+import { assetPath } from '@/lib/assetPath'
 
 const Index = () => {
   return (
@@ -18,7 +19,7 @@ const Index = () => {
           <div className="w-full md:w-[36.7%] md:mr-[60px] h-auto">
             <div className="relative w-full h-[280px] sm:h-[350px] md:h-[400px]">
               <Image
-                src="/Images/Empowering-Charities.webp"
+                src={assetPath('/Images/Empowering-Charities.webp')}
                 alt="Empowering Charities"
                 fill
                 className="object-cover rounded-[6px]"

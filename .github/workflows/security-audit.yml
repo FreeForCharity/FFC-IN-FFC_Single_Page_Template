@@ -1,0 +1,45 @@
+name: Security Audit
+
+# Runs `npm audit` against production dependencies on a daily cadence and on
+# pull requests that touch package files. Fails on `high` or `critical` so a
+# fresh template/site is never deployed with known-exploitable libraries.
+#
+# Dependabot still handles the upgrades; this workflow makes sure we notice if
+# a published advisory lands between Dependabot runs.
+
+on:
+  schedule:
+    - cron: '17 6 * * *' # daily, 06:17 UTC
+  pull_request:
+    branches: ['main']
+    paths:
+      - 'package.json'
+      - 'package-lock.json'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  audit:
+    name: npm audit (production)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install (no scripts)
+        run: npm ci --ignore-scripts
+
+      - name: Audit high-severity production deps
+        run: npm run audit:high

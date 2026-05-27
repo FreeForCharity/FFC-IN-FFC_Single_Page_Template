@@ -1,5 +1,6 @@
 import React from 'react'
 import SlidingCard from '@/components/ui/SlidingCard'
+import { assetPath } from '@/lib/assetPath'
 
 const index = () => {
   return (
@@ -29,7 +30,7 @@ const index = () => {
             }
             buttonText="Available Here"
             buttonLink="https://www.waveapps.com/"
-            imageSrc="/Images/Wave-logo.webp" // 👈 image passed as prop
+            imageSrc={assetPath('/Images/Wave-logo.webp')} // 👈 image passed as prop
           />
           <SlidingCard
             direction="right"
@@ -48,7 +49,7 @@ const index = () => {
             }
             buttonText="Available Here"
             buttonLink="https://www.shoeboxed.com/"
-            imageSrc="/Images/shoeboxed.webp" // 👈 image passed as prop
+            imageSrc={assetPath('/Images/shoeboxed.webp')} // 👈 image passed as prop
           />
 
           <SlidingCard
@@ -65,7 +66,7 @@ const index = () => {
             }
             buttonText="Available Here"
             buttonLink="https://www.google.com/enterprise/apps/business/"
-            imageSrc="/Images/google.webp" // 👈 image passed as prop
+            imageSrc={assetPath('/Images/google.webp')} // 👈 image passed as prop
           />
 
           <SlidingCard
@@ -80,7 +81,7 @@ const index = () => {
             }
             buttonText="Available Here"
             buttonLink="http://fiverr.com/"
-            imageSrc="/Images/fiverr.webp" // 👈 image passed as prop
+            imageSrc={assetPath('/Images/fiverr.webp')} // 👈 image passed as prop
           />
 
           <SlidingCard
@@ -95,7 +96,7 @@ const index = () => {
             }
             buttonText="Available Here"
             buttonLink="https://www.odesk.com/"
-            imageSrc="/Images/upwork.webp" // 👈 image passed as prop
+            imageSrc={assetPath('/Images/upwork.webp')} // 👈 image passed as prop
           />
         </div>
       </div>

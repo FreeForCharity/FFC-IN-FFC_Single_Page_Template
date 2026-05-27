@@ -7,7 +7,7 @@ export const metadata: Metadata = {
 
 export default function DonationPolicy() {
   return (
-    <main className="ffc-container py-16">
+    <div className="ffc-container py-16">
       <div className="max-w-4xl mx-auto">
         <h1 className="font-[var(--font-faustina)] text-[48px] leading-[60px] mb-8">
           Donation Policy
@@ -81,6 +81,6 @@ export default function DonationPolicy() {
           </p>
         </div>
       </div>
-    </main>
+    </div>
   )
 }
