@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test'
+import { test, expect, type Page } from '@playwright/test'
 import { testConfig } from './test.config'
 
 /**
@@ -13,9 +13,27 @@ import { testConfig } from './test.config'
  * Note: Test expectations use values from test.config.ts for easy customization
  */
 
+/**
+ * GTM is injected via Next.js `<Script strategy="lazyOnload">`, which appends
+ * the inline bootstrap during browser idle *after* the load event. Asserting
+ * immediately after `page.goto` therefore races the injection and flakes
+ * (this also fails on main). Wait for the element and dataLayer first. The
+ * inline snippet sets `window.dataLayer` synchronously when it runs, so this
+ * resolves without the external gtm.js needing to load over the network.
+ */
+async function waitForGtm(page: Page): Promise<void> {
+  await page.waitForSelector('script#gtm-script', { state: 'attached', timeout: 15000 })
+  await page.waitForFunction(
+    () => Array.isArray((window as unknown as { dataLayer?: unknown[] }).dataLayer),
+    undefined,
+    { timeout: 15000 }
+  )
+}
+
 test.describe('Google Tag Manager Integration', () => {
   test('should initialize dataLayer on page load', async ({ page }) => {
     await page.goto('/')
+    await waitForGtm(page)
 
     // Check if dataLayer exists and is initialized
     const hasDataLayer = await page.evaluate(() => {
@@ -27,6 +45,7 @@ test.describe('Google Tag Manager Integration', () => {
 
   test('should load GTM script with correct ID', async ({ page }) => {
     await page.goto('/')
+    await waitForGtm(page)
 
     // Check for GTM script element
     const gtmScript = await page.locator('script[id="gtm-script"]').count()
@@ -50,6 +69,7 @@ test.describe('Google Tag Manager Integration', () => {
 
   test('should push events to dataLayer', async ({ page }) => {
     await page.goto('/')
+    await waitForGtm(page)
 
     // Verify we can push events to dataLayer
     const canPushToDataLayer = await page.evaluate(() => {
@@ -65,6 +85,7 @@ test.describe('Google Tag Manager Integration', () => {
 
   test('should load GTM script after page interaction', async ({ page }) => {
     await page.goto('/')
+    await waitForGtm(page)
 
     // Verify GTM script exists on the page
     // Note: Next.js Script component with lazyOnload strategy
@@ -116,6 +137,7 @@ test.describe('Google Tag Manager Configuration', () => {
     // The GTM_ID is configured in the component
 
     await page.goto('/')
+    await waitForGtm(page)
 
     // GTM script should always be present with the configured ID
     const gtmScript = await page.locator('script[id="gtm-script"]').count()
