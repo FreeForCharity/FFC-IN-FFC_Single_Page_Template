@@ -35,6 +35,11 @@ test.describe('axe-core homepage guardrail', () => {
 
     const results = await new AxeBuilder({ page })
       .include('body')
+      // Don't crawl into third-party iframes (Zeffy donation form, GTM,
+      // Microsoft Forms, YouTube embeds). axe descends into same-origin
+      // frames by default, but these are vendor surfaces we don't own;
+      // their a11y is the vendor's responsibility, not this template's.
+      .exclude('iframe')
       .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'])
       .analyze()
 
