@@ -275,7 +275,19 @@ async function main() {
   ].filter(Boolean)
 
   if (configuredSources.length === 0) {
-    console.log('[events] No sources configured; leaving existing snapshot untouched.')
+    // Deterministic: removing/renaming all secrets should clear the
+    // snapshot so the site shows the empty state. Only rewrite if the
+    // current snapshot actually has events (to avoid pointless commit
+    // churn on every scheduled run for a template that ships with no
+    // sources configured).
+    const existing = await readExistingSnapshot()
+    if (existing.events.length === 0) {
+      console.log('[events] No sources configured; snapshot already empty.')
+      return
+    }
+    const empty = { updatedAt: new Date().toISOString(), events: [] }
+    await writeFile(SNAPSHOT_PATH, `${JSON.stringify(empty, null, 2)}\n`, 'utf8')
+    console.log('[events] No sources configured; wrote empty snapshot.')
     return
   }
 
@@ -311,14 +323,13 @@ async function main() {
 
   const fetched = dedupe(merged).sort((a, b) => a.startUtc.localeCompare(b.startUtc))
 
-  // Belt-and-suspenders: if every source errored AND retention produced
-  // nothing new beyond what was already in the snapshot, leave the
-  // snapshot's updatedAt alone so we don't churn the commit.
+  // If every source errored, leave the snapshot alone — retention has
+  // already preserved whatever was there, and bumping `updatedAt` would
+  // both create a commit per 6-hour cron run during an outage and
+  // misleadingly tell visitors the data refreshed when nothing did.
   const allFailed = results.every((r) => !r.ok)
-  if (allFailed && fetched.length === 0) {
-    console.warn(
-      '[events] All sources failed and no prior cache to retain; leaving snapshot untouched.'
-    )
+  if (allFailed) {
+    console.warn('[events] All sources failed; keeping snapshot and updatedAt untouched.')
     return
   }
 

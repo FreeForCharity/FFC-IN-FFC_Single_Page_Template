@@ -54,7 +54,16 @@ const MIME = {
 // The trailing-slash → `.html` fallback matters because linkinator probes the
 // slashed variant of clean links even when the page only links no-slash.
 function resolveCandidates(urlPath) {
-  const clean = decodeURIComponent(urlPath.split('?')[0].split('#')[0])
+  const raw = urlPath.split('?')[0].split('#')[0]
+  // decodeURIComponent throws on malformed percent-encoding (e.g. a stray
+  // `%`). Fall back to the raw path so the server can answer 404 rather
+  // than crash the whole check.
+  let clean
+  try {
+    clean = decodeURIComponent(raw)
+  } catch {
+    clean = raw
+  }
   // Block path traversal: normalize and strip any leading "../" segments.
   const safe = normalize(clean).replace(/^(\.\.(\/|\\|$))+/, '')
   const hadTrailingSlash = clean.endsWith('/')
