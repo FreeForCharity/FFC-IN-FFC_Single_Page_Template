@@ -27,7 +27,11 @@ const BASELINE_ALLOWLIST = new Set<string>([
 test.describe('axe-core homepage guardrail', () => {
   test('homepage has no new serious or critical violations', async ({ page }) => {
     await page.goto('/')
-    await page.waitForLoadState('networkidle')
+    // `page.goto` already waits for the `load` event, which is sufficient for
+    // axe to scan the rendered DOM. Don't gate on `networkidle` — third-party
+    // scripts (GTM, Clarity) keep the network busy in CI and the wait can
+    // never settle within the test's 30s timeout (this consistently flaked
+    // on main).
 
     const results = await new AxeBuilder({ page })
       .include('body')
