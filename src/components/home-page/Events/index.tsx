@@ -34,12 +34,11 @@ const Events = () => {
   const updatedAt = data.updatedAt ? new Date(data.updatedAt) : null
 
   return (
-    <section id="events" className="py-[52px]" aria-labelledby="events-heading">
+    <section id="events" className="py-[52px]" aria-label="Upcoming Events">
       <div className="w-[90%] mx-auto max-w-[1280px]">
         <h2
-          id="events-heading"
+          id="faustina-font"
           className="font-[400] text-[40px] lg:text-[48px] leading-[100%] tracking-[0] text-center mx-auto mb-[20px]"
-          data-font="faustina-font"
         >
           Upcoming Events
         </h2>

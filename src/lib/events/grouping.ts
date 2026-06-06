@@ -1,5 +1,10 @@
 import type { EventBucket, UnifiedEvent } from './types'
 
+// Bucket and label each event in its own timezone so users see the month
+// they'd expect (e.g. a Saturday-11pm-NY event belongs to May locally, not
+// June UTC). When no timezone is set we fall back to UTC, in which case
+// monthKey and monthLabel necessarily agree because both come from the
+// same Intl.DateTimeFormat call.
 const MONTH_KEY_OPTS: Intl.DateTimeFormatOptions = {
   year: 'numeric',
   month: '2-digit',

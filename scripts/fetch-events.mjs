@@ -423,38 +423,38 @@ async function fetchIcsSource(label, urlString, source, secrets) {
   const safe = safeHttpUrl(urlString)
   if (!safe) {
     console.warn(`[events] ${label} URL is not a valid http(s) URL; skipping.`)
-    return { ok: false, events: [] }
+    return { source, ok: false, events: [] }
   }
   const host = new URL(safe).hostname
   if (!ALLOWED_ICS_HOSTS.some((h) => host === h || host.endsWith(`.${h}`))) {
     console.warn(`[events] ${label} host ${host} is not allowlisted; skipping.`)
-    return { ok: false, events: [] }
+    return { source, ok: false, events: [] }
   }
   try {
     const { res, text } = await fetchWithLimits(safe)
     if (!res.ok) {
       console.warn(`[events] ${label} responded ${res.status}; skipping.`)
-      return { ok: false, events: [] }
+      return { source, ok: false, events: [] }
     }
     const ct = res.headers.get('content-type') ?? ''
     if (!/text\/calendar|application\/octet-stream|text\/plain/i.test(ct)) {
       console.warn(
         `[events] ${label} returned unexpected content-type "${ct}"; skipping (likely an auth redirect).`
       )
-      return { ok: false, events: [] }
+      return { source, ok: false, events: [] }
     }
-    return { ok: true, events: parseIcs(text, source) }
+    return { source, ok: true, events: parseIcs(text, source) }
   } catch (err) {
     const msg = scrubSecrets(err.message ?? String(err), secrets)
     console.warn(`[events] ${label} fetch failed: ${msg}; skipping.`)
-    return { ok: false, events: [] }
+    return { source, ok: false, events: [] }
   }
 }
 
 async function fetchFacebookSource(pageId, token, secrets) {
   if (!FACEBOOK_ID_RE.test(pageId)) {
     console.warn('[events] Facebook page id has unexpected characters; skipping.')
-    return { ok: false, events: [] }
+    return { source, ok: false, events: [] }
   }
   const fields = [
     'id',
@@ -478,7 +478,7 @@ async function fetchFacebookSource(pageId, token, secrets) {
       const { res, text } = await fetchWithLimits(url)
       if (!res.ok) {
         console.warn(`[events] Facebook responded ${res.status}; skipping.`)
-        return { ok: events.length > 0, events }
+        return { source: 'facebook', ok: events.length > 0, events }
       }
       const payload = JSON.parse(text)
       if (payload.error) {
@@ -494,19 +494,19 @@ async function fetchFacebookSource(pageId, token, secrets) {
           )
         }
         console.warn(`[events] Facebook error: ${msg}; skipping.`)
-        return { ok: events.length > 0, events }
+        return { source: 'facebook', ok: events.length > 0, events }
       }
       events.push(...normalizeFacebookEvents(payload))
       const next = payload?.paging?.next
-      if (!next) return { ok: true, events }
+      if (!next) return { source: 'facebook', ok: true, events }
       url = next
     } catch (err) {
       const msg = scrubSecrets(err.message ?? String(err), secrets)
       console.warn(`[events] Facebook fetch failed: ${msg}; skipping.`)
-      return { ok: events.length > 0, events }
+      return { source: 'facebook', ok: events.length > 0, events }
     }
   }
-  return { ok: true, events }
+  return { source: 'facebook', ok: true, events }
 }
 
 function dedupe(events) {
@@ -560,24 +560,38 @@ async function main() {
     tasks.push(fetchFacebookSource(facebookPageId, facebookAccessToken, secrets))
 
   const results = await Promise.all(tasks)
-  const anySourceSucceeded = results.some((r) => r.ok)
-  const fetched = dedupe(results.flatMap((r) => r.events)).sort((a, b) =>
-    a.startUtc.localeCompare(b.startUtc)
-  )
+  const existing = await readExistingSnapshot()
 
-  if (!anySourceSucceeded) {
-    console.warn('[events] All configured sources failed; keeping previous snapshot.')
-    return
+  // Per-source retention: if a source errored, use its last-good events
+  // from the existing snapshot (identified by the `source:` id prefix that
+  // every parser stamps). This prevents one outage from dropping the other
+  // sources' previously-cached events.
+  const merged = []
+  for (const { source, ok, events } of results) {
+    if (ok) {
+      merged.push(...events)
+    } else {
+      const prior = existing.events.filter((e) => e.id.startsWith(`${source}:`))
+      if (prior.length > 0) {
+        console.warn(
+          `[events] ${source} failed; retaining ${prior.length} previously-cached event(s).`
+        )
+        merged.push(...prior)
+      }
+    }
   }
 
-  if (fetched.length === 0) {
-    const existing = await readExistingSnapshot()
-    if (existing.events.length > 0) {
-      console.warn(
-        '[events] All sources returned 0 events; keeping previous snapshot to avoid data loss.'
-      )
-      return
-    }
+  const fetched = dedupe(merged).sort((a, b) => a.startUtc.localeCompare(b.startUtc))
+
+  // Belt-and-suspenders: if every source errored AND retention produced
+  // nothing new beyond what was already in the snapshot, leave the
+  // snapshot's updatedAt alone so we don't churn the commit.
+  const allFailed = results.every((r) => !r.ok)
+  if (allFailed && fetched.length === 0) {
+    console.warn(
+      '[events] All sources failed and no prior cache to retain; leaving snapshot untouched.'
+    )
+    return
   }
 
   const snapshot = { updatedAt: new Date().toISOString(), events: fetched }
