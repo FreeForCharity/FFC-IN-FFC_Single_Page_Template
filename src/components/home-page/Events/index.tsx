@@ -11,12 +11,11 @@ const Events = () => {
   const hasEvents = buckets.length > 0
 
   return (
-    <section id="events" className="py-[52px]" aria-labelledby="events-heading">
+    <section id="events" className="py-[52px]" aria-label="Upcoming Events">
       <div className="w-[90%] mx-auto max-w-[1280px]">
         <h1
-          id="events-heading"
+          id="faustina-font"
           className="font-[400] text-[40px] lg:text-[48px] leading-[100%] tracking-[0] text-center mx-auto mb-[20px]"
-          data-font="faustina-font"
         >
           Upcoming Events
         </h1>
@@ -59,7 +58,13 @@ const Events = () => {
 
         <p className="text-center mt-10 text-sm text-gray-500" id="lato-font">
           {data.updatedAt ? (
-            <>Events last refreshed {new Date(data.updatedAt).toLocaleString('en-US')}.</>
+            <>
+              Events last refreshed{' '}
+              <time dateTime={new Date(data.updatedAt).toISOString()}>
+                {new Date(data.updatedAt).toLocaleString('en-US', { timeZone: 'UTC' })} UTC
+              </time>
+              .
+            </>
           ) : (
             <>Events are aggregated automatically from our calendar sources.</>
           )}{' '}

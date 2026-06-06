@@ -201,13 +201,13 @@ async function fetchIcsSource(label, urlString, source) {
     const res = await fetch(urlString, { redirect: 'follow' })
     if (!res.ok) {
       console.warn(`[events] ${label} responded ${res.status}; skipping.`)
-      return []
+      return { source, ok: false, events: [] }
     }
     const text = await res.text()
-    return parseIcs(text, source)
+    return { source, ok: true, events: parseIcs(text, source) }
   } catch (err) {
     console.warn(`[events] ${label} fetch failed: ${err.message}; skipping.`)
-    return []
+    return { source, ok: false, events: [] }
   }
 }
 
@@ -231,17 +231,17 @@ async function fetchFacebookSource(pageId, token) {
     const res = await fetch(url.toString())
     if (!res.ok) {
       console.warn(`[events] Facebook responded ${res.status}; skipping.`)
-      return []
+      return { source: 'facebook', ok: false, events: [] }
     }
     const payload = await res.json()
     if (payload.error) {
       console.warn(`[events] Facebook error: ${payload.error.message ?? 'unknown'}; skipping.`)
-      return []
+      return { source: 'facebook', ok: false, events: [] }
     }
-    return normalizeFacebookEvents(payload)
+    return { source: 'facebook', ok: true, events: normalizeFacebookEvents(payload) }
   } catch (err) {
     console.warn(`[events] Facebook fetch failed: ${err.message}; skipping.`)
-    return []
+    return { source: 'facebook', ok: false, events: [] }
   }
 }
 
@@ -288,16 +288,38 @@ async function main() {
     tasks.push(fetchFacebookSource(facebookPageId, facebookAccessToken))
 
   const results = await Promise.all(tasks)
-  const fetched = dedupe(results.flat()).sort((a, b) => a.startUtc.localeCompare(b.startUtc))
+  const existing = await readExistingSnapshot()
 
-  if (fetched.length === 0) {
-    const existing = await readExistingSnapshot()
-    if (existing.events.length > 0) {
-      console.warn(
-        '[events] All sources returned 0 events; keeping previous snapshot to avoid data loss.'
-      )
-      return
+  // Per-source retention: if a source errored, use its last-good events
+  // from the existing snapshot (identified by the `source:` id prefix that
+  // every parser stamps). This prevents one outage from dropping the other
+  // sources' previously-cached events.
+  const merged = []
+  for (const { source, ok, events } of results) {
+    if (ok) {
+      merged.push(...events)
+    } else {
+      const prior = existing.events.filter((e) => e.id.startsWith(`${source}:`))
+      if (prior.length > 0) {
+        console.warn(
+          `[events] ${source} failed; retaining ${prior.length} previously-cached event(s).`
+        )
+        merged.push(...prior)
+      }
     }
+  }
+
+  const fetched = dedupe(merged).sort((a, b) => a.startUtc.localeCompare(b.startUtc))
+
+  // Belt-and-suspenders: if every source errored AND retention produced
+  // nothing new beyond what was already in the snapshot, leave the
+  // snapshot's updatedAt alone so we don't churn the commit.
+  const allFailed = results.every((r) => !r.ok)
+  if (allFailed && fetched.length === 0) {
+    console.warn(
+      '[events] All sources failed and no prior cache to retain; leaving snapshot untouched.'
+    )
+    return
   }
 
   const snapshot = { updatedAt: new Date().toISOString(), events: fetched }
