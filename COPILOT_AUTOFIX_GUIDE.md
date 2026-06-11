@@ -72,7 +72,9 @@ CI - Build and Test-refs/pull/87/merge exists
 
 ## This Repository's Actual CI/CD
 
-### Workflows Defined in Repository
+### CI/CD and Security Checks
+
+Repository Actions workflows, plus GitHub-managed CodeQL code scanning (default setup, no workflow file):
 
 1. **CI - Build and Test** (`.github/workflows/ci.yml`)
    - Runs: formatting check, linting, unit tests, build, E2E tests

@@ -160,7 +160,7 @@ Example: `feat: add volunteer signup form with validation`
 
 ## CI Pipeline
 
-GitHub Actions enforces the following on every PR:
+GitHub Actions (items 1–5) plus GitHub code scanning (item 6) enforce the following on every PR:
 
 1. **Prettier** -- `npm run format:check` (formatting must pass)
 2. **ESLint** -- `npm run lint` (no errors allowed)

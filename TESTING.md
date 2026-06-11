@@ -623,7 +623,7 @@ GitHub Dependabot provides automated dependency management and security updates 
 
 - On push to main branch
 - On pull requests to main
-- Weekly on Mondays at 11:17 PM
+- On a weekly cadence (timing is GitHub-managed under default setup)
 
 **View Results**:
 

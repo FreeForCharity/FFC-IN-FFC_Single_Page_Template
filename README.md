@@ -152,9 +152,11 @@ hand or use the same address for both.
 ## DO NOT TOUCH
 
 - `scripts/check-drift.mjs` — platform contract (drift enforcement).
-- `.github/workflows/ci.yml`, `scorecard.yml`,
-  `security-audit.yml`, `security-txt-expiry.yml`, `drift-check.yml`,
-  `phantom-revert-guard.yml` — shared CI/security workflows.
+- `.github/workflows/ci.yml`, `.github/workflows/scorecard.yml`,
+  `.github/workflows/security-audit.yml`,
+  `.github/workflows/security-txt-expiry.yml`,
+  `.github/workflows/drift-check.yml`,
+  `.github/workflows/phantom-revert-guard.yml` — shared CI/security workflows.
 - `.github/workflows/deploy.yml`, `.github/workflows/lighthouse.yml` —
   you ONLY edit `NEXT_PUBLIC_BASE_PATH` in these (per step 9). Don't
   change anything else.
