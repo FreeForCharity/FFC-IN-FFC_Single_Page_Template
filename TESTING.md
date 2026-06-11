@@ -612,7 +612,7 @@ GitHub Dependabot provides automated dependency management and security updates 
 
 **Status**: ✅ Enabled
 
-**Location**: `.github/workflows/codeql.yml`
+**Location**: GitHub code scanning **default setup** (Settings → Security & Analysis). No `codeql.yml` workflow file — an advanced workflow and default setup cannot both be enabled.
 
 **Scans**:
 
@@ -723,8 +723,8 @@ FFC_Single_Page_Template/
 ├── .github/workflows/
 │   ├── ci.yml                     # CI pipeline with linting, testing
 │   ├── deploy.yml                 # Deployment pipeline to GitHub Pages
-│   ├── codeql.yml                 # Security scanning
 │   └── lighthouse.yml             # Performance monitoring
+│   # CodeQL runs via GitHub code scanning default setup (no workflow file)
 ├── public/                         # Static assets
 ├── src/data/
 │   ├── faqs/

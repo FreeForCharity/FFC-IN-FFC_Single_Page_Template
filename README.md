@@ -152,7 +152,7 @@ hand or use the same address for both.
 ## DO NOT TOUCH
 
 - `scripts/check-drift.mjs` — platform contract (drift enforcement).
-- `.github/workflows/ci.yml`, `codeql.yml`, `scorecard.yml`,
+- `.github/workflows/ci.yml`, `scorecard.yml`,
   `security-audit.yml`, `security-txt-expiry.yml`, `drift-check.yml`,
   `phantom-revert-guard.yml` — shared CI/security workflows.
 - `.github/workflows/deploy.yml`, `.github/workflows/lighthouse.yml` —
@@ -459,7 +459,7 @@ The ESLint warnings fall into three categories:
 - 📊 Monitor Dependabot PRs in the repository's Pull Requests tab
 - 📖 **Full Guide**: See [DEPENDABOT.md](./DEPENDABOT.md) for comprehensive documentation and setup instructions
 
-**CodeQL Security Scanning** (`.github/workflows/codeql.yml`)
+**CodeQL Security Scanning** (GitHub code scanning **default setup** — no workflow file)
 
 - ✅ Scans JavaScript/TypeScript code for security vulnerabilities
 - ✅ Scans GitHub Actions workflows for security issues

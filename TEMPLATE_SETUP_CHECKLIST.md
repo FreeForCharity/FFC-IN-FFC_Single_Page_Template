@@ -51,7 +51,7 @@ Quick reference checklist for setting up a new repository from the FFC Single Pa
 - [ ] Enable Dependency graph ✅
 - [ ] Enable Dependabot alerts ✅
 - [ ] Enable Dependabot security updates ✅
-- [ ] Enable Code scanning (CodeQL) - auto-configured by workflow
+- [ ] Enable Code scanning (CodeQL) - use **default setup** (do NOT add a `codeql.yml` advanced workflow; it conflicts with default setup)
 - [ ] Enable Secret scanning (if available)
 
 ---
@@ -65,8 +65,7 @@ Create ruleset named "Protect Main":
 - [ ] Require pull request before merging ✅
 - [ ] Require status checks to pass:
   - [ ] Test and Build (CI workflow)
-  - [ ] Analyze (javascript-typescript)
-  - [ ] Analyze (actions)
+  - [ ] CodeQL (code scanning default setup; appears after first scan)
 - [ ] Require branches to be up to date ✅
 - [ ] Require signed commits ✅
 - [ ] Block force pushes ✅

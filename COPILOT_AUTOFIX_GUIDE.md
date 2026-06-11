@@ -79,9 +79,9 @@ CI - Build and Test-refs/pull/87/merge exists
    - Status: ✅ Working correctly
    - Current behavior: Cancels in-progress runs when new commits pushed
 
-2. **CodeQL Advanced** (`.github/workflows/codeql.yml`)
-   - Runs: Security scanning for JavaScript/TypeScript
-   - Status: ✅ Working correctly
+2. **CodeQL** (GitHub code scanning **default setup** — no workflow file)
+   - Runs: Security scanning for JavaScript/TypeScript and GitHub Actions
+   - Status: ✅ Working correctly (managed by GitHub, not a `codeql.yml` workflow)
 
 3. **Deploy to GitHub Pages** (`.github/workflows/deploy.yml`)
    - Runs: Builds and deploys to GitHub Pages

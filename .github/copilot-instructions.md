@@ -37,7 +37,7 @@ Issue -> branch -> PR -> merge queue. No direct commits to main.
 - Jest (all tests pass)
 - `npm run build` (static export succeeds)
 - Playwright E2E
-- CodeQL (static analysis, separate workflow)
+- CodeQL (static analysis, GitHub code scanning default setup — no workflow file)
 
 ## Known Constraints
 

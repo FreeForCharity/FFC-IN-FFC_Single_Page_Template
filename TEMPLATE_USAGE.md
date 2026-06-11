@@ -236,10 +236,12 @@ This template includes four GitHub Actions workflows:
    - Purpose: Deploys built site to GitHub Pages
    - What it does: Builds site with basePath, deploys to `gh-pages` branch
 
-3. **CodeQL Security Scanning** (`.github/workflows/codeql.yml`)
-   - Runs on: Push to main, PRs to main, weekly schedule
+3. **CodeQL Security Scanning** (GitHub code scanning **default setup** — no workflow file)
+   - Runs on: Push to main, PRs to main, weekly schedule (managed by GitHub)
    - Purpose: Scans code for security vulnerabilities
    - What it does: Analyzes JavaScript/TypeScript and GitHub Actions
+   - Note: This template ships **without** a `codeql.yml` advanced workflow on
+     purpose, so clones can use default setup without a standard/advanced conflict
 
 4. **Lighthouse CI** (`.github/workflows/lighthouse.yml`)
    - Runs on: After deployment, PRs to main
@@ -335,8 +337,7 @@ Create a ruleset named **"Protect Main"** with these settings:
 3. ✅ **Require status checks to pass**
    - Select these status checks as required:
      - `Test and Build` (from CI workflow)
-     - `Analyze (javascript-typescript)` (from CodeQL)
-     - `Analyze (actions)` (from CodeQL)
+     - `CodeQL` (from code scanning default setup — appears after the first scan runs)
    - ✅ Enable **"Require branches to be up to date before merging"**
    - This ensures tests run on latest code before merge
 
@@ -398,10 +399,13 @@ gpg --armor --export YOUR_KEY_ID
    - Click **"Enable"** if not already enabled
    - Works immediately when vulnerabilities are detected
 
-4. ✅ **Code scanning (CodeQL)**
-   - Should be automatically enabled by the workflow
-   - Verify it's listed under "Code scanning alerts"
-   - If not, the workflow will set it up on first run
+4. ✅ **Code scanning (CodeQL — default setup)**
+   - Settings → Security & Analysis → Code scanning → **Set up → Default**
+   - Use GitHub's **default setup** (no `codeql.yml` workflow needed)
+   - Do **not** add an advanced CodeQL workflow file — a `codeql.yml`
+     advanced workflow and default setup cannot both be enabled and will
+     conflict. This template intentionally ships **without** one.
+   - Verify scans appear under "Code scanning alerts" after the first run
 
 **Recommended:**
 
