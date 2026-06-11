@@ -463,10 +463,33 @@ The ESLint warnings fall into three categories:
 
 **CodeQL Security Scanning** (GitHub code scanning **default setup** — no workflow file)
 
+- 🏢 **Configured at the organization level.** Free For Charity enables CodeQL
+  **default (standard) setup** org-wide, so repositories created from this
+  template inherit it automatically — no per-repo configuration needed.
+- 🚫 **No `codeql.yml` is committed on purpose.** A repo-level advanced CodeQL
+  workflow and org/repo default setup **cannot both be enabled** — committing
+  one re-introduces the standard/advanced conflict this template avoids.
 - ✅ Scans JavaScript/TypeScript code for security vulnerabilities
 - ✅ Scans GitHub Actions workflows for security issues
-- ✅ Runs on push to main, pull requests, and weekly schedule
+- ✅ Runs on push to main, pull requests, and a weekly schedule (GitHub-managed)
 - 📊 View results in repository Security → Code scanning alerts
+
+**Setting up CodeQL when you use this template**
+
+If your repository is **not** covered by an organization-level default setup
+(e.g. a personal fork or an org without it configured), enable standard setup
+per repository:
+
+1. Go to **Settings → Security & Analysis** (a.k.a. "Code security").
+2. Under **Code scanning**, click **Set up → Default**.
+3. Confirm the languages (JavaScript/TypeScript and Actions are auto-detected)
+   and click **Enable CodeQL**.
+4. After the first scan, add the **`CodeQL`** check to your branch protection /
+   ruleset required status checks (see [TEMPLATE_USAGE.md](./TEMPLATE_USAGE.md)).
+
+> ⚠️ **Do not** add a `.github/workflows/codeql.yml` advanced workflow. Default
+> setup and an advanced workflow conflict, and GitHub will refuse to enable
+> default setup while the workflow exists. Use default setup only.
 
 **npm audit**
 
