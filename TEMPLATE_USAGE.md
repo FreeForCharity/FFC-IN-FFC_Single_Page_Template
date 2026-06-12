@@ -224,7 +224,7 @@ The deploy workflow creates a `github-pages` environment automatically. You can 
 
 ### Workflows Overview
 
-This template includes three GitHub Actions workflows (CI, Deploy, Lighthouse). CodeQL security scanning is **not** a committed workflow — it runs via GitHub code scanning default setup — but is listed below alongside the workflows for completeness:
+The primary GitHub Actions workflows are described below (CI, Deploy, Lighthouse). The repo also ships additional maintenance/security workflows — e.g. `drift-check`, `scorecard`, `security-audit`, `security-txt-expiry`, `phantom-revert-guard`, and `uptime`. CodeQL security scanning is **not** a committed workflow — it runs via GitHub code scanning default setup — but is listed below alongside the workflows for completeness:
 
 1. **CI - Build and Test** (`.github/workflows/ci.yml`)
    - Runs on: All pull requests and pushes to main
