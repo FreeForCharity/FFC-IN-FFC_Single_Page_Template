@@ -160,13 +160,13 @@ Example: `feat: add volunteer signup form with validation`
 
 ## CI Pipeline
 
-GitHub Actions enforces the following on every PR:
+GitHub Actions (items 1–5) plus GitHub code scanning (item 6) enforce the following on every PR:
 
 1. **Prettier** -- `npm run format:check` (formatting must pass)
 2. **ESLint** -- `npm run lint` (no errors allowed)
 3. **Jest** -- `npm test` (all unit tests must pass)
 4. **Build** -- `npm run build` (static export must succeed)
 5. **Playwright** -- `npm run test:e2e` (E2E tests must pass)
-6. **CodeQL** -- Static analysis and security scanning (separate workflow)
+6. **CodeQL** -- Static analysis and security scanning via GitHub code scanning **default setup** (no `codeql.yml` workflow; an advanced workflow would conflict with default setup)
 
 PRs cannot merge until all checks pass.

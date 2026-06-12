@@ -75,7 +75,7 @@ If you have a real need to change one of these, open an issue first.
 | Vuln disclosure page     | `src/app/vulnerability-disclosure-policy/page.tsx`                   |
 | Branch protection        | `SECURITY.md` (configure in GitHub repo settings)                    |
 | Dep scanning             | `.github/dependabot.yml`, `.github/workflows/security-audit.yml`     |
-| Static analysis          | `.github/workflows/codeql.yml`                                       |
+| Static analysis (CodeQL) | GitHub code scanning **default setup** (no `codeql.yml` workflow)    |
 | Supply-chain score       | `.github/workflows/scorecard.yml`                                    |
 | Secret patterns          | `scripts/check-drift.mjs` (locally) + GitHub secret scanning         |
 

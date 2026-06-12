@@ -152,9 +152,11 @@ hand or use the same address for both.
 ## DO NOT TOUCH
 
 - `scripts/check-drift.mjs` — platform contract (drift enforcement).
-- `.github/workflows/ci.yml`, `codeql.yml`, `scorecard.yml`,
-  `security-audit.yml`, `security-txt-expiry.yml`, `drift-check.yml`,
-  `phantom-revert-guard.yml` — shared CI/security workflows.
+- `.github/workflows/ci.yml`, `.github/workflows/scorecard.yml`,
+  `.github/workflows/security-audit.yml`,
+  `.github/workflows/security-txt-expiry.yml`,
+  `.github/workflows/drift-check.yml`, `.github/workflows/uptime.yml`,
+  `.github/workflows/phantom-revert-guard.yml` — shared CI/security workflows.
 - `.github/workflows/deploy.yml`, `.github/workflows/lighthouse.yml` —
   you ONLY edit `NEXT_PUBLIC_BASE_PATH` in these (per step 9). Don't
   change anything else.
@@ -459,12 +461,35 @@ The ESLint warnings fall into three categories:
 - 📊 Monitor Dependabot PRs in the repository's Pull Requests tab
 - 📖 **Full Guide**: See [DEPENDABOT.md](./DEPENDABOT.md) for comprehensive documentation and setup instructions
 
-**CodeQL Security Scanning** (`.github/workflows/codeql.yml`)
+**CodeQL Security Scanning** (GitHub code scanning **default setup** — no workflow file)
 
+- 🏢 **Configured at the organization level.** Free For Charity enables CodeQL
+  **default (standard) setup** org-wide, so repositories created from this
+  template inherit it automatically — no per-repo configuration needed.
+- 🚫 **No `codeql.yml` is committed on purpose.** A repo-level advanced CodeQL
+  workflow and org/repo default setup **cannot both be enabled** — committing
+  one re-introduces the standard/advanced conflict this template avoids.
 - ✅ Scans JavaScript/TypeScript code for security vulnerabilities
 - ✅ Scans GitHub Actions workflows for security issues
-- ✅ Runs on push to main, pull requests, and weekly schedule
+- ✅ Runs on push to main, pull requests, and a weekly schedule (GitHub-managed)
 - 📊 View results in repository Security → Code scanning alerts
+
+**Setting up CodeQL when you use this template**
+
+If your repository is **not** covered by an organization-level default setup
+(e.g. a personal fork or an org without it configured), enable standard setup
+per repository:
+
+1. Go to **Settings → Security & Analysis** (a.k.a. "Code security").
+2. Under **Code scanning**, click **Set up → Default**.
+3. Confirm the languages (JavaScript/TypeScript and Actions are auto-detected)
+   and click **Enable CodeQL**.
+4. After the first scan, add the **`CodeQL`** check to your branch protection /
+   ruleset required status checks (see [TEMPLATE_USAGE.md](./TEMPLATE_USAGE.md)).
+
+> ⚠️ **Do not** add a `.github/workflows/codeql.yml` advanced workflow. Default
+> setup and an advanced workflow conflict, and GitHub will refuse to enable
+> default setup while the workflow exists. Use default setup only.
 
 **npm audit**
 

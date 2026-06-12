@@ -132,7 +132,7 @@ npm run test:e2e:ui
 
 **Purpose**: Security vulnerability scanning
 
-**Configuration**: `.github/workflows/codeql.yml`
+**Configuration**: GitHub code scanning **default setup** (Settings → Security & Analysis). This template intentionally ships **without** a `codeql.yml` advanced workflow, because an advanced workflow and default setup cannot both be enabled.
 
 **Automatic Scanning**:
 
