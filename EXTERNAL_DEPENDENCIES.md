@@ -104,7 +104,7 @@ These are services we directly integrate into our application code.
 - **Domain:** `www.zeffy.com`
 - **Preconnect:** Configured in `src/app/layout.tsx`
 - **Data Collected:** Donation transaction data
-- **Privacy Policy:** https://www.zeffy.com/privacy
+- **Privacy Policy:** https://support.zeffy.com/legal-data-privacy-security
 
 ### Transparency & Validation
 

@@ -193,12 +193,12 @@ export default function CookiePolicy() {
             <p className="text-xs mt-2 text-gray-600">
               Privacy Policy:{' '}
               <a
-                href="https://www.zeffy.com/privacy"
+                href="https://support.zeffy.com/legal-data-privacy-security"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-blue-600 hover:underline"
               >
-                https://www.zeffy.com/privacy
+                https://support.zeffy.com/legal-data-privacy-security
               </a>
             </p>
           </div>
