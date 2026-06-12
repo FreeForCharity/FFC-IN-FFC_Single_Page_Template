@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useRef, useEffect } from 'react'
+import React, { useState, useRef } from 'react'
 import { Swiper, SwiperSlide } from 'swiper/react'
 import { Navigation, Autoplay } from 'swiper/modules'
 import type { Swiper as SwiperInstance } from 'swiper'
@@ -46,20 +46,18 @@ const TestimonialSlider: React.FC = () => {
   const prevRef = useRef<HTMLButtonElement>(null)
   const nextRef = useRef<HTMLButtonElement>(null)
 
-  useEffect(() => {
-    if (swiperInstance && prevRef.current && nextRef.current) {
-      if (swiperInstance.params.navigation) {
-        const navigationParams = swiperInstance.params.navigation as {
-          prevEl?: HTMLElement | null
-          nextEl?: HTMLElement | null
-        }
-        navigationParams.prevEl = prevRef.current
-        navigationParams.nextEl = nextRef.current
-      }
-      swiperInstance.navigation.init()
-      swiperInstance.navigation.update()
+  // Wire the external prev/next buttons to Swiper navigation. Done in
+  // onBeforeInit (which receives Swiper's own instance) rather than mutating
+  // the swiperInstance held in state — the latter trips the React Compiler
+  // immutability rule and is the documented Swiper-for-React pattern for
+  // custom navigation elements.
+  const handleBeforeInit = (swiper: SwiperInstance) => {
+    const nav = swiper.params.navigation
+    if (nav && typeof nav !== 'boolean') {
+      nav.prevEl = prevRef.current
+      nav.nextEl = nextRef.current
     }
-  }, [swiperInstance])
+  }
 
   const handleSlideChange = (swiper: SwiperInstance) => {
     setActiveIndex(swiper.activeIndex)
@@ -79,6 +77,8 @@ const TestimonialSlider: React.FC = () => {
             modules={[Navigation, Autoplay]}
             onSwiper={setSwiperInstance}
             onSlideChange={handleSlideChange}
+            onBeforeInit={handleBeforeInit}
+            navigation={{ enabled: true }}
             spaceBetween={30}
             slidesPerView={1}
             loop={true}
