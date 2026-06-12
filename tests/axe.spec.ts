@@ -37,6 +37,13 @@ test.describe('axe-core homepage guardrail', () => {
 
     const results = await new AxeBuilder({ page })
       .include('body')
+      // Exclude third-party embed iframes (Zeffy donation form, SociableKit,
+      // Google Maps, Microsoft Forms, GTM). axe descends into iframes, but
+      // their internal markup is owned by those vendors — e.g. Zeffy's own
+      // form ships `focusable-no-name` / `nested-interactive` violations we
+      // can't fix. This guardrail exists to catch regressions in OUR markup,
+      // so scope it to the top document.
+      .exclude('iframe')
       .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'])
       .analyze()
 
