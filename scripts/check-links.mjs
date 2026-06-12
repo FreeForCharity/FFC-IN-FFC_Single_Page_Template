@@ -16,7 +16,7 @@
 import { createServer } from 'node:http'
 import { spawn } from 'node:child_process'
 import { readFile, stat } from 'node:fs/promises'
-import { join, normalize, extname } from 'node:path'
+import { join, normalize, extname, resolve, sep } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 const ROOT = fileURLToPath(new URL('../out', import.meta.url))
@@ -44,19 +44,29 @@ const CONTENT_TYPES = {
 }
 
 async function resolveFile(urlPath) {
-  // Strip query/hash, decode, drop any trailing slash, and prevent path
-  // traversal outside ROOT. A trailing slash is irrelevant to resolution —
-  // `/privacy-policy` and `/privacy-policy/` resolve identically, just as
-  // GitHub Pages (and the `serve` preview) treat them.
-  const clean = decodeURIComponent(urlPath.split('?')[0].split('#')[0])
-  const trimmed = clean.replace(/\/+$/, '')
-  const safe = normalize(trimmed).replace(/^(\.\.[/\\])+/, '')
-  const base = join(ROOT, safe)
+  // Strip query/hash and decode. decodeURIComponent throws on malformed
+  // escapes (e.g. a bare `%`), so guard it rather than crash the handler.
+  let decoded
+  try {
+    decoded = decodeURIComponent(urlPath.split('?')[0].split('#')[0])
+  } catch {
+    return null
+  }
+
+  // Drop leading slashes so the request always resolves *relative* to ROOT
+  // (an absolute-looking path like `/etc/passwd` must not escape it), and a
+  // trailing slash is irrelevant — `/privacy-policy` and `/privacy-policy/`
+  // resolve identically, just as GitHub Pages and the `serve` preview treat
+  // them.
+  const rel = normalize(decoded.replace(/^[/\\]+/, '').replace(/\/+$/, ''))
+  const base = resolve(ROOT, rel)
+  // Defense in depth: never serve anything resolved outside ROOT.
+  if (base !== ROOT && !base.startsWith(ROOT + sep)) return null
 
   // Resolution order mirrors GitHub Pages for `output: 'export'`:
   // exact file, then `<path>.html` (clean URL), then `<path>/index.html`.
   const candidates =
-    safe === '' || safe === '.'
+    rel === '' || rel === '.'
       ? [join(ROOT, 'index.html')]
       : [base, `${base}.html`, join(base, 'index.html')]
 
@@ -105,8 +115,13 @@ server.listen(0, '127.0.0.1', () => {
     '--config',
     fileURLToPath(new URL('../.linkinatorrc.json', import.meta.url)),
   ]
-  const bin = fileURLToPath(new URL('../node_modules/.bin/linkinator', import.meta.url))
-  const child = spawn(bin, args, { stdio: 'inherit' })
+  // Spawn linkinator from PATH — npm puts node_modules/.bin on PATH for
+  // scripts, so `npm run check-links` resolves it cross-platform. shell:true
+  // on Windows lets the `linkinator.cmd` shim resolve.
+  const child = spawn('linkinator', args, {
+    stdio: 'inherit',
+    shell: process.platform === 'win32',
+  })
   child.on('exit', (code) => shutdown(code ?? 1))
   child.on('error', (err) => {
     console.error('Failed to run linkinator:', err)
