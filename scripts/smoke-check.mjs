@@ -90,13 +90,47 @@ async function expect200(path, name = path) {
   }
 }
 
+// Non-fatal note: logged but never added to results, so it can't fail the run.
+function warn(msg) {
+  console.log(`! ${msg}`)
+}
+
+// Extract the URLs the home page needs in order to actually render:
+// stylesheets, (module)preloads, and scripts. Used to catch "page is 200 but
+// its assets 404" — the whole-bundle blind spot the fixed per-file checks miss.
+function extractSubresourceUrls(html) {
+  const urls = []
+  let m
+  const linkRe = /<link\b[^>]*?\bhref=["']([^"']+)["'][^>]*>/gi
+  while ((m = linkRe.exec(html))) {
+    if (/\brel=["'](?:stylesheet|preload|modulepreload)["']/i.test(m[0])) urls.push(m[1])
+  }
+  const scriptRe = /<script\b[^>]*?\bsrc=["']([^"']+)["'][^>]*>/gi
+  while ((m = scriptRe.exec(html))) urls.push(m[1])
+  return urls
+}
+
+// Same-origin guard: root-relative paths are same-origin by definition; absolute
+// URLs must match `origin`. Cross-origin assets (font/analytics CDNs) are skipped
+// so a flaky or rate-limiting third party can never fail a deploy.
+function isSameOrigin(url, origin) {
+  if (/^\/(?!\/)/.test(url)) return true
+  try {
+    return new URL(url).origin === origin
+  } catch {
+    return false
+  }
+}
+
 async function smoke() {
   console.log(`Smoke checking ${BASE}\n`)
 
   // 1. Home page.
+  let homeHtml = ''
   const homeRes = await expect200('/', 'home page returns 200')
   if (homeRes) {
     const html = await homeRes.text()
+    homeHtml = html
     record(
       'home has Content-Security-Policy <meta>',
       /<meta[^>]+http-equiv=["']Content-Security-Policy["'][^>]+content=/i.test(html)
@@ -210,6 +244,39 @@ async function smoke() {
     }
   }
 
+  // 4b. Same-origin sub-resources the home page references actually load.
+  // The per-file checks above only cover a fixed list; this covers the real
+  // CSS/JS bundle. Run against BASE (the deploy URL), so it validates the
+  // build is self-consistent at its own deploy URL. Capped + de-duped to bound
+  // request volume; same-origin only.
+  if (homeHtml) {
+    let originBase = BASE
+    try {
+      originBase = new URL(BASE).origin
+    } catch {
+      /* keep BASE */
+    }
+    const refs = [...new Set(extractSubresourceUrls(homeHtml).filter((u) => isSameOrigin(u, originBase)))]
+    const sample = refs.slice(0, 30)
+    let bad = 0
+    for (const ref of sample) {
+      // Normalize to a BASE-relative path, mirroring the manifest-icon logic so
+      // the deploy base path isn't doubled on a github.io subpath deploy.
+      let p = ref.startsWith('http') ? new URL(ref).pathname : ref
+      if (BASE_PATHNAME && p.startsWith(`${BASE_PATHNAME}/`)) p = p.slice(BASE_PATHNAME.length)
+      const r = await fetchWithRetry(p).catch(() => null)
+      if (!r || r.status !== 200) {
+        bad++
+        record(`sub-resource ${ref}`, false, r ? `HTTP ${r.status}` : 'fetch failed')
+      }
+    }
+    record(
+      'home sub-resources (same-origin) resolve',
+      bad === 0,
+      `${sample.length - bad}/${sample.length} ok${refs.length > sample.length ? ` (capped from ${refs.length})` : ''}`
+    )
+  }
+
   // 5. Branded 404.
   const notFoundUrl = `/this-page-definitely-does-not-exist-${Date.now()}`
   const notFoundRes = await fetchWithRetry(notFoundUrl).catch(() => null)
@@ -231,6 +298,79 @@ async function smoke() {
   await expect200('/favicon.ico')
   await expect200('/icon.png')
 
+  // 6b. Optional production-domain pass (best effort). Set PROD_URL to the live
+  // custom domain (e.g. https://example.org/) to verify the build also works
+  // when served at the apex *root*, not just at its deploy URL. This is the ONLY
+  // check that catches a basePath/custom-domain mismatch.
+  //
+  // It is deliberately fail-SOFT about reachability: a freshly-attached domain
+  // may not have DNS/TLS yet, and a brand-new site's first deploy may have no
+  // custom domain at all. We therefore only FAIL on a *definitive* mismatch —
+  // the prod home serving HTTP 200 while its own same-origin sub-resources 404.
+  // If prod is unreachable, cert-not-ready, or non-200, we warn and move on, so
+  // propagation lag never reds an otherwise-good deploy.
+  const prodUrl = (process.env.PROD_URL || '').trim()
+  if (prodUrl) {
+    const PROD = prodUrl.replace(/\/$/, '')
+    let prodOrigin = PROD
+    try {
+      prodOrigin = new URL(PROD).origin
+    } catch {
+      /* keep PROD */
+    }
+    const fetchProd = async (target) => {
+      const controller = new AbortController()
+      const timer = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS)
+      try {
+        return await fetch(target, {
+          signal: controller.signal,
+          redirect: 'follow',
+          headers: { 'User-Agent': 'ffc-smoke-check' },
+        })
+      } finally {
+        clearTimeout(timer)
+      }
+    }
+    let prodHome = null
+    try {
+      prodHome = await fetchProd(`${PROD}/`)
+    } catch (err) {
+      warn(`prod ${PROD} not reachable yet (${(err && err.message) || err}) — skipping prod asset check`)
+    }
+    if (prodHome && prodHome.status === 200) {
+      const phtml = await prodHome.text()
+      // No base-path stripping here: fetch the literal href against the prod
+      // origin, so a /<repo>/... asset will 404 at the apex root and be caught.
+      const prefs = [
+        ...new Set(extractSubresourceUrls(phtml).filter((u) => isSameOrigin(u, prodOrigin))),
+      ].slice(0, 30)
+      let pbad = 0
+      const broken = []
+      for (const ref of prefs) {
+        const target = ref.startsWith('http')
+          ? ref
+          : `${prodOrigin}${ref.startsWith('/') ? '' : '/'}${ref}`
+        let r = null
+        try {
+          r = await fetchProd(target)
+        } catch {
+          /* treated as failure below */
+        }
+        if (!r || r.status !== 200) {
+          pbad++
+          if (broken.length < 5) broken.push(`${ref} -> ${r ? r.status : 'ERR'}`)
+        }
+      }
+      record(
+        `prod ${PROD} serves its own home assets`,
+        pbad === 0,
+        pbad === 0 ? `${prefs.length} ok` : `${pbad}/${prefs.length} broken: ${broken.join(', ')}`
+      )
+    } else if (prodHome) {
+      warn(`prod ${PROD} home returned HTTP ${prodHome.status} — skipping prod asset check (propagation?)`)
+    }
+  }
+
   // 7. Summary.
   const failed = results.filter((r) => !r.ok)
   console.log(`\n${results.length - failed.length}/${results.length} checks passed`)
@@ -245,3 +385,4 @@ smoke().catch((err) => {
   console.error('\nSmoke check crashed:', err && err.stack ? err.stack : err)
   process.exit(1)
 })
+

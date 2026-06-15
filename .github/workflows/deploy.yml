@@ -119,11 +119,26 @@ jobs:
           DEPLOY_URL: ${{ steps.deployment.outputs.page_url }}
         timeout-minutes: 5
         # Runs scripts/smoke-check.mjs against the freshly deployed URL.
-        # Verifies the home page, security.txt (with /.well-known fallback to
-        # /), robots.txt, sitemap.xml, manifest, branded 404, and favicons.
+        # Verifies the home page, its same-origin sub-resources (CSS/JS),
+        # security.txt (with /.well-known fallback to /), robots.txt,
+        # sitemap.xml, manifest, branded 404, and favicons.
         # The script lives in the repo so it's runnable locally too:
         #   node scripts/smoke-check.mjs https://your-site.example
-        run: node scripts/smoke-check.mjs "$DEPLOY_URL"
+        #
+        # When public/CNAME is present we also pass PROD_URL = the live custom
+        # domain. The script then verifies the build works when served at the
+        # apex ROOT (not just the deploy URL) — the only check that catches a
+        # basePath/custom-domain mismatch. That pass is fail-soft about
+        # reachability (DNS/TLS propagation, first deploys), so it only fails on
+        # a definitive mismatch (200 home whose own assets 404).
+        run: |
+          PROD_URL=""
+          if [ -s "public/CNAME" ]; then
+            cname="$(tr -d '[:space:]' < public/CNAME)"
+            if [ -n "$cname" ]; then PROD_URL="https://${cname}/"; fi
+          fi
+          echo "DEPLOY_URL=$DEPLOY_URL  PROD_URL=${PROD_URL:-<none>}"
+          PROD_URL="$PROD_URL" node scripts/smoke-check.mjs "$DEPLOY_URL"
 
   notify-failure:
     name: Notify on production deploy failure
@@ -278,3 +293,4 @@ jobs:
             }
 
             core.info(`Created incident issue #${created.data.number}`);
+
