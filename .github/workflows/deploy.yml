@@ -293,4 +293,3 @@ jobs:
             }
 
             core.info(`Created incident issue #${created.data.number}`);
-

@@ -256,7 +256,9 @@ async function smoke() {
     } catch {
       /* keep BASE */
     }
-    const refs = [...new Set(extractSubresourceUrls(homeHtml).filter((u) => isSameOrigin(u, originBase)))]
+    const refs = [
+      ...new Set(extractSubresourceUrls(homeHtml).filter((u) => isSameOrigin(u, originBase))),
+    ]
     const sample = refs.slice(0, 30)
     let bad = 0
     for (const ref of sample) {
@@ -335,7 +337,9 @@ async function smoke() {
     try {
       prodHome = await fetchProd(`${PROD}/`)
     } catch (err) {
-      warn(`prod ${PROD} not reachable yet (${(err && err.message) || err}) — skipping prod asset check`)
+      warn(
+        `prod ${PROD} not reachable yet (${(err && err.message) || err}) — skipping prod asset check`
+      )
     }
     if (prodHome && prodHome.status === 200) {
       const phtml = await prodHome.text()
@@ -367,7 +371,9 @@ async function smoke() {
         pbad === 0 ? `${prefs.length} ok` : `${pbad}/${prefs.length} broken: ${broken.join(', ')}`
       )
     } else if (prodHome) {
-      warn(`prod ${PROD} home returned HTTP ${prodHome.status} — skipping prod asset check (propagation?)`)
+      warn(
+        `prod ${PROD} home returned HTTP ${prodHome.status} — skipping prod asset check (propagation?)`
+      )
     }
   }
 
@@ -385,4 +391,3 @@ smoke().catch((err) => {
   console.error('\nSmoke check crashed:', err && err.stack ? err.stack : err)
   process.exit(1)
 })
-
