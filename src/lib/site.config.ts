@@ -16,6 +16,54 @@ export type SiteSocialLink = {
   href: string
 }
 
+export type SiteTrustProfile = {
+  /** Contract version for ffcadmin / generated-site automation. */
+  schemaVersion: 'ffc.site-profile.v1'
+  /** Stable machine ID for this generated site. */
+  siteId: string
+  /** Human-readable name for dashboards and audit logs. */
+  siteName: string
+  /** Canonical public origin with no trailing slash. */
+  canonicalUrl: string
+  /** Owning nonprofit or template organization. */
+  organization: {
+    name: string
+    legalName: string
+    ein: string
+    nonprofitStatus: 'us-501c3' | 'unknown' | 'not-applicable'
+    country: string
+  }
+  /** Source template identity used to compare generated sites for parity. */
+  template: {
+    family: 'ffc-single-page-template'
+    repository: string
+    branch: string
+    issue: string
+  }
+  /** Public, non-secret contact channels that automation may display or verify. */
+  contacts: {
+    primaryEmail: string
+    securityEmail: string
+    vulnerabilityDisclosurePath: string
+  }
+  /** Public profile endpoints that generated sites should expose consistently. */
+  profileEndpoints: {
+    siteProfile: '/site-profile.json'
+    securityTxt: '/.well-known/security.txt'
+    sitemap: '/sitemap.xml'
+    robots: '/robots.txt'
+  }
+  /** Expected platform controls; declarative only, not credentials or settings. */
+  trust: {
+    generatedBy: 'Free For Charity template factory'
+    hosting: 'github-pages-static-export'
+    requiresHttps: boolean
+    managesSecrets: false
+    productionDnsManagedHere: false
+    requiredChecks: readonly string[]
+  }
+}
+
 export type SiteConfig = {
   /** Display name of the charity (used in titles, OG/Twitter cards). */
   name: string
@@ -85,6 +133,64 @@ export const siteConfig: SiteConfig = {
     { label: 'LinkedIn', href: 'https://www.linkedin.com/company/freeforcharity/' },
     { label: 'GitHub', href: 'https://github.com/FreeForCharity/FFC_Single_Page_Template' },
   ],
+}
+
+export const siteTrustProfile: SiteTrustProfile = {
+  schemaVersion: 'ffc.site-profile.v1',
+  siteId: 'ffc-working-site-1',
+  siteName: siteConfig.name,
+  canonicalUrl: siteConfig.url,
+  organization: {
+    name: siteConfig.name,
+    legalName: 'Free For Charity',
+    ein: '46-2471893',
+    nonprofitStatus: 'us-501c3',
+    country: 'US',
+  },
+  template: {
+    family: 'ffc-single-page-template',
+    repository: 'FreeForCharity/FFC-IN-FFC_Single_Page_Template',
+    branch: 'agent/sammy/195-site-profile-contract',
+    issue: 'https://github.com/FreeForCharity/FFC-IN-FFC_Single_Page_Template/issues/195',
+  },
+  contacts: {
+    primaryEmail: siteConfig.contactEmail,
+    securityEmail: siteConfig.contactEmail,
+    vulnerabilityDisclosurePath: siteConfig.vulnerabilityDisclosurePath,
+  },
+  profileEndpoints: {
+    siteProfile: '/site-profile.json',
+    securityTxt: '/.well-known/security.txt',
+    sitemap: '/sitemap.xml',
+    robots: '/robots.txt',
+  },
+  trust: {
+    generatedBy: 'Free For Charity template factory',
+    hosting: 'github-pages-static-export',
+    requiresHttps: true,
+    managesSecrets: false,
+    productionDnsManagedHere: false,
+    requiredChecks: ['npm run lint', 'npm test', 'npm run build'],
+  },
+}
+
+/** Returns a JSON-serializable profile contract for ffcadmin and generated-site tooling. */
+export function getSiteTrustProfile(): SiteTrustProfile {
+  return {
+    ...siteTrustProfile,
+    siteName: siteConfig.name,
+    canonicalUrl: siteConfig.url,
+    organization: {
+      ...siteTrustProfile.organization,
+      name: siteConfig.name,
+    },
+    contacts: {
+      ...siteTrustProfile.contacts,
+      primaryEmail: siteConfig.contactEmail,
+      securityEmail: siteConfig.contactEmail,
+      vulnerabilityDisclosurePath: siteConfig.vulnerabilityDisclosurePath,
+    },
+  }
 }
 
 /**
