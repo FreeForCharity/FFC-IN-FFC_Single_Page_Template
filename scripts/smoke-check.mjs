@@ -32,6 +32,15 @@ if (!baseArg) {
   process.exit(2)
 }
 const BASE = baseArg.replace(/\/$/, '')
+// Deploy base path, e.g. '' on a custom domain or '/<repo>' on a github.io
+// project deploy. Used to de-dupe sub-resource paths that already include it.
+const BASE_PATHNAME = (() => {
+  try {
+    return new URL(BASE).pathname.replace(/\/+$/, '')
+  } catch {
+    return ''
+  }
+})()
 
 const TOTAL_DEADLINE_MS = 180 * 1000
 const REQUEST_TIMEOUT_MS = 15 * 1000
