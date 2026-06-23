@@ -135,11 +135,15 @@ export const siteConfig: SiteConfig = {
   ],
 }
 
+function normalizedSiteOrigin(): string {
+  return siteConfig.url.replace(/\/$/, '')
+}
+
 export const siteTrustProfile: SiteTrustProfile = {
   schemaVersion: 'ffc.site-profile.v1',
   siteId: 'ffc-working-site-1',
   siteName: siteConfig.name,
-  canonicalUrl: siteConfig.url,
+  canonicalUrl: normalizedSiteOrigin(),
   organization: {
     name: siteConfig.name,
     legalName: 'Free For Charity',
@@ -150,7 +154,7 @@ export const siteTrustProfile: SiteTrustProfile = {
   template: {
     family: 'ffc-single-page-template',
     repository: 'FreeForCharity/FFC-IN-FFC_Single_Page_Template',
-    branch: 'agent/sammy/195-site-profile-contract',
+    branch: 'main',
     issue: 'https://github.com/FreeForCharity/FFC-IN-FFC_Single_Page_Template/issues/195',
   },
   contacts: {
@@ -170,7 +174,14 @@ export const siteTrustProfile: SiteTrustProfile = {
     requiresHttps: true,
     managesSecrets: false,
     productionDnsManagedHere: false,
-    requiredChecks: ['npm run lint', 'npm test', 'npm run build'],
+    requiredChecks: [
+      'npm run format:check',
+      'npm run lint',
+      'npm test',
+      'npm run build',
+      'npm run test:e2e',
+      'npm run check:drift',
+    ],
   },
 }
 
@@ -179,7 +190,7 @@ export function getSiteTrustProfile(): SiteTrustProfile {
   return {
     ...siteTrustProfile,
     siteName: siteConfig.name,
-    canonicalUrl: siteConfig.url,
+    canonicalUrl: normalizedSiteOrigin(),
     organization: {
       ...siteTrustProfile.organization,
       name: siteConfig.name,
@@ -206,7 +217,7 @@ export function siteUrl(path = '/'): string {
       `siteUrl: path must be a same-origin absolute path starting with a single "/" (got: ${JSON.stringify(path)})`
     )
   }
-  const base = siteConfig.url.replace(/\/$/, '')
+  const base = normalizedSiteOrigin()
   return `${base}${path}`
 }
 

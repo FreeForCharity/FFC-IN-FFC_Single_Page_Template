@@ -25,7 +25,14 @@ describe('site trust profile contract', () => {
       managesSecrets: false,
       productionDnsManagedHere: false,
     })
-    expect(siteTrustProfile.trust.requiredChecks).toContain('npm run build')
+    expect(siteTrustProfile.trust.requiredChecks).toEqual([
+      'npm run format:check',
+      'npm run lint',
+      'npm test',
+      'npm run build',
+      'npm run test:e2e',
+      'npm run check:drift',
+    ])
   })
 
   it('keeps the static public JSON endpoint in sync with the typed profile', () => {
@@ -43,7 +50,7 @@ describe('site trust profile contract', () => {
     const serialized = JSON.stringify(profile).toLowerCase()
     expect(serialized).not.toContain('apikey')
     expect(serialized).not.toContain('token')
-    expect(profile.canonicalUrl).toBe(siteConfig.url)
+    expect(profile.canonicalUrl).toBe(siteConfig.url.replace(/\/$/, ''))
     expect(profile.contacts.primaryEmail).toBe(siteConfig.contactEmail)
   })
 
@@ -54,7 +61,7 @@ describe('site trust profile contract', () => {
 
     try {
       siteConfig.name = 'Example Nonprofit'
-      siteConfig.url = 'https://example.org'
+      siteConfig.url = 'https://example.org/'
       siteConfig.contactEmail = 'hello@example.org'
 
       expect(getSiteTrustProfile()).toMatchObject({
@@ -69,6 +76,18 @@ describe('site trust profile contract', () => {
       siteConfig.name = originalName
       siteConfig.url = originalUrl
       siteConfig.contactEmail = originalEmail
+    }
+  })
+
+  it('normalizes canonicalUrl when siteConfig.url has a trailing slash', () => {
+    const originalUrl = siteConfig.url
+
+    try {
+      siteConfig.url = 'https://example.org/'
+
+      expect(getSiteTrustProfile().canonicalUrl).toBe('https://example.org')
+    } finally {
+      siteConfig.url = originalUrl
     }
   })
 })

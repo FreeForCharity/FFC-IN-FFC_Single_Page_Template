@@ -46,7 +46,7 @@ Consumers should treat `schemaVersion` as the compatibility key. Additive fields
   "template": {
     "family": "ffc-single-page-template",
     "repository": "FreeForCharity/FFC-IN-FFC_Single_Page_Template",
-    "branch": "agent/sammy/195-site-profile-contract",
+    "branch": "main",
     "issue": "https://github.com/FreeForCharity/FFC-IN-FFC_Single_Page_Template/issues/195"
   },
   "contacts": {
@@ -66,7 +66,14 @@ Consumers should treat `schemaVersion` as the compatibility key. Additive fields
     "requiresHttps": true,
     "managesSecrets": false,
     "productionDnsManagedHere": false,
-    "requiredChecks": ["npm run lint", "npm test", "npm run build"]
+    "requiredChecks": [
+      "npm run format:check",
+      "npm run lint",
+      "npm test",
+      "npm run build",
+      "npm run test:e2e",
+      "npm run check:drift"
+    ]
   }
 }
 ```
