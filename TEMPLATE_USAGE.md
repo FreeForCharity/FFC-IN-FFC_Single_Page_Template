@@ -648,7 +648,6 @@ grep -r "ffcworkingsite1.org" . --exclude-dir=node_modules --exclude-dir=.git
 Files to update:
 
 - `src/components/footer/index.tsx` - Footer contact info
-- `src/components/contact-us/` - Contact section
 - `SECURITY.md` - Security contact
 - `CODE_OF_CONDUCT.md` - Conduct reporting contact
 - `SUPPORT.md` - Support contact

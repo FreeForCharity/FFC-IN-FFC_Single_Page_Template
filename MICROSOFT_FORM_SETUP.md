@@ -51,14 +51,6 @@ The following components now use the new `ApplicationFormButton`:
    - File: `src/components/home-page/Our-Programs/index.tsx`
    - Location: After the program descriptions, in the "Ready to Get Started Now?" section
 
-2. **Help for Charities - Ready to Get Started**
-   - File: `src/components/help-for-charities/Ready-to-Get-Started-Now/index.tsx`
-   - Used in 501c3 pages
-
-3. **Free Charity Web Hosting - Ready to Get Started**
-   - File: `src/components/free-charity-web-hosting/ReadyToGetStarted/index.tsx`
-   - Used in hosting pages
-
 ## Features
 
 - **Modal Popup**: Opens in a centered modal overlay
