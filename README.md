@@ -743,7 +743,7 @@ Vercel automatically enables PR preview deployments and comments.
 ## Key Features
 
 - **Single-Page Architecture:** One main scrollable page with multiple sections plus 7 policy pages
-- **Component Library:** 112 component files organized by feature/section
+- **Component Library:** 23 component files organized by feature/section
 - **Responsive Navigation:** Mobile and desktop navigation with Header/Footer components
 - **Cookie Consent System:** GDPR-compliant cookie consent management
 - **SEO Optimization:**
@@ -783,32 +783,14 @@ src/
 │   ├── vulnerability-disclosure-policy/       # Vulnerability Disclosure Policy page
 │   ├── sitemap.ts                             # Dynamic sitemap generation
 │   └── robots.ts                              # Robots.txt configuration
-├── components/                                # Reusable components (112 component files)
-│   ├── header/                               # Site header/navigation
-│   ├── footer/                               # Site footer
+├── components/                                # Reusable components
+│   ├── header/                                # Site header/navigation
+│   ├── footer/                                # Site footer
 │   ├── cookie-consent/                        # Cookie consent banner
 │   ├── google-tag-manager/                    # Analytics integration
+│   ├── seo/                                   # SEO / structured data (JSON-LD)
 │   ├── ui/                                    # Reusable UI components
-│   ├── home-page/                             # Homepage-specific components
-│   ├── home/                                  # Alternative home components
-│   ├── domains/                               # Domain-related components
-│   ├── donate/                                # Donation components
-│   ├── volunteer/                             # Volunteer components
-│   ├── 501c3/                                 # 501c3 charity components
-│   ├── about-us/                              # About page components
-│   ├── charity-validation-guide/              # Charity validation guide components
-│   ├── contact-us/                            # Contact form components
-│   ├── endowment-fund/                        # Endowment fund components
-│   ├── free-charity-web-hosting/              # Web hosting program components
-│   ├── guidestar-guide/                       # GuideStar guide components
-│   ├── help-for-charities/                    # Help resources
-│   ├── online-impacts-onboarding/             # Online impacts onboarding components
-│   ├── pre501c3/                              # Pre-501c3 charity components
-│   ├── service-delivery-stages/               # Service delivery stages components
-│   ├── techstack/                             # Technology stack components
-│   ├── tools-for-success/                     # Tools and resources
-│   ├── volunteer-proving-ground/              # Volunteer proving ground components
-│   └── web-developer-training-guide/          # Web developer training guide components
+│   └── home-page/                             # Homepage section components
 ├── data/                                      # Static content
 │   ├── faqs/                                  # FAQ JSON files
 │   ├── team/                                  # Team member data
