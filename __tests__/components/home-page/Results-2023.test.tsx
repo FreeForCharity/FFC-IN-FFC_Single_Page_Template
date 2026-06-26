@@ -33,7 +33,7 @@ import Results from '../../../src/components/home-page/Results-2023'
 describe('Results-2023', () => {
   it('renders the section heading', () => {
     render(<Results />)
-    expect(screen.getByRole('heading', { level: 1, name: /Results - 2023/i })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { level: 2, name: /Results - 2023/i })).toBeInTheDocument()
   })
 
   it('mounts under the #results section landmark id', () => {
@@ -43,9 +43,9 @@ describe('Results-2023', () => {
 
   it('renders four stat cards', () => {
     const { container } = render(<Results />)
-    // Each ResultCard wraps a value in <h1>; the section heading is also <h1>,
-    // so the count is 1 (heading) + 4 (cards) = 5.
-    const headings = container.querySelectorAll('h1')
-    expect(headings.length).toBe(5)
+    // The section heading is an <h2>; each ResultCard wraps its value in an
+    // <h3> (one level below the section), so there are 1 <h2> and 4 <h3>s.
+    expect(container.querySelectorAll('h2').length).toBe(1)
+    expect(container.querySelectorAll('h3').length).toBe(4)
   })
 })

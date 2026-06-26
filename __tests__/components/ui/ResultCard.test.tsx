@@ -42,9 +42,9 @@ describe('ResultCard', () => {
     expect(screen.getByText('Volunteers')).toBeInTheDocument()
   })
 
-  it('renders the title inside an <h1>', () => {
+  it('renders the title inside an <h3>', () => {
     render(<ResultCard title="50" description="Partners" />)
-    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('50')
+    expect(screen.getByRole('heading', { level: 3 })).toHaveTextContent('50')
   })
 
   it('falls back to plain text for titles that mix digits and letters', () => {

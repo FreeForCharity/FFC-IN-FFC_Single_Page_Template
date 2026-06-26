@@ -24,7 +24,7 @@ test.describe('Events Section', () => {
     await expect(eventsSection).toBeVisible()
 
     // Verify section heading is present
-    const heading = eventsSection.locator('h1')
+    const heading = eventsSection.locator('h2')
     await expect(heading).toBeVisible()
     await expect(heading).toContainText(testConfig.events.heading)
   })
@@ -184,7 +184,7 @@ test.describe('Events Section', () => {
     await expect(eventsIframe).toBeVisible()
 
     // Verify heading is visible on mobile
-    const heading = eventsSection.locator('h1')
+    const heading = eventsSection.locator('h2')
     await expect(heading).toBeVisible()
   })
 })
