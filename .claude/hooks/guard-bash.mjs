@@ -48,17 +48,40 @@ const DANGEROUS_RM_TARGETS = new Set([
  * top-level / home / wildcard target. We deliberately allow targeted
  * recursive deletes (e.g. `rm -rf out`, `rm -rf node_modules`) — those are
  * routine and safe.
+ *
+ * Every target of every `rm` is inspected, not just the first: `rm -rf out /`
+ * mixes a safe and a catastrophic target, and the catastrophic one must still
+ * be caught. The command is split on shell separators so each simple command
+ * (e.g. `rm -rf a && rm -rf /`) is checked independently.
  */
 function checkRm(cmd) {
-  const re = /\brm\b((?:\s+-{1,2}[a-zA-Z-]+)*)\s+([^\s;|&><]+)/g
-  let m
-  while ((m = re.exec(cmd))) {
-    const flags = m[1] || ''
-    const target = m[2]
-    const recursive = /(^|\s)-{1,2}\S*r/i.test(flags) || /--recursive\b/.test(flags)
-    const forced = /(^|\s)-{1,2}\S*f/i.test(flags) || /--force\b/.test(flags)
-    if (recursive && forced && DANGEROUS_RM_TARGETS.has(target)) {
-      return `"rm -rf ${target}" targets the filesystem root, home, or a wildcard. Delete a specific, named path instead.`
+  for (const segment of cmd.split(/[\n;|&]+/)) {
+    const tokens = segment.trim().split(/\s+/)
+    const rmIdx = tokens.findIndex((t) => t === 'rm' || t.endsWith('/rm'))
+    if (rmIdx === -1) continue
+
+    let recursive = false
+    let forced = false
+    const targets = []
+    for (const arg of tokens.slice(rmIdx + 1)) {
+      if (arg === '--') continue
+      if (arg.startsWith('--')) {
+        if (arg === '--recursive') recursive = true
+        if (arg === '--force') forced = true
+      } else if (arg.startsWith('-')) {
+        // Short flags, possibly bundled: -r, -R, -f, -rf, -fr.
+        if (/r/i.test(arg)) recursive = true
+        if (/f/.test(arg)) forced = true
+      } else {
+        targets.push(arg)
+      }
+    }
+
+    if (recursive && forced) {
+      const danger = targets.find((t) => DANGEROUS_RM_TARGETS.has(t))
+      if (danger) {
+        return `"rm ... ${danger}" targets the filesystem root, home, or a wildcard. Delete a specific, named path instead.`
+      }
     }
   }
   return null

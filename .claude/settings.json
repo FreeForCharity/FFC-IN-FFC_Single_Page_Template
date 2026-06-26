@@ -7,7 +7,13 @@
       "Bash(git *)",
       "Bash(gh *)"
     ],
-    "deny": ["Bash(rm -rf *)", "Bash(*API_TOKEN*)", "Bash(*SECRET*)"]
+    "deny": [
+      "Bash(rm -rf /*)",
+      "Bash(rm -rf ~*)",
+      "Bash(rm -rf $HOME*)",
+      "Bash(*API_TOKEN*)",
+      "Bash(*SECRET*)"
+    ]
   },
   "hooks": {
     "SessionStart": [

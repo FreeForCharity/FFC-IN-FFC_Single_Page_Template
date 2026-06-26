@@ -9,8 +9,9 @@ commit ever happens.
 
 Hooks are wired in [`.claude/settings.json`](../settings.json) and run automatically
 during any Claude Code session in this repo. Each script is plain Node (matching
-`scripts/`), reads the tool-call JSON on stdin, and **fails open** — if the hook itself
-errors it never blocks legitimate work.
+`scripts/`) and **fails open** — if the hook itself errors it never blocks legitimate
+work. The two `PreToolUse` guards read the tool-call JSON on stdin; `format-after-edit`
+reads it too, while `session-start` takes no input and only prints context.
 
 | Script                  | Event                                 | What it does                                                                                                                                                            |
 | ----------------------- | ------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -40,7 +41,8 @@ High-signal only — safe variants are intentionally allowed so the hook stays o
 
 ## Testing a hook manually
 
-Each hook reads a JSON tool call on stdin. For example:
+The `PreToolUse` / `PostToolUse` hooks read a JSON tool call on stdin (`session-start`
+takes no input). For example:
 
 ```bash
 echo '{"tool_input":{"command":"rm -rf /"}}' | node .claude/hooks/guard-bash.mjs; echo "exit=$?"
