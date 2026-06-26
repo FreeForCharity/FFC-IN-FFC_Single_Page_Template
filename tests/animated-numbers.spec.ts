@@ -22,7 +22,7 @@ test.describe('Results 2023 Animated Numbers', () => {
 
     // Find the Results section heading
     const resultsHeading = page.locator(
-      `h1:has-text("${testConfig.animatedNumbers.sectionHeading}")`
+      `h2:has-text("${testConfig.animatedNumbers.sectionHeading}")`
     )
     await expect(resultsHeading).toBeVisible()
 
@@ -31,7 +31,7 @@ test.describe('Results 2023 Animated Numbers', () => {
 
     // Wait for animation to complete by checking final values
     for (const stat of testConfig.animatedNumbers.statistics) {
-      await expect(getResultCard(page, stat.description).locator('h1')).toContainText(stat.value, {
+      await expect(getResultCard(page, stat.description).locator('h3')).toContainText(stat.value, {
         timeout: 5000,
       })
     }
@@ -43,11 +43,11 @@ test.describe('Results 2023 Animated Numbers', () => {
 
     // Verify the numbers start at 0 before scrolling into view
     const firstStat = testConfig.animatedNumbers.statistics[0]
-    const firstCardNumber = getResultCard(page, firstStat.description).locator('h1')
+    const firstCardNumber = getResultCard(page, firstStat.description).locator('h3')
     await expect(firstCardNumber).toContainText('0')
 
     const resultsSection = page.locator(
-      `h1:has-text("${testConfig.animatedNumbers.sectionHeading}")`
+      `h2:has-text("${testConfig.animatedNumbers.sectionHeading}")`
     )
     await expect(resultsSection).toBeAttached()
   })
@@ -58,13 +58,13 @@ test.describe('Results 2023 Animated Numbers', () => {
 
     // Find and scroll to the Results section
     const resultsHeading = page.locator(
-      `h1:has-text("${testConfig.animatedNumbers.sectionHeading}")`
+      `h2:has-text("${testConfig.animatedNumbers.sectionHeading}")`
     )
     await resultsHeading.scrollIntoViewIfNeeded()
 
     // Wait for animation to complete by checking the final value
     const firstStat = testConfig.animatedNumbers.statistics[0]
-    const firstCardNumber = getResultCard(page, firstStat.description).locator('h1')
+    const firstCardNumber = getResultCard(page, firstStat.description).locator('h3')
     await expect(firstCardNumber).toContainText(firstStat.value, { timeout: 5000 })
 
     // Scroll away and back
@@ -94,7 +94,7 @@ test.describe('Results 2023 Animated Numbers', () => {
 
     await page.goto('/')
     const resultsHeading = page.locator(
-      `h1:has-text("${testConfig.animatedNumbers.sectionHeading}")`
+      `h2:has-text("${testConfig.animatedNumbers.sectionHeading}")`
     )
     // Wait for the element to be visible before scrolling
     await expect(resultsHeading).toBeVisible({ timeout: 5000 })
@@ -102,7 +102,7 @@ test.describe('Results 2023 Animated Numbers', () => {
 
     // With reduced motion, numbers should appear instantly at final value
     const firstStat = testConfig.animatedNumbers.statistics[0]
-    const firstCardNumber = getResultCard(page, firstStat.description).locator('h1')
+    const firstCardNumber = getResultCard(page, firstStat.description).locator('h3')
     await expect(firstCardNumber).toContainText(firstStat.value, { timeout: 1000 })
 
     await context.close()
