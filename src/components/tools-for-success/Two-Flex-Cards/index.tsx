@@ -103,7 +103,7 @@ const Index = () => {
             </div>
 
             <a
-              href="https://staging.freeforcharity.org/"
+              href="https://freeforcharity.org/"
               target="_blank"
               rel="noopener noreferrer"
               className="relative group inline-flex items-center justify-center gap-2 mt-[25px] px-[30px] py-[6px] border border-[#f27022] rounded-[10px] text-[18px] bg-[#f27022] transition-all duration-300 ease-in-out text-white shadow-md leading-[31px] font-[600] hover:shadow-[0px_12px_18px_-6px_#f27022]"

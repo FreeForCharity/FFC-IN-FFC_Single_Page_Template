@@ -1,4 +1,5 @@
 import React from 'react'
+import { assetPath } from '@/lib/assetPath'
 
 interface SupportMissionSectionProps {
   title?: string
@@ -18,7 +19,7 @@ const SupportMissionSection: React.FC<SupportMissionSectionProps> = ({
       style={{
         backgroundImage: `
           linear-gradient(90deg, #003566 40%, rgba(0, 0, 0, 0.5) 100%),
-          url('https://images.unsplash.com/photo-1624953901718-e24ee7200b85?ixid=M3w1ODkyNzF8MHwxfHNlYXJjaHw2fHxwZW9wbGUlMjBkb25hdGluZ3xlbnwwfDB8fHwxNzM2MjE0MTc4fDA&ixlib=rb-4.0.3&fm=webp&fit=crop&crop=entropy&w=1920&h=1080&q=20&dpr=2')
+          url(${assetPath('/Images/support-mission-bg.webp')})
         `,
         backgroundSize: 'cover',
         backgroundPosition: 'center',

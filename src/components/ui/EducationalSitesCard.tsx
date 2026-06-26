@@ -3,6 +3,7 @@
 import React from 'react'
 import Image from 'next/image'
 import { IoIosArrowForward } from 'react-icons/io'
+import { assetPath } from '@/lib/assetPath'
 
 interface EducationalSitesCardProps {
   imageSrc?: string
@@ -11,7 +12,7 @@ interface EducationalSitesCardProps {
 }
 
 const EducationalSitesCard: React.FC<EducationalSitesCardProps> = ({
-  imageSrc = 'https://freeforcharity.org/wp-content/uploads/2021/07/logo-1200x630-1.png',
+  imageSrc = assetPath('/Images/free-for-charity.webp'),
   title = 'ittybiz.com Great site for ultra small business info',
   link = 'https://iwillteachyoutoberich.com',
 }) => {
