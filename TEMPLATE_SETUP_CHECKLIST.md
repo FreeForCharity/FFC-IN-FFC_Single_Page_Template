@@ -132,14 +132,15 @@ You don't have to edit either workflow when you rename the repo.
       and `public/web-app-manifest-512x512.png` with the charity's
       branded assets (KEEP the filenames so layout.tsx and manifest.ts
       pick them up automatically)
-- [ ] Replace the header logo: `src/components/header/index.tsx`
-      currently hardcodes an external `https://freeforcharity.org/...`
-      WordPress URL. Self-host a logo under `public/Images/` and use
-      `assetPath('/Images/your-logo.png')` instead.
+- [ ] Replace the header logo: `src/components/header/index.tsx` uses
+      `assetPath('/Images/logo.webp')`. Swap `public/Images/logo.webp`
+      for your charity's logo (keep the filename, or update the path in
+      the header).
 - [ ] Replace the OG / Twitter card image — `layout.tsx` references
-      `/web-app-manifest-512x512.png` (a square 512×512). For proper
-      social cards, drop a 1200×630 image at the same filename or
-      update both layout.tsx references to point at a new asset.
+      `/Images/og-image.png` (1200×630 landscape). Drop your own
+      1200×630 image at `public/Images/og-image.png` (keep the
+      filename). The square `web-app-manifest-512x512.png` stays as the
+      PWA / app icon and JSON-LD logo.
 - [ ] Replace branded images and SVGs under `public/Images/` and
       `public/Svgs/`
 - [ ] Update color scheme in `src/app/globals.css`
