@@ -101,7 +101,11 @@ const Header: React.FC = () => {
                 <img
                   src={assetPath('/Images/logo.webp')}
                   alt="Free For Charity"
-                  className={`transition-all duration-300 ${isScrolled ? 'h-7' : 'h-11'}`}
+                  width={686}
+                  height={234}
+                  className={`w-auto max-w-none object-contain transition-all duration-300 ${
+                    isScrolled ? 'h-7' : 'h-11'
+                  }`}
                 />
               </Link>
             </div>
