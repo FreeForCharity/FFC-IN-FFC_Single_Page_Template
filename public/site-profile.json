@@ -1,0 +1,45 @@
+{
+  "schemaVersion": "ffc.site-profile.v1",
+  "siteId": "ffc-working-site-1",
+  "siteName": "Free For Charity",
+  "canonicalUrl": "https://ffcworkingsite1.org",
+  "organization": {
+    "name": "Free For Charity",
+    "legalName": "Free For Charity",
+    "ein": "46-2471893",
+    "nonprofitStatus": "us-501c3",
+    "country": "US"
+  },
+  "template": {
+    "family": "ffc-single-page-template",
+    "repository": "FreeForCharity/FFC-IN-FFC_Single_Page_Template",
+    "branch": "main",
+    "issue": "https://github.com/FreeForCharity/FFC-IN-FFC_Single_Page_Template/issues/195"
+  },
+  "contacts": {
+    "primaryEmail": "security@freeforcharity.org",
+    "securityEmail": "security@freeforcharity.org",
+    "vulnerabilityDisclosurePath": "/vulnerability-disclosure-policy"
+  },
+  "profileEndpoints": {
+    "siteProfile": "/site-profile.json",
+    "securityTxt": "/.well-known/security.txt",
+    "sitemap": "/sitemap.xml",
+    "robots": "/robots.txt"
+  },
+  "trust": {
+    "generatedBy": "Free For Charity template factory",
+    "hosting": "github-pages-static-export",
+    "requiresHttps": true,
+    "managesSecrets": false,
+    "productionDnsManagedHere": false,
+    "requiredChecks": [
+      "npm run format:check",
+      "npm run lint",
+      "npm test",
+      "npm run build",
+      "npm run test:e2e",
+      "npm run check:drift"
+    ]
+  }
+}

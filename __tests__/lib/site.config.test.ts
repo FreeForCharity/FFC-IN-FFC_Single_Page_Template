@@ -1,4 +1,96 @@
-import { siteConfig, siteUrl, twitterSite, cardDescription } from '../../src/lib/site.config'
+import { readFileSync } from 'node:fs'
+import { join } from 'node:path'
+
+import {
+  siteConfig,
+  siteTrustProfile,
+  siteUrl,
+  twitterSite,
+  cardDescription,
+  getSiteTrustProfile,
+} from '../../src/lib/site.config'
+
+describe('site trust profile contract', () => {
+  it('exposes the stable v1 machine-readable contract shape', () => {
+    expect(siteTrustProfile.schemaVersion).toBe('ffc.site-profile.v1')
+    expect(siteTrustProfile.profileEndpoints).toEqual({
+      siteProfile: '/site-profile.json',
+      securityTxt: '/.well-known/security.txt',
+      sitemap: '/sitemap.xml',
+      robots: '/robots.txt',
+    })
+    expect(siteTrustProfile.trust).toMatchObject({
+      hosting: 'github-pages-static-export',
+      requiresHttps: true,
+      managesSecrets: false,
+      productionDnsManagedHere: false,
+    })
+    expect(siteTrustProfile.trust.requiredChecks).toEqual([
+      'npm run format:check',
+      'npm run lint',
+      'npm test',
+      'npm run build',
+      'npm run test:e2e',
+      'npm run check:drift',
+    ])
+  })
+
+  it('keeps the static public JSON endpoint in sync with the typed profile', () => {
+    const publicProfile = JSON.parse(
+      readFileSync(join(process.cwd(), 'public/site-profile.json'), 'utf8')
+    )
+
+    expect(publicProfile).toEqual(siteTrustProfile)
+  })
+
+  it('returns JSON-serializable public data only', () => {
+    const profile = getSiteTrustProfile()
+    expect(() => JSON.stringify(profile)).not.toThrow()
+    expect(JSON.parse(JSON.stringify(profile))).toEqual(profile)
+    const serialized = JSON.stringify(profile).toLowerCase()
+    expect(serialized).not.toContain('apikey')
+    expect(serialized).not.toContain('token')
+    expect(profile.canonicalUrl).toBe(siteConfig.url.replace(/\/$/, ''))
+    expect(profile.contacts.primaryEmail).toBe(siteConfig.contactEmail)
+  })
+
+  it('reflects siteConfig edits used by generated-site automation', () => {
+    const originalName = siteConfig.name
+    const originalUrl = siteConfig.url
+    const originalEmail = siteConfig.contactEmail
+
+    try {
+      siteConfig.name = 'Example Nonprofit'
+      siteConfig.url = 'https://example.org/'
+      siteConfig.contactEmail = 'hello@example.org'
+
+      expect(getSiteTrustProfile()).toMatchObject({
+        siteName: 'Example Nonprofit',
+        canonicalUrl: 'https://example.org',
+        contacts: {
+          primaryEmail: 'hello@example.org',
+          securityEmail: 'hello@example.org',
+        },
+      })
+    } finally {
+      siteConfig.name = originalName
+      siteConfig.url = originalUrl
+      siteConfig.contactEmail = originalEmail
+    }
+  })
+
+  it('normalizes canonicalUrl when siteConfig.url has a trailing slash', () => {
+    const originalUrl = siteConfig.url
+
+    try {
+      siteConfig.url = 'https://example.org/'
+
+      expect(getSiteTrustProfile().canonicalUrl).toBe('https://example.org')
+    } finally {
+      siteConfig.url = originalUrl
+    }
+  })
+})
 
 describe('siteUrl', () => {
   it('returns the base URL for "/"', () => {
