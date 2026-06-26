@@ -6,12 +6,12 @@ const index = () => {
   return (
     <div id="volunteer" className="bg-[#2A6682] py-[40px]">
       <div className="w-[90%] mx-auto lg:px-[20px]">
-        <h1
+        <h2
           className="mt-[2px] mb-[42px] pb-[10px] text-[30px] md:text-[48px] font-[400] leading-[46px] text-center text-white"
           id="faustina-font"
         >
           Volunteer with Us
-        </h1>
+        </h2>
         <p
           className="mb-[13px] w-[85%] mx-auto font-[500] text-[20px] leading-[30px] text-center text-white"
           id="lato-font"

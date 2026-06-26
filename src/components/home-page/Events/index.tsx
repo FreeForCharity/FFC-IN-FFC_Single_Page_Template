@@ -4,12 +4,12 @@ const Events = () => {
   return (
     <div id="events" className="py-[52px]">
       <div className="w-[90%] mx-auto max-w-[1280px]">
-        <h1
+        <h2
           className="font-[400] text-[40px] lg:text-[48px] leading-[100%] tracking-[0] text-center mx-auto mb-[50px]"
           id="faustina-font"
         >
           Upcoming Events
-        </h1>
+        </h2>
 
         <div className="text-center mb-8">
           <p className="text-[20px] lg:text-[25px] font-[500]" id="lato-font">
