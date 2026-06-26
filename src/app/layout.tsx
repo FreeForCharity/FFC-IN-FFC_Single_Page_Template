@@ -49,9 +49,9 @@ export const metadata: Metadata = {
     description: cardDescription(),
     images: [
       {
-        url: assetPath('/web-app-manifest-512x512.png'),
-        width: 512,
-        height: 512,
+        url: assetPath('/Images/og-image.png'),
+        width: 1200,
+        height: 630,
         alt: siteConfig.name,
       },
     ],
@@ -61,7 +61,7 @@ export const metadata: Metadata = {
     site: twitterSite(),
     title: defaultTitle,
     description: cardDescription(),
-    images: [assetPath('/web-app-manifest-512x512.png')],
+    images: [assetPath('/Images/og-image.png')],
   },
   icons: {
     icon: [
