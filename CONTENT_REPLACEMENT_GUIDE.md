@@ -23,11 +23,11 @@ This guide identifies all the content you need to provide to replace the Free Fo
 
 ### Logo in Top Left Corner
 
-| Section           | Variable              | Current Free For Charity Content                                                                              | Your Content                                                                                                      |
-| ----------------- | --------------------- | ------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
-| Header Navigation | Logo Image            | `https://freeforcharity.org/wp-content/uploads/2024/04/Screenshot_145.png` (Free For Charity horizontal logo) | _(URL or file path to your charity's horizontal logo, recommended size: 150px wide × 44px tall for best display)_ |
-| Header Navigation | Logo Alt Text         | "Free For Charity"                                                                                            | _(Your charity name for accessibility)_                                                                           |
-| Header Navigation | Logo Link Destination | "/" (homepage)                                                                                                | _(Usually "/" for homepage)_                                                                                      |
+| Section           | Variable              | Current Free For Charity Content                                                                           | Your Content                                                                                                                                                                                               |
+| ----------------- | --------------------- | ---------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Header Navigation | Logo Image            | `assetPath('/Images/logo.webp')` (Free For Charity horizontal logo, served from `public/Images/logo.webp`) | _(Replace `public/Images/logo.webp` with your charity's horizontal logo, recommended size: 150px wide × 44px tall for best display. Keep the `assetPath()` wrapper so it works on GitHub Pages subpaths.)_ |
+| Header Navigation | Logo Alt Text         | "Free For Charity"                                                                                         | _(Your charity name for accessibility)_                                                                                                                                                                    |
+| Header Navigation | Logo Link Destination | "/" (homepage)                                                                                             | _(Usually "/" for homepage)_                                                                                                                                                                               |
 
 ### Navigation Menu Items
 
