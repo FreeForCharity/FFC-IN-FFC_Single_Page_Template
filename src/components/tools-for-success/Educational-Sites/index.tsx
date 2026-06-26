@@ -30,7 +30,14 @@ const EducationalSitesSection = () => {
   ]
 
   return (
-    <div className="py-[91px] bg-[linear-gradient(180deg,#0068b7_0%,rgba(44,96,118,0.75)_100%),url('https://staging.freeforcharity.org/wp-content/uploads/2021/07/pexels-cottonbro-4064840.jpg')] bg-[#0f82af] bg-cover bg-center bg-no-repeat">
+    <div
+      className="py-[91px] bg-[#0f82af] bg-cover bg-center bg-no-repeat"
+      style={{
+        backgroundImage: `linear-gradient(180deg, #0068b7 0%, rgba(44,96,118,0.75) 100%), url(${assetPath(
+          '/Images/edu-everyone-bg.webp'
+        )})`,
+      }}
+    >
       <div className="w-[80%] mx-auto flex flex-col items-center">
         {/* Heading */}
         <h2

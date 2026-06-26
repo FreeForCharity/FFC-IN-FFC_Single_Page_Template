@@ -47,7 +47,14 @@ const index = () => {
   ]
 
   return (
-    <div className="bg-[linear-gradient(180deg,rgba(232,141,51,0.5)_0%,rgba(44,96,118,0.89)_100%),url('https://staging.freeforcharity.org/wp-content/uploads/2021/07/pexels-serpstat-572056.jpg'))] bg-cover bg-center pt-[67px] pb-[67px]">
+    <div
+      className="bg-cover bg-center pt-[67px] pb-[67px]"
+      style={{
+        backgroundImage: `linear-gradient(180deg, rgba(232,141,51,0.5) 0%, rgba(44,96,118,0.89) 100%), url(${assetPath(
+          '/Images/edu-business-bg.webp'
+        )})`,
+      }}
+    >
       <div className="py-[27px] w-[80%] mx-auto">
         <h1 className="text-center pb-[10px] tracking-[1px] mb-[11px] text-[30px] md:text-[40px] text-[#333] font-[700] leading-[44px]">
           Educational Sites for Starting a Business
