@@ -134,6 +134,7 @@ const TestimonialSlider: React.FC = () => {
 
           {/* Left Arrow */}
           <button
+            type="button"
             ref={prevRef}
             disabled={activeIndex === 0}
             className="absolute left-2 md:left-4 top-1/2 -translate-y-1/2 z-10 flex items-center justify-center text-gray-600 hover:text-gray-800 transition-all disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer"
@@ -144,6 +145,7 @@ const TestimonialSlider: React.FC = () => {
 
           {/* Right Arrow */}
           <button
+            type="button"
             ref={nextRef}
             disabled={activeIndex === testimonials.length - 1}
             className="absolute right-2 md:right-4 top-1/2 -translate-y-1/2 z-10 flex items-center justify-center text-gray-600 hover:text-gray-800 transition-all disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer"
@@ -158,6 +160,7 @@ const TestimonialSlider: React.FC = () => {
           {testimonials.map((_, i) => (
             <button
               key={i}
+              type="button"
               onClick={() => handleDotClick(i)}
               className="group flex h-6 min-w-[24px] cursor-pointer items-center justify-center"
               aria-label={`Go to testimonial ${i + 1}`}
