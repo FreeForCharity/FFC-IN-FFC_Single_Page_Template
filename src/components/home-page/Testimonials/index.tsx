@@ -159,11 +159,17 @@ const TestimonialSlider: React.FC = () => {
             <button
               key={i}
               onClick={() => handleDotClick(i)}
-              className={`h-2 rounded-full transition-all cursor-pointer ${
-                activeIndex === i ? 'bg-orange-600 w-8' : 'bg-gray-300 w-2 hover:bg-gray-400'
-              }`}
+              className="group flex h-6 min-w-[24px] cursor-pointer items-center justify-center"
               aria-label={`Go to testimonial ${i + 1}`}
-            />
+            >
+              <span
+                className={`block h-2 rounded-full transition-all ${
+                  activeIndex === i
+                    ? 'w-8 bg-orange-600'
+                    : 'w-2 bg-gray-300 group-hover:bg-gray-400'
+                }`}
+              />
+            </button>
           ))}
         </div>
       </div>
