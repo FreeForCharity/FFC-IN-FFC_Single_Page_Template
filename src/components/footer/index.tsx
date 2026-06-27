@@ -74,80 +74,84 @@ const Footer: React.FC = () => {
         <div className="space-y-6 px-4 sm:px-0">
           <h2 className="text-[28px] text-white">Quick Links</h2>
 
-          <ul className="space-y-2 text-sm lato-font">
-            {[
-              { name: 'Home', href: '/#hero' },
-              { name: 'Mission', href: '/#mission' },
-              { name: 'Programs', href: '/#programs' },
-              { name: 'Events', href: '/#events' },
-              { name: 'Donate', href: '/#donate' },
-              { name: 'Volunteer', href: '/#volunteer' },
-              { name: 'FAQ', href: '/#faq' },
-              { name: 'Team', href: '/#team' },
-              // Only shown when this site is a project of a parent org with a hub.
-              ...(siteConfig.parentOrg?.hubUrl
-                ? [{ name: 'Supported Charity Login', href: siteConfig.parentOrg.hubUrl }]
-                : []),
-            ].map((link) => {
-              const isExternal = link.href.startsWith('http')
-              return (
-                <li key={link.name}>
-                  <Link
-                    href={link.href}
-                    target={isExternal ? '_blank' : undefined}
-                    rel={isExternal ? 'noopener noreferrer' : undefined}
-                    className="hover:text-[#F58C23] hover:tracking-widest transition-all text-[16px] font-[500]"
-                  >
-                    {link.name}
-                  </Link>
-                </li>
-              )
-            })}
-          </ul>
+          <nav aria-label="Quick links">
+            <ul className="space-y-2 text-sm lato-font">
+              {[
+                { name: 'Home', href: '/#hero' },
+                { name: 'Mission', href: '/#mission' },
+                { name: 'Programs', href: '/#programs' },
+                { name: 'Events', href: '/#events' },
+                { name: 'Donate', href: '/#donate' },
+                { name: 'Volunteer', href: '/#volunteer' },
+                { name: 'FAQ', href: '/#faq' },
+                { name: 'Team', href: '/#team' },
+                // Only shown when this site is a project of a parent org with a hub.
+                ...(siteConfig.parentOrg?.hubUrl
+                  ? [{ name: 'Supported Charity Login', href: siteConfig.parentOrg.hubUrl }]
+                  : []),
+              ].map((link) => {
+                const isExternal = link.href.startsWith('http')
+                return (
+                  <li key={link.name}>
+                    <Link
+                      href={link.href}
+                      target={isExternal ? '_blank' : undefined}
+                      rel={isExternal ? 'noopener noreferrer' : undefined}
+                      className="hover:text-[#F58C23] hover:tracking-widest transition-all text-[16px] font-[500]"
+                    >
+                      {link.name}
+                    </Link>
+                  </li>
+                )
+              })}
+            </ul>
+          </nav>
 
           <div className="space-y-3">
             <h3 className="text-[28px] text-white">{siteConfig.name} Policy</h3>
-            <ul className="space-y-1 text-sm lato-font">
-              {[
-                {
-                  name: `${siteConfig.name} Donation Policy`,
-                  href: '/free-for-charity-donation-policy',
-                },
-                {
-                  name: 'Donation Policy',
-                  href: '/donation-policy',
-                },
-                {
-                  name: `${siteConfig.name} Privacy Policy`,
-                  href: '/privacy-policy',
-                },
-                {
-                  name: `${siteConfig.name} Cookie Policy`,
-                  href: '/cookie-policy',
-                },
-                {
-                  name: `${siteConfig.name} Terms of Service`,
-                  href: '/terms-of-service',
-                },
-                {
-                  name: `${siteConfig.name} Vulnerability Disclosure Policy`,
-                  href: '/vulnerability-disclosure-policy',
-                },
-                {
-                  name: `${siteConfig.name} Security Acknowledgement`,
-                  href: '/security-acknowledgements',
-                },
-              ].map((link) => (
-                <li key={link.name}>
-                  <Link
-                    href={link.href}
-                    className="hover:text-[#F58C23] hover:tracking-widest transition-all text-[16px] font-[500]"
-                  >
-                    {link.name}
-                  </Link>
-                </li>
-              ))}
-            </ul>
+            <nav aria-label="Policy links">
+              <ul className="space-y-1 text-sm lato-font">
+                {[
+                  {
+                    name: `${siteConfig.name} Donation Policy`,
+                    href: '/free-for-charity-donation-policy',
+                  },
+                  {
+                    name: 'Donation Policy',
+                    href: '/donation-policy',
+                  },
+                  {
+                    name: `${siteConfig.name} Privacy Policy`,
+                    href: '/privacy-policy',
+                  },
+                  {
+                    name: `${siteConfig.name} Cookie Policy`,
+                    href: '/cookie-policy',
+                  },
+                  {
+                    name: `${siteConfig.name} Terms of Service`,
+                    href: '/terms-of-service',
+                  },
+                  {
+                    name: `${siteConfig.name} Vulnerability Disclosure Policy`,
+                    href: '/vulnerability-disclosure-policy',
+                  },
+                  {
+                    name: `${siteConfig.name} Security Acknowledgement`,
+                    href: '/security-acknowledgements',
+                  },
+                ].map((link) => (
+                  <li key={link.name}>
+                    <Link
+                      href={link.href}
+                      className="hover:text-[#F58C23] hover:tracking-widest transition-all text-[16px] font-[500]"
+                    >
+                      {link.name}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </nav>
           </div>
         </div>
 
