@@ -2,6 +2,7 @@
 
 import React from 'react'
 import Link from 'next/link'
+import Image from 'next/image'
 import { FiMail, FiPhone, FiMapPin, FiArrowRight, FiLink2 } from 'react-icons/fi'
 import { FaFacebookF, FaLinkedinIn, FaGithub } from 'react-icons/fa'
 import { FaXTwitter } from 'react-icons/fa6'
@@ -38,9 +39,11 @@ const Footer: React.FC = () => {
               href={siteConfig.guidestar.profileUrl}
               aria-label={`View ${siteConfig.name} GuideStar Profile`}
             >
-              <img
+              <Image
                 src={assetPath('/Svgs/footerImage.svg')}
                 alt="GuideStar Platinum Seal of Transparency"
+                width={108}
+                height={108}
               />
             </a>
             <Link
