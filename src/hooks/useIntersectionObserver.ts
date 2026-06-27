@@ -13,8 +13,10 @@ type Options = {
  * Returns whether the observed element is intersecting the viewport. A small
  * native replacement for framer-motion's `useInView`.
  *
- * In environments without IntersectionObserver (older browsers, some test
- * runners) it falls back to `true` so content is shown rather than hidden.
+ * Starts `false` (matching the server render) and updates after mount. In
+ * environments without IntersectionObserver (older browsers, some test
+ * runners) it sets `true` on mount so content still becomes visible instead of
+ * staying hidden.
  */
 export function useIntersectionObserver(
   ref: RefObject<Element | null>,

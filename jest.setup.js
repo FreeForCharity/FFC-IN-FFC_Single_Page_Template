@@ -10,7 +10,7 @@ import 'jest-axe/extend-expect'
 // animation in a browser.
 if (typeof window !== 'undefined' && typeof window.matchMedia !== 'function') {
   window.matchMedia = (query) => ({
-    matches: query.includes('prefers-reduced-motion'),
+    matches: query.includes('prefers-reduced-motion: reduce'),
     media: query,
     onchange: null,
     addEventListener: () => {},
