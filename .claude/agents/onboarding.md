@@ -13,9 +13,10 @@ You are helping a Free For Charity volunteer or charity admin stand up a new sit
    - SEO description (1–2 sentences) and a shorter card description for OG / Twitter previews.
    - Production URL (custom domain) — if none yet, default to the GitHub Pages URL.
    - Twitter/X handle (optional), primary contact email, security disclosure email, primary social links (Facebook, X, LinkedIn, GitHub, others).
-   - EIN, mailing address(es), phone number(s) — the footer still hardcodes these.
+   - EIN, mailing address(es), phone number(s) — collected for `siteConfig` (`ein`, `phone`, `addresses`); these are no longer footer-hardcoded.
+   - GuideStar/Candid profile links, parent-organization details, and any third-party integration URLs (Zeffy, Idealist, SociableKit events, Microsoft Forms) — also collected for `siteConfig`.
 
-2. **Update `src/lib/site.config.ts`** with the values above. This is the canonical source — never duplicate. Helpers (`siteUrl`, `twitterSite`, `cardDescription`) drive layout/robots/sitemap/manifest/footer; do NOT change their signatures.
+2. **Update `src/lib/site.config.ts`** with the values above. This is the canonical source — never duplicate. It now drives the full per-charity value set: identity/SEO (`name`, `tagline`, `description`, `shortDescription`, `url`, `twitterHandle`, `keywords`, `themeColor`), `contactEmail`, `social`, AND `ein`, `phone`, `addresses`, `guidestar`, `parentOrg`, and `integrations`. Helpers (`siteUrl`, `twitterSite`, `cardDescription`) drive layout/robots/sitemap/manifest/footer; do NOT change their signatures. Analytics IDs (GTM / GA / Clarity / Meta Pixel) are set separately in `src/lib/analytics.config.ts`.
 
 3. **Update `public/CNAME`** if a custom domain is being used; otherwise delete it.
 
@@ -28,9 +29,7 @@ You are helping a Free For Charity volunteer or charity admin stand up a new sit
 
 6. **Swap branded assets** in `public/Images/` and `public/Svgs/`. Keep filenames where possible so the LCP preload in `layout.tsx` and the manifest icons still hit real files.
 
-7. **Edit the footer** in `src/components/footer/index.tsx`:
-   - EIN, mailing addresses (Raleigh + State College), phone number, GuideStar profile URL, and the parent-organization link at the bottom are all hardcoded — replace with the charity's real info.
-   - The social-link rail and email already come from `siteConfig`; don't duplicate them.
+7. **Footer** — no per-charity CODE edits needed. EIN, addresses, phone, GuideStar links, parent-org link, social rail, and email all come from `siteConfig` (set in step 2). The only footer-related swap is the GuideStar / endorsement seal IMAGE asset in `public/Svgs/` if the charity's endorsements differ.
 
 8. **Replace content** in `src/data/` (testimonials, FAQs, team) and the home-page sections under `src/components/home-page/`.
 
@@ -73,7 +72,7 @@ You are helping a Free For Charity volunteer or charity admin stand up a new sit
 
 ## Guardrails
 
-- Never paste API keys, GTM IDs, or secrets into committed files. Use GitHub Secrets / `.env` (gitignored).
+- Never commit real SECRETS, tokens, or passwords. Use GitHub Secrets / `.env` (gitignored). Note: the analytics IDs (GTM / GA / Clarity / Meta Pixel) are PUBLIC identifiers, not secrets — they live in `src/lib/analytics.config.ts` and committing them there is expected.
 - Never rename route folders to non-kebab-case (CI will fail).
 - Never bypass `assetPath()` for `/Images/`, `/Svgs/`, or `/videos/` references (CI will fail).
 - Never add a third-party origin (analytics, embed, payment) to only one of `public/_headers` or the CSP `<meta>` in `src/app/layout.tsx`. The drift checker enforces sync; one-sided changes will fail CI.

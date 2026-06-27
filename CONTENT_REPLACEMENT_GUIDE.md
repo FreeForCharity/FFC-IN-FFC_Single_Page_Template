@@ -348,15 +348,15 @@ The footer appears at the bottom of every page and contains important links and 
 
 ### Column 1 - Endorsements
 
-| Section | Variable                     | Current Free For Charity Content                                                | Your Content                                                        |
-| ------- | ---------------------------- | ------------------------------------------------------------------------------- | ------------------------------------------------------------------- |
-| Footer  | Column 1 Heading             | "Endorsements"                                                                  | _(You might use "Certifications", "Verified By", or similar)_       |
-| Footer  | Endorsement Image 1          | `/Svgs/footerImage.svg` (GuideStar Platinum Seal)                               | _(Logo/seal image from your endorsing organizations)_               |
-| Footer  | Endorsement Image 1 Alt Text | "GuideStar Platinum Seal of Transparency"                                       |                                                                     |
-| Footer  | Endorsement Image 1 Link     | "https://www.guidestar.org/profile/46-2471893"                                  | _(Link to your profile page)_                                       |
-| Footer  | Direct Profile Link Text     | "Direct GuideStar Profile Link"                                                 | _(Or your equivalent verification link)_                            |
-| Footer  | Direct Profile Link URL      | "https://www.guidestar.org/profile/shared/bbbe173a-87b9-4af9-a8a2-cae255a95742" |                                                                     |
-| Footer  | EIN Display Text             | "Free For Charity EIN: 46-2471893"                                              | _(Your charity's EIN number, e.g., "Your Charity EIN: XX-XXXXXXX")_ |
+| Section | Variable                     | Current Free For Charity Content                                                                                                               | Your Content                                                        |
+| ------- | ---------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------- |
+| Footer  | Column 1 Heading             | "Endorsements"                                                                                                                                 | _(You might use "Certifications", "Verified By", or similar)_       |
+| Footer  | Endorsement Image 1          | `/Svgs/footerImage.svg` (GuideStar Platinum Seal) — asset/markup in `src/components/footer/index.tsx`                                          | _(Logo/seal image from your endorsing organizations)_               |
+| Footer  | Endorsement Image 1 Alt Text | "GuideStar Platinum Seal of Transparency" — in `src/components/footer/index.tsx`                                                               |                                                                     |
+| Footer  | Endorsement Image 1 Link     | "https://www.guidestar.org/profile/46-2471893" — set `guidestar.profileUrl` in `src/lib/site.config.ts`                                        | _(Link to your profile page)_                                       |
+| Footer  | Direct Profile Link Text     | "Direct GuideStar Profile Link"                                                                                                                | _(Or your equivalent verification link)_                            |
+| Footer  | Direct Profile Link URL      | "https://www.guidestar.org/profile/shared/bbbe173a-87b9-4af9-a8a2-cae255a95742" — set `guidestar.directProfileUrl` in `src/lib/site.config.ts` |                                                                     |
+| Footer  | EIN Display Text             | "Free For Charity EIN: 46-2471893" — set `ein` in `src/lib/site.config.ts`                                                                     | _(Your charity's EIN number, e.g., "Your Charity EIN: XX-XXXXXXX")_ |
 
 ### Column 2 - Quick Links
 
@@ -406,27 +406,31 @@ _Note: These policy pages will need to be created with your charity's specific p
 
 ### Column 3 - Contact Information
 
+_Edit location: `src/lib/site.config.ts` — `contactEmail`, `phone.display` / `phone.tel`, and the `addresses[]` entries (`label`, `lines`, `mapUrl`). The footer renders these from siteConfig._
+
 | Section | Variable                           | Current Free For Charity Content                                                                    | Your Content                                         |
 | ------- | ---------------------------------- | --------------------------------------------------------------------------------------------------- | ---------------------------------------------------- |
 | Footer  | Column 3 Heading                   | "Contact Us"                                                                                        |                                                      |
 | Footer  | Email Label                        | "E-mail"                                                                                            |                                                      |
-| Footer  | Email Address                      | "clarkemoyer@freeforcharity.org"                                                                    | _(Your charity's contact email)_                     |
+| Footer  | Email Address (`contactEmail`)     | "clarkemoyer@freeforcharity.org"                                                                    | _(Your charity's contact email)_                     |
 | Footer  | Phone Label                        | "Call Us Today"                                                                                     |                                                      |
-| Footer  | Phone Number                       | "(520) 222-8104"                                                                                    | _(Your charity's phone number)_                      |
-| Footer  | Phone Number (dialable format)     | "5202228104"                                                                                        | _(Numbers only, no spaces or dashes)_                |
+| Footer  | Phone Number (`phone.display`)     | "(520) 222-8104"                                                                                    | _(Your charity's phone number)_                      |
+| Footer  | Phone Number (`phone.tel`)         | "5202228104"                                                                                        | _(Numbers only, no spaces or dashes)_                |
 | Footer  | Main Address Label                 | "Main Address"                                                                                      |                                                      |
 | Footer  | Main Address Line 1                | "4030 Wake Forrest Road"                                                                            |                                                      |
-| Footer  | Main Address Line 2                | "Suite 349 Raleigh North"                                                                           |                                                      |
-| Footer  | Main Address Line 3                | "Carolina 27609"                                                                                    |                                                      |
+| Footer  | Main Address Line 2                | "Suite 349"                                                                                         |                                                      |
+| Footer  | Main Address Line 3                | "Raleigh, NC 27609"                                                                                 |                                                      |
 | Footer  | Main Address Google Maps Link      | "https://www.google.com/maps/search/?api=1&query=4030+Wake+Forrest+Road+Suite+349+Raleigh+NC+27609" | _(Format: Google Maps search URL with your address)_ |
 | Footer  | Secondary Address Label            | "PA Office Address"                                                                                 | _(Optional second location)_                         |
-| Footer  | Secondary Address Line 1           | "301 Science Park Road Suite"                                                                       |                                                      |
-| Footer  | Secondary Address Line 2           | "119 State College PA 16803"                                                                        |                                                      |
+| Footer  | Secondary Address Line 1           | "301 Science Park Road, Suite 119"                                                                  |                                                      |
+| Footer  | Secondary Address Line 2           | "State College, PA 16803"                                                                           |                                                      |
 | Footer  | Secondary Address Google Maps Link | "https://www.google.com/maps/place/Free+For+Charity/@40.7768455,-77.8963305,17z/..."                |                                                      |
 
 _Note: If you don't have a second location, you can remove the secondary address section._
 
 ### Social Media Links
+
+_Edit location: `src/lib/site.config.ts` — the `social[]` array (each entry's `href`). The footer renders the rail from siteConfig._
 
 | Section | Variable              | Current Free For Charity Content                             | Your Content                                         |
 | ------- | --------------------- | ------------------------------------------------------------ | ---------------------------------------------------- |
@@ -495,7 +499,7 @@ When implementing these changes:
 - **Programs section**: Edit `src/components/home-page/our-programs/index.tsx`
 - **FAQ section**: Edit `src/components/home-page/frequently-asked-questions/index.tsx`
 - **Team section**: Edit `src/components/home-page/the-free-for-charity-team/index.tsx`
-- **Footer**: Edit `src/components/footer/index.tsx`
+- **Footer**: The footer's per-charity values (EIN, phone, addresses, GuideStar links, social, email) come from `src/lib/site.config.ts`. Edit `src/components/footer/index.tsx` only for structural/markup changes (e.g. the endorsement seal image).
 - **Metadata**: Edit `src/app/layout.tsx`
 - **Navigation menu**: Edit `src/components/header/index.tsx`
 
