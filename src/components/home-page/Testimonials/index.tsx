@@ -48,7 +48,17 @@ const TestimonialSlider: React.FC = () => {
       <div className="container mx-auto px-4 max-w-[1150px] text-center">
         <h2 className="font-bold text-[#E16820] text-[40px] leading-[44px] mb-7">Testimonials</h2>
 
-        <div className="relative">
+        {/* Carousel landmark so assistive tech announces this region and its
+            role. aria-live is intentionally omitted: the carousel auto-rotates,
+            and a live region on an auto-rotating carousel would announce every
+            transition (ARIA APG guidance). The prev/next/dot controls already
+            carry descriptive aria-labels. */}
+        <div
+          className="relative"
+          role="region"
+          aria-roledescription="carousel"
+          aria-label="Testimonials"
+        >
           <Swiper
             modules={[Navigation, Autoplay]}
             onSwiper={setSwiperInstance}
