@@ -13,8 +13,8 @@ const index = () => {
           {results.heading}
         </h2>
         <div className="pt-[30px] grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-[20px]">
-          {results.stats.map((stat, i) => (
-            <ResultCard key={i} title={stat.value} description={stat.label} />
+          {results.stats.map((stat) => (
+            <ResultCard key={stat.label} title={stat.value} description={stat.label} />
           ))}
         </div>
       </div>
