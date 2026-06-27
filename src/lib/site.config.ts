@@ -81,6 +81,21 @@ export type SiteConfig = {
    * nonprofit. Omit for a standalone charity (the footer clause is hidden).
    */
   parentOrg?: { name: string; url: string; hubUrl: string }
+  /**
+   * Third-party integration endpoints. Each fork points these at its own
+   * accounts — the domains are already allow-listed in the CSP, so only the
+   * path/ID changes here.
+   */
+  integrations: {
+    /** Zeffy donation-form embed URL (the iframe `src`). */
+    zeffyDonationUrl: string
+    /** Idealist volunteer-opportunities profile URL. */
+    idealistUrl: string
+    /** SociableKit Facebook-events widget iframe URL. */
+    sociableKitEventsWidgetUrl: string
+    /** Microsoft Forms application-form URL (https://forms.office.com/r/<id>). */
+    microsoftFormUrl: string
+  }
 }
 
 export const siteConfig: SiteConfig = {
@@ -135,6 +150,14 @@ export const siteConfig: SiteConfig = {
     name: 'Free For Charity',
     url: 'https://freeforcharity.org',
     hubUrl: 'https://freeforcharity.org/hub/',
+  },
+  integrations: {
+    zeffyDonationUrl: 'https://www.zeffy.com/embed/donation-form/free-for-charity-endowment-fund',
+    idealistUrl:
+      'https://www.idealist.org/en/nonprofit/356bfc8e2ae64f83beea4a4e677e99d7-free-for-charity-state-college#opportunities',
+    sociableKitEventsWidgetUrl:
+      'https://widgets.sociablekit.com/facebook-page-events/iframe/25631700',
+    microsoftFormUrl: 'https://forms.office.com/r/vePxGq6JqG',
   },
 }
 

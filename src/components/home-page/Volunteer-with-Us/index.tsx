@@ -1,6 +1,7 @@
 import React from 'react'
 import Image from 'next/image'
 import { assetPath } from '@/lib/assetPath'
+import { siteConfig } from '@/lib/site.config'
 
 const index = () => {
   return (
@@ -15,7 +16,7 @@ const index = () => {
           invaluable to our mission.
         </p>
         <a
-          href="https://www.idealist.org/en/nonprofit/356bfc8e2ae64f83beea4a4e677e99d7-free-for-charity-state-college#opportunities"
+          href={siteConfig.integrations.idealistUrl}
           target="_blank"
           rel="noopener noreferrer"
           className="w-[216px] h-[62px] top-[261px] left-[611px] rounded-[27px] 
