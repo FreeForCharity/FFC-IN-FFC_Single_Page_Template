@@ -1,16 +1,23 @@
 import React from 'react'
 import Link from 'next/link'
 import type { Metadata } from 'next'
+import BreadcrumbSchema from '@/components/seo/BreadcrumbSchema'
+
+const PAGE_NAME = 'Security Acknowledgements'
+const CANONICAL_PATH = '/security-acknowledgements'
 
 export const metadata: Metadata = {
-  title: 'Security Acknowledgements | Free For Charity',
+  // The root layout's title template appends " | Free For Charity", so the
+  // page title is just the page name (avoids a doubled brand suffix).
+  title: PAGE_NAME,
   description: 'Security Acknowledgements for Free For Charity website',
-  alternates: { canonical: '/security-acknowledgements' },
+  alternates: { canonical: CANONICAL_PATH },
 }
 
 const index = () => {
   return (
     <div className="pt-[130px] pb-[54px]">
+      <BreadcrumbSchema name={PAGE_NAME} path={CANONICAL_PATH} />
       <div className="py-[27px] w-[90%] md:w-[80%] mx-auto">
         <div className="border-t-[5px] border-[#0073e6] pt-[25px] lato-font">
           <h2 className="text-[30px] leading-[30px] font-[700] text-[#333] mt-[20px] mb-[25px]">

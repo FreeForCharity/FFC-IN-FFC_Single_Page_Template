@@ -1,14 +1,21 @@
 import type { Metadata } from 'next'
+import BreadcrumbSchema from '@/components/seo/BreadcrumbSchema'
+
+const PAGE_NAME = 'Donation Policy'
+const CANONICAL_PATH = '/donation-policy'
 
 export const metadata: Metadata = {
-  title: 'Donation Policy | Free For Charity',
+  // The root layout's title template appends " | Free For Charity", so the
+  // page title is just the page name (avoids a doubled brand suffix).
+  title: PAGE_NAME,
   description: 'Donation Policy for Free For Charity website',
-  alternates: { canonical: '/donation-policy' },
+  alternates: { canonical: CANONICAL_PATH },
 }
 
 export default function DonationPolicy() {
   return (
     <div className="ffc-container py-16">
+      <BreadcrumbSchema name={PAGE_NAME} path={CANONICAL_PATH} />
       <div className="max-w-4xl mx-auto">
         <h1 className="font-[var(--font-faustina)] text-[48px] leading-[60px] mb-8">
           Donation Policy

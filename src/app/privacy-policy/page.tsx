@@ -1,14 +1,21 @@
 import type { Metadata } from 'next'
+import BreadcrumbSchema from '@/components/seo/BreadcrumbSchema'
+
+const PAGE_NAME = 'Privacy Policy'
+const CANONICAL_PATH = '/privacy-policy'
 
 export const metadata: Metadata = {
-  title: 'Privacy Policy | Free For Charity',
+  // The root layout's title template appends " | Free For Charity", so the
+  // page title is just the page name (avoids a doubled brand suffix).
+  title: PAGE_NAME,
   description: 'Privacy Policy for Free For Charity website',
-  alternates: { canonical: '/privacy-policy' },
+  alternates: { canonical: CANONICAL_PATH },
 }
 
 export default function PrivacyPolicy() {
   return (
     <div className="pt-[140px] pb-[54px]">
+      <BreadcrumbSchema name={PAGE_NAME} path={CANONICAL_PATH} />
       <div className="py-[27px] w-[90%] md:w-[80%] mx-auto">
         <div className="aria-font">
           <p className="text-[14px] text-[#666] pb-[10px] leading-[24px] font-[500]"></p>
