@@ -88,13 +88,13 @@ This analysis compares FFC_Single_Page_Template against three sister repositorie
 
 ### Dependency Comparison
 
-| Library/Tool         | FFC_Single_Page_Template | freeforcharity-web | ffcadmin.org | KCCF-web |
-| -------------------- | ------------------------ | ------------------ | ------------ | -------- |
-| **framer-motion**    | ✅ 12.23.24              | ✅ 12.23.24        | ❌           | ❌       |
-| **lucide-react**     | ✅ 0.469.0               | ✅ 0.469.0         | ❌           | ❌       |
-| **react-icons**      | ✅ 5.5.0                 | ✅ 5.5.0           | ❌           | ❌       |
-| **swiper**           | ✅ 12.0.3                | ✅ 12.0.3          | ❌           | ❌       |
-| **@playwright/test** | ✅ 1.56.0                | ✅ 1.56.0          | ❌           | ❌       |
+| Library/Tool         | FFC_Single_Page_Template     | freeforcharity-web | ffcadmin.org | KCCF-web |
+| -------------------- | ---------------------------- | ------------------ | ------------ | -------- |
+| **framer-motion**    | ✅ 12.23.24                  | ✅ 12.23.24        | ❌           | ❌       |
+| **lucide-react**     | ❌ removed (use react-icons) | ✅ 0.469.0         | ❌           | ❌       |
+| **react-icons**      | ✅ 5.5.0                     | ✅ 5.5.0           | ❌           | ❌       |
+| **swiper**           | ✅ 12.0.3                    | ✅ 12.0.3          | ❌           | ❌       |
+| **@playwright/test** | ✅ 1.56.0                    | ✅ 1.56.0          | ❌           | ❌       |
 
 **Observation:** FFC_Single_Page_Template and freeforcharity-web are nearly identical in their dependency stacks, suggesting they share similar feature sets.
 

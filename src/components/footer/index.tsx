@@ -2,21 +2,19 @@
 
 import React from 'react'
 import Link from 'next/link'
-import { Mail, Phone, MapPin, ArrowRight, Link2 } from 'lucide-react'
-
+import { FiMail, FiPhone, FiMapPin, FiArrowRight, FiLink2 } from 'react-icons/fi'
 import { FaFacebookF, FaLinkedinIn, FaGithub } from 'react-icons/fa'
 import { FaXTwitter } from 'react-icons/fa6'
 import type { IconType } from 'react-icons'
-import type { LucideIcon } from 'lucide-react'
 
 import { siteConfig } from '@/lib/site.config'
 import { assetPath } from '@/lib/assetPath'
 
 // Maps a social link's label (as defined in siteConfig.social) to an icon.
-// Unknown labels fall back to a generic link icon (Link2 from lucide-react)
-// so a charity that adds a new social network — Bluesky, Mastodon, YouTube,
-// etc. — gets a sensible placeholder instead of a misleading GitHub mark.
-const socialIconByLabel: Record<string, IconType | LucideIcon> = {
+// Unknown labels fall back to a generic link icon (FiLink2) so a charity
+// that adds a new social network — Bluesky, Mastodon, YouTube, etc. — gets a
+// sensible placeholder instead of a misleading GitHub mark.
+const socialIconByLabel: Record<string, IconType> = {
   Facebook: FaFacebookF,
   'X (Twitter)': FaXTwitter,
   Twitter: FaXTwitter,
@@ -55,7 +53,7 @@ const Footer: React.FC = () => {
                 Direct GuideStar Profile Link
               </span>
 
-              <ArrowRight
+              <FiArrowRight
                 className="h-8 w-8 translate-x-2 opacity-0 text-[#2ea3f2] transition-all duration-300 group-hover:translate-x-0 group-hover:opacity-100"
                 strokeWidth={2}
               />
@@ -150,7 +148,7 @@ const Footer: React.FC = () => {
 
           <div className="space-y-4 text-sm">
             <div className="flex items-start gap-3">
-              <Mail className="w-10 h-10 text-orange-500 flex-shrink-0 mt-0.5" />
+              <FiMail className="w-10 h-10 text-orange-500 flex-shrink-0 mt-0.5" />
               <div>
                 <p className="font-[500] text-[22px]">E-mail</p>
                 <a
@@ -163,7 +161,7 @@ const Footer: React.FC = () => {
             </div>
 
             <div className="flex items-start gap-3">
-              <Phone className="w-10 h-10 text-orange-500 flex-shrink-0 mt-0.5" />
+              <FiPhone className="w-10 h-10 text-orange-500 flex-shrink-0 mt-0.5" />
               <div>
                 <p className="font-[500] text-[22px]">Call Us Today</p>
                 <a
@@ -182,7 +180,7 @@ const Footer: React.FC = () => {
               aria-label="Open main address in Google Maps"
               className="flex items-start gap-3 hover:opacity-80 transition-opacity"
             >
-              <MapPin className="w-10 h-10 text-orange-500 flex-shrink-0 mt-0.5" />
+              <FiMapPin className="w-10 h-10 text-orange-500 flex-shrink-0 mt-0.5" />
               <div>
                 <p className="font-[500] text-[22px]">Main Address</p>
                 <p className="font-[500] text-[16px] aria-font">
@@ -202,7 +200,7 @@ const Footer: React.FC = () => {
               aria-label="Open PA office address in Google Maps"
               className="flex items-start gap-3 hover:opacity-80 transition-opacity"
             >
-              <MapPin className="w-10 h-10 text-orange-500 flex-shrink-0 mt-0.5" />
+              <FiMapPin className="w-10 h-10 text-orange-500 flex-shrink-0 mt-0.5" />
               <div>
                 <p className="font-[500] text-[22px]">PA Office Address</p>
                 <p className="font-[500] text-[16px] aria-font">
@@ -215,7 +213,7 @@ const Footer: React.FC = () => {
 
             <div className="flex gap-3 pt-4">
               {socialLinks.map(({ href, label }) => {
-                const Icon = socialIconByLabel[label] ?? Link2
+                const Icon = socialIconByLabel[label] ?? FiLink2
                 return (
                   <a
                     key={`${label}-${href}`}
