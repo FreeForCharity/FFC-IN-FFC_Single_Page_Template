@@ -12,10 +12,15 @@ on:
   # Allows manual trigger from Actions tab
   workflow_dispatch:
 
-# Cancel in-progress CI runs for the same PR/branch
+# Cancel in-progress CI runs ONLY for pull requests (a new push to a PR
+# supersedes the old run). NEVER cancel on main pushes: deploy.yml fires
+# via `workflow_run` only when this workflow concludes `success`, so a
+# cancelled main run (which concludes `cancelled`) silently skips the
+# deploy. A rapid merge train would otherwise cancel each commit's CI
+# and leave production stuck on a stale build.
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
   test-and-build:
