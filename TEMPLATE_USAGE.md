@@ -641,13 +641,13 @@ grep -r "46-2471893" . --exclude-dir=node_modules --exclude-dir=.git
 grep -r "ffcworkingsite1.org" . --exclude-dir=node_modules --exclude-dir=.git
 ```
 
-**Social media links**: Update in `src/components/footer/index.tsx`
+**Social media links**: Update `siteConfig.social` in `src/lib/site.config.ts`
 
 ### 2. Update Contact Information
 
 Files to update:
 
-- `src/components/footer/index.tsx` - Footer contact info
+- `src/lib/site.config.ts` - Footer contact info (`contactEmail`, `phone`, `addresses`, `ein`, `guidestar`) and `social` links
 - `SECURITY.md` - Security contact
 - `CODE_OF_CONDUCT.md` - Conduct reporting contact
 - `SUPPORT.md` - Support contact

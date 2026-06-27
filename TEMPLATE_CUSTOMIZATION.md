@@ -27,10 +27,15 @@ charity's name, URL, contact email, social links, etc.
 | `themeColor`                  | Web manifest `theme_color` and `background_color`                                           |
 | `vulnerabilityDisclosurePath` | 404 page CTA, error page disclosure link                                                    |
 | `social`                      | Footer social-link rail (icon resolved by `label`: Facebook, X (Twitter), LinkedIn, GitHub) |
+| `ein`                         | Footer EIN display line                                                                     |
+| `phone`                       | Footer phone link (`phone.display` shown, `phone.tel` used for the `tel:` link)             |
+| `addresses`                   | Footer contact column (`addresses[].label` / `.lines` / `.mapUrl`)                          |
+| `guidestar`                   | Footer GuideStar/Candid seal links (`guidestar.profileUrl`, `guidestar.directProfileUrl`)   |
+| `parentOrg`                   | Footer "a project of" parent-org clause (omit for a standalone charity)                     |
+| `integrations`                | Zeffy donation embed, Idealist profile, SociableKit events widget, Microsoft Forms URL      |
 
-### Things `siteConfig` does NOT yet drive
+### Things `siteConfig` does NOT drive
 
-- **EIN, mailing addresses, phone numbers** — still hardcoded in `src/components/footer/index.tsx`. Add to siteConfig if your charity wants them.
 - **Hero/section copy** — lives in component files under `src/components/home-page/` and `src/data/`.
 - **GitHub Pages base path** — chosen automatically by `deploy.yml` and `lighthouse.yml` based on whether `public/CNAME` exists. With a CNAME the build uses an empty basePath (custom-domain root). Without a CNAME the build uses `/<repo-name>` for github.io subpath deploys. No manual workflow edit required when you rename the repo.
 - **OG/Twitter card image** — `layout.tsx` points at `/Images/og-image.png` (1200×630 landscape, the size social cards expect). To rebrand, replace `public/Images/og-image.png` with your own 1200×630 image (keep the filename). The square `/web-app-manifest-512x512.png` is still used separately for the PWA icon and the JSON-LD logo.
@@ -60,15 +65,15 @@ E2E tests assert against it, so there is a single source of truth.
 
 ## Files you'll likely touch when rebranding
 
-| File                                                            | What to change                                                                                                                                                                                                        |
-| --------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `public/CNAME`                                                  | Custom domain (delete if using only github.io)                                                                                                                                                                        |
-| `public/.well-known/security.txt` **and** `public/security.txt` | `Contact`, `Canonical`, `Policy`, `Acknowledgments`, `Expires`. **Both copies must stay in sync** (the drift checker enforces it). The root copy exists because GitHub Pages does not serve dot-prefixed directories. |
-| `public/Images/*`, `public/Svgs/*`                              | Brand assets (keep filenames where possible)                                                                                                                                                                          |
-| `src/components/footer/index.tsx`                               | EIN, addresses, phone, GuideStar profile URLs, parent-org footer link — these are not in `siteConfig` (yet)                                                                                                           |
-| `src/data/*`                                                    | Testimonials, FAQs, team — your real content                                                                                                                                                                          |
-| `src/components/home-page/*`                                    | Home page sections                                                                                                                                                                                                    |
-| `src/app/privacy-policy/page.tsx` etc                           | Legal pages (have a lawyer review)                                                                                                                                                                                    |
+| File                                                            | What to change                                                                                                                                                                                                                           |
+| --------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `public/CNAME`                                                  | Custom domain (delete if using only github.io)                                                                                                                                                                                           |
+| `public/.well-known/security.txt` **and** `public/security.txt` | `Contact`, `Canonical`, `Policy`, `Acknowledgments`, `Expires`. **Both copies must stay in sync** (the drift checker enforces it). The root copy exists because GitHub Pages does not serve dot-prefixed directories.                    |
+| `public/Images/*`, `public/Svgs/*`                              | Brand assets (keep filenames where possible)                                                                                                                                                                                             |
+| `src/components/footer/index.tsx`                               | Usually no edit needed — EIN, addresses, phone, GuideStar links, parent-org link, social rail, and email all read from `siteConfig`. Touch the footer code only to change the endorsement seal image/markup or other structural changes. |
+| `src/data/*`                                                    | Testimonials, FAQs, team — your real content                                                                                                                                                                                             |
+| `src/components/home-page/*`                                    | Home page sections                                                                                                                                                                                                                       |
+| `src/app/privacy-policy/page.tsx` etc                           | Legal pages (have a lawyer review)                                                                                                                                                                                                       |
 
 The web manifest is **auto-generated** from `siteConfig` at build time by `src/app/manifest.ts` — no separate file to edit.
 
