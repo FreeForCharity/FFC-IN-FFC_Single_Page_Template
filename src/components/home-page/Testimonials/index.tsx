@@ -70,7 +70,7 @@ const TestimonialSlider: React.FC = () => {
   return (
     <section id="testimonials" className="py-16 pb-25 bg-[#FCFCFC]">
       <div className="container mx-auto px-4 max-w-[1150px] text-center">
-        <h2 className="font-bold text-[#F27022] text-[40px] leading-[44px] mb-7">Testimonials</h2>
+        <h2 className="font-bold text-[#E16820] text-[40px] leading-[44px] mb-7">Testimonials</h2>
 
         <div className="relative">
           <Swiper
@@ -117,7 +117,7 @@ const TestimonialSlider: React.FC = () => {
 
                   {t.location && (
                     <a href="https://americanlegionpost64.org/">
-                      <p className="text-[14px] font-medium text-[#2EA3F2]" id="aria-font">
+                      <p className="text-[14px] font-medium text-[#227AB5]" id="aria-font">
                         {t.location}
                       </p>
                     </a>
