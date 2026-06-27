@@ -2,11 +2,13 @@
 
 import React, { useState, useEffect, useMemo } from 'react'
 import Link from 'next/link'
+import Image from 'next/image'
 import { FiMenu } from 'react-icons/fi'
 import { LiaSearchSolid } from 'react-icons/lia'
 import { RxCross2 } from 'react-icons/rx'
 import { motion, AnimatePresence } from 'framer-motion'
 import { assetPath } from '@/lib/assetPath'
+import { siteConfig } from '@/lib/site.config'
 
 interface MenuItem {
   label: string
@@ -98,11 +100,12 @@ const Header: React.FC = () => {
               className={`transition-all duration-300 ${isScrolled ? 'w-[110px]' : 'w-[150px]'}`}
             >
               <Link href="/" onClick={handleLinkClick} className="block">
-                <img
+                <Image
                   src={assetPath('/Images/logo.webp')}
-                  alt="Free For Charity"
+                  alt={siteConfig.name}
                   width={686}
                   height={234}
+                  priority
                   className={`w-auto max-w-none object-contain transition-all duration-300 ${
                     isScrolled ? 'h-7' : 'h-11'
                   }`}
