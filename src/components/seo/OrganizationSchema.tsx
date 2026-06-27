@@ -40,13 +40,16 @@ export function buildOrganizationSchema(): Record<string, unknown> {
  */
 export default function OrganizationSchema() {
   const schema = buildOrganizationSchema()
+  // Escape '<' as its JSON unicode form so any value that ever contains the
+  // literal substring "</script>" cannot break out of this inline script tag
+  // (a known JSON-LD injection vector). The output stays valid JSON/JSON-LD.
+  const json = JSON.stringify(schema).replace(/</g, '\\u003c')
   return (
     <script
       type="application/ld+json"
-      // Stable JSON output: stringify with no whitespace to avoid layout
-      // shift and keep the payload small. dangerouslySetInnerHTML is the
-      // standard pattern for inline JSON-LD per the Next.js docs.
-      dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }}
+      // dangerouslySetInnerHTML is the standard pattern for inline JSON-LD per
+      // the Next.js docs.
+      dangerouslySetInnerHTML={{ __html: json }}
     />
   )
 }
