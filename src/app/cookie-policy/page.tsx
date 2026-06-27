@@ -12,7 +12,7 @@ export default function CookiePolicy() {
   return (
     <div className="pt-[140px] pb-[54px]">
       <div className="py-[27px] w-[90%] md:w-[80%] mx-auto">
-        <div id="aria-font">
+        <div className="aria-font">
           <h1 className="text-[30px] text-[#333] pb-[10px] leading-[1em] font-[500]">
             <strong>Cookie Policy</strong>
           </h1>

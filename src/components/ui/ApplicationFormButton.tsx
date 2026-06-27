@@ -93,8 +93,7 @@ const ApplicationFormButton: React.FC<ApplicationFormButtonProps> = ({
           text-black font-[400] text-[25px] px-[28px] py-[16px] 
           hover:bg-[#2A6682] hover:text-white transition-all duration-300
           ${className}
-        `}
-        id="lato-font"
+         lato-font`}
       >
         {text}
       </button>

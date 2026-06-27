@@ -26,7 +26,7 @@ const FrequentlyAskedQuestions: React.FC<AccordionItemProps> = ({ title, childre
   const toggle = () => setIsOpen(!isOpen)
 
   return (
-    <div className="mb-5 overflow-hidden" id="lato-font">
+    <div className="mb-5 overflow-hidden lato-font">
       {/* Header */}
       <button
         onClick={toggle}
@@ -34,7 +34,7 @@ const FrequentlyAskedQuestions: React.FC<AccordionItemProps> = ({ title, childre
         aria-expanded={isOpen}
       >
         {/* Text takes remaining space */}
-        <span className={`font-[400] text-[20px] md:text-[32px] flex-1 pr-3`} id="lato-font">
+        <span className={`font-[400] text-[20px] md:text-[32px] flex-1 pr-3 lato-font`}>
           {title}
         </span>
 
@@ -65,8 +65,7 @@ const FrequentlyAskedQuestions: React.FC<AccordionItemProps> = ({ title, childre
       >
         <div
           ref={contentRef}
-          className="px-4 pb-4 pt-2 transition-colors duration-300 text-[#555555] text-[20px] md:text-[25px] font-[400]"
-          id="lato-font"
+          className="px-4 pb-4 pt-2 transition-colors duration-300 text-[#555555] text-[20px] md:text-[25px] font-[400] lato-font"
         >
           {children}
         </div>

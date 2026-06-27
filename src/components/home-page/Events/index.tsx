@@ -4,15 +4,12 @@ const Events = () => {
   return (
     <div id="events" className="py-[52px]">
       <div className="w-[90%] mx-auto max-w-[1280px]">
-        <h2
-          className="font-[400] text-[40px] lg:text-[48px] leading-[100%] tracking-[0] text-center mx-auto mb-[50px]"
-          id="faustina-font"
-        >
+        <h2 className="font-[400] text-[40px] lg:text-[48px] leading-[100%] tracking-[0] text-center mx-auto mb-[50px] faustina-font">
           Upcoming Events
         </h2>
 
         <div className="text-center mb-8">
-          <p className="text-[20px] lg:text-[25px] font-[500]" id="lato-font">
+          <p className="text-[20px] lg:text-[25px] font-[500] lato-font">
             Join us for upcoming volunteer opportunities, training sessions, and community events.
           </p>
         </div>
@@ -33,7 +30,7 @@ const Events = () => {
         </div>
 
         <div className="text-center mt-8">
-          <p className="text-[18px] font-[400] text-gray-600" id="lato-font">
+          <p className="text-[18px] font-[400] text-gray-600 lato-font">
             <a
               href="https://www.facebook.com/freeforcharity"
               target="_blank"
