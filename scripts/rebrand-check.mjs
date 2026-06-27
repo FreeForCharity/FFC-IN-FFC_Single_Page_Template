@@ -88,7 +88,10 @@ async function checkSiteConfig() {
     ['EIN (tax ID) still 46-2471893', '46-2471893'],
     ['Phone still (520) 222-8104', '5202228104'],
     ['Contact email still security@freeforcharity.org', 'security@freeforcharity.org'],
-    ['Twitter/X handle still @freeforcharity', 'freeforcharity'],
+    // Match the twitterHandle assignment specifically — a bare "freeforcharity"
+    // needle also hits the email and the Facebook/LinkedIn/GitHub social URLs,
+    // so it would mis-fire even after a fork updated the handle.
+    ['Twitter/X handle still @freeforcharity', "twitterHandle: '@freeforcharity'"],
     ['Mailing address still FFC (Wake Forrest Road)', 'Wake Forrest Road'],
   ]
   for (const [label, needle] of defaults) {
@@ -119,13 +122,25 @@ async function checkDeployment() {
   if (cname && cname.includes('ffcworkingsite1.org')) {
     flag('Deployment', 'public/CNAME still points at ffcworkingsite1.org', 'public/CNAME')
   }
+  // Check the Contact email and the Canonical/Policy URLs separately — a fork
+  // might update one and forget the other. Both copies of the file must stay in
+  // sync (the drift checker enforces that), so flagging the root copy is enough.
   const securityTxt = await readText('public/security.txt')
-  if (securityTxt && securityTxt.includes('freeforcharity')) {
-    flag(
-      'Deployment',
-      'public/security.txt Contact still references freeforcharity (keep in sync with .well-known/)',
-      'public/security.txt'
-    )
+  if (securityTxt) {
+    if (securityTxt.includes('security@freeforcharity.org')) {
+      flag(
+        'Deployment',
+        'public/security.txt Contact still security@freeforcharity.org (keep in sync with .well-known/)',
+        'public/security.txt'
+      )
+    }
+    if (securityTxt.includes('ffcworkingsite1.org')) {
+      flag(
+        'Deployment',
+        'public/security.txt Canonical/Policy URLs still point at ffcworkingsite1.org',
+        'public/security.txt'
+      )
+    }
   }
 }
 
