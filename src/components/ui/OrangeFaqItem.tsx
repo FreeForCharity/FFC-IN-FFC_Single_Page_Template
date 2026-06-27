@@ -26,10 +26,7 @@ const AccordionItem: React.FC<AccordionItemProps> = ({ title, children }) => {
   const toggle = () => setIsOpen(!isOpen)
 
   return (
-    <div
-      className="shadow-[0px_16px_16px_0px_#11253E0F] mb-5 p-2 border-[5px] border-[#F58629] rounded-[10px] overflow-hidden"
-      id="lato-font"
-    >
+    <div className="shadow-[0px_16px_16px_0px_#11253E0F] mb-5 p-2 border-[5px] border-[#F58629] rounded-[10px] overflow-hidden lato-font">
       {/* Header */}
       <button
         onClick={toggle}
@@ -62,8 +59,7 @@ const AccordionItem: React.FC<AccordionItemProps> = ({ title, children }) => {
       >
         <div
           ref={contentRef}
-          className="px-4 pb-4 pt-2 text-[22px] lg:text-[25px] font-[400]"
-          id="lato-font"
+          className="px-4 pb-4 pt-2 text-[22px] lg:text-[25px] font-[400] lato-font"
         >
           {children}
         </div>

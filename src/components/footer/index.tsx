@@ -49,8 +49,7 @@ const Footer: React.FC = () => {
               href="https://www.guidestar.org/profile/shared/bbbe173a-87b9-4af9-a8a2-cae255a95742"
               className="group relative my-4 flex w-full max-w-[230px] items-center justify-between
                 border-2 border-[#2ea3f2] bg-black px-5 py-2.5 text-[#2ea3f2]
-                transition-all duration-300 hover:border-transparent"
-              id="aria-font"
+                transition-all duration-300 hover:border-transparent aria-font"
             >
               <span className="text-[17px] font-medium leading-tight sm:text-[18px] md:text-[20px] transition-transform duration-300 group-hover:-translate-x-1">
                 Direct GuideStar Profile Link
@@ -72,7 +71,7 @@ const Footer: React.FC = () => {
         <div className="space-y-6 px-4 sm:px-0">
           <h3 className="text-[28px] text-white">Quick Links</h3>
 
-          <ul className="space-y-2 text-sm" id="lato-font">
+          <ul className="space-y-2 text-sm lato-font">
             {[
               { name: 'Home', href: '/#hero' },
               { name: 'Mission', href: '/#mission' },
@@ -101,7 +100,7 @@ const Footer: React.FC = () => {
 
           <div className="space-y-3">
             <h4 className="text-[28px] text-white">Free For Charity Policy</h4>
-            <ul className="space-y-1 text-sm" id="lato-font">
+            <ul className="space-y-1 text-sm lato-font">
               {[
                 {
                   name: 'Free For Charity Donation Policy',
@@ -156,8 +155,7 @@ const Footer: React.FC = () => {
                 <p className="font-[500] text-[22px]">E-mail</p>
                 <a
                   href={`mailto:${siteConfig.contactEmail}`}
-                  className="font-[500] text-[15px] hover:text-cyan-400 transition-colors break-all"
-                  id="aria-font"
+                  className="font-[500] text-[15px] hover:text-cyan-400 transition-colors break-all aria-font"
                 >
                   {siteConfig.contactEmail}
                 </a>
@@ -170,8 +168,7 @@ const Footer: React.FC = () => {
                 <p className="font-[500] text-[22px]">Call Us Today</p>
                 <a
                   href="tel:5202228104"
-                  className="font-[500] text-[16px] hover:text-cyan-400 transition-colors"
-                  id="aria-font"
+                  className="font-[500] text-[16px] hover:text-cyan-400 transition-colors aria-font"
                 >
                   (520) 222-8104
                 </a>
@@ -188,7 +185,7 @@ const Footer: React.FC = () => {
               <MapPin className="w-10 h-10 text-orange-500 flex-shrink-0 mt-0.5" />
               <div>
                 <p className="font-[500] text-[22px]">Main Address</p>
-                <p className="font-[500] text-[16px]" id="aria-font">
+                <p className="font-[500] text-[16px] aria-font">
                   4030 Wake Forrest Road
                   <br />
                   Suite 349 Raleigh North
@@ -208,7 +205,7 @@ const Footer: React.FC = () => {
               <MapPin className="w-10 h-10 text-orange-500 flex-shrink-0 mt-0.5" />
               <div>
                 <p className="font-[500] text-[22px]">PA Office Address</p>
-                <p className="font-[500] text-[16px]" id="aria-font">
+                <p className="font-[500] text-[16px] aria-font">
                   301 Science Park Road Suite
                   <br />
                   119 State College PA 16803
@@ -238,10 +235,7 @@ const Footer: React.FC = () => {
       </div>
 
       {/* Bottom Bar */}
-      <div
-        className="mt-12 py-6 px-4 border-t border-gray-800 text-center text-[18px] font-[500] w-full"
-        id="aria-font"
-      >
+      <div className="mt-12 py-6 px-4 border-t border-gray-800 text-center text-[18px] font-[500] w-full aria-font">
         <p>
           © {currentYear} All Rights Are Reserved by {siteConfig.name} a US 501c3 Non Profit | A
           project of{' '}

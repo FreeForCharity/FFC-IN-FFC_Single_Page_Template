@@ -7,10 +7,7 @@ const Home: React.FC = () => {
     <div className="pb-[30px]">
       <div className="w-[90%] mx-auto lg:px-[20px] max-w-[1280px]">
         <div>
-          <h2
-            className="font-[400] text-[40px] lg:text-[48px] leading-[100%] tracking-[0] text-center mx-auto mb-[30px]"
-            id="faustina-font"
-          >
+          <h2 className="font-[400] text-[40px] lg:text-[48px] leading-[100%] tracking-[0] text-center mx-auto mb-[30px] faustina-font">
             Free For Charity Endowment Features
           </h2>
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-[24px]">
