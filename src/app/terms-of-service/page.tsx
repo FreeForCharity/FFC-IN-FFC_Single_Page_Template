@@ -1,16 +1,19 @@
 import type { Metadata } from 'next'
 import BreadcrumbSchema from '@/components/seo/BreadcrumbSchema'
 
+const PAGE_NAME = 'Terms of Service'
+const CANONICAL_PATH = '/terms-of-service'
+
 export const metadata: Metadata = {
-  title: 'Terms of Service | Free For Charity',
+  title: `${PAGE_NAME} | Free For Charity`,
   description: 'Terms of Service for Free For Charity website',
-  alternates: { canonical: '/terms-of-service' },
+  alternates: { canonical: CANONICAL_PATH },
 }
 
 export default function TermsOfService() {
   return (
     <div className="pt-[130px] pb-[54px]">
-      <BreadcrumbSchema name="Terms of Service" path="/terms-of-service" />
+      <BreadcrumbSchema name={PAGE_NAME} path={CANONICAL_PATH} />
       <div className="py-[27px] w-[90%] md:w-[80%] mx-auto">
         <div className="aria-font">
           {/* Effective Date */}

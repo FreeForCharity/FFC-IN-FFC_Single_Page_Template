@@ -2,19 +2,19 @@ import React from 'react'
 import type { Metadata } from 'next'
 import BreadcrumbSchema from '@/components/seo/BreadcrumbSchema'
 
+const PAGE_NAME = 'Free For Charity Donation Policy'
+const CANONICAL_PATH = '/free-for-charity-donation-policy'
+
 export const metadata: Metadata = {
-  title: 'Free For Charity Donation Policy | Free For Charity',
+  title: `${PAGE_NAME} | Free For Charity`,
   description: 'Free For Charity Donation Policy - Learn about our donation policies',
-  alternates: { canonical: '/free-for-charity-donation-policy' },
+  alternates: { canonical: CANONICAL_PATH },
 }
 
 const index = () => {
   return (
     <div className="pt-[140px]">
-      <BreadcrumbSchema
-        name="Free For Charity Donation Policy"
-        path="/free-for-charity-donation-policy"
-      />
+      <BreadcrumbSchema name={PAGE_NAME} path={CANONICAL_PATH} />
       <div className="py-[21px] w-[90%] md:w-[80%] mx-auto max-w-[1080px]">
         <div className="aria-font">
           <h1 className="text-[30px] text-[#333] pb-[10px] leading-[30px] font-[500]">

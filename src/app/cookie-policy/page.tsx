@@ -1,10 +1,13 @@
 import type { Metadata } from 'next'
 import BreadcrumbSchema from '@/components/seo/BreadcrumbSchema'
 
+const PAGE_NAME = 'Cookie Policy'
+const CANONICAL_PATH = '/cookie-policy'
+
 export const metadata: Metadata = {
-  title: 'Cookie Policy | Free For Charity',
+  title: `${PAGE_NAME} | Free For Charity`,
   description: 'Cookie Policy for Free For Charity website',
-  alternates: { canonical: '/cookie-policy' },
+  alternates: { canonical: CANONICAL_PATH },
 }
 
 // Update this date when the policy changes
@@ -13,7 +16,7 @@ const LAST_UPDATED = 'December 7, 2025'
 export default function CookiePolicy() {
   return (
     <div className="pt-[140px] pb-[54px]">
-      <BreadcrumbSchema name="Cookie Policy" path="/cookie-policy" />
+      <BreadcrumbSchema name={PAGE_NAME} path={CANONICAL_PATH} />
       <div className="py-[27px] w-[90%] md:w-[80%] mx-auto">
         <div className="aria-font">
           <h1 className="text-[30px] text-[#333] pb-[10px] leading-[1em] font-[500]">
