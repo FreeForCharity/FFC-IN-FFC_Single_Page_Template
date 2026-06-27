@@ -6,7 +6,9 @@ const PAGE_NAME = 'Free For Charity Donation Policy'
 const CANONICAL_PATH = '/free-for-charity-donation-policy'
 
 export const metadata: Metadata = {
-  title: `${PAGE_NAME} | Free For Charity`,
+  // The root layout's title template appends " | Free For Charity", so the
+  // page title is just the page name (avoids a doubled brand suffix).
+  title: PAGE_NAME,
   description: 'Free For Charity Donation Policy - Learn about our donation policies',
   alternates: { canonical: CANONICAL_PATH },
 }
