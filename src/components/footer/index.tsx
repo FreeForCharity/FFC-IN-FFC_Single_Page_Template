@@ -33,7 +33,7 @@ const Footer: React.FC = () => {
       <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 py-12 px-4 md:px-6 lg:px-8">
         {/* Column 1: Endorsements */}
         <div className="space-y-6 px-4 sm:px-0">
-          <h3 className="text-[28px] text-white">Endorsements</h3>
+          <h2 className="text-[28px] text-white">Endorsements</h2>
 
           <div className="space-y-4">
             <a
@@ -69,7 +69,7 @@ const Footer: React.FC = () => {
 
         {/* Column 2: Quick Links */}
         <div className="space-y-6 px-4 sm:px-0">
-          <h3 className="text-[28px] text-white">Quick Links</h3>
+          <h2 className="text-[28px] text-white">Quick Links</h2>
 
           <ul className="space-y-2 text-sm lato-font">
             {[
@@ -99,7 +99,7 @@ const Footer: React.FC = () => {
           </ul>
 
           <div className="space-y-3">
-            <h4 className="text-[28px] text-white">Free For Charity Policy</h4>
+            <h3 className="text-[28px] text-white">Free For Charity Policy</h3>
             <ul className="space-y-1 text-sm lato-font">
               {[
                 {
@@ -146,7 +146,7 @@ const Footer: React.FC = () => {
 
         {/* Column 3: Contact Us */}
         <div className="space-y-6 px-4 sm:px-0">
-          <h3 className="text-[28px] text-white">Contact Us</h3>
+          <h2 className="text-[28px] text-white">Contact Us</h2>
 
           <div className="space-y-4 text-sm">
             <div className="flex items-start gap-3">

@@ -236,7 +236,7 @@ export default function TermsOfService() {
           </p>
           <p className="text-[14px] text-[#666] pb-[10px] leading-[24px] font-[500]">
             Email:{' '}
-            <a href="mailto:clarkemoyer@freeforcharity.org" className="text-[#007bff] underline">
+            <a href="mailto:clarkemoyer@freeforcharity.org" className="text-[#0062CC] underline">
               clarkemoyer@freeforcharity.org
             </a>
           </p>
