@@ -100,6 +100,40 @@ body {
   }
 }
 
+@keyframes slideInFromBottom {
+  0% {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Entrance for AnimatedNumber's count-up. The prefers-reduced-motion media
+   query below collapses this (and all animations) to a near-instant snap, and
+   the component additionally renders a static value under reduced motion. */
+.animate-slideInFromBottom {
+  animation: slideInFromBottom 0.5s ease-out forwards;
+}
+
+@keyframes menuExpand {
+  0% {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Dropdown entrance for the mobile menu (replaces framer-motion). */
+.animate-menuExpand {
+  animation: menuExpand 0.25s ease-out;
+}
+
 .animate-fadeTop {
   animation: fadeTop 1s cubic-bezier(0.77, 0, 0.175, 1) 1;
 }
@@ -173,9 +207,9 @@ body {
 
 /* WCAG 2.3.3 — respect the user's reduced-motion preference. Collapses
    CSS transitions and animations to near-instant. JS-driven animations
-   (e.g., framer-motion in AnimatedNumber, the setInterval auto-scroll in
-   VoicesofGratitude) read prefers-reduced-motion separately in their own
-   components and snap to the end state when it is set. */
+   (e.g., AnimatedNumber's count-up via the useReducedMotion hook, and the
+   setInterval auto-scroll in VoicesofGratitude) read prefers-reduced-motion
+   separately in their own components and snap to the end state when set. */
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,

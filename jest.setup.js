@@ -4,6 +4,36 @@ import '@testing-library/jest-dom'
 // Configure jest-axe for accessibility testing
 import 'jest-axe/extend-expect'
 
+// jsdom doesn't implement matchMedia. Default to prefers-reduced-motion: reduce
+// so motion components (AnimatedNumber) render their static path in unit tests,
+// matching the deterministic behavior we want under test. E2E covers the real
+// animation in a browser.
+if (typeof window !== 'undefined' && typeof window.matchMedia !== 'function') {
+  window.matchMedia = (query) => ({
+    matches: query.includes('prefers-reduced-motion'),
+    media: query,
+    onchange: null,
+    addEventListener: () => {},
+    removeEventListener: () => {},
+    addListener: () => {},
+    removeListener: () => {},
+    dispatchEvent: () => false,
+  })
+}
+
+// jsdom doesn't implement IntersectionObserver. Provide a no-op stub so hooks
+// that observe elements don't throw during unit tests.
+if (typeof global.IntersectionObserver === 'undefined') {
+  global.IntersectionObserver = class {
+    observe() {}
+    unobserve() {}
+    disconnect() {}
+    takeRecords() {
+      return []
+    }
+  }
+}
+
 // Suppress Next.js Link component act() warnings
 // These warnings occur because Next.js Link uses internal intersection observer
 // that triggers state updates after render. This is expected behavior and not a test issue.
