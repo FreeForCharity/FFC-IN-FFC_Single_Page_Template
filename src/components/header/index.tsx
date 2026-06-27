@@ -6,7 +6,6 @@ import Image from 'next/image'
 import { FiMenu } from 'react-icons/fi'
 import { LiaSearchSolid } from 'react-icons/lia'
 import { RxCross2 } from 'react-icons/rx'
-import { motion, AnimatePresence } from 'framer-motion'
 import { assetPath } from '@/lib/assetPath'
 import { siteConfig } from '@/lib/site.config'
 
@@ -117,7 +116,10 @@ const Header: React.FC = () => {
             {!isSearchOpen ? (
               <div className="flex items-center justify-end sm:pl-[50px] md:pl-[70px] w-full">
                 {/* Desktop Menu */}
-                <nav className="hidden lg:block transition-all duration-300">
+                <nav
+                  aria-label="Primary navigation"
+                  className="hidden lg:block transition-all duration-300"
+                >
                   <ul className="flex items-center space-x-[1px] font-navbar font-[600]">
                     {menuItems.map((item, index) => (
                       <li key={index} className="relative py-6">
@@ -153,6 +155,8 @@ const Header: React.FC = () => {
                   onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
                   className="lg:hidden p-2 text-gray-600 hover:text-blue-600"
                   aria-label={isMobileMenuOpen ? 'Close menu' : 'Open menu'}
+                  aria-expanded={isMobileMenuOpen}
+                  aria-controls="mobile-menu"
                 >
                   {isMobileMenuOpen ? (
                     <RxCross2 className="h-6 w-6" />
@@ -184,42 +188,38 @@ const Header: React.FC = () => {
         </div>
       </div>
 
-      {/* Mobile Menu */}
-      <AnimatePresence>
-        {isMobileMenuOpen && (
-          <motion.div
-            initial={{ height: 0, opacity: 0 }}
-            animate={{ height: 'auto', opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }}
-            transition={{ duration: 0.3, ease: 'easeInOut' }}
-            className={`lg:hidden absolute left-0 w-full overflow-hidden z-40 ${
-              isScrolled ? 'top-[53px]' : 'top-[77px]'
-            }`}
+      {/* Mobile Menu — mounted only when open (so its links aren't focusable
+          while collapsed) and animated in with a CSS entrance. */}
+      {isMobileMenuOpen && (
+        <div
+          id="mobile-menu"
+          className={`lg:hidden absolute left-0 w-full overflow-hidden z-40 animate-menuExpand ${
+            isScrolled ? 'top-[53px]' : 'top-[77px]'
+          }`}
+        >
+          <div
+            className={`max-w-[700px] mx-auto px-6 py-4 bg-white border-t-[3px] border-[#2EA3F2] shadow-[0_2px_5px_rgba(0,0,0,0.1)] max-h-[80vh] overflow-auto`}
           >
-            <div
-              className={`max-w-[700px] mx-auto px-6 py-4 bg-white border-t-[3px] border-[#2EA3F2] shadow-[0_2px_5px_rgba(0,0,0,0.1)] max-h-[80vh] overflow-auto`}
-            >
-              <ul className="space-y-2">
-                {menuItems.map((item, index) => (
-                  <li key={index}>
-                    <Link
-                      href={item.path}
-                      onClick={handleLinkClick}
-                      className={`block px-4 py-2 rounded-lg text-sm font-[600] ${
-                        isActive(item.path)
-                          ? 'bg-blue-50 text-blue-600'
-                          : 'text-gray-700 hover:bg-gray-100'
-                      }`}
-                    >
-                      {item.label}
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+            <ul className="space-y-2">
+              {menuItems.map((item, index) => (
+                <li key={index}>
+                  <Link
+                    href={item.path}
+                    onClick={handleLinkClick}
+                    className={`block px-4 py-2 rounded-lg text-sm font-[600] ${
+                      isActive(item.path)
+                        ? 'bg-blue-50 text-blue-600'
+                        : 'text-gray-700 hover:bg-gray-100'
+                    }`}
+                  >
+                    {item.label}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </div>
+      )}
     </header>
   )
 }

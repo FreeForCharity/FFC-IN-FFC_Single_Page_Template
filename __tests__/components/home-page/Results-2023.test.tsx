@@ -1,33 +1,9 @@
 import React from 'react'
 import { render, screen } from '@testing-library/react'
 
-// Results-2023 renders four ResultCards, each of which uses framer-motion's
-// IntersectionObserver-backed useInView via AnimatedNumber. Mock framer-motion
-// so the static render path is taken (same shape as the AnimatedNumber and
-// ResultCard suite mocks).
-jest.mock('framer-motion', () => {
-  return {
-    useReducedMotion: () => true,
-    useInView: () => true,
-    useMotionValue: (initial: number) => ({
-      set: jest.fn(),
-      get: () => initial,
-      on: () => () => undefined,
-    }),
-    useSpring: (mv: { on: (event: string, cb: (latest: number) => void) => () => void }) => mv,
-    motion: new Proxy(
-      {},
-      {
-        get: () => {
-          const Pass = ({ children, ...rest }: React.PropsWithChildren<Record<string, unknown>>) =>
-            React.createElement('span', rest, children)
-          return Pass
-        },
-      }
-    ),
-  }
-})
-
+// Results-2023 renders four ResultCards → AnimatedNumber, which now uses native
+// IntersectionObserver + matchMedia (stubbed in jest.setup.js to report
+// prefers-reduced-motion: reduce), so the static value path is taken here.
 import Results from '../../../src/components/home-page/Results-2023'
 
 describe('Results-2023', () => {

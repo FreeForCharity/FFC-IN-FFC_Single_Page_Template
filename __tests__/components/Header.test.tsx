@@ -11,19 +11,6 @@ jest.mock('next/navigation', () => ({
   usePathname: jest.fn(() => '/'),
 }))
 
-// Mock framer-motion to avoid animation issues in tests
-jest.mock('framer-motion', () => ({
-  motion: {
-    div: ({ children, ...props }: React.PropsWithChildren<Record<string, unknown>>) => (
-      <div {...props}>{children}</div>
-    ),
-    nav: ({ children, ...props }: React.PropsWithChildren<Record<string, unknown>>) => (
-      <nav {...props}>{children}</nav>
-    ),
-  },
-  AnimatePresence: ({ children }: React.PropsWithChildren) => <>{children}</>,
-}))
-
 describe('Header component', () => {
   it('should render the header', () => {
     render(<Header />)
