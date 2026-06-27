@@ -116,7 +116,10 @@ const Header: React.FC = () => {
             {!isSearchOpen ? (
               <div className="flex items-center justify-end sm:pl-[50px] md:pl-[70px] w-full">
                 {/* Desktop Menu */}
-                <nav className="hidden lg:block transition-all duration-300">
+                <nav
+                  aria-label="Primary navigation"
+                  className="hidden lg:block transition-all duration-300"
+                >
                   <ul className="flex items-center space-x-[1px] font-navbar font-[600]">
                     {menuItems.map((item, index) => (
                       <li key={index} className="relative py-6">
