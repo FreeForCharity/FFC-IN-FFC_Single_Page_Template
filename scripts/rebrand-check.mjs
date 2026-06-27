@@ -19,7 +19,7 @@
  * the CWD a developer invokes it from.
  */
 import { readdir, readFile } from 'node:fs/promises'
-import { dirname, join, relative } from 'node:path'
+import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 const SCRIPT_DIR = dirname(fileURLToPath(import.meta.url))
