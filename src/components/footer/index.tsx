@@ -106,11 +106,11 @@ const Footer: React.FC = () => {
           </ul>
 
           <div className="space-y-3">
-            <h3 className="text-[28px] text-white">Free For Charity Policy</h3>
+            <h3 className="text-[28px] text-white">{siteConfig.name} Policy</h3>
             <ul className="space-y-1 text-sm lato-font">
               {[
                 {
-                  name: 'Free For Charity Donation Policy',
+                  name: `${siteConfig.name} Donation Policy`,
                   href: '/free-for-charity-donation-policy',
                 },
                 {
@@ -118,23 +118,23 @@ const Footer: React.FC = () => {
                   href: '/donation-policy',
                 },
                 {
-                  name: 'Free For Charity Privacy Policy',
+                  name: `${siteConfig.name} Privacy Policy`,
                   href: '/privacy-policy',
                 },
                 {
-                  name: 'Free For Charity Cookie Policy',
+                  name: `${siteConfig.name} Cookie Policy`,
                   href: '/cookie-policy',
                 },
                 {
-                  name: 'Free For Charity Terms of Service',
+                  name: `${siteConfig.name} Terms of Service`,
                   href: '/terms-of-service',
                 },
                 {
-                  name: 'Free For Charity Vulnerability Disclosure Policy',
+                  name: `${siteConfig.name} Vulnerability Disclosure Policy`,
                   href: '/vulnerability-disclosure-policy',
                 },
                 {
-                  name: 'Free For Charity Security Acknowledgement',
+                  name: `${siteConfig.name} Security Acknowledgement`,
                   href: '/security-acknowledgements',
                 },
               ].map((link) => (
