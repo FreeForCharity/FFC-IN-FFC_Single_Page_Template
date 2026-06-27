@@ -21,6 +21,25 @@ describe('OrganizationSchema', () => {
     expect(schema.logo as string).toMatch(/^https:\/\//)
   })
 
+  it('includes the EIN, phone, and address from siteConfig', () => {
+    const schema = buildOrganizationSchema()
+
+    if (siteConfig.ein) {
+      expect(schema.taxID).toBe(siteConfig.ein)
+    }
+    if (siteConfig.phone?.tel) {
+      expect(schema.telephone).toBe(siteConfig.phone.tel)
+    }
+    // Mirror the production guard: schema.address is only set when the first
+    // address actually has lines.
+    if (siteConfig.addresses?.[0] && siteConfig.addresses[0].lines.length > 0) {
+      const address = schema.address as Record<string, unknown>
+      expect(address['@type']).toBe('PostalAddress')
+      expect(typeof address.streetAddress).toBe('string')
+      expect((address.streetAddress as string).length).toBeGreaterThan(0)
+    }
+  })
+
   it('includes social profiles as sameAs when configured', () => {
     const schema = buildOrganizationSchema()
     if (siteConfig.social.some((s) => s.href.trim().length > 0)) {

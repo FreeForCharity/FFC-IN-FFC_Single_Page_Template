@@ -12,6 +12,7 @@
  */
 
 import { analyticsConfig } from '../src/lib/analytics.config'
+import { siteConfig } from '../src/lib/site.config'
 
 export const testConfig = {
   /**
@@ -78,8 +79,10 @@ export const testConfig = {
   copyright: {
     text: 'All Rights Are Reserved by Free For Charity a US 501c3 Non Profit',
     searchText: 'All Rights Are Reserved',
-    linkUrl: 'https://freeforcharity.org',
-    linkText: 'https://freeforcharity.org',
+    // Sourced from siteConfig so the parent-org link expectations track the
+    // footer (which now shows the org name, not the raw URL, as link text).
+    linkUrl: siteConfig.parentOrg?.url ?? '',
+    linkText: siteConfig.parentOrg?.name ?? siteConfig.name,
   },
 
   /**
