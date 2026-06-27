@@ -49,13 +49,16 @@ You are helping a Free For Charity volunteer or charity admin stand up a new sit
     npm install
     npm run format
     npm run lint
-    npm run check:drift   # MUST be 0 errors; warnings should not increase
+    npm run check:drift     # MUST be 0 errors; warnings should not increase
+    npm run check:rebrand   # checklist of FFC defaults still present (guide only)
     npm test
     npm run build
     npm run test:e2e
     ```
 
-    Fix anything red before opening a PR.
+    Fix anything red before opening a PR. `check:rebrand` never fails the build —
+    treat its checklist as the "did I replace every FFC default?" confirmation
+    (charity name, EIN, phone, email, domain, GTM container, sample content).
 
 13. **Open a PR titled** `chore: initial customization for <Charity Name>` linking the onboarding issue. In the body include:
     - A checklist of every file edited
