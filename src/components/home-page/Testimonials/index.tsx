@@ -10,35 +10,11 @@ import { MdOutlineArrowBackIos, MdOutlineArrowForwardIos } from 'react-icons/md'
 import Image from 'next/image'
 import QuoteLeft from '../../../../public/Svgs/quote-left.svg'
 import QuoteRight from '../../../../public/Svgs/quote-right.svg'
+import { testimonials } from '@/data/testimonials'
 
-interface Testimonial {
-  heading: string
-  text: string
-  name?: string
-  location?: string
-}
-
-const testimonials: Testimonial[] = [
-  {
-    heading: 'American Legion Ahwatukee Post 64',
-    text: 'Knowing that I can reach out to the owner of another veteran to aid with our website’s charities’ needs completely across the country has been amazing for this disabled veteran.',
-    name: 'David Green, Public Affairs Officer',
-    location: 'American Legion Ahwatukee Post 64',
-  },
-  {
-    heading: 'TaShonda Payne',
-    text: '…I’m so glad the universe aligned me with you',
-    name: 'Melanin Magic Foundation',
-  },
-  {
-    heading: 'Pardhasaradhi Namburi',
-    text: 'Free For Charity was absolutely and outstanding — they really did a terrific job for us, they provided us the proper tech guidance and tools in order to help support the nonprofits that we support at Online Impacts.',
-  },
-  {
-    heading: 'Keith Ray',
-    text: 'An awesome charity that helps and supports other charities with technology support',
-  },
-]
+// Testimonials are sourced from src/data/testimonials/*.json (aggregated in
+// src/data/testimonials.ts). To change them, edit those JSON files — no need to
+// touch this component.
 
 const TestimonialSlider: React.FC = () => {
   const [swiperInstance, setSwiperInstance] = useState<SwiperInstance | null>(null)
@@ -109,13 +85,18 @@ const TestimonialSlider: React.FC = () => {
                     </p>
                   )}
 
-                  {t.location && (
-                    <a href="https://americanlegionpost64.org/">
+                  {t.location &&
+                    (t.locationUrl ? (
+                      <a href={t.locationUrl}>
+                        <p className="text-[14px] font-medium text-[#227AB5] aria-font">
+                          {t.location}
+                        </p>
+                      </a>
+                    ) : (
                       <p className="text-[14px] font-medium text-[#227AB5] aria-font">
                         {t.location}
                       </p>
-                    </a>
-                  )}
+                    ))}
 
                   {/* Right Quote */}
                   <div className="absolute right-[10px] md:right-[50px] bottom-0 opacity-20 w-6 md:w-9 h-6 md:h-9">
