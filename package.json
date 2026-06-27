@@ -19,6 +19,7 @@
     "test:e2e:headed": "playwright test --headed",
     "check:drift": "node scripts/check-drift.mjs",
     "check:rebrand": "node scripts/rebrand-check.mjs",
+    "check:bundle": "node scripts/check-bundle-size.mjs",
     "smoke": "node scripts/smoke-check.mjs",
     "audit:high": "npm audit --omit=dev --audit-level=high",
     "prepare": "husky"
