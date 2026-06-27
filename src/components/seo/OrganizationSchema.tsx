@@ -32,8 +32,10 @@ export function buildOrganizationSchema(): Record<string, unknown> {
     schema.taxID = siteConfig.ein
   }
 
-  if (siteConfig.phone?.display) {
-    schema.telephone = siteConfig.phone.display
+  if (siteConfig.phone?.tel) {
+    // Use the normalized tel value (digits) rather than the display form so
+    // search-engine parsers reliably recognize the number.
+    schema.telephone = siteConfig.phone.tel
   }
 
   const primaryAddress = siteConfig.addresses?.[0]

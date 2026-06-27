@@ -81,21 +81,25 @@ const Footer: React.FC = () => {
               { name: 'Volunteer', href: '/#volunteer' },
               { name: 'FAQ', href: '/#faq' },
               { name: 'Team', href: '/#team' },
-              {
-                name: 'Supported Charity Login',
-                href: siteConfig.parentOrg?.hubUrl ?? '',
-              },
-            ].map((link) => (
-              <li key={link.name}>
-                <Link
-                  href={link.href}
-                  target={link.href.startsWith('http') ? '_blank' : undefined}
-                  className="hover:text-[#F58C23] hover:tracking-widest transition-all text-[16px] font-[500]"
-                >
-                  {link.name}
-                </Link>
-              </li>
-            ))}
+              // Only shown when this site is a project of a parent org with a hub.
+              ...(siteConfig.parentOrg?.hubUrl
+                ? [{ name: 'Supported Charity Login', href: siteConfig.parentOrg.hubUrl }]
+                : []),
+            ].map((link) => {
+              const isExternal = link.href.startsWith('http')
+              return (
+                <li key={link.name}>
+                  <Link
+                    href={link.href}
+                    target={isExternal ? '_blank' : undefined}
+                    rel={isExternal ? 'noopener noreferrer' : undefined}
+                    className="hover:text-[#F58C23] hover:tracking-widest transition-all text-[16px] font-[500]"
+                  >
+                    {link.name}
+                  </Link>
+                </li>
+              )
+            })}
           </ul>
 
           <div className="space-y-3">
@@ -231,7 +235,7 @@ const Footer: React.FC = () => {
                 href={siteConfig.parentOrg.url}
                 className="underline text-[#2EA3F2] hover:text-[#2EA3F2] transition-colors"
               >
-                {siteConfig.parentOrg.url}
+                {siteConfig.parentOrg.name}
               </Link>
             </>
           )}

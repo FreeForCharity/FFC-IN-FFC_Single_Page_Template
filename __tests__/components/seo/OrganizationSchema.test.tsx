@@ -27,8 +27,8 @@ describe('OrganizationSchema', () => {
     if (siteConfig.ein) {
       expect(schema.taxID).toBe(siteConfig.ein)
     }
-    if (siteConfig.phone?.display) {
-      expect(schema.telephone).toBe(siteConfig.phone.display)
+    if (siteConfig.phone?.tel) {
+      expect(schema.telephone).toBe(siteConfig.phone.tel)
     }
     if (siteConfig.addresses?.[0]) {
       const address = schema.address as Record<string, unknown>
