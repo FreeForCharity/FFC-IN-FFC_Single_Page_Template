@@ -43,6 +43,20 @@ charity's name, URL, contact email, social links, etc.
 After editing, **run `npm run check:drift`** to confirm nothing else still
 references the old placeholder values.
 
+### Are you done rebranding? — `npm run check:rebrand`
+
+Run **`npm run check:rebrand`** at any point to get a checklist of every value
+that still matches the Free For Charity template defaults — charity name, EIN,
+phone, contact email, domain/CNAME, the GTM analytics container, and the sample
+team / testimonials / FAQ content. It is a guide, not a gate: it always exits 0
+on the template itself (the canonical repo intentionally keeps FFC's values), so
+it never blocks a PR. If your fork wants to _enforce_ "fully rebranded before
+deploy", wire `node scripts/rebrand-check.mjs --strict` (which exits non-zero
+while any default remains) into your own CI.
+
+> Note: leaving the GTM container as `GTM-TQ5H8HPR` sends your site's analytics
+> to Free For Charity — replace it in `src/lib/analytics.config.ts` early.
+
 ## Analytics & tracking IDs
 
 All analytics identifiers live in one file:
@@ -115,6 +129,7 @@ GitHub Pages, or vice versa.
 npm run format         # auto-fix formatting
 npm run lint           # ESLint
 npm run check:drift    # FFC best-practices
+npm run check:rebrand  # remaining template defaults (guide only, never fails)
 npm test               # Jest unit tests
 npm run build          # static export
 npm run test:e2e       # Playwright
