@@ -3,6 +3,7 @@ import type { Metadata } from 'next'
 export const metadata: Metadata = {
   title: 'Cookie Policy | Free For Charity',
   description: 'Cookie Policy for Free For Charity website',
+  alternates: { canonical: '/cookie-policy' },
 }
 
 // Update this date when the policy changes

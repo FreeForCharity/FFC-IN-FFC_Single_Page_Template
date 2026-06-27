@@ -5,6 +5,7 @@ import type { Metadata } from 'next'
 export const metadata: Metadata = {
   title: 'Security Acknowledgements | Free For Charity',
   description: 'Security Acknowledgements for Free For Charity website',
+  alternates: { canonical: '/security-acknowledgements' },
 }
 
 const index = () => {
