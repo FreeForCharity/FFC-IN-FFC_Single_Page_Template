@@ -79,7 +79,6 @@ We also provide many physical services like nonprofit websites and hosting that 
     question: 'Where do you get your domain name packages?',
     answer: `We are a registered reseller of eNom domain names. eNom has graciously provided us with a Platinum account to support other non profits providing the lowest cost domain names for a charity of our size. As we get more and more charities into the domain system we expect the costs to freeforchariy.org to drop even further.`,
   },
-  faq2,
   {
     question: 'Why do I not see hosting as an option?',
     answer: `We have a large backlog for new sites and support. We try to process at least 1 new charity into the full hosting system per week.
