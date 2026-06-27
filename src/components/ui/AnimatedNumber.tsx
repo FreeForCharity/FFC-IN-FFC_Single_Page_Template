@@ -39,12 +39,9 @@ const AnimatedNumber: React.FC<AnimatedNumberProps> = ({ value, className = '', 
   const [displayValue, setDisplayValue] = useState(0)
 
   useEffect(() => {
-    if (prefersReducedMotion) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      setDisplayValue(value)
-      return
-    }
-    if (!isInView) return
+    // Reduced-motion users get the static value rendered directly (below), so
+    // the count-up effect is a no-op for them.
+    if (prefersReducedMotion || !isInView) return
 
     let frame = 0
     let startTime: number | null = null
