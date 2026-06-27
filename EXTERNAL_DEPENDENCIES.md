@@ -121,7 +121,7 @@ These are services we directly integrate into our application code.
 - **Data Collected:** Minimal (widget display only)
 - **Privacy Policy:** https://www.guidestar.org/privacy
 
-**Getting your own profile links:** Claim or look up your nonprofit's profile at https://www.guidestar.org (now Candid). Copy the public profile URL into `siteConfig.guidestar.profileUrl` and the shared-seal URL into `siteConfig.guidestar.directProfileUrl` in `src/lib/site.config.ts` (the `widgets.guidestar.org` domain is already allow-listed in the CSP).
+**Getting your own profile links:** Claim or look up your nonprofit's profile at https://www.guidestar.org (now Candid). Copy the public profile URL into `siteConfig.guidestar.profileUrl` and the shared-seal URL into `siteConfig.guidestar.directProfileUrl` in `src/lib/site.config.ts`. These are ordinary outbound links (to `www.guidestar.org`), so no CSP change is needed. The CSP already allow-lists the `widgets.guidestar.org` origin separately — that only matters if you later embed an interactive GuideStar/Candid widget rather than the static seal.
 
 ### External Volunteer Platforms
 
