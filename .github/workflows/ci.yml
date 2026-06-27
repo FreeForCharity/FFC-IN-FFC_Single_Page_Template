@@ -56,6 +56,10 @@ jobs:
         # E2E tests need to run against a build without basePath since the test server
         # (serve -s out) doesn't understand basePath routing
 
+      - name: Check bundle size
+        # Reuses the build above — fails if shipped JS exceeds the gzipped budget.
+        run: npm run check:bundle
+
       - name: Run E2E tests
         run: npm run test:e2e
         env:
