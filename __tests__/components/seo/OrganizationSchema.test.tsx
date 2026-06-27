@@ -30,7 +30,9 @@ describe('OrganizationSchema', () => {
     if (siteConfig.phone?.tel) {
       expect(schema.telephone).toBe(siteConfig.phone.tel)
     }
-    if (siteConfig.addresses?.[0]) {
+    // Mirror the production guard: schema.address is only set when the first
+    // address actually has lines.
+    if (siteConfig.addresses?.[0] && siteConfig.addresses[0].lines.length > 0) {
       const address = schema.address as Record<string, unknown>
       expect(address['@type']).toBe('PostalAddress')
       expect(typeof address.streetAddress).toBe('string')

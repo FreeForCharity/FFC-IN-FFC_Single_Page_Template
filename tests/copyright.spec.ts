@@ -34,6 +34,10 @@ test.describe('Footer Copyright Notice', () => {
   })
 
   test('should display link to organization website in copyright notice', async ({ page }) => {
+    // The footer only renders the "A project of" parent-org link when a parent
+    // org is configured. Skip this assertion for standalone charities.
+    test.skip(!testConfig.copyright.linkUrl, 'No parent organization configured')
+
     // Navigate to the homepage
     await page.goto('/')
 
