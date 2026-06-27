@@ -337,9 +337,9 @@ Change the `interval` in `dependabot.yml`:
 
 ```yaml
 schedule:
-  interval: "daily"    # Check every day
-  interval: "weekly"   # Check every week (current)
-  interval: "monthly"  # Check every month
+  interval: 'daily' # Check every day
+  interval: 'weekly' # Check every week (current)
+  interval: 'monthly' # Check every month
 ```
 
 ### Change Update Day/Time
