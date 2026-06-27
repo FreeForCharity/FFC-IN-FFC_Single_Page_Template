@@ -18,8 +18,13 @@ export function useReducedMotion(): boolean {
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setPrefersReducedMotion(query.matches)
     const onChange = (event: MediaQueryListEvent) => setPrefersReducedMotion(event.matches)
-    query.addEventListener('change', onChange)
-    return () => query.removeEventListener('change', onChange)
+    // Safari < 14 only implements the deprecated addListener/removeListener.
+    if (typeof query.addEventListener === 'function') {
+      query.addEventListener('change', onChange)
+      return () => query.removeEventListener('change', onChange)
+    }
+    query.addListener(onChange)
+    return () => query.removeListener(onChange)
   }, [])
 
   return prefersReducedMotion

@@ -25,6 +25,10 @@ if (typeof window !== 'undefined' && typeof window.matchMedia !== 'function') {
 // that observe elements don't throw during unit tests.
 if (typeof global.IntersectionObserver === 'undefined') {
   global.IntersectionObserver = class {
+    constructor(callback, options) {
+      this.callback = callback
+      this.options = options
+    }
     observe() {}
     unobserve() {}
     disconnect() {}

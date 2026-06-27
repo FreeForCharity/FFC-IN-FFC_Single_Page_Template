@@ -7,7 +7,6 @@ type Options = {
   once?: boolean
   /** Margin around the root, e.g. '-100px' to trigger later. */
   rootMargin?: string
-  threshold?: number | number[]
 }
 
 /**
@@ -21,7 +20,7 @@ export function useIntersectionObserver(
   ref: RefObject<Element | null>,
   options: Options = {}
 ): boolean {
-  const { once = false, rootMargin, threshold } = options
+  const { once = false, rootMargin } = options
   const [isIntersecting, setIsIntersecting] = useState(false)
 
   useEffect(() => {
@@ -42,12 +41,12 @@ export function useIntersectionObserver(
           setIsIntersecting(false)
         }
       },
-      { rootMargin, threshold }
+      { rootMargin }
     )
 
     observer.observe(element)
     return () => observer.disconnect()
-  }, [ref, once, rootMargin, threshold])
+  }, [ref, once, rootMargin])
 
   return isIntersecting
 }
