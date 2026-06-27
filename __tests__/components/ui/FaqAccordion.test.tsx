@@ -21,7 +21,9 @@ describe.each([
     const panelId = button.getAttribute('aria-controls')
     expect(panelId).toBeTruthy()
 
-    const panel = container.querySelector(`#${panelId}`)
+    // Use an attribute selector rather than `#${panelId}`: useId() ids can
+    // contain ':' which a CSS id selector treats as a pseudo-class separator.
+    const panel = container.querySelector(`[id="${panelId}"]`)
     expect(panel).not.toBeNull()
     expect(panel).toHaveAttribute('aria-labelledby', button.id)
     expect(button.id).toBeTruthy()
