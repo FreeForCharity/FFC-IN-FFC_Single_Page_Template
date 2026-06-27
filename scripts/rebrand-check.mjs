@@ -122,25 +122,33 @@ async function checkDeployment() {
   if (cname && cname.includes('ffcworkingsite1.org')) {
     flag('Deployment', 'public/CNAME still points at ffcworkingsite1.org', 'public/CNAME')
   }
+  // The site ships TWO security.txt copies (root + .well-known/) that must stay
+  // in sync. Scan both so a fork that updated only one copy is still flagged.
   // Check the Contact email and the Canonical/Policy URLs separately — a fork
-  // might update one and forget the other. Both copies of the file must stay in
-  // sync (the drift checker enforces that), so flagging the root copy is enough.
-  const securityTxt = await readText('public/security.txt')
-  if (securityTxt) {
-    if (securityTxt.includes('security@freeforcharity.org')) {
-      flag(
-        'Deployment',
-        'public/security.txt Contact still security@freeforcharity.org (keep in sync with .well-known/)',
-        'public/security.txt'
-      )
-    }
-    if (securityTxt.includes('ffcworkingsite1.org')) {
-      flag(
-        'Deployment',
-        'public/security.txt Canonical/Policy URLs still point at ffcworkingsite1.org',
-        'public/security.txt'
-      )
-    }
+  // might update one and forget the other.
+  const securityFiles = ['public/security.txt', 'public/.well-known/security.txt']
+  const bodies = []
+  for (const rel of securityFiles) {
+    const body = await readText(rel)
+    if (body !== null) bodies.push([rel, body])
+  }
+  const filesWith = (needle) => bodies.filter(([, b]) => b.includes(needle)).map(([rel]) => rel)
+
+  const withEmail = filesWith('security@freeforcharity.org')
+  if (withEmail.length) {
+    flag(
+      'Deployment',
+      `security.txt Contact still security@freeforcharity.org`,
+      withEmail.join(', ')
+    )
+  }
+  const withUrl = filesWith('ffcworkingsite1.org')
+  if (withUrl.length) {
+    flag(
+      'Deployment',
+      'security.txt Canonical/Policy URLs still point at ffcworkingsite1.org',
+      withUrl.join(', ')
+    )
   }
 }
 
