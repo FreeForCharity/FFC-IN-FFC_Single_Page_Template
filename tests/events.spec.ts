@@ -39,11 +39,8 @@ test.describe('Events Section', () => {
     )
     await expect(eventsIframe).toBeVisible()
 
-    // Verify iframe has correct src
-    await expect(eventsIframe).toHaveAttribute(
-      'src',
-      'https://widgets.sociablekit.com/facebook-page-events/iframe/25631700'
-    )
+    // Verify iframe has correct src (sourced from siteConfig via test.config)
+    await expect(eventsIframe).toHaveAttribute('src', testConfig.events.widgetUrl)
 
     // Verify iframe has sandbox attribute for security
     const sandboxAttr = await eventsIframe.getAttribute('sandbox')

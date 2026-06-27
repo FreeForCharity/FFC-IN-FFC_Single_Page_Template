@@ -47,6 +47,9 @@ export const testConfig = {
     facebookLinkText: 'View all events on Facebook',
     facebookUrl: 'https://www.facebook.com/freeforcharity',
     descriptionText: 'volunteer opportunities',
+    // Sourced from siteConfig so the expected iframe src always matches what the
+    // Events component renders (single source of truth).
+    widgetUrl: siteConfig.integrations.sociableKitEventsWidgetUrl,
   },
 
   /**

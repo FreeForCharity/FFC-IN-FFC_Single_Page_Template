@@ -1,4 +1,5 @@
 import React from 'react'
+import { siteConfig } from '@/lib/site.config'
 
 const Events = () => {
   return (
@@ -17,7 +18,7 @@ const Events = () => {
         {/* SociableKit Facebook Events Widget */}
         <div className="flex justify-center">
           <iframe
-            src="https://widgets.sociablekit.com/facebook-page-events/iframe/25631700"
+            src={siteConfig.integrations.sociableKitEventsWidgetUrl}
             frameBorder={0}
             width="100%"
             height="1000"
