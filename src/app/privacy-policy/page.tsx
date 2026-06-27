@@ -3,6 +3,7 @@ import type { Metadata } from 'next'
 export const metadata: Metadata = {
   title: 'Privacy Policy | Free For Charity',
   description: 'Privacy Policy for Free For Charity website',
+  alternates: { canonical: '/privacy-policy' },
 }
 
 export default function PrivacyPolicy() {

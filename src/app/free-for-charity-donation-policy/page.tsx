@@ -4,6 +4,7 @@ import type { Metadata } from 'next'
 export const metadata: Metadata = {
   title: 'Free For Charity Donation Policy | Free For Charity',
   description: 'Free For Charity Donation Policy - Learn about our donation policies',
+  alternates: { canonical: '/free-for-charity-donation-policy' },
 }
 
 const index = () => {
