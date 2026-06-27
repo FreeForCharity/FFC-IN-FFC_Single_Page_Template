@@ -4,10 +4,11 @@
  *
  * After `npm run build`, this sums the JavaScript under
  * `out/_next/static/chunks/` and fails if the gzipped total exceeds a budget.
- * Gzip is what a browser actually downloads, so it's the meaningful number; the
- * budget carries generous headroom above the current size so normal feature
- * work doesn't trip it — only a real regression (e.g. accidentally re-adding a
- * heavy dependency) does.
+ * Gzip is a stable, deterministic proxy for transfer size — real browsers may
+ * receive Brotli (smaller) depending on the host, but gzip is a good guardrail
+ * and easy to reproduce. The budget carries generous headroom above the current
+ * size so normal feature work doesn't trip it — only a real regression (e.g.
+ * accidentally re-adding a heavy dependency) does.
  *
  * Run AFTER a build: `npm run build && npm run check:bundle`.
  * Exits non-zero when over budget.
@@ -32,8 +33,12 @@ async function walkJs(dir, results = []) {
   let entries
   try {
     entries = await readdir(dir, { withFileTypes: true })
-  } catch {
-    return results
+  } catch (err) {
+    // A missing chunks dir is expected pre-build and handled by the empty-list
+    // check below. Any other I/O error (permissions, transient FS) must fail
+    // loudly — swallowing it could undercount JS and pass the budget falsely.
+    if (err.code === 'ENOENT') return results
+    throw err
   }
   for (const entry of entries) {
     const full = join(dir, entry.name)
