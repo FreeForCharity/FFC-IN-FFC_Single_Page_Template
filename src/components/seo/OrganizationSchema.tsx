@@ -27,6 +27,23 @@ export function buildOrganizationSchema(): Record<string, unknown> {
     schema.email = siteConfig.contactEmail
   }
 
+  if (siteConfig.ein) {
+    // schema.org/Organization taxID — surfaces the EIN to search/knowledge panels.
+    schema.taxID = siteConfig.ein
+  }
+
+  if (siteConfig.phone?.display) {
+    schema.telephone = siteConfig.phone.display
+  }
+
+  const primaryAddress = siteConfig.addresses?.[0]
+  if (primaryAddress && primaryAddress.lines.length > 0) {
+    schema.address = {
+      '@type': 'PostalAddress',
+      streetAddress: primaryAddress.lines.join(', '),
+    }
+  }
+
   return schema
 }
 

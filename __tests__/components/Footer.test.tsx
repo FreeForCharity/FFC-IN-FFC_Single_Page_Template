@@ -2,6 +2,7 @@ import React from 'react'
 import { render, screen } from '@testing-library/react'
 import { axe, toHaveNoViolations } from 'jest-axe'
 import Footer from '../../src/components/footer'
+import { siteConfig } from '../../src/lib/site.config'
 
 // Extend Jest matchers
 expect.extend(toHaveNoViolations)
@@ -53,6 +54,29 @@ describe('Footer component', () => {
     const links = screen.getAllByRole('link')
     const emailLink = links.find((link) => link.getAttribute('href')?.includes('mailto:'))
     expect(emailLink).toBeDefined()
+  })
+
+  it('renders the EIN from siteConfig', () => {
+    render(<Footer />)
+    expect(screen.getByText(`${siteConfig.name} EIN: ${siteConfig.ein}`)).toBeInTheDocument()
+  })
+
+  it('renders the phone number from siteConfig as a tel link', () => {
+    render(<Footer />)
+    const telLink = screen
+      .getAllByRole('link')
+      .find((link) => link.getAttribute('href') === `tel:${siteConfig.phone.tel}`)
+    expect(telLink).toBeDefined()
+    expect(telLink).toHaveTextContent(siteConfig.phone.display)
+  })
+
+  it('renders every configured office address with a maps link', () => {
+    render(<Footer />)
+    const links = screen.getAllByRole('link')
+    for (const address of siteConfig.addresses) {
+      expect(screen.getByText(address.label)).toBeInTheDocument()
+      expect(links.some((link) => link.getAttribute('href') === address.mapUrl)).toBe(true)
+    }
   })
 
   it('should not have accessibility violations', async () => {

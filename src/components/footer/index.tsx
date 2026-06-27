@@ -35,7 +35,7 @@ const Footer: React.FC = () => {
 
           <div className="space-y-4">
             <a
-              href="https://www.guidestar.org/profile/46-2471893"
+              href={siteConfig.guidestar.profileUrl}
               aria-label={`View ${siteConfig.name} GuideStar Profile`}
             >
               <img
@@ -44,7 +44,7 @@ const Footer: React.FC = () => {
               />
             </a>
             <Link
-              href="https://www.guidestar.org/profile/shared/bbbe173a-87b9-4af9-a8a2-cae255a95742"
+              href={siteConfig.guidestar.directProfileUrl}
               className="group relative my-4 flex w-full max-w-[230px] items-center justify-between
                 border-2 border-[#2ea3f2] bg-black px-5 py-2.5 text-[#2ea3f2]
                 transition-all duration-300 hover:border-transparent aria-font"
@@ -60,7 +60,9 @@ const Footer: React.FC = () => {
             </Link>
 
             <p>
-              <span className="font-[500] text-[22px]">Free For Charity EIN: 46-2471893</span>
+              <span className="font-[500] text-[22px]">
+                {siteConfig.name} EIN: {siteConfig.ein}
+              </span>
             </p>
           </div>
         </div>
@@ -81,7 +83,7 @@ const Footer: React.FC = () => {
               { name: 'Team', href: '/#team' },
               {
                 name: 'Supported Charity Login',
-                href: 'https://freeforcharity.org/hub/',
+                href: siteConfig.parentOrg?.hubUrl ?? '',
               },
             ].map((link) => (
               <li key={link.name}>
@@ -165,51 +167,37 @@ const Footer: React.FC = () => {
               <div>
                 <p className="font-[500] text-[22px]">Call Us Today</p>
                 <a
-                  href="tel:5202228104"
+                  href={`tel:${siteConfig.phone.tel}`}
                   className="font-[500] text-[16px] hover:text-cyan-400 transition-colors aria-font"
                 >
-                  (520) 222-8104
+                  {siteConfig.phone.display}
                 </a>
               </div>
             </div>
 
-            <a
-              href="https://www.google.com/maps/search/?api=1&query=4030+Wake+Forrest+Road+Suite+349+Raleigh+NC+27609"
-              target="_blank"
-              rel="noopener noreferrer"
-              aria-label="Open main address in Google Maps"
-              className="flex items-start gap-3 hover:opacity-80 transition-opacity"
-            >
-              <FiMapPin className="w-10 h-10 text-orange-500 flex-shrink-0 mt-0.5" />
-              <div>
-                <p className="font-[500] text-[22px]">Main Address</p>
-                <p className="font-[500] text-[16px] aria-font">
-                  4030 Wake Forrest Road
-                  <br />
-                  Suite 349 Raleigh North
-                  <br />
-                  Carolina 27609
-                </p>
-              </div>
-            </a>
-
-            <a
-              href="https://www.google.com/maps/place/Free+For+Charity/@40.7768455,-77.8963305,17z/data=!3m1!4b1!4m6!3m5!1s0x89cea944b44a2e01:0x6fc2d6bf09e00a0f!8m2!3d40.7768415!4d-77.8937556!16s%2Fg%2F11vzvbl2d7?entry=ttu&g_ep=EgoyMDI1MTEyMy4xIKXMDSoASAFQAw%3D%3D"
-              target="_blank"
-              rel="noopener noreferrer"
-              aria-label="Open PA office address in Google Maps"
-              className="flex items-start gap-3 hover:opacity-80 transition-opacity"
-            >
-              <FiMapPin className="w-10 h-10 text-orange-500 flex-shrink-0 mt-0.5" />
-              <div>
-                <p className="font-[500] text-[22px]">PA Office Address</p>
-                <p className="font-[500] text-[16px] aria-font">
-                  301 Science Park Road Suite
-                  <br />
-                  119 State College PA 16803
-                </p>
-              </div>
-            </a>
+            {siteConfig.addresses.map((address) => (
+              <a
+                key={address.label}
+                href={address.mapUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label={`Open ${address.label} in Google Maps`}
+                className="flex items-start gap-3 hover:opacity-80 transition-opacity"
+              >
+                <FiMapPin className="w-10 h-10 text-orange-500 flex-shrink-0 mt-0.5" />
+                <div>
+                  <p className="font-[500] text-[22px]">{address.label}</p>
+                  <p className="font-[500] text-[16px] aria-font">
+                    {address.lines.map((line, i) => (
+                      <React.Fragment key={i}>
+                        {i > 0 && <br />}
+                        {line}
+                      </React.Fragment>
+                    ))}
+                  </p>
+                </div>
+              </a>
+            ))}
 
             <div className="flex gap-3 pt-4">
               {socialLinks.map(({ href, label }) => {
@@ -235,14 +223,18 @@ const Footer: React.FC = () => {
       {/* Bottom Bar */}
       <div className="mt-12 py-6 px-4 border-t border-gray-800 text-center text-[18px] font-[500] w-full aria-font">
         <p>
-          © {currentYear} All Rights Are Reserved by {siteConfig.name} a US 501c3 Non Profit | A
-          project of{' '}
-          <Link
-            href="https://freeforcharity.org"
-            className="underline text-[#2EA3F2] hover:text-[#2EA3F2] transition-colors"
-          >
-            https://freeforcharity.org
-          </Link>
+          © {currentYear} All Rights Are Reserved by {siteConfig.name} a US 501c3 Non Profit
+          {siteConfig.parentOrg && (
+            <>
+              {' | A project of '}
+              <Link
+                href={siteConfig.parentOrg.url}
+                className="underline text-[#2EA3F2] hover:text-[#2EA3F2] transition-colors"
+              >
+                {siteConfig.parentOrg.url}
+              </Link>
+            </>
+          )}
         </p>
       </div>
     </footer>
