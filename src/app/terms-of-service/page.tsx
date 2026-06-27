@@ -3,6 +3,7 @@ import type { Metadata } from 'next'
 export const metadata: Metadata = {
   title: 'Terms of Service | Free For Charity',
   description: 'Terms of Service for Free For Charity website',
+  alternates: { canonical: '/terms-of-service' },
 }
 
 export default function TermsOfService() {
