@@ -11,6 +11,8 @@
  * 3. Maintain a single source of truth for test expectations
  */
 
+import { analyticsConfig } from '../src/lib/analytics.config'
+
 export const testConfig = {
   /**
    * Mission Video Configuration
@@ -100,9 +102,12 @@ export const testConfig = {
   /**
    * Google Tag Manager Configuration
    * Used in: tests/google-tag-manager.spec.ts
+   *
+   * Sourced from the same src/lib/analytics.config.ts the component reads, so
+   * the expected ID always matches what the build embedded.
    */
   googleTagManager: {
-    id: 'GTM-TQ5H8HPR',
+    id: analyticsConfig.gtmId,
   },
 
   /**

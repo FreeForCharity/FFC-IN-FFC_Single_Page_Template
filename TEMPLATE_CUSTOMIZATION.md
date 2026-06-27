@@ -38,6 +38,26 @@ charity's name, URL, contact email, social links, etc.
 After editing, **run `npm run check:drift`** to confirm nothing else still
 references the old placeholder values.
 
+## Analytics & tracking IDs
+
+All analytics identifiers live in one file:
+[`src/lib/analytics.config.ts`](./src/lib/analytics.config.ts). They are **not**
+secrets — they are public, client-side IDs baked into the static export and
+visible in the page source — so they are kept in a plain, easy-to-edit config
+file rather than in environment variables or hardcoded inside components.
+
+| Field              | Provider              | Placeholder          |
+| ------------------ | --------------------- | -------------------- |
+| `gtmId`            | Google Tag Manager    | `GTM-TQ5H8HPR` (FFC) |
+| `gaMeasurementId`  | Google Analytics 4    | `G-XXXXXXXXXX`       |
+| `metaPixelId`      | Meta (Facebook) Pixel | `XXXXXXXXXXXXXXX`    |
+| `clarityProjectId` | Microsoft Clarity     | `XXXXXXXXXX`         |
+
+To use your own accounts, edit the values in `analytics.config.ts`. Leaving a
+value as its placeholder keeps that integration effectively inert. The GTM
+component and the cookie-consent component both read from this file, and the
+E2E tests assert against it, so there is a single source of truth.
+
 ## Files you'll likely touch when rebranding
 
 | File                                                            | What to change                                                                                                                                                                                                        |
