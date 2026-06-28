@@ -20,7 +20,7 @@ const Events = () => {
           <div className="relative w-full max-w-[1200px]">
             {/* CSS-only loading placeholder shown until the lazy iframe loads. */}
             <div
-              className="absolute inset-0 animate-pulse bg-gray-100 rounded-lg"
+              className="absolute inset-0 animate-pulse bg-gray-100 rounded-lg pointer-events-none motion-reduce:animate-none"
               aria-hidden="true"
             />
             <iframe

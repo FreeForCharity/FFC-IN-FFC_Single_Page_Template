@@ -66,7 +66,10 @@ const Index = () => {
             >
               {/* CSS-only loading placeholder; the transparent Zeffy iframe
                   paints over it once the form loads. Purely decorative. */}
-              <div className="absolute inset-0 animate-pulse bg-gray-100" aria-hidden="true" />
+              <div
+                className="absolute inset-0 animate-pulse bg-gray-100 pointer-events-none motion-reduce:animate-none"
+                aria-hidden="true"
+              />
               <iframe {...donationFormProps}></iframe>
             </div>
           </div>
