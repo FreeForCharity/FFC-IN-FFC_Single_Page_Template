@@ -24,6 +24,7 @@ const Index = () => {
     title: 'Donation form powered by Zeffy',
     style: donationFormStyle,
     src: siteConfig.integrations.zeffyDonationUrl,
+    loading: 'lazy',
     allowpaymentrequest: '',
     allowtransparency: 'true',
   }
@@ -63,6 +64,9 @@ const Index = () => {
               role="region"
               aria-label="Donation form"
             >
+              {/* CSS-only loading placeholder; the transparent Zeffy iframe
+                  paints over it once the form loads. Purely decorative. */}
+              <div className="absolute inset-0 animate-pulse bg-gray-100" aria-hidden="true" />
               <iframe {...donationFormProps}></iframe>
             </div>
           </div>
