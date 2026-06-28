@@ -17,7 +17,9 @@ describe('error page (GlobalError)', () => {
   it('renders branded error copy', () => {
     render(<GlobalError error={new Error('boom')} reset={() => {}} />)
     expect(screen.getByRole('heading', { name: /unexpected error/i })).toBeInTheDocument()
-    expect(screen.getByText(new RegExp(siteConfig.name))).toBeInTheDocument()
+    // Substring match (not a RegExp built from config) so a fork name with
+    // regex metacharacters can't break or throw.
+    expect(screen.getByText(siteConfig.name, { exact: false })).toBeInTheDocument()
   })
 
   it('calls reset when "Try again" is clicked', () => {

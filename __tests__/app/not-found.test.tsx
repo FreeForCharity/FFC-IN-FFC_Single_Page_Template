@@ -7,7 +7,9 @@ describe('not-found page', () => {
   it('renders branded 404 copy', () => {
     render(<NotFound />)
     expect(screen.getByRole('heading', { name: /can.?t find that page/i })).toBeInTheDocument()
-    expect(screen.getByText(new RegExp(siteConfig.name))).toBeInTheDocument()
+    // Substring match (not a RegExp built from config) so a fork name with
+    // regex metacharacters can't break or throw.
+    expect(screen.getByText(siteConfig.name, { exact: false })).toBeInTheDocument()
   })
 
   it('links to the homepage and the disclosure path', () => {

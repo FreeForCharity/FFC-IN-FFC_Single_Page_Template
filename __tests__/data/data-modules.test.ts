@@ -24,6 +24,7 @@ describe('data modules', () => {
 
   describe('team', () => {
     it('is a non-empty array', () => {
+      expect(Array.isArray(team)).toBe(true)
       expect(team.length).toBeGreaterThan(0)
     })
     it('every member has name, title, an /Images/ photo, and an http(s) LinkedIn URL', () => {
@@ -38,6 +39,7 @@ describe('data modules', () => {
 
   describe('faqs', () => {
     it('is a non-empty array', () => {
+      expect(Array.isArray(faqs)).toBe(true)
       expect(faqs.length).toBeGreaterThan(0)
     })
     it('every entry has a question and an answer', () => {
@@ -51,6 +53,7 @@ describe('data modules', () => {
   describe('results', () => {
     it('has a heading and a non-empty stats array', () => {
       expect(results.heading).toBeTruthy()
+      expect(Array.isArray(results.stats)).toBe(true)
       expect(results.stats.length).toBeGreaterThan(0)
     })
     it('every stat has a value and a label', () => {
