@@ -25,11 +25,8 @@ describe('iframe embeds', () => {
   })
 
   describe('Events widget', () => {
-    it('lazy-loads the events iframe', () => {
-      render(<Events />)
-      expect(screen.getByTitle('Facebook Events').getAttribute('loading')).toBe('lazy')
-    })
-
+    // The Events iframe's loading="lazy" / src / sandbox contract is covered by
+    // __tests__/components/Events.test.tsx; only the skeleton is asserted here.
     it('renders a decorative, reduced-motion-safe loading skeleton', () => {
       const { container } = render(<Events />)
       const skeleton = container.querySelector('[aria-hidden="true"].animate-pulse')
