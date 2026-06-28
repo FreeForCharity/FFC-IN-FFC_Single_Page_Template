@@ -53,6 +53,18 @@ describe('OrganizationSchema', () => {
     }
   })
 
+  it('links the parent organization when configured', () => {
+    const schema = buildOrganizationSchema()
+    if (siteConfig.parentOrg) {
+      const parent = schema.parentOrganization as Record<string, unknown>
+      expect(parent['@type']).toBe('NGO')
+      expect(parent.name).toBe(siteConfig.parentOrg.name)
+      expect(parent.url).toBe(siteConfig.parentOrg.url)
+    } else {
+      expect(schema.parentOrganization).toBeUndefined()
+    }
+  })
+
   it('renders a single application/ld+json script block whose JSON parses', () => {
     const { container } = render(<OrganizationSchema />)
     const scripts = container.querySelectorAll('script[type="application/ld+json"]')

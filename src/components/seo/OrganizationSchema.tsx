@@ -46,6 +46,16 @@ export function buildOrganizationSchema(): Record<string, unknown> {
     }
   }
 
+  if (siteConfig.parentOrg) {
+    // When this site is "a project of" an umbrella org, link the two so search
+    // engines can relate them in the knowledge graph.
+    schema.parentOrganization = {
+      '@type': 'NGO',
+      name: siteConfig.parentOrg.name,
+      url: siteConfig.parentOrg.url,
+    }
+  }
+
   return schema
 }
 
