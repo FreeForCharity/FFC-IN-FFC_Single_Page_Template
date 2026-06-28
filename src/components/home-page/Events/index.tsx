@@ -17,17 +17,23 @@ const Events = () => {
 
         {/* SociableKit Facebook Events Widget */}
         <div className="flex justify-center">
-          <iframe
-            src={siteConfig.integrations.sociableKitEventsWidgetUrl}
-            frameBorder={0}
-            width="100%"
-            height="1000"
-            style={{ maxWidth: '1200px' }}
-            title="Facebook Events"
-            loading="lazy"
-            className="rounded-lg"
-            sandbox="allow-scripts allow-same-origin"
-          ></iframe>
+          <div className="relative w-full max-w-[1200px]">
+            {/* CSS-only loading placeholder shown until the lazy iframe loads. */}
+            <div
+              className="absolute inset-0 animate-pulse bg-gray-100 rounded-lg pointer-events-none motion-reduce:animate-none"
+              aria-hidden="true"
+            />
+            <iframe
+              src={siteConfig.integrations.sociableKitEventsWidgetUrl}
+              frameBorder={0}
+              width="100%"
+              height="1000"
+              title="Facebook Events"
+              loading="lazy"
+              className="relative rounded-lg"
+              sandbox="allow-scripts allow-same-origin"
+            ></iframe>
+          </div>
         </div>
 
         <div className="text-center mt-8">
