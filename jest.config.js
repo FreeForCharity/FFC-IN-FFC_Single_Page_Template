@@ -21,15 +21,15 @@ const customJestConfig = {
     '!src/app/layout.tsx', // Exclude layout due to font imports causing issues
   ],
   // Coverage floors set a few points below the current measured coverage
-  // (branches ~47%, functions ~59%, lines/statements ~60%) so a real
+  // (branches ~51%, functions ~65%, lines/statements ~65%) so a real
   // regression fails CI, while leaving enough margin that a trivial diff
   // adding one uncovered branch doesn't. Raise these as coverage improves.
   coverageThreshold: {
     global: {
-      branches: 40,
-      functions: 50,
-      lines: 50,
-      statements: 50,
+      branches: 45,
+      functions: 58,
+      lines: 58,
+      statements: 58,
     },
   },
   moduleNameMapper: {
