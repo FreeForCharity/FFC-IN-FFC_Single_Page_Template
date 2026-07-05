@@ -21,6 +21,7 @@ export const testConfig = {
    */
   missionVideo: {
     ariaLabel: 'Free For Charity mission video',
+    playLabel: 'Play the Free For Charity mission video',
     title: "Learn about Free For Charity's mission to help nonprofits reduce costs",
   },
 

@@ -3,24 +3,38 @@ import { siteConfig, siteUrl } from '@/lib/site.config'
 import { assetPath } from '@/lib/assetPath'
 
 /**
- * Builds the schema.org NGO JSON-LD object for this site. Pulls every value
- * from `siteConfig` so a fork only edits one file. Exported separately so
- * it can be asserted in unit tests without rendering.
+ * Builds the schema.org NonprofitOrganization JSON-LD object for this site.
+ * Pulls every value from `siteConfig` so a fork only edits one file.
+ * Exported separately so it can be asserted in unit tests without rendering.
  */
 export function buildOrganizationSchema(): Record<string, unknown> {
   const sameAs = siteConfig.social.map((s) => s.href.trim()).filter((href) => href.length > 0)
 
   const schema: Record<string, unknown> = {
     '@context': 'https://schema.org',
-    '@type': 'NGO',
+    '@type': 'NonprofitOrganization',
     name: siteConfig.name,
     description: siteConfig.description,
     url: siteUrl('/'),
     logo: siteUrl(assetPath('/web-app-manifest-512x512.png')),
   }
 
+  if (siteConfig.alternateNames.length > 0) {
+    schema.alternateName = [...siteConfig.alternateNames]
+  }
+
   if (sameAs.length > 0) {
     schema.sameAs = sameAs
+  }
+
+  if (siteConfig.nonprofitStatus) {
+    // e.g. https://schema.org/Nonprofit501c3 — tells search engines the exact
+    // IRS classification instead of leaving it to be inferred.
+    schema.nonprofitStatus = siteConfig.nonprofitStatus
+  }
+
+  if (siteConfig.foundingDate) {
+    schema.foundingDate = siteConfig.foundingDate
   }
 
   if (siteConfig.contactEmail) {
@@ -50,7 +64,7 @@ export function buildOrganizationSchema(): Record<string, unknown> {
     // When this site is "a project of" an umbrella org, link the two so search
     // engines can relate them in the knowledge graph.
     schema.parentOrganization = {
-      '@type': 'NGO',
+      '@type': 'NonprofitOrganization',
       name: siteConfig.parentOrg.name,
       url: siteConfig.parentOrg.url,
     }
@@ -60,8 +74,8 @@ export function buildOrganizationSchema(): Record<string, unknown> {
 }
 
 /**
- * Emits a single <script type="application/ld+json"> block carrying an NGO
- * Organization schema for the site. Render once on the homepage so search
+ * Emits a single <script type="application/ld+json"> block carrying a
+ * NonprofitOrganization schema for the site. Render once on the homepage so search
  * engines, knowledge-panel matchers, and assistant integrations have a
  * canonical machine-readable identity for the org.
  *

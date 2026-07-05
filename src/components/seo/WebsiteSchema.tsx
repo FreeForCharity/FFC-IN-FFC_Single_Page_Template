@@ -20,7 +20,7 @@ export function buildWebsiteSchema(): Record<string, unknown> {
     url: siteUrl('/'),
     description: siteConfig.description,
     publisher: {
-      '@type': 'NGO',
+      '@type': 'NonprofitOrganization',
       name: siteConfig.name,
     },
   }

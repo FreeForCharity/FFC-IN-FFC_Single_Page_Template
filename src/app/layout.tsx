@@ -72,6 +72,16 @@ export default function RootLayout({
   return (
     <html lang="en">
       <head>
+        {/* Array/String/TypedArray .at() polyfill for pre-ES2022 browsers
+            (Chrome <92, Safari <15.4). Both the Next.js runtime and
+            third-party monitoring scripts call .at() and throw a TypeError
+            in those engines; this must run before any other script. */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html:
+              '(function(){function at(n){n=Math.trunc(n)||0;if(n<0)n+=this.length;return n<0||n>=this.length?undefined:this[n]}var protos=[Array.prototype,String.prototype];if(typeof Int8Array==="function"){var t=Object.getPrototypeOf(Int8Array.prototype);if(t)protos.push(t)}protos.forEach(function(p){if(!p.at)Object.defineProperty(p,"at",{writable:true,configurable:true,value:at})})})()',
+          }}
+        />
         {/* Baseline CSP for hosts that cannot serve _headers (GitHub Pages).
             Note: frame-ancestors, sandbox, and report-uri are IGNORED by the
             browser when delivered via <meta http-equiv> per the CSP spec.
@@ -83,7 +93,7 @@ export default function RootLayout({
             third-party origins must be added to BOTH. */}
         <meta
           httpEquiv="Content-Security-Policy"
-          content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.googletagmanager.com https://www.google-analytics.com https://*.google-analytics.com https://www.clarity.ms https://*.clarity.ms https://widgets.guidestar.org https://connect.facebook.net https://www.zeffy.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data: blob: https:; font-src 'self' data: https://fonts.gstatic.com; connect-src 'self' https://www.google-analytics.com https://*.google-analytics.com https://stats.g.doubleclick.net https://www.googletagmanager.com https://www.clarity.ms https://*.clarity.ms; frame-src https://www.googletagmanager.com https://www.zeffy.com https://widgets.guidestar.org https://www.facebook.com https://forms.office.com https://forms.microsoft.com https://www.youtube.com https://www.youtube-nocookie.com https://widgets.sociablekit.com; media-src 'self' blob: https:; object-src 'none'; base-uri 'self'; form-action 'self' https://www.zeffy.com https://forms.office.com; upgrade-insecure-requests"
+          content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.googletagmanager.com https://www.google-analytics.com https://*.google-analytics.com https://www.clarity.ms https://*.clarity.ms https://widgets.guidestar.org https://connect.facebook.net https://www.zeffy.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; font-src 'self' data:; connect-src 'self' https://www.google-analytics.com https://*.google-analytics.com https://stats.g.doubleclick.net https://www.googletagmanager.com https://www.clarity.ms https://*.clarity.ms; frame-src https://www.googletagmanager.com https://www.zeffy.com https://widgets.guidestar.org https://www.facebook.com https://forms.office.com https://forms.microsoft.com https://www.youtube.com https://www.youtube-nocookie.com https://widgets.sociablekit.com; media-src 'self' blob: https:; object-src 'none'; base-uri 'self'; form-action 'self' https://www.zeffy.com https://forms.office.com; upgrade-insecure-requests"
         />
         <meta name="referrer" content="strict-origin-when-cross-origin" />
         <meta name="color-scheme" content="light" />

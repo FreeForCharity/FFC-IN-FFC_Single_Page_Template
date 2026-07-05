@@ -6,11 +6,11 @@ import OrganizationSchema, {
 import { siteConfig } from '../../../src/lib/site.config'
 
 describe('OrganizationSchema', () => {
-  it('builds a schema.org NGO object with values from siteConfig', () => {
+  it('builds a schema.org NonprofitOrganization object with values from siteConfig', () => {
     const schema = buildOrganizationSchema()
 
     expect(schema['@context']).toBe('https://schema.org')
-    expect(schema['@type']).toBe('NGO')
+    expect(schema['@type']).toBe('NonprofitOrganization')
     expect(schema.name).toBe(siteConfig.name)
     expect(schema.description).toBe(siteConfig.description)
 
@@ -26,6 +26,22 @@ describe('OrganizationSchema', () => {
 
     if (siteConfig.ein) {
       expect(schema.taxID).toBe(siteConfig.ein)
+    }
+    // Mirror the production guards: these fields are only set when configured.
+    if (siteConfig.nonprofitStatus) {
+      expect(schema.nonprofitStatus).toBe(siteConfig.nonprofitStatus)
+    } else {
+      expect(schema.nonprofitStatus).toBeUndefined()
+    }
+    if (siteConfig.foundingDate) {
+      expect(schema.foundingDate).toBe(siteConfig.foundingDate)
+    } else {
+      expect(schema.foundingDate).toBeUndefined()
+    }
+    if (siteConfig.alternateNames.length > 0) {
+      expect(schema.alternateName).toEqual([...siteConfig.alternateNames])
+    } else {
+      expect(schema.alternateName).toBeUndefined()
     }
     if (siteConfig.phone?.tel) {
       expect(schema.telephone).toBe(siteConfig.phone.tel)
@@ -57,7 +73,7 @@ describe('OrganizationSchema', () => {
     const schema = buildOrganizationSchema()
     if (siteConfig.parentOrg) {
       const parent = schema.parentOrganization as Record<string, unknown>
-      expect(parent['@type']).toBe('NGO')
+      expect(parent['@type']).toBe('NonprofitOrganization')
       expect(parent.name).toBe(siteConfig.parentOrg.name)
       expect(parent.url).toBe(siteConfig.parentOrg.url)
     } else {
@@ -73,6 +89,6 @@ describe('OrganizationSchema', () => {
     expect(text.length).toBeGreaterThan(0)
     const parsed = JSON.parse(text) as Record<string, unknown>
     expect(parsed.name).toBe(siteConfig.name)
-    expect(parsed['@type']).toBe('NGO')
+    expect(parsed['@type']).toBe('NonprofitOrganization')
   })
 })

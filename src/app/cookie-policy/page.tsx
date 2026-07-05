@@ -1,16 +1,19 @@
 import type { Metadata } from 'next'
 import BreadcrumbSchema from '@/components/seo/BreadcrumbSchema'
+import { pageMetadata } from '@/lib/page-metadata'
 
 const PAGE_NAME = 'Cookie Policy'
 const CANONICAL_PATH = '/cookie-policy'
 
-export const metadata: Metadata = {
-  // The root layout's title template appends " | Free For Charity", so the
-  // page title is just the page name (avoids a doubled brand suffix).
+// The root layout's title template appends " | Free For Charity", so the
+// page title is just the page name (avoids a doubled brand suffix).
+// pageMetadata() also emits page-specific OpenGraph/Twitter fields so link
+// previews don't inherit the homepage title (Next merges metadata shallowly).
+export const metadata: Metadata = pageMetadata({
   title: PAGE_NAME,
   description: 'Cookie Policy for Free For Charity website',
-  alternates: { canonical: CANONICAL_PATH },
-}
+  canonical: CANONICAL_PATH,
+})
 
 // Update this date when the policy changes
 const LAST_UPDATED = 'December 7, 2025'
@@ -119,7 +122,7 @@ export default function CookiePolicy() {
 
           {/* Microsoft Forms */}
           <div className="bg-gray-50 p-4 rounded-lg mb-4">
-            <h4 className="font-semibold mb-2 text-[#333]">Microsoft Forms</h4>
+            <h3 className="font-semibold mb-2 text-[#333]">Microsoft Forms</h3>
             <p className="text-sm mb-2 text-[#666]">
               Used for our charity application form. Microsoft Forms may load additional third-party
               services (including HubSpot) for form analytics and feedback collection. These
@@ -156,7 +159,7 @@ export default function CookiePolicy() {
                 href="https://privacy.microsoft.com/"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-blue-600 hover:underline"
+                className="text-blue-600 underline"
               >
                 https://privacy.microsoft.com/
               </a>
@@ -167,7 +170,7 @@ export default function CookiePolicy() {
                 href="https://legal.hubspot.com/privacy-policy"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-blue-600 hover:underline"
+                className="text-blue-600 underline"
               >
                 https://legal.hubspot.com/privacy-policy
               </a>
@@ -176,7 +179,7 @@ export default function CookiePolicy() {
 
           {/* Zeffy */}
           <div className="bg-gray-50 p-4 rounded-lg mb-4">
-            <h4 className="font-semibold mb-2 text-[#333]">Zeffy Donation Platform</h4>
+            <h3 className="font-semibold mb-2 text-[#333]">Zeffy Donation Platform</h3>
             <p className="text-sm mb-2 text-[#666]">
               Zero-fee donation processing platform embedded on our website to accept donations.
             </p>
@@ -204,7 +207,7 @@ export default function CookiePolicy() {
                 href="https://support.zeffy.com/legal-data-privacy-security"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-blue-600 hover:underline"
+                className="text-blue-600 underline"
               >
                 https://support.zeffy.com/legal-data-privacy-security
               </a>
@@ -223,7 +226,7 @@ export default function CookiePolicy() {
 
           {/* Google Analytics */}
           <div className="bg-gray-50 p-4 rounded-lg mb-4">
-            <h4 className="font-semibold mb-2 text-[#333]">Google Analytics</h4>
+            <h3 className="font-semibold mb-2 text-[#333]">Google Analytics</h3>
             <p className="text-sm mb-2 text-[#666]">
               Google Analytics is a web analytics service offered by Google that tracks and reports
               website traffic. We use Google Analytics to understand how users interact with our
@@ -263,7 +266,7 @@ export default function CookiePolicy() {
                 href="https://policies.google.com/privacy"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-blue-600 hover:underline"
+                className="text-blue-600 underline"
               >
                 https://policies.google.com/privacy
               </a>
@@ -272,7 +275,7 @@ export default function CookiePolicy() {
 
           {/* Microsoft Clarity */}
           <div className="bg-gray-50 p-4 rounded-lg mb-4">
-            <h4 className="font-semibold mb-2 text-[#333]">Microsoft Clarity</h4>
+            <h3 className="font-semibold mb-2 text-[#333]">Microsoft Clarity</h3>
             <p className="text-sm mb-2 text-[#666]">
               Microsoft Clarity is a user behavior analytics tool that helps us understand how users
               interact with our website through session recordings and heatmaps.
@@ -306,7 +309,7 @@ export default function CookiePolicy() {
                 href="https://privacy.microsoft.com/en-us/privacystatement"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-blue-600 hover:underline"
+                className="text-blue-600 underline"
               >
                 https://privacy.microsoft.com/privacystatement
               </a>
@@ -325,7 +328,7 @@ export default function CookiePolicy() {
 
           {/* Meta Pixel */}
           <div className="bg-gray-50 p-4 rounded-lg mb-4">
-            <h4 className="font-semibold mb-2 text-[#333]">Meta Pixel (Facebook Pixel)</h4>
+            <h3 className="font-semibold mb-2 text-[#333]">Meta Pixel (Facebook Pixel)</h3>
             <p className="text-sm mb-2 text-[#666]">
               The Meta Pixel is an analytics tool that helps us measure the effectiveness of
               advertising by understanding the actions people take on our website.
@@ -359,7 +362,7 @@ export default function CookiePolicy() {
                 href="https://www.facebook.com/privacy/policy/"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-blue-600 hover:underline"
+                className="text-blue-600 underline"
               >
                 https://www.facebook.com/privacy/policy/
               </a>
@@ -439,7 +442,7 @@ export default function CookiePolicy() {
                 href="https://tools.google.com/dlpage/gaoptout"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-blue-600 hover:underline"
+                className="text-blue-600 underline"
               >
                 Google Analytics Opt-out Browser Add-on
               </a>
@@ -450,7 +453,7 @@ export default function CookiePolicy() {
                 href="https://www.facebook.com/settings/?tab=ads"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-blue-600 hover:underline"
+                className="text-blue-600 underline"
               >
                 Facebook Ad Settings
               </a>
@@ -500,7 +503,7 @@ export default function CookiePolicy() {
           <ul className="list-inside list-disc space-y-[4px] pb-[1em]">
             <li className="text-[14px] text-[#666] leading-[24px] font-[500]">
               <strong>Email:</strong>{' '}
-              <a href="mailto:privacy@freeforcharity.org" className="text-blue-600 hover:underline">
+              <a href="mailto:privacy@freeforcharity.org" className="text-blue-600 underline">
                 privacy@freeforcharity.org
               </a>
             </li>
@@ -509,7 +512,7 @@ export default function CookiePolicy() {
             </li>
             <li className="text-[14px] text-[#666] leading-[24px] font-[500]">
               <strong>Phone:</strong>{' '}
-              <a href="tel:520-222-8104" className="text-blue-600 hover:underline">
+              <a href="tel:520-222-8104" className="text-blue-600 underline">
                 520-222-8104
               </a>
             </li>
@@ -525,7 +528,7 @@ export default function CookiePolicy() {
           </ol>
           <p className="text-[14px] text-[#666] pb-[10px] leading-[24px] font-[500]">
             For more information about how we handle your personal data, please see our{' '}
-            <a href="/privacy-policy" className="text-blue-600 hover:underline">
+            <a href="/privacy-policy" className="text-blue-600 underline">
               Privacy Policy
             </a>
             .
