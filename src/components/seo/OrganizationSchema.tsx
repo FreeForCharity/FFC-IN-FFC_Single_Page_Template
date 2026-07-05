@@ -19,7 +19,7 @@ export function buildOrganizationSchema(): Record<string, unknown> {
     logo: siteUrl(assetPath('/web-app-manifest-512x512.png')),
   }
 
-  if (siteConfig.alternateNames.length > 0) {
+  if (siteConfig.alternateNames && siteConfig.alternateNames.length > 0) {
     schema.alternateName = [...siteConfig.alternateNames]
   }
 

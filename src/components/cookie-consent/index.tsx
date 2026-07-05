@@ -506,10 +506,10 @@ export default function CookieConsent() {
               decline non-essential cookies.
             </p>
             <div className="flex items-center gap-4 text-xs text-gray-500">
-              <Link href="/privacy-policy" className="text-blue-600 hover:underline">
+              <Link href="/privacy-policy" className="text-blue-600 underline">
                 Privacy Policy
               </Link>
-              <Link href="/cookie-policy" className="text-blue-600 hover:underline">
+              <Link href="/cookie-policy" className="text-blue-600 underline">
                 Cookie Policy
               </Link>
             </div>

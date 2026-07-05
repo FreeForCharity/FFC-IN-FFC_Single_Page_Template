@@ -38,7 +38,7 @@ describe('OrganizationSchema', () => {
     } else {
       expect(schema.foundingDate).toBeUndefined()
     }
-    if (siteConfig.alternateNames.length > 0) {
+    if (siteConfig.alternateNames && siteConfig.alternateNames.length > 0) {
       expect(schema.alternateName).toEqual([...siteConfig.alternateNames])
     } else {
       expect(schema.alternateName).toBeUndefined()

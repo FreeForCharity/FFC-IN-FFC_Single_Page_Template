@@ -69,19 +69,19 @@ export type SiteConfig = {
   ein: string
   /**
    * Year (or ISO date) the organization was founded, e.g. '2014'.
-   * Emitted as schema.org `foundingDate`. Empty string omits it.
+   * Emitted as schema.org `foundingDate`. Omit to skip it.
    */
-  foundingDate: string
+  foundingDate?: string
   /**
    * schema.org nonprofit status URL, e.g. 'https://schema.org/Nonprofit501c3'.
-   * FFC-supported sites are 501(c)(3) organizations; empty string omits it.
+   * FFC-supported sites are 501(c)(3) organizations; omit to skip it.
    */
-  nonprofitStatus: string
+  nonprofitStatus?: string
   /**
    * Other names the organization is known by (brands, abbreviations).
-   * Emitted as schema.org `alternateName`. Empty array omits it.
+   * Emitted as schema.org `alternateName`. Omit to skip it.
    */
-  alternateNames: readonly string[]
+  alternateNames?: readonly string[]
   /**
    * Primary phone number. `display` is the human-readable form shown to users;
    * `tel` is the value used in the `tel:` link (digits, optionally E.164).
@@ -143,7 +143,6 @@ export const siteConfig: SiteConfig = {
   ein: '46-2471893',
   foundingDate: '2014',
   nonprofitStatus: 'https://schema.org/Nonprofit501c3',
-  alternateNames: [],
   phone: { display: '(520) 222-8104', tel: '5202228104' },
   addresses: [
     {

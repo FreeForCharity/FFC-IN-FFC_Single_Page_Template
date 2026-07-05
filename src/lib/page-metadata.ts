@@ -9,7 +9,11 @@ import { assetPath } from '@/lib/assetPath'
 // shared links preview correctly. The root layout keeps the site-wide
 // defaults for the homepage itself.
 
-const OG_IMAGE = {
+/**
+ * The site's social-card image, shared by the root layout and every
+ * pageMetadata() call so the OG image is defined exactly once.
+ */
+export const OG_IMAGE = {
   url: assetPath('/Images/og-image.png'),
   width: 1200,
   height: 630,
@@ -21,14 +25,12 @@ export function pageMetadata(input: {
   description: string
   /** Same-origin absolute path, e.g. '/privacy-policy'. */
   canonical: string
-  noindex?: boolean
 }): Metadata {
-  const { title, description, canonical, noindex } = input
+  const { title, description, canonical } = input
   return {
     title,
     description,
     alternates: { canonical },
-    ...(noindex ? { robots: { index: false, follow: false } } : {}),
     openGraph: {
       type: 'website',
       siteName: siteConfig.name,

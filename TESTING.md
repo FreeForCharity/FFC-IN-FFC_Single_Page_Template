@@ -411,11 +411,11 @@ Tests run automatically in GitHub Actions with the following workflows:
   6. Post results comment on PR (if applicable)
 - Runs independently after deployment
 - Provides performance metrics without blocking deployment
-- Warning thresholds (not hard failures):
-  - Performance: ≥60%
-  - Accessibility: ≥80%
-  - Best Practices: ≥80%
-  - SEO: ≥90%
+- Thresholds (from `lighthouserc.json`, the single source of truth):
+  - Performance: ≥90% (warn — does not fail CI)
+  - Accessibility: ≥98% (**error** — fails the workflow)
+  - Best Practices: ≥96% (warn — does not fail CI)
+  - SEO: ≥98% (**error** — fails the workflow)
 
 ### Result Reporting
 

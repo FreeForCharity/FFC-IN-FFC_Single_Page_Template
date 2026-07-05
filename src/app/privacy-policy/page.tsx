@@ -5,10 +5,8 @@ import { pageMetadata } from '@/lib/page-metadata'
 const PAGE_NAME = 'Privacy Policy'
 const CANONICAL_PATH = '/privacy-policy'
 
-// The root layout's title template appends " | Free For Charity", so the
-// page title is just the page name (avoids a doubled brand suffix).
-// pageMetadata() also emits page-specific OpenGraph/Twitter fields so link
-// previews don't inherit the homepage title (Next merges metadata shallowly).
+// Bare page name as title (the root layout template appends the brand);
+// per-page OG/Twitter handling is documented in src/lib/page-metadata.ts.
 export const metadata: Metadata = pageMetadata({
   title: PAGE_NAME,
   description: 'Privacy Policy for Free For Charity website',

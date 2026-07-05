@@ -7,6 +7,8 @@ import GoogleTagManager, { GoogleTagManagerNoScript } from './../components/goog
 import { siteConfig, siteUrl, twitterSite, cardDescription } from '@/lib/site.config'
 import { assetPath } from '@/lib/assetPath'
 import { openSans, lato, faustina } from '@/lib/fonts'
+import { AT_POLYFILL_JS } from '@/lib/at-polyfill'
+import { OG_IMAGE } from '@/lib/page-metadata'
 
 const defaultTitle = `${siteConfig.name} | ${siteConfig.tagline}`
 
@@ -38,21 +40,14 @@ export const metadata: Metadata = {
     siteName: siteConfig.name,
     title: defaultTitle,
     description: cardDescription(),
-    images: [
-      {
-        url: assetPath('/Images/og-image.png'),
-        width: 1200,
-        height: 630,
-        alt: siteConfig.name,
-      },
-    ],
+    images: [OG_IMAGE],
   },
   twitter: {
     card: 'summary_large_image',
     site: twitterSite(),
     title: defaultTitle,
     description: cardDescription(),
-    images: [assetPath('/Images/og-image.png')],
+    images: [OG_IMAGE.url],
   },
   icons: {
     icon: [
@@ -72,16 +67,10 @@ export default function RootLayout({
   return (
     <html lang="en">
       <head>
-        {/* Array/String/TypedArray .at() polyfill for pre-ES2022 browsers
-            (Chrome <92, Safari <15.4). Both the Next.js runtime and
-            third-party monitoring scripts call .at() and throw a TypeError
-            in those engines; this must run before any other script. */}
-        <script
-          dangerouslySetInnerHTML={{
-            __html:
-              '(function(){function at(n){n=Math.trunc(n)||0;if(n<0)n+=this.length;return n<0||n>=this.length?undefined:this[n]}var protos=[Array.prototype,String.prototype];if(typeof Int8Array==="function"){var t=Object.getPrototypeOf(Int8Array.prototype);if(t)protos.push(t)}protos.forEach(function(p){if(!p.at)Object.defineProperty(p,"at",{writable:true,configurable:true,value:at})})})()',
-          }}
-        />
+        {/* .at() polyfill for pre-ES2022 browsers — must run before any other
+            script. Source + rationale live in src/lib/at-polyfill.ts, and
+            __tests__/lib/at-polyfill.test.ts asserts its semantics. */}
+        <script dangerouslySetInnerHTML={{ __html: AT_POLYFILL_JS }} />
         {/* Baseline CSP for hosts that cannot serve _headers (GitHub Pages).
             Note: frame-ancestors, sandbox, and report-uri are IGNORED by the
             browser when delivered via <meta http-equiv> per the CSP spec.
