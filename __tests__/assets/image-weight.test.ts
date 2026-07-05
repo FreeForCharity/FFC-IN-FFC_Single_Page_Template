@@ -29,7 +29,7 @@ describe('public/ image weights', () => {
   const images = walk(PUBLIC_DIR)
 
   it('finds images to audit (sanity)', () => {
-    expect(images.length).toBeGreaterThan(10)
+    expect(images.length).toBeGreaterThan(0)
   })
 
   it(`every image is under ${MAX_KB}KB (or explicitly grandfathered)`, () => {

@@ -255,10 +255,10 @@ jobs:
             comment += '- 🟡 **Needs Improvement** (50-89%): Some issues to address\n';
             comment += '- 🔴 **Poor** (0-49%): Significant problems\n\n';
             comment += '**Thresholds:**\n';
-            comment += '- Performance: ≥55% (warn)\n';
-            comment += '- Accessibility: ≥90% (warn)\n';
-            comment += '- Best Practices: ≥65% (warn)\n';
-            comment += '- SEO: ≥95% (warn)\n\n';
+            comment += '- Performance: ≥90% (warn)\n';
+            comment += '- Accessibility: ≥98% (error)\n';
+            comment += '- Best Practices: ≥96% (warn)\n';
+            comment += '- SEO: ≥98% (error)\n\n';
             comment += '📥 Download the detailed HTML reports from the [workflow artifacts](';
             comment += `${context.payload.repository.html_url}/actions/runs/${context.runId}) for in-depth analysis.\n\n`;
             comment += '📖 Learn more about [Lighthouse scoring](https://developer.chrome.com/docs/lighthouse/performance/performance-scoring/)';
