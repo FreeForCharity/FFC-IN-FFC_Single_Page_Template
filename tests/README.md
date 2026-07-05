@@ -41,7 +41,7 @@ export const testConfig = {
   // Update each section with your content
   missionVideo: {
     ariaLabel: 'Your organization mission video',
-    playLabel: 'Play the your-organization mission video',
+    playLabel: 'Play your organization mission video',
     title: 'Your mission video title',
   },
 
