@@ -7,6 +7,8 @@ import GoogleTagManager, { GoogleTagManagerNoScript } from './../components/goog
 import { siteConfig, siteUrl, twitterSite, cardDescription } from '@/lib/site.config'
 import { assetPath } from '@/lib/assetPath'
 import { openSans, lato, faustina } from '@/lib/fonts'
+import { AT_POLYFILL_JS } from '@/lib/at-polyfill'
+import { OG_IMAGE } from '@/lib/page-metadata'
 
 const defaultTitle = `${siteConfig.name} | ${siteConfig.tagline}`
 
@@ -38,21 +40,14 @@ export const metadata: Metadata = {
     siteName: siteConfig.name,
     title: defaultTitle,
     description: cardDescription(),
-    images: [
-      {
-        url: assetPath('/Images/og-image.png'),
-        width: 1200,
-        height: 630,
-        alt: siteConfig.name,
-      },
-    ],
+    images: [OG_IMAGE],
   },
   twitter: {
     card: 'summary_large_image',
     site: twitterSite(),
     title: defaultTitle,
     description: cardDescription(),
-    images: [assetPath('/Images/og-image.png')],
+    images: [OG_IMAGE.url],
   },
   icons: {
     icon: [
@@ -72,6 +67,10 @@ export default function RootLayout({
   return (
     <html lang="en">
       <head>
+        {/* .at() polyfill for pre-ES2022 browsers — must run before any other
+            script. Source + rationale live in src/lib/at-polyfill.ts, and
+            __tests__/lib/at-polyfill.test.ts asserts its semantics. */}
+        <script dangerouslySetInnerHTML={{ __html: AT_POLYFILL_JS }} />
         {/* Baseline CSP for hosts that cannot serve _headers (GitHub Pages).
             Note: frame-ancestors, sandbox, and report-uri are IGNORED by the
             browser when delivered via <meta http-equiv> per the CSP spec.
@@ -83,7 +82,7 @@ export default function RootLayout({
             third-party origins must be added to BOTH. */}
         <meta
           httpEquiv="Content-Security-Policy"
-          content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.googletagmanager.com https://www.google-analytics.com https://*.google-analytics.com https://www.clarity.ms https://*.clarity.ms https://widgets.guidestar.org https://connect.facebook.net https://www.zeffy.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data: blob: https:; font-src 'self' data: https://fonts.gstatic.com; connect-src 'self' https://www.google-analytics.com https://*.google-analytics.com https://stats.g.doubleclick.net https://www.googletagmanager.com https://www.clarity.ms https://*.clarity.ms; frame-src https://www.googletagmanager.com https://www.zeffy.com https://widgets.guidestar.org https://www.facebook.com https://forms.office.com https://forms.microsoft.com https://www.youtube.com https://www.youtube-nocookie.com https://widgets.sociablekit.com; media-src 'self' blob: https:; object-src 'none'; base-uri 'self'; form-action 'self' https://www.zeffy.com https://forms.office.com; upgrade-insecure-requests"
+          content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.googletagmanager.com https://www.google-analytics.com https://*.google-analytics.com https://www.clarity.ms https://*.clarity.ms https://widgets.guidestar.org https://connect.facebook.net https://www.zeffy.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; font-src 'self' data:; connect-src 'self' https://www.google-analytics.com https://*.google-analytics.com https://stats.g.doubleclick.net https://www.googletagmanager.com https://www.clarity.ms https://*.clarity.ms; frame-src https://www.googletagmanager.com https://www.zeffy.com https://widgets.guidestar.org https://www.facebook.com https://forms.office.com https://forms.microsoft.com https://www.youtube.com https://www.youtube-nocookie.com https://widgets.sociablekit.com; media-src 'self' blob: https:; object-src 'none'; base-uri 'self'; form-action 'self' https://www.zeffy.com https://forms.office.com; upgrade-insecure-requests"
         />
         <meta name="referrer" content="strict-origin-when-cross-origin" />
         <meta name="color-scheme" content="light" />

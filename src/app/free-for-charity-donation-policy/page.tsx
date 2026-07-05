@@ -1,17 +1,18 @@
 import React from 'react'
 import type { Metadata } from 'next'
 import BreadcrumbSchema from '@/components/seo/BreadcrumbSchema'
+import { pageMetadata } from '@/lib/page-metadata'
 
 const PAGE_NAME = 'Free For Charity Donation Policy'
 const CANONICAL_PATH = '/free-for-charity-donation-policy'
 
-export const metadata: Metadata = {
-  // The root layout's title template appends " | Free For Charity", so the
-  // page title is just the page name (avoids a doubled brand suffix).
+// Bare page name as title (the root layout template appends the brand);
+// per-page OG/Twitter handling is documented in src/lib/page-metadata.ts.
+export const metadata: Metadata = pageMetadata({
   title: PAGE_NAME,
   description: 'Free For Charity Donation Policy - Learn about our donation policies',
-  alternates: { canonical: CANONICAL_PATH },
-}
+  canonical: CANONICAL_PATH,
+})
 
 const index = () => {
   return (

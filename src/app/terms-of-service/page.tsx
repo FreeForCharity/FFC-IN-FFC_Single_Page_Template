@@ -1,16 +1,17 @@
 import type { Metadata } from 'next'
 import BreadcrumbSchema from '@/components/seo/BreadcrumbSchema'
+import { pageMetadata } from '@/lib/page-metadata'
 
 const PAGE_NAME = 'Terms of Service'
 const CANONICAL_PATH = '/terms-of-service'
 
-export const metadata: Metadata = {
-  // The root layout's title template appends " | Free For Charity", so the
-  // page title is just the page name (avoids a doubled brand suffix).
+// Bare page name as title (the root layout template appends the brand);
+// per-page OG/Twitter handling is documented in src/lib/page-metadata.ts.
+export const metadata: Metadata = pageMetadata({
   title: PAGE_NAME,
   description: 'Terms of Service for Free For Charity website',
-  alternates: { canonical: CANONICAL_PATH },
-}
+  canonical: CANONICAL_PATH,
+})
 
 export default function TermsOfService() {
   return (

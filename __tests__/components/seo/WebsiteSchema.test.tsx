@@ -15,7 +15,7 @@ describe('WebsiteSchema', () => {
     expect(schema.url as string).toMatch(/^https:\/\//)
 
     const publisher = schema.publisher as Record<string, unknown>
-    expect(publisher['@type']).toBe('NGO')
+    expect(publisher['@type']).toBe('NonprofitOrganization')
     expect(publisher.name).toBe(siteConfig.name)
   })
 

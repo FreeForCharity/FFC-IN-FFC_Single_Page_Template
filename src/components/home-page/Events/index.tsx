@@ -42,7 +42,7 @@ const Events = () => {
               href="https://www.facebook.com/freeforcharity"
               target="_blank"
               rel="noopener noreferrer"
-              className="text-[#227AB5] hover:underline"
+              className="text-[#227AB5] underline"
             >
               View all events on Facebook
             </a>

@@ -64,3 +64,30 @@ test.describe('axe-core homepage guardrail', () => {
     expect(blocking).toEqual([])
   })
 })
+
+/**
+ * Heading-order guard: axe rates skipped heading levels as "moderate" impact,
+ * so the serious/critical guardrail above never gates them, and Lighthouse's
+ * category score may not dip below the CI threshold for a lone heading skip.
+ * This spec pins the rule explicitly on every static page so a reintroduced
+ * h2→h4 jump (fixed once in cookie-policy) fails with a pointer to the node.
+ */
+const STATIC_PAGES = ['/', '/cookie-policy', '/privacy-policy', '/terms-of-service']
+
+test.describe('heading order on static pages', () => {
+  for (const path of STATIC_PAGES) {
+    test(`headings descend sequentially on ${path}`, async ({ page }) => {
+      await page.goto(path)
+      await page.waitForLoadState('domcontentloaded')
+      await page.locator('footer').waitFor({ state: 'visible' })
+
+      const results = await new AxeBuilder({ page })
+        .include('body')
+        .exclude('iframe')
+        .withRules(['heading-order'])
+        .analyze()
+
+      expect(results.violations).toEqual([])
+    })
+  }
+})

@@ -93,6 +93,9 @@ async function checkSiteConfig() {
     // so it would mis-fire even after a fork updated the handle.
     ['Twitter/X handle still @freeforcharity', "twitterHandle: '@freeforcharity'"],
     ['Mailing address still FFC (Wake Forrest Road)', 'Wake Forrest Road'],
+    // foundingDate feeds the public JSON-LD (schema.org foundingDate); a fork
+    // that keeps FFC's value publishes 2014 as ITS founding year.
+    ['Founding date still FFC 2014', "foundingDate: '2014'"],
   ]
   for (const [label, needle] of defaults) {
     if (cfg.includes(needle)) flag('Organization identity', label, rel)

@@ -192,7 +192,6 @@ const Footer: React.FC = () => {
                 href={address.mapUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                aria-label={`Open ${address.label} in Google Maps`}
                 className="flex items-start gap-3 hover:opacity-80 transition-opacity"
               >
                 <FiMapPin className="w-10 h-10 text-orange-500 flex-shrink-0 mt-0.5" />
@@ -206,6 +205,10 @@ const Footer: React.FC = () => {
                       </React.Fragment>
                     ))}
                   </p>
+                  {/* The accessible name must contain the visible text
+                      (WCAG 2.5.3 label-in-name), so instead of an aria-label
+                      that replaces it, append screen-reader-only context. */}
+                  <span className="sr-only">(opens in Google Maps)</span>
                 </div>
               </a>
             ))}
