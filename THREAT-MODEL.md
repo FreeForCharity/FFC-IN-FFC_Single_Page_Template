@@ -90,7 +90,9 @@ The Free For Charity website is a static Next.js application deployed to GitHub 
 
 - ✅ React automatically escapes output
 - ✅ Next.js built-in XSS protections
-- ✅ Content Security Policy headers (configured via GitHub Pages)
+- ✅ Content Security Policy delivered via `<meta http-equiv>` in the page
+  `<head>` (GitHub Pages cannot serve a CSP _header_; the meta form applies).
+  See T4.3 for the header-delivery limitation.
 - ✅ Regular dependency updates via Dependabot
 - ⚠️ Manual review of third-party scripts (Google Tag Manager)
 
@@ -238,6 +240,40 @@ The Free For Charity website is a static Next.js application deployed to GitHub 
 - ✅ GitHub's incident response
 
 **Residual Risk**: Very Low (external dependency)
+
+#### T4.3: Missing HTTP Security Headers (GitHub Pages limitation)
+
+**Description**: GitHub Pages cannot serve custom HTTP response headers and
+ignores the `public/_headers` file (a Cloudflare Pages / Netlify convention).
+With DNS delegated to Cloudflare in **DNS-only** mode — the only configuration
+that keeps GitHub's automatic HTTPS certificate renewal working — Cloudflare is
+not in the request path and cannot inject headers either. As a result HSTS,
+`X-Content-Type-Options`, `X-Frame-Options` / CSP `frame-ancestors`,
+`Permissions-Policy`, and cross-origin isolation headers are not delivered.
+
+**Impact**: Low - Removes defense-in-depth layers (clickjacking framing, MIME
+sniffing, first-visit HTTPS downgrade). The site has no authenticated,
+state-changing UI to clickjack, no user-generated content, and serves
+developer-committed assets with correct content types, so no active exploit
+path depends on these headers.
+
+**Likelihood**: N/A - Structural limitation, not an attacker action.
+
+**Mitigations**:
+
+- ✅ CSP and Referrer-Policy delivered via `<meta>` tags in `src/app/layout.tsx`
+  (the two protections that have a working meta-tag form).
+- ✅ HTTPS enforced by GitHub Pages (mitigates most first-visit downgrade risk
+  after the initial request).
+- ⚠️ HSTS, framing protection, `nosniff`, and `Permissions-Policy` are absent
+  and accepted for a static, no-login site. If compliance or a required
+  security-scanner grade makes them mandatory, migrate hosting to **Cloudflare
+  Pages**, where `public/_headers` is honored natively. See `CLOUDFLARE_SETUP.md`.
+- ⛔ **Do NOT** attempt to add headers by proxying the GitHub Pages DNS records
+  through Cloudflare (orange cloud): it stops GitHub's certificate renewal and
+  breaks HTTPS ~90 days later. This is a documented pitfall, not a mitigation.
+
+**Residual Risk**: Low (accepted for the current static, no-login site)
 
 ### 5. Social Engineering and Account Compromise
 
