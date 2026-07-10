@@ -246,9 +246,19 @@ async function checkPlaceholderUrl() {
 
   // Walk every text source under src/ and public/ (plus a small set of
   // well-known config files at the repo root) for the placeholder host.
+  // The extra files below are functional metadata that ships real data (funding
+  // links, citation URL, issue-template contact links) — not template-authoring
+  // guides, which legitimately keep the placeholder as a "replace-me" example.
   const interestingExt = /\.(tsx?|jsx?|md|mdx|txt|json|yml|yaml|webmanifest)$|^_headers$|^CNAME$/
   const roots = [join(ROOT, 'src'), join(ROOT, 'public')]
-  const rootFiles = ['next.config.ts', 'package.json', 'README.md']
+  const rootFiles = [
+    'next.config.ts',
+    'package.json',
+    'README.md',
+    'CITATION.cff',
+    '.github/FUNDING.yml',
+    '.github/ISSUE_TEMPLATE/config.yml',
+  ]
   const candidates = []
   for (const root of roots) {
     candidates.push(...(await walk(root, (n) => interestingExt.test(n))))
@@ -497,11 +507,9 @@ async function checkBrandIdentity() {
   // Dormant on the upstream template itself: FFC identity is correct there.
   if (!name || name === TEMPLATE_ORG_NAME) return
 
-  const trees = [join(SRC_DIR, 'app'), join(SRC_DIR, 'components')]
-  const files = []
-  for (const tree of trees) {
-    files.push(...(await walk(tree, (n) => /\.(tsx?|jsx?)$/.test(n))))
-  }
+  // Scan the whole src/ tree (app, components, lib, data) — leftover FFC
+  // identity in config or data modules is just as wrong as in a page.
+  const files = await walk(SRC_DIR, (n) => /\.(tsx?|jsx?)$/.test(n))
   for (const full of files) {
     const rel = relative(ROOT, full)
     let body
