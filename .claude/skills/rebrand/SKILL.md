@@ -104,6 +104,10 @@ Keep brand-neutral, reusable UI primitives (cards, buttons) even if unused.
   supplies the brand — not `'… | Free For Charity'`, which double-brands.
 - **Article/detail pages**: give them their own `openGraph`/`twitter` metadata
   and `Article` JSON-LD instead of inheriting the homepage card.
+- **Heading hierarchy**: the template's legal pages ship with broken headings —
+  e.g. every section as its own `<h1>`, or a page whose top heading is an `<h2>`.
+  Each page needs exactly one `<h1>` (the title) with a logical `h2`/`h3` nesting
+  and no skipped levels. Check every policy page.
 
 ### 6. Assets, footer, repo metadata
 
@@ -113,7 +117,36 @@ Keep brand-neutral, reusable UI primitives (cards, buttons) even if unused.
   `siteConfig.parentOrg` — set it (or clear it), don't hardcode. If you add a
   hardcoded "Built with Free For Charity" credit line, it's the one allowlisted
   identity exception.
-- `README.md`, `CITATION.cff`, `.github/FUNDING.yml`, repo description/topics.
+
+### 6b. Full docs & metadata cleanup — the whole repo, not just `src/`
+
+The rebrand is not done when the app is clean; a fork also inherits a pile of
+Markdown and config that still names the template's placeholder domain
+(`ffcworkingsite1.org`) and, in functional metadata, points at the template repo.
+Do a **repo-wide** sweep:
+
+```
+grep -rniE 'ffcworkingsite1\.org|46-?2471893|520[-. ]?222[-. ]?8104' . \
+  --exclude-dir=node_modules --exclude-dir=.git --exclude-dir=out
+```
+
+- **Functional metadata (ships real data — must be correct):** `.github/FUNDING.yml`
+  (fix the domain and drop any `#donate` link if the site has no donate flow),
+  `CITATION.cff` (`url` + `repository-code`), `.github/ISSUE_TEMPLATE/config.yml`
+  (contact links — point at the fork's repo, not the template repo), `README.md`.
+  The drift checker scans these, so a stale value fails CI once rebranded.
+- **Instance-describing docs (replace the placeholder domain with the real one):**
+  `CONTRIBUTING.md`, `SUPPORT.md`, `SECURITY.md`, `DEPLOYMENT.md`,
+  `CLOUDFLARE_SETUP.md`, `THREAT-MODEL.md`, `ADOPTERS.md`, `ISSUE_RESOLUTION.md`,
+  `NAMING_CONVENTIONS.md`, `FACEBOOK_EVENTS_SETUP.md`, and any workflow comments.
+- **Template-authoring guides (leave the placeholder — it's the teaching example):**
+  `TEMPLATE_USAGE.md`, `TEMPLATE_SETUP_CHECKLIST.md`, `TEMPLATE_CUSTOMIZATION.md`,
+  `CONTENT_REPLACEMENT_GUIDE.md`, `.github/ISSUE_TEMPLATE/rebrand-template.md`, and
+  `scripts/check-drift.mjs` (the `PLACEHOLDER_HOST` detection constant).
+- **Stale doc references to deleted routes/components:** if you removed the
+  donation pages (step 4), scrub their mentions from `README.md` and any guide
+  so the docs match the shipped routes.
+- Update the GitHub **repo description and topics** (web UI).
 
 ### 7. Human-decision items — ask, don't guess
 
