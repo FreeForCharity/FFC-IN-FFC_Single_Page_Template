@@ -21,9 +21,9 @@ const index = () => {
       <BreadcrumbSchema name={PAGE_NAME} path={CANONICAL_PATH} />
       <div className="py-[27px] w-[90%] md:w-[80%] mx-auto">
         <div className="border-t-[5px] border-[#0073e6] pt-[25px] lato-font">
-          <h2 className="text-[30px] leading-[30px] font-[700] text-[#333] mt-[20px] mb-[25px]">
+          <h1 className="text-[30px] leading-[30px] font-[700] text-[#333] mt-[20px] mb-[25px]">
             Security Acknowledgements
-          </h2>
+          </h1>
           <p className="mb-[20px] pb-[10px] text-[14px] font-[500] leading-[25px] text-[#666]">
             Free For Charity would like to extend our sincere gratitude to the following security
             researchers for their invaluable contributions in helping us keep our platform safe. By
