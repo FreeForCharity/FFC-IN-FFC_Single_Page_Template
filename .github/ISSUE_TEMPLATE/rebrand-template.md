@@ -440,27 +440,48 @@ Before submitting this issue, verify you have:
 
 ### Step 1: Assign Text-Based Updates to Copilot
 
-Copy and paste this template into a comment on this issue, filling in the values from above:
+> **Why this is a full checklist, not "replace all Free For Charity":** a naive
+> find-and-replace on the homepage leaves the **legal pages, deep routes, and
+> per-page SEO metadata** still branded as Free For Charity — and lint, build,
+> and tests all pass anyway. The steps below close those gaps. The agent should
+> follow the repo's **`rebrand` skill** (`.claude/skills/rebrand/SKILL.md`),
+> which encodes this in detail.
+
+Copy this into a comment on the issue, filling in the values from above:
 
 ```
-@copilot, based on the information provided in this issue, please update the repository:
+@copilot, follow the repository's `rebrand` skill and this issue to rebrand the site. Do ALL of the following, then run the verification step and paste its output back:
 
-1. Replace all instances of "Free For Charity" with "[Your Organization Name]"
-2. Replace all instances of "46-2471893" with "[Your EIN]"
-3. Replace all instances of "ffcworkingsite1.org" with "[your-domain.org]"
-4. Update CODEOWNERS file to list: @[username1], @[username2], @[username3]
-5. Update NEXT_PUBLIC_BASE_PATH in .github/workflows/deploy.yml and .github/workflows/lighthouse.yml to /[your-repo-name]
-6. Update all social media links in footer component to:
-   - Facebook: [your-facebook-url]
-   - Twitter: [your-twitter-url]
-   - LinkedIn: [your-linkedin-url]
-7. Update team member data in src/data/team/ with the board member information provided above
-8. Update FAQ data in src/data/faqs/ with the FAQ content provided above
-9. Update testimonial data in src/data/testimonials/ with the testimonial content provided above
-10. Update contact information (email, phone, addresses) throughout the codebase with the contact details provided above
+IDENTITY & CONFIG
+1. Set every field in src/lib/site.config.ts (name, tagline, description, shortDescription, url, contactEmail, keywords, themeColor, social, parentOrg, guidestar, foundingDate) and the GTM container in src/lib/analytics.config.ts — this is the single source of truth. `npm run check:rebrand` lists exactly which FFC defaults remain.
+2. Replace all instances of "ffcworkingsite1.org" with "[your-domain.org]" and update public/CNAME (or delete it for github.io-only).
+3. Update public/.well-known/security.txt AND public/security.txt: Contact = [security email], Canonical/Policy/Acknowledgments = new URL, Expires >= 12 months out.
+4. Update CODEOWNERS to: @[username1], @[username2], @[username3]; set NEXT_PUBLIC_BASE_PATH in deploy.yml/lighthouse.yml (empty for custom domain, /[repo] for github.io).
+
+LEGAL PAGES — do every one of these, metadata + body (org name, freeforcharity.org URLs, contact emails, phone, DPO name):
+5. src/app/{privacy-policy,terms-of-service,cookie-policy,vulnerability-disclosure-policy,security-acknowledgements}/page.tsx
+6. Give each a bare <title> and its own alternates.canonical. Align the vulnerability-disclosure contact with security.txt.
+7. Replace "46-2471893" (EIN) and "520-222-8104" (phone) everywhere with the org's — or remove if not provided. Do NOT invent an EIN, governing-law state, or donation terms; leave them for the org to confirm.
+
+DELETE UNUSED TEMPLATE CONTENT (don't just edit it):
+8. Delete any src/components/home-page/* section not imported by src/app/home-page/index.tsx, plus its test.
+9. Delete src/data/{team,testimonials,faqs} if nothing imports them; delete donation pages if the org doesn't solicit donations, and remove their src/app/sitemap.ts entries + any Terms "Donation Policy" reference.
+
+SEO:
+10. Do NOT set alternates.canonical on the root layout. Add per-page canonicals (home, /articles, each article via generateMetadata). Give article pages their own OpenGraph/Twitter + Article JSON-LD.
+
+CONTENT & METADATA:
+11. Social links, footer (parent-org credit via siteConfig.parentOrg), README.md, CITATION.cff, .github/FUNDING.yml, repo description/topics.
+
+VERIFY (paste output): npm run format && npm run lint && npm run check:rebrand && npm run check:drift && npm test && npm run build
 ```
 
-Copilot will handle all text-based find-and-replace operations automatically. **Estimated time: 5-10 minutes**
+`check:drift` includes a **brand-identity gate** that fails if any Free For
+Charity name, `freeforcharity.org` URL, EIN, phone, or `@freeforcharity.org`
+email is left in `src/app/**` or `src/components/**` (footer credit excepted) —
+the enforced complement to the advisory `check:rebrand` config/data checklist.
+If both pass, the rebrand is complete rather than skin-deep. **Estimated time:
+10-20 minutes.**
 
 ### Step 2: Manual File Uploads (Cannot be Automated)
 
