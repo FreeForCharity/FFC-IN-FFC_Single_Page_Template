@@ -31,9 +31,11 @@ You are helping a Free For Charity volunteer or charity admin stand up a new sit
 
 7. **Footer** — no per-charity CODE edits needed. EIN, addresses, phone, GuideStar links, parent-org link, social rail, and email all come from `siteConfig` (set in step 2). The only footer-related swap is the GuideStar / endorsement seal IMAGE asset in `public/Svgs/` if the charity's endorsements differ.
 
-8. **Replace content** in `src/data/` (testimonials, FAQs, team) and the home-page sections under `src/components/home-page/`.
+8. **Replace or DELETE demo content.** Update the home-page sections under `src/components/home-page/` and `src/data/` (testimonials, FAQs, team) the charity keeps — and **delete the ones it doesn't**. Any `src/components/home-page/*` section not imported by `src/app/home-page/index.tsx` is dead; remove it and its test rather than leaving FFC content in the tree. Delete `src/data/{team,testimonials,faqs}` if nothing imports them. Keep brand-neutral reusable UI primitives.
 
-9. **Legal pages** under `src/app/{privacy-policy,terms-of-service,cookie-policy,donation-policy}` — REVIEW with the charity's counsel before committing. Update org name and contact references.
+9. **Legal pages — every one of them.** Under `src/app/`, update `privacy-policy`, `terms-of-service`, `cookie-policy`, `vulnerability-disclosure-policy`, and `security-acknowledgements`. For each: fix `metadata` (bare `title`, org-correct `description`, add `alternates.canonical`) and the body (org name, `freeforcharity.org` URLs, contact emails, phone, DPO name). Align the vulnerability-disclosure contact with `security.txt`. Handle the donation pages per the charity's donation posture — rebrand if they solicit donations, otherwise **delete them** and drop their `src/app/sitemap.ts` entries plus any Terms "Donation Policy" reference. Do NOT invent an EIN, governing-law state, or donation terms — leave blanks for the charity to confirm. **REVIEW all legal text with the charity's counsel before committing.**
+
+9b. **Per-page SEO.** Never set `alternates.canonical` on the root layout (App Router inherits it → every page canonicalizes to `/`); set it per page instead (home, `/articles`, each article via `generateMetadata`, every policy page). Keep policy `<title>`s bare so the layout template supplies the brand. Give article pages their own `openGraph`/`twitter` + `Article` JSON-LD.
 
 10. **GitHub repo settings** (web UI, not in code):
     - Settings → Pages → Source = **"GitHub Actions"** (NOT "Deploy from a branch" — there is no `gh-pages` branch).
@@ -59,6 +61,16 @@ You are helping a Free For Charity volunteer or charity admin stand up a new sit
     Fix anything red before opening a PR. `check:rebrand` never fails the build —
     treat its checklist as the "did I replace every FFC default?" confirmation
     (charity name, EIN, phone, email, domain, GTM container, sample content).
+    `check:drift` **does** fail on leftover FFC identity in rendered pages: once
+    `siteConfig.name` changes, any `Free For Charity`, `freeforcharity.org`, EIN
+    `46-2471893`, phone `520-222-8104`, or `@freeforcharity.org` email in
+    `src/app/**` or `src/components/**` is a hard error (footer credit excepted).
+    As a final belt-and-suspenders sweep of surfaces neither check scans:
+
+    ```
+    grep -rniE 'free ?for ?charity|freeforcharity\.org|46-?2471893|520[-. ]?222[-. ]?8104' src/ public/ \
+      | grep -v 'Built with Free For Charity'
+    ```
 
 13. **Open a PR titled** `chore: initial customization for <Charity Name>` linking the onboarding issue. In the body include:
     - A checklist of every file edited
@@ -83,4 +95,7 @@ You are helping a Free For Charity volunteer or charity admin stand up a new sit
 
 ## Reference
 
-The full field-to-surface map lives in `TEMPLATE_CUSTOMIZATION.md`. The setup checklist in `TEMPLATE_SETUP_CHECKLIST.md` covers GitHub repo settings. The drift checker (`scripts/check-drift.mjs`) describes the platform contract you're working within.
+For a rebrand of an existing fork (as opposed to first-time onboarding), follow
+the **`rebrand` skill** (`.claude/skills/rebrand/SKILL.md`) — it covers the same
+ground with extra emphasis on deleting unused demo content, per-page SEO, and the
+brand-identity gate. The full field-to-surface map lives in `TEMPLATE_CUSTOMIZATION.md`. The setup checklist in `TEMPLATE_SETUP_CHECKLIST.md` covers GitHub repo settings. The drift checker (`scripts/check-drift.mjs`) describes the platform contract you're working within.
