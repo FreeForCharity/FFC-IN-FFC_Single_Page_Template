@@ -2,6 +2,17 @@
 
 Single-page Next.js 16.0.7 website built with App Router for Free For Charity nonprofit organization.
 
+## Who This Template Is For — and Where It Fits in the FFC Journey
+
+This template is the **starting point for charities that don't have a website yet** — most pre-501(c)(3) organizations, plus mature charities that never had one. An FFC volunteer builds a complete single-page site from the charity's own content, guaranteeing every section FFC requires (mission, programs, contact, legal/policy pages, cookie consent, analytics, footer) is present from day one.
+
+It is one of two website paths in the gated [FFC charity onboarding journey](https://freeforcharity.org/charity-onboarding-journey/):
+
+- **No existing website?** Start here — this template.
+- **Already have a designed website?** Use the sibling [FFC Footer-Only Template](https://github.com/FreeForCharity/FFC-IN-Footer_Only_Template) instead, which adds the FFC footer, policy pages, cookie consent, and analytics layer to the charity's existing design.
+
+Both paths converge on the same validation gate: the new site launches on its **free GitHub Pages address first** (no custom domain) and must be validated live there against the FFC standard. Only after the site passes validation does FFC purchase the charity's free .org domain — which in turn unlocks email setup.
+
 ## 🎉 Phase 5 Implementation Complete
 
 **Status:** ✅ All critical gaps closed. Repository now has enterprise-grade tooling, comprehensive testing, and professional documentation.
