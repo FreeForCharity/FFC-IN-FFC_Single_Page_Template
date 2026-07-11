@@ -56,6 +56,11 @@ jobs:
         # E2E tests need to run against a build without basePath since the test server
         # (serve -s out) doesn't understand basePath routing
 
+      - name: Verify build output
+        # Fails the build if any indexable page is missing its single <h1> or a
+        # per-page canonical (invariants a rebrand often breaks in rendered HTML).
+        run: npm run verify:build
+
       - name: Check bundle size
         # Reuses the build above — fails if shipped JS exceeds the gzipped budget.
         run: npm run check:bundle
