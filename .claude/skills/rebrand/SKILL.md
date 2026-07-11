@@ -175,6 +175,7 @@ npm run check:rebrand   # advisory: config/data defaults still present
 npm run check:drift     # ENFORCED: includes the brand-identity gate
 npm test
 npm run build
+npm run verify:build    # built-HTML: one <h1> + a canonical per page
 npm run test:e2e
 ```
 
@@ -185,8 +186,9 @@ grep -rniE 'free ?for ?charity|freeforcharity\.org|46-?2471893|520[-. ]?222[-. ]
   | grep -v 'Built with Free For Charity'
 ```
 
-And spot-check the built output in `out/`: policy `<title>`s, per-page
-`<link rel="canonical">`, and article `Article` JSON-LD.
+`verify:build` covers the built-output invariants (one `<h1>` per page, a
+per-page canonical); still eyeball the `out/` policy `<title>`s and any article
+`Article` JSON-LD.
 
 ### 9. PR
 
