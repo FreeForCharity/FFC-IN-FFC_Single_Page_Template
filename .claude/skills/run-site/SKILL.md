@@ -89,10 +89,12 @@ npm run test:e2e   # playwright e2e — needs the pinned browser; see gotcha bel
 
 ## Gotchas
 
-- **Third-party embeds that fail are not bugs.** Any third-party host the sandbox
-  proxy blocks (`ERR_CONNECTION_RESET`) is counted and reported as
-  "N third-party blocked" — the driver does **not** fail on them; it only fails
-  on same-origin problems. Those embeds render blank in screenshots as a result.
+- **Cross-origin request failures are not counted as bugs.** Any failed request
+  to an origin other than the page's (a third-party embed, CDN, analytics, etc.)
+  is counted and reported as "N third-party failed" — the driver does **not**
+  fail the run on them; it only fails on same-origin problems. In this sandbox
+  these are usually blocked embeds (`ERR_CONNECTION_RESET`), which render blank
+  in screenshots as a result.
 - **`ERR_ABORTED` request failures are prefetches, not bugs.** Next.js `<Link>`
   prefetches the RSC payload and aborts those requests on navigate. The driver
   drops any `requestfailed` whose error text contains `ERR_ABORTED` (regardless

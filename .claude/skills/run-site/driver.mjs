@@ -114,7 +114,7 @@ async function main() {
     const page = await context.newPage()
     const pageErrors = []
     const localFails = [] // same-origin resource failures — real bugs
-    const extBlocks = [] // third-party hosts blocked by the sandbox — informational
+    const extBlocks = [] // cross-origin (third-party) request failures — informational
     page.on('pageerror', (e) => pageErrors.push(String(e)))
     page.on('requestfailed', (r) => {
       const err = r.failure()?.errorText || ''
@@ -163,7 +163,7 @@ async function main() {
     }
 
     if (!ok) failures++
-    const note = extBlocks.length ? ` (${extBlocks.length} third-party blocked)` : ''
+    const note = extBlocks.length ? ` (${extBlocks.length} third-party failed)` : ''
     process.stdout.write(
       `${ok ? PASS : FAIL} ${path}${detail ? ` — ${detail}` : ''}${note} -> ${shotRel}\n`
     )
