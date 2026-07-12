@@ -12,7 +12,8 @@
  * that throws or 404s makes the run exit non-zero; blocked third-party
  * requests are counted but never fail the run.
  *
- * Prereqs: `npm run build` then a server on BASE_URL (see SKILL.md).
+ * Prereqs: a freshly built export served on BASE_URL (see SKILL.md for the
+ * repo's build + serve commands).
  *
  * Usage:
  *   node .claude/skills/run-site/driver.mjs                 # smoke the default route set
@@ -77,8 +78,11 @@ const FAIL = '\x1b[31m✗\x1b[0m'
 
 async function main() {
   await mkdir(shotDir, { recursive: true })
+  // Chromium's setuid sandbox can't run as root (the common container case),
+  // so pass --no-sandbox only then; a normal local user keeps the sandbox.
+  const isRoot = typeof process.getuid === 'function' && process.getuid() === 0
   const browser = await chromium.launch({
-    args: ['--no-sandbox'],
+    args: isRoot ? ['--no-sandbox'] : [],
     ...(CHROME ? { executablePath: CHROME } : {}),
   })
   const context = await browser.newContext({ viewport: VIEWPORT })
@@ -90,8 +94,16 @@ async function main() {
     // `http-status/` would be mistaken for a URL and crash `new URL()`.
     const url = /^https?:\/\//.test(path) ? path : `${BASE_URL}${rel}`
     // Classify by the target's own origin, not BASE_URL — an absolute-URL
-    // arg has its own origin, and BASE_URL wouldn't match it.
-    const origin = new URL(url).origin
+    // arg has its own origin, and BASE_URL wouldn't match it. Guard the parse
+    // so a malformed BASE_URL/route fails this route, not the whole run.
+    let origin
+    try {
+      origin = new URL(url).origin
+    } catch {
+      failures++
+      process.stdout.write(`${FAIL} ${path} — invalid URL "${url}"\n`)
+      continue
+    }
     const sameOrigin = (u) => {
       try {
         return new URL(u).origin === origin
