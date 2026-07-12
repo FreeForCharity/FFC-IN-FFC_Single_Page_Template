@@ -163,7 +163,10 @@ jobs:
         # always() so the score breakdown still reaches the PR when an
         # error-level assertion (accessibility/SEO) fails the lhci step —
         # that's exactly when the author needs the per-page table.
-        if: always() && github.event_name == 'pull_request'
+        # Fork PRs get a read-only GITHUB_TOKEN, so createComment would 403
+        # and fail the whole run — skip the step there (scores remain in the
+        # workflow log and artifacts).
+        if: always() && github.event_name == 'pull_request' && !github.event.pull_request.head.repo.fork
         uses: actions/github-script@v8
         with:
           script: |
@@ -306,15 +309,24 @@ jobs:
             comment += `${context.payload.repository.html_url}/actions/runs/${context.runId}) for in-depth analysis.\n\n`;
             comment += '📖 Learn more about [Lighthouse scoring](https://developer.chrome.com/docs/lighthouse/performance/performance-scoring/)';
 
-            // Post comment on PR
-            await github.rest.issues.createComment({
-              issue_number: context.issue.number,
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              body: comment
-            });
-
-            console.log('Lighthouse results comment posted successfully');
+            // Post comment on PR. Never fail the workflow over a comment:
+            // a permissions hiccup (e.g. a repo-in-org token restriction, or
+            // a fork PR that slipped past the step-level guard) must not
+            // mask green Lighthouse results.
+            try {
+              await github.rest.issues.createComment({
+                issue_number: context.issue.number,
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                body: comment
+              });
+              console.log('Lighthouse results comment posted successfully');
+            } catch (error) {
+              core.notice(
+                `Could not post the Lighthouse results comment (${error.message}). ` +
+                'Scores are still available in the step log above and the workflow artifacts.'
+              );
+            }
             }
 
             await run();

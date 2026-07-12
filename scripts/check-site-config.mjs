@@ -14,16 +14,18 @@
  * siteConfig object literal from the TypeScript source and evaluates it in
  * an isolated `node:vm` context, then validates it with a minimal built-in
  * checker covering exactly the JSON Schema subset the contract uses
- * (type, required, properties, items, const, minLength). If the schema
- * grows a keyword the checker does not know, the run fails loudly rather
- * than silently skipping the rule.
+ * (type, required, properties, items, const, minLength, and boolean
+ * additionalProperties). If the schema grows a keyword — or a keyword form,
+ * e.g. a sub-schema additionalProperties — the checker does not know, the
+ * run fails loudly rather than silently skipping the rule.
  *
  * Run: `node scripts/check-site-config.mjs` or `npm run check:site-config`.
  * Exits non-zero on any validation error.
  */
 import { readFile } from 'node:fs/promises'
 import { dirname, join } from 'node:path'
-import { fileURLToPath } from 'node:url'
+import { fileURLToPath, pathToFileURL } from 'node:url'
+import process from 'node:process'
 import vm from 'node:vm'
 
 const SCRIPT_DIR = dirname(fileURLToPath(import.meta.url))
@@ -80,7 +82,7 @@ function extractSiteConfigLiteral(source) {
   throw new Error(`Unbalanced braces while extracting the siteConfig literal from ${CONFIG_PATH}.`)
 }
 
-const SUPPORTED_KEYWORDS = new Set([
+export const SUPPORTED_KEYWORDS = new Set([
   '$schema',
   '$id',
   '$comment',
@@ -102,7 +104,7 @@ function typeOf(value) {
 }
 
 /** Minimal validator for the JSON Schema subset used by the contract. */
-function validate(schema, value, path, errors) {
+export function validate(schema, value, path, errors) {
   for (const keyword of Object.keys(schema)) {
     if (!SUPPORTED_KEYWORDS.has(keyword)) {
       errors.push(
@@ -136,6 +138,26 @@ function validate(schema, value, path, errors) {
       if (key in value) {
         validate(subSchema, value[key], `${path}.${key}`, errors)
       }
+    }
+    // `additionalProperties: false` closes the object: any key not declared
+    // in `properties` is an error. `true` (or omitted) leaves it open. A
+    // sub-schema form is NOT implemented — fail loudly rather than silently
+    // passing whatever the schema author intended to constrain.
+    if (schema.additionalProperties === false) {
+      const declared = new Set(Object.keys(schema.properties ?? {}))
+      for (const key of Object.keys(value)) {
+        if (!declared.has(key)) {
+          errors.push(
+            `${path}: unknown key "${key}" — the schema sets additionalProperties: false, ` +
+              `so every key must be declared in its "properties".`
+          )
+        }
+      }
+    } else if (schema.additionalProperties !== undefined && schema.additionalProperties !== true) {
+      errors.push(
+        `${path}: schema uses a non-boolean "additionalProperties" (sub-schema form) — ` +
+          `extend the validator in scripts/check-site-config.mjs before using it.`
+      )
     }
   }
   if (schema.type === 'array' && schema.items !== undefined) {
@@ -180,7 +202,10 @@ async function main() {
   console.log('SiteConfig contract check passed: src/lib/site.config.ts matches the shared schema.')
 }
 
-main().catch((error) => {
-  console.error(`check-site-config: ${error.message}`)
-  process.exit(1)
-})
+// Only run when executed directly (allows importing validate() in tests).
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
+  main().catch((error) => {
+    console.error(`check-site-config: ${error.message}`)
+    process.exit(1)
+  })
+}
