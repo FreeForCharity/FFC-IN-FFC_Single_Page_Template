@@ -37,3 +37,9 @@ jobs:
 
       - name: Run drift check
         run: node scripts/check-drift.mjs
+
+      # Validates src/lib/site.config.ts against the shared cross-template
+      # SiteConfig contract (schema/site-config.schema.json, kept identical
+      # in FFC-IN-FFC_Single_Page_Template and FFC-IN-Footer_Only_Template).
+      - name: Run shared SiteConfig contract check
+        run: node scripts/check-site-config.mjs
