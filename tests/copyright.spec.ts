@@ -33,6 +33,28 @@ test.describe('Footer Copyright Notice', () => {
     await expect(footerText).toContainText(testConfig.copyright.text)
   })
 
+  test('should display the permanent "Supported by" attribution', async ({ page }) => {
+    // FFC footer standard: every supported charity site carries a permanent
+    // "Supported by <org>" link in the bottom bar. Unlike the parent-org
+    // clause below, this is always rendered — it must never be skipped.
+    await page.goto('/')
+
+    // On the template itself the supporting org and the parent org are both
+    // FFC, so this href can appear twice. The "Supported by" clause renders
+    // first (before the optional "A project of" clause) — assert on it.
+    const attributionLink = page
+      .locator(
+        `footer p:has-text("${testConfig.copyright.searchText}") a[href="${testConfig.copyright.supportedByUrl}"]`
+      )
+      .first()
+
+    await expect(attributionLink).toBeVisible()
+    await expect(attributionLink).toContainText(testConfig.copyright.supportedByText)
+
+    const footerText = page.locator(`footer p:has-text("${testConfig.copyright.searchText}")`)
+    await expect(footerText).toContainText(`Supported by ${testConfig.copyright.supportedByText}`)
+  })
+
   test('should display link to organization website in copyright notice', async ({ page }) => {
     // The footer only renders the "A project of" parent-org link when a parent
     // org is configured. Skip this assertion for standalone charities.
@@ -41,10 +63,15 @@ test.describe('Footer Copyright Notice', () => {
     // Navigate to the homepage
     await page.goto('/')
 
-    // Find the link within the copyright notice
-    const copyrightLink = page.locator(
-      `footer p:has-text("${testConfig.copyright.searchText}") a[href="${testConfig.copyright.linkUrl}"]`
-    )
+    // Find the link within the copyright notice. On the template itself the
+    // parent org and the supporting org are both FFC, so the same href appears
+    // twice ("Supported by" first, then "A project of") — assert on the last
+    // match, which is the parent-org clause.
+    const copyrightLink = page
+      .locator(
+        `footer p:has-text("${testConfig.copyright.searchText}") a[href="${testConfig.copyright.linkUrl}"]`
+      )
+      .last()
 
     // Verify the link is visible
     await expect(copyrightLink).toBeVisible()

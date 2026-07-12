@@ -483,15 +483,30 @@ const FFC_IDENTITY_PATTERNS = [
 ]
 
 // A child site that customizes its footer with a hardcoded "Built with Free For
-// Charity" platform credit may keep it. Allow ONLY those two specific lines (the
-// credit text and the exact attribution href) so any other freeforcharity.org
-// URL — or an EIN, phone, or email — is still flagged even inside the footer.
+// Charity" platform credit may keep it. Allow ONLY those specific lines (the
+// credit text, the exact attribution href, and the FFC donation-policy label —
+// that page documents FFC's own policy, so its label intentionally keeps FFC's
+// name after a rebrand) so any other freeforcharity.org URL — or an EIN, phone,
+// or email — is still flagged even inside the footer.
 function isAllowedIdentityLine(relPath, line) {
   const normalized = relPath.split(sep).join('/')
   if (normalized !== 'src/components/footer/index.tsx') return false
   return (
-    /Built with Free For Charity/.test(line) || /href="https:\/\/freeforcharity\.org"/i.test(line)
+    /Built with Free For Charity/.test(line) ||
+    /href="https:\/\/freeforcharity\.org"/i.test(line) ||
+    /Free For Charity Donation Policy/.test(line)
   )
+}
+
+// siteConfig.supportedBy intentionally keeps Free For Charity's name and URL
+// forever: it is the permanent "Supported by" attribution required by the FFC
+// footer standard, not leftover branding. Blank exactly that block (preserving
+// newlines so reported line numbers stay accurate) before the identity scan,
+// so every OTHER FFC reference in site.config.ts is still flagged.
+function withoutSupportedByBlock(relPath, body) {
+  const normalized = relPath.split(sep).join('/')
+  if (normalized !== 'src/lib/site.config.ts') return body
+  return body.replace(/supportedBy:\s*\{[^}]*\}/g, (block) => block.replace(/[^\n]/g, ' '))
 }
 
 async function checkBrandIdentity() {
@@ -518,7 +533,7 @@ async function checkBrandIdentity() {
     } catch {
       continue
     }
-    const lines = body.split('\n')
+    const lines = withoutSupportedByBlock(rel, body).split('\n')
     for (let i = 0; i < lines.length; i++) {
       const line = lines[i]
       if (isAllowedIdentityLine(rel, line)) continue

@@ -85,10 +85,10 @@ const Footer: React.FC = () => {
                 { name: 'Volunteer', href: '/#volunteer' },
                 { name: 'FAQ', href: '/#faq' },
                 { name: 'Team', href: '/#team' },
-                // Only shown when this site is a project of a parent org with a hub.
-                ...(siteConfig.parentOrg?.hubUrl
-                  ? [{ name: 'Supported Charity Login', href: siteConfig.parentOrg.hubUrl }]
-                  : []),
+                // FFC footer standard: every supported charity site links back
+                // to the supporting org's hub. Always rendered — keep this
+                // entry when customizing a fork.
+                { name: 'Supported Charity Login', href: siteConfig.supportedBy.hubUrl },
               ].map((link) => {
                 const isExternal = link.href.startsWith('http')
                 return (
@@ -113,7 +113,11 @@ const Footer: React.FC = () => {
               <ul className="space-y-1 text-sm lato-font">
                 {[
                   {
-                    name: `${siteConfig.name} Donation Policy`,
+                    // Hardcoded on purpose: this page documents FFC's OWN
+                    // donation policy, so the label must keep FFC's name even
+                    // after a fork rebrands siteConfig.name. The adjacent
+                    // '/donation-policy' entry is the charity's own policy.
+                    name: 'Free For Charity Donation Policy',
                     href: '/free-for-charity-donation-policy',
                   },
                   {
@@ -238,6 +242,15 @@ const Footer: React.FC = () => {
       <div className="mt-12 py-6 px-4 border-t border-gray-800 text-center text-[18px] font-[500] w-full aria-font">
         <p>
           © {currentYear} All Rights Are Reserved by {siteConfig.name} a US 501c3 Non Profit
+          {/* FFC footer standard: the permanent "Supported by" attribution.
+              Always rendered — do NOT remove or hide it when customizing. */}
+          {' | Supported by '}
+          <Link
+            href={siteConfig.supportedBy.url}
+            className="underline text-[#2EA3F2] hover:text-[#2EA3F2] transition-colors"
+          >
+            {siteConfig.supportedBy.name}
+          </Link>
           {siteConfig.parentOrg && (
             <>
               {' | A project of '}

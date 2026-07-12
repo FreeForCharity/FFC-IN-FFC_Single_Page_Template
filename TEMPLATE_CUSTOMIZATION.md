@@ -14,25 +14,26 @@ is the **map** — what changes where, and why.
 truth for site-specific values. Update the `siteConfig` export with your
 charity's name, URL, contact email, social links, etc.
 
-| Property                      | Where it shows up                                                                           |
-| ----------------------------- | ------------------------------------------------------------------------------------------- |
-| `name`                        | `<title>`, OG/Twitter `site_name`, 404 page, error page, footer copyright, manifest         |
-| `tagline`                     | Default `<title>` and OG title                                                              |
-| `description`                 | `<meta description>` (long form for search engines), manifest fallback                      |
-| `shortDescription`            | OG / Twitter card description (tuned for social previews; falls back to `description`)      |
-| `url`                         | `metadataBase`, sitemap entries, robots `Sitemap:` line                                     |
-| `twitterHandle`               | Twitter card `site` attribute (the leading `@` is added automatically)                      |
-| `contactEmail`                | Footer e-mail link. `security.txt` has its own `Contact:` line — keep them in sync.         |
-| `keywords`                    | `<meta keywords>`                                                                           |
-| `themeColor`                  | Web manifest `theme_color` and `background_color`                                           |
-| `vulnerabilityDisclosurePath` | 404 page CTA, error page disclosure link                                                    |
-| `social`                      | Footer social-link rail (icon resolved by `label`: Facebook, X (Twitter), LinkedIn, GitHub) |
-| `ein`                         | Footer EIN display line                                                                     |
-| `phone`                       | Footer phone link (`phone.display` shown, `phone.tel` used for the `tel:` link)             |
-| `addresses`                   | Footer contact column (`addresses[].label` / `.lines` / `.mapUrl`)                          |
-| `guidestar`                   | Footer GuideStar/Candid seal links (`guidestar.profileUrl`, `guidestar.directProfileUrl`)   |
-| `parentOrg`                   | Footer "a project of" parent-org clause (omit for a standalone charity)                     |
-| `integrations`                | Zeffy donation embed, Idealist profile, SociableKit events widget, Microsoft Forms URL      |
+| Property                      | Where it shows up                                                                                                                                                                                                      |
+| ----------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `name`                        | `<title>`, OG/Twitter `site_name`, 404 page, error page, footer copyright, manifest                                                                                                                                    |
+| `tagline`                     | Default `<title>` and OG title                                                                                                                                                                                         |
+| `description`                 | `<meta description>` (long form for search engines), manifest fallback                                                                                                                                                 |
+| `shortDescription`            | OG / Twitter card description (tuned for social previews; falls back to `description`)                                                                                                                                 |
+| `url`                         | `metadataBase`, sitemap entries, robots `Sitemap:` line                                                                                                                                                                |
+| `twitterHandle`               | Twitter card `site` attribute (the leading `@` is added automatically)                                                                                                                                                 |
+| `contactEmail`                | Footer e-mail link. `security.txt` has its own `Contact:` line — keep them in sync.                                                                                                                                    |
+| `keywords`                    | `<meta keywords>`                                                                                                                                                                                                      |
+| `themeColor`                  | Web manifest `theme_color` and `background_color`                                                                                                                                                                      |
+| `vulnerabilityDisclosurePath` | 404 page CTA, error page disclosure link                                                                                                                                                                               |
+| `social`                      | Footer social-link rail (icon resolved by `label`: Facebook, X (Twitter), LinkedIn, GitHub)                                                                                                                            |
+| `ein`                         | Footer EIN display line                                                                                                                                                                                                |
+| `phone`                       | Footer phone link (`phone.display` shown, `phone.tel` used for the `tel:` link)                                                                                                                                        |
+| `addresses`                   | Footer contact column (`addresses[].label` / `.lines` / `.mapUrl`)                                                                                                                                                     |
+| `guidestar`                   | Footer GuideStar/Candid seal links (`guidestar.profileUrl`, `guidestar.directProfileUrl`)                                                                                                                              |
+| `supportedBy`                 | Permanent "Supported by Free For Charity" bottom-bar attribution and "Supported Charity Login" hub link. Part of the FFC footer standard: required, always rendered — do **not** change or remove it when customizing. |
+| `parentOrg`                   | Footer "a project of" parent-org clause (omit for a standalone charity)                                                                                                                                                |
+| `integrations`                | Zeffy donation embed, Idealist profile, SociableKit events widget, Microsoft Forms URL                                                                                                                                 |
 
 ### Things `siteConfig` does NOT drive
 
