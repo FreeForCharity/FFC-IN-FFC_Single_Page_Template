@@ -57,10 +57,36 @@ jobs:
         env:
           NEXT_PUBLIC_BASE_PATH: ${{ steps.basepath.outputs.value }}
 
+      - name: Stage site for Lighthouse
+        id: stage
+        # lighthouserc.json serves ./out at the domain root and audits
+        # root-relative URLs. That matches a custom-domain deploy, but a
+        # subpath build prefixes every asset URL with /<repo-name> — served
+        # from the root, all CSS/JS would 404 and Lighthouse would audit an
+        # unstyled skeleton page (bogus scores, e.g. tap-target failures from
+        # default user-agent styles). Nest the export under the same subpath
+        # the production Pages deploy uses and audit the subpath URLs instead.
+        # The page list is derived from lighthouserc.json (single source of
+        # truth) so it can't drift from the config.
+        run: |
+          base="${{ steps.basepath.outputs.value }}"
+          if [ -n "$base" ]; then
+            mkdir -p "_lhci-site${base}"
+            cp -r out/. "_lhci-site${base}/"
+            flags="--collect.staticDistDir=./_lhci-site"
+            pages=$(jq -r '.ci.collect.url[] | sub("^http://localhost/"; "")' lighthouserc.json)
+            for page in $pages; do
+              flags="$flags --collect.url=http://localhost${base}/${page}"
+            done
+            echo "flags=$flags" >> "$GITHUB_OUTPUT"
+          else
+            echo "flags=" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Run Lighthouse CI
         run: |
           npm install -g @lhci/cli
-          lhci autorun
+          lhci autorun ${{ steps.stage.outputs.flags }}
         env:
           LHCI_GITHUB_APP_TOKEN: ${{ secrets.LHCI_GITHUB_APP_TOKEN }}
 
