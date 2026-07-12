@@ -4,7 +4,7 @@
  *
  * Site-agnostic: works for any repo built from FFC_Single_Page_Template
  * (Next.js `output: 'export'`). It drives Chromium through Playwright's
- * API (the same `playwright` import the repo already depends on) — pointed
+ * API via `@playwright/test` (the package the repo already depends on) — pointed
  * at the container's pre-installed browser via executablePath, not a
  * Playwright-bundled download. It navigates one or more routes against a
  * running server, screenshots each, and reports same-origin request
@@ -25,7 +25,7 @@
  * Exit code: 0 = every route clean, 1 = any route failed.
  */
 
-import { chromium } from 'playwright'
+import { chromium } from '@playwright/test'
 import { mkdir } from 'node:fs/promises'
 import { existsSync, statSync, accessSync, constants } from 'node:fs'
 import { dirname, resolve, relative } from 'node:path'
