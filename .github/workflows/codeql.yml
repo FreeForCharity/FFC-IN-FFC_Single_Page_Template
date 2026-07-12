@@ -1,0 +1,61 @@
+name: CodeQL
+
+# Advanced-setup CodeQL analysis. The 'Protect Main' ruleset requires CodeQL
+# results for every PR, but GitHub's DEFAULT setup never uploads analyses for
+# PR refs — so every PR needed a manual bypass merge (see #395). This
+# workflow analyzes PRs, merge-queue groups, and pushes to main so the
+# required code-scanning results always exist.
+#
+# Operator note (#395): if CodeQL DEFAULT setup is (re-)enabled in
+# Settings → Code security → CodeQL, GitHub rejects this workflow's analysis
+# upload with a 'default setup enabled' error. Default setup must be switched
+# OFF so this workflow takes over.
+
+on:
+  # Runs on all pull requests
+  pull_request:
+    branches: ['main']
+
+  # Runs in the merge queue (Protect Main uses merge_queue + code_scanning)
+  merge_group:
+
+  # Runs on pushes to main
+  push:
+    branches: ['main']
+
+  # Weekly scan to pick up newly released CodeQL queries
+  schedule:
+    - cron: '0 6 * * 1'
+
+  # Allows manual trigger from Actions tab
+  workflow_dispatch:
+
+jobs:
+  analyze:
+    name: Analyze (${{ matrix.language }})
+    runs-on: ubuntu-latest
+
+    permissions:
+      actions: read
+      contents: read
+      security-events: write
+
+    strategy:
+      fail-fast: false
+      matrix:
+        # Matches the languages the previous default setup scanned
+        language: ['javascript-typescript', 'actions']
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v4
+        with:
+          languages: ${{ matrix.language }}
+
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@v4
+        with:
+          category: '/language:${{ matrix.language }}'
