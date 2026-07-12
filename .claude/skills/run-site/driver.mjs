@@ -55,7 +55,7 @@ const CHROME = resolveChrome()
 const here = dirname(fileURLToPath(import.meta.url))
 const shotDir = resolve(here, 'screenshots')
 
-// Default preview origin: `npm run preview` serves the export on :3000.
+// Default origin: the static export served on :3000 (see SKILL.md for how).
 const BASE_URL = (process.env.BASE_URL || 'http://localhost:3000').replace(/\/$/, '')
 const EXPECT = process.env.EXPECT || ''
 const VIEWPORT = { width: 1280, height: 800 }
