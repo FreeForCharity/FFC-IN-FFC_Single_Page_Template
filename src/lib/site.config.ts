@@ -92,6 +92,16 @@ export type SiteConfig = {
   /** GuideStar / Candid transparency profile links shown in the footer. */
   guidestar: { profileUrl: string; directProfileUrl: string }
   /**
+   * Permanent attribution to the supporting organization (FFC). Drives the
+   * always-rendered "Supported by" clause in the footer bottom bar and the
+   * "Supported Charity Login" quick link (`hubUrl`). This is part of the FFC
+   * footer standard for every supported charity site: it is REQUIRED, always
+   * rendered, and NOT to be removed or repointed when customizing a fork.
+   * Distinct from `parentOrg` below, which covers genuine fiscal-sponsorship
+   * ("a project of") relationships.
+   */
+  supportedBy: { name: string; url: string; hubUrl: string }
+  /**
    * Parent / umbrella organization, when this site is "a project of" another
    * nonprofit. Omit for a standalone charity (the footer clause is hidden).
    */
@@ -162,6 +172,11 @@ export const siteConfig: SiteConfig = {
     profileUrl: 'https://www.guidestar.org/profile/46-2471893',
     directProfileUrl:
       'https://www.guidestar.org/profile/shared/bbbe173a-87b9-4af9-a8a2-cae255a95742',
+  },
+  supportedBy: {
+    name: 'Free For Charity',
+    url: 'https://freeforcharity.org',
+    hubUrl: 'https://freeforcharity.org/hub/',
   },
   parentOrg: {
     name: 'Free For Charity',

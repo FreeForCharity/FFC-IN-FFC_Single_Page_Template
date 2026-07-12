@@ -70,6 +70,40 @@ describe('Footer component', () => {
     expect(telLink).toHaveTextContent(siteConfig.phone.display)
   })
 
+  it('always renders the permanent "Supported by" attribution in the bottom bar', () => {
+    render(<Footer />)
+    // FFC footer standard: the attribution renders unconditionally (it does
+    // not depend on the optional parentOrg), naming the supporting org and
+    // linking to its site.
+    const bottomBar = screen.getByText(/All Rights Are Reserved/)
+    expect(bottomBar).toHaveTextContent(`Supported by ${siteConfig.supportedBy.name}`)
+    const attributionLink = screen
+      .getAllByRole('link')
+      .find(
+        (link) =>
+          link.getAttribute('href') === siteConfig.supportedBy.url &&
+          link.textContent === siteConfig.supportedBy.name
+      )
+    expect(attributionLink).toBeDefined()
+  })
+
+  it('always renders the Supported Charity Login quick link to the hub', () => {
+    render(<Footer />)
+    const hubLink = screen.getByText('Supported Charity Login').closest('a')
+    expect(hubLink).toHaveAttribute('href', siteConfig.supportedBy.hubUrl)
+  })
+
+  it('keeps the FFC donation policy label hardcoded (not siteConfig.name-branded)', () => {
+    render(<Footer />)
+    // This page documents FFC's own donation policy, so its label must not
+    // pick up a fork's rebranded siteConfig.name.
+    const ffcPolicyLink = screen.getByText('Free For Charity Donation Policy').closest('a')
+    expect(ffcPolicyLink).toHaveAttribute('href', '/free-for-charity-donation-policy')
+    // The charity's own donation policy remains a separate entry.
+    const ownPolicyLink = screen.getByText('Donation Policy').closest('a')
+    expect(ownPolicyLink).toHaveAttribute('href', '/donation-policy')
+  })
+
   it('renders every configured office address with a maps link', () => {
     render(<Footer />)
     const links = screen.getAllByRole('link')
