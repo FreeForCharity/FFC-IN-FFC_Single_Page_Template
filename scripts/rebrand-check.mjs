@@ -82,6 +82,11 @@ async function checkSiteConfig() {
     flag('Organization identity', `${rel} is missing — restore it from the template`, rel)
     return
   }
+  // siteConfig.supportedBy intentionally keeps Free For Charity's name and URL
+  // forever — it is the permanent "Supported by" footer attribution required by
+  // the FFC footer standard, NOT a rebrand target. Drop that block before
+  // scanning so it never shows up (or fails --strict) as an unfinished rebrand.
+  const scanned = cfg.replace(/supportedBy:\s*\{[^}]*\}/g, '')
   const defaults = [
     ['Charity name still "Free For Charity"', 'Free For Charity'],
     ['Domain still ffcworkingsite1.org', 'ffcworkingsite1.org'],
@@ -98,7 +103,7 @@ async function checkSiteConfig() {
     ['Founding date still FFC 2014', "foundingDate: '2014'"],
   ]
   for (const [label, needle] of defaults) {
-    if (cfg.includes(needle)) flag('Organization identity', label, rel)
+    if (scanned.includes(needle)) flag('Organization identity', label, rel)
   }
 }
 

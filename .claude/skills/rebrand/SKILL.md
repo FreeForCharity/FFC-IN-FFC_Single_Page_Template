@@ -115,8 +115,14 @@ Keep brand-neutral, reusable UI primitives (cards, buttons) even if unused.
   and manifest icons still resolve. Always reference via `assetPath()`.
 - Footer: the parent-org / platform credit is config-driven via
   `siteConfig.parentOrg` — set it (or clear it), don't hardcode. If you add a
-  hardcoded "Built with Free For Charity" credit line, it's the one allowlisted
+  hardcoded "Built with Free For Charity" credit line, it's an allowlisted
   identity exception.
+- Footer attribution that is NOT a rebrand target: `siteConfig.supportedBy`
+  (the permanent "Supported by Free For Charity" bottom-bar clause and the
+  "Supported Charity Login" hub link) and the hardcoded "Free For Charity
+  Donation Policy" label. These are part of the FFC footer standard — leave
+  them exactly as shipped; `check:drift` and `check:rebrand` deliberately
+  exempt them.
 
 ### 6b. Full docs & metadata cleanup — the whole repo, not just `src/`
 
