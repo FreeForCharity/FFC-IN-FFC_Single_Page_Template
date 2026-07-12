@@ -18,6 +18,7 @@
     "test:e2e:ui": "playwright test --ui",
     "test:e2e:headed": "playwright test --headed",
     "check:drift": "node scripts/check-drift.mjs",
+    "check:site-config": "node scripts/check-site-config.mjs",
     "check:rebrand": "node scripts/rebrand-check.mjs",
     "verify:build": "node scripts/verify-build.mjs",
     "check:bundle": "node scripts/check-bundle-size.mjs",
