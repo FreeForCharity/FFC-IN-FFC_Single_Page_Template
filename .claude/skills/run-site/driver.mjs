@@ -2,8 +2,8 @@
 /*
  * driver.mjs — headless-Chromium harness for an FFC static-export site.
  *
- * Site-agnostic: works for any repo built from FFC_Single_Page_Template
- * (Next.js `output: 'export'`). It drives Chromium through Playwright's
+ * Site-agnostic: works for any FFC static-export site (Next.js
+ * `output: 'export'`). It drives Chromium through Playwright's
  * API via `@playwright/test` (the package the repo already depends on) — pointed
  * at the container's pre-installed browser via executablePath, not a
  * Playwright-bundled download. It navigates one or more routes against a
@@ -60,8 +60,8 @@ const BASE_URL = (process.env.BASE_URL || 'http://localhost:3000').replace(/\/$/
 const EXPECT = process.env.EXPECT || ''
 const VIEWPORT = { width: 1280, height: 800 }
 
-// Default route set. Templates are single-page, so `/` is the safe default;
-// override with ROUTES="/a/,/b/" or pass routes as args for multi-page sites.
+// Default route set: `/` only — the one route every site has. Override with
+// ROUTES="/a/,/b/" or pass routes as args to cover more of a multi-page site.
 const DEFAULT_ROUTES = (process.env.ROUTES || '/')
   .split(',')
   .map((r) => r.trim())
