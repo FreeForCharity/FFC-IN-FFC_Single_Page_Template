@@ -20,7 +20,7 @@ Before starting implementation, ensure you have:
 - [x] Read and understood `FACEBOOK_EVENTS_REQUIREMENTS.md`
 - [x] Confirmed Free For Charity Facebook page URL: `https://www.facebook.com/freeforcharity`
 - [x] Verified Facebook page has upcoming events posted
-- [x] Development environment set up (Node.js 20.x, npm)
+- [x] Development environment set up (Node.js 24.x, npm)
 - [x] Access to repository: `FreeForCharity/FFC_Single_Page_Template`
 - [x] Reviewed existing cookie consent implementation in `src/components/cookie-consent/index.tsx`
 

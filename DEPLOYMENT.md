@@ -82,7 +82,7 @@ The deployment workflow runs automatically when:
 Runs on all pull requests and pushes to main:
 
 1. **Checkout code**: Retrieves the latest code from the repository
-2. **Setup Node.js**: Installs Node.js 20.x
+2. **Setup Node.js**: Installs Node.js 24.x
 3. **Install dependencies**: Runs `npm ci` for a clean installation
 4. **Check formatting**: Runs Prettier format check
 5. **Run linting**: Executes ESLint to catch code issues
@@ -100,7 +100,7 @@ Triggered automatically after the CI workflow completes successfully on push to 
 The actual steps performed by the deploy workflow are:
 
 1. **Checkout code**: Retrieves the tested code from the repository
-2. **Setup Node.js**: Installs Node.js 20.x
+2. **Setup Node.js**: Installs Node.js 24.x
 3. **Setup Pages**: Configures GitHub Pages settings
 4. **Restore Next.js cache**: Restores build cache for faster builds
 5. **Install dependencies**: Runs `npm ci` for a clean installation
@@ -132,7 +132,7 @@ While automated deployment is recommended, you can also deploy manually if neede
 
 ### Prerequisites
 
-- Node.js 20.x installed
+- Node.js 24.x installed
 - GitHub CLI (`gh`) or GitHub Personal Access Token
 - Write access to the repository
 

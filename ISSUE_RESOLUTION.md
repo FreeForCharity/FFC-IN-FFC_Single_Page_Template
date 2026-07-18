@@ -29,11 +29,11 @@ This document provides solutions to common issues, troubleshooting steps, and fr
 # Check your Node.js version
 node --version
 
-# Should be 20.x or higher
-# Install Node 20 if needed
+# Should be 24.x or higher
+# Install Node 24 if needed
 # Using nvm (recommended):
-nvm install 20
-nvm use 20
+nvm install 24
+nvm use 24
 
 # Or download from nodejs.org
 ```

@@ -523,7 +523,7 @@ The project uses separate workflows for better separation of concerns:
 **CI Workflow** (`.github/workflows/ci.yml`)
 
 - ✅ Runs on all pull requests and pushes
-- ✅ Node.js 20 setup
+- ✅ Node.js 24 setup
 - ✅ Dependency installation (`npm ci`)
 - ✅ Code formatting check (Prettier)
 - ✅ Linting (ESLint)
@@ -537,7 +537,7 @@ The project uses separate workflows for better separation of concerns:
 
 - ✅ Runs only after CI workflow completes successfully
 - ✅ Ensures all tests pass before deployment
-- ✅ Node.js 20 setup
+- ✅ Node.js 24 setup
 - ✅ Dependency installation (`npm ci`)
 - ✅ Next.js build with GitHub Pages basePath
 - ✅ Static site artifact upload

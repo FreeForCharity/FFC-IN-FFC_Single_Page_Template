@@ -317,4 +317,4 @@ check:drift` will fail if any are missing
 
 **Last Updated**: 2025-12-19  
 **Template Version**: 0.3.0  
-**Compatible with**: Next.js 16.0.7, Node.js 20.x
+**Compatible with**: Next.js 16.0.7, Node.js 24.x
