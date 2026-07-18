@@ -699,7 +699,7 @@ If your issue isn't covered here:
 
 ---
 
-**Last Updated**: 2025-12-03  
+**Last Updated**: 2026-07-18  
 **Repository**: FreeForCharity/FFC_Single_Page_Template  
 **Node.js**: 24.x (validated with v24.18.0)
 
