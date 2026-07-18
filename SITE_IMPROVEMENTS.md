@@ -7,7 +7,7 @@
 **Last Updated:** December 2025  
 **Status:** Phase 5 Complete - All Critical Gaps Closed  
 **Repository:** FreeForCharity/FFC_Single_Page_Template  
-**Node.js:** 20.x (validated with v20.19.6)
+**Node.js:** 24.x (validated with v24.18.0)
 
 ---
 
@@ -80,7 +80,7 @@ This analysis compares FFC_Single_Page_Template against three sister repositorie
 | ------------------- | ------------------------ | ------------------ | ------------ | -------- |
 | **Next.js Version** | 16.0.7                   | 15.5.2             | 16.0.3       | 15.4.6   |
 | **React Version**   | 19.1.0                   | 19.1.0             | 19.2.0       | 19.1.0   |
-| **Node.js Target**  | 20.x                     | 20.x               | 20.x         | 20.x     |
+| **Node.js Target**  | 24.x                     | 20.x               | 20.x         | 20.x     |
 | **Package Manager** | npm                      | npm                | pnpm         | npm      |
 | **Static Export**   | ✅                       | ✅                 | ✅           | ✅       |
 | **TypeScript**      | ✅                       | ✅                 | ✅           | ✅       |
@@ -1641,7 +1641,7 @@ docker run -v $(pwd):/app -p 3000:3000 kccf-web npm run dev
 #### Technical Requirements
 
 1. Create `Dockerfile`:
-   - Base image: node:20-alpine
+   - Base image: node:24-alpine
    - Multi-stage build (dependencies, build, production)
    - Non-root user
    - Optimized layer caching

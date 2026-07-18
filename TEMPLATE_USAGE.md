@@ -92,7 +92,7 @@ Quick checklist of major content areas:
 git clone https://github.com/YOUR-ORG/YOUR-REPO-NAME.git
 cd YOUR-REPO-NAME
 
-# Verify Node.js version (requires 20.x)
+# Verify Node.js version (requires 24.x)
 node --version
 
 # Install dependencies
