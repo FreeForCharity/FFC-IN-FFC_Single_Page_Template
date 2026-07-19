@@ -338,21 +338,44 @@ jobs:
               return null;
             }).catch(() => null);
 
-            // Donation surfaces: Zeffy iframes (embedded forms) AND Zeffy
-            // links/payment buttons. Zeffy runs on Stripe under the hood, which
-            // is why its widgets emit stripe.com/googlepay/amplitude beacons —
-            // see the waitUntil note above.
-            const donationSurfaces = await page.evaluate(() => {
+            // Donation surfaces across providers. Zeffy is FFC's PREFERRED
+            // provider (0% fees; runs on Stripe under the hood — hence the
+            // stripe/googlepay/amplitude beacons and the waitUntil note above).
+            // Other providers (PayPal etc.) count as working-but-non-preferred:
+            // real charity money flows through them, so they are never treated
+            // as "no donations", but a standing migration issue tracks the move
+            // to Zeffy.
+            const PROVIDERS = [
+              { name: 'zeffy', hosts: ['zeffy.com'] },
+              { name: 'paypal', hosts: ['paypal.com', 'paypalobjects.com'] },
+              { name: 'gofundme', hosts: ['gofundme.com'] },
+              { name: 'givebutter', hosts: ['givebutter.com'] },
+              { name: 'donorbox', hosts: ['donorbox.org'] },
+              { name: 'venmo', hosts: ['venmo.com'] },
+            ];
+            const donationSurfaces = await page.evaluate((providers) => {
               const out = [];
-              for (const f of document.querySelectorAll('iframe[src*="zeffy.com"]')) {
-                out.push({ kind: 'embed', url: f.getAttribute('src') });
+              const provOf = (u) => {
+                for (const p of providers) if (p.hosts.some(h => (u || '').includes(h))) return p.name;
+                return null;
+              };
+              for (const f of document.querySelectorAll('iframe[src]')) {
+                const p = provOf(f.getAttribute('src'));
+                if (p) out.push({ provider: p, kind: 'embed', url: f.getAttribute('src') });
               }
-              for (const a of document.querySelectorAll('a[href*="zeffy.com"]')) {
-                out.push({ kind: 'link', url: a.getAttribute('href'), text: (a.innerText || '').slice(0, 60) });
+              for (const a of document.querySelectorAll('a[href]')) {
+                const p = provOf(a.getAttribute('href'));
+                if (p) out.push({ provider: p, kind: 'link', url: a.getAttribute('href'), text: (a.innerText || '').slice(0, 60) });
+              }
+              for (const fm of document.querySelectorAll('form[action]')) {
+                const p = provOf(fm.getAttribute('action'));
+                if (p) out.push({ provider: p, kind: 'form', url: fm.getAttribute('action') });
               }
               return out;
-            }).catch(() => []);
-            const donationEmbeds = donationSurfaces.filter(s => s.kind === 'embed').map(s => s.url);
+            }, PROVIDERS).catch(() => []);
+            const zeffySurfaces = donationSurfaces.filter(s => s.provider === 'zeffy');
+            const otherProviders = [...new Set(donationSurfaces.filter(s => s.provider !== 'zeffy').map(s => s.provider))];
+            const donationEmbeds = zeffySurfaces.filter(s => s.kind === 'embed').map(s => s.url);
 
             // Known-bad markers that a 200 HTTP check would miss.
             const allowTemplateDefault = String(process.env.SMOKE_ALLOW_TEMPLATE_DEFAULT || '').toLowerCase() === 'true';
@@ -401,30 +424,33 @@ jobs:
             if (requireDonation && donationEmbeds.length === 0) {
               complianceFailures.push('SMOKE_REQUIRE_DONATION_EMBED=true but no Zeffy iframe found on the page');
             }
-            // Live apex site with NO donation surface of any kind = failure,
-            // unless the site explicitly declares scope 'none'.
+            // Tri-state donation posture:
+            //   no surfaces at all           -> HARD FAILURE (unless scope 'none')
+            //   non-Zeffy provider(s) only   -> PASS + standing donation-migration issue
+            //   Zeffy present                -> PASS (charity or ffc-interim per scope)
             const isApex = String(process.env.SMOKE_MODE || '') !== 'default';
             if (isApex && !placeholder && donationSurfaces.length === 0 && donationScope !== 'none') {
-              complianceFailures.push('No donation capability detected (no Zeffy embed, link, or button). Wire a Zeffy campaign, or set SMOKE_DONATION_SCOPE=none only if this site intentionally takes no donations.');
+              complianceFailures.push('No donation capability detected (no Zeffy, PayPal, or other donation provider found). Wire a Zeffy campaign, or set SMOKE_DONATION_SCOPE=none only if this site intentionally takes no donations.');
             }
-            // Every surface must be reachable (embed or button target).
+            // Every surface must be reachable, whatever the provider.
             for (const s of donationSurfaces) {
               try {
-                const r = await fetch(s.url, { method: 'GET', redirect: 'follow' });
+                const r = await fetch(s.url.startsWith('http') ? s.url : 'https:' + s.url, { method: 'GET', redirect: 'follow' });
                 donationChecks.push({ ...s, status: r.status });
                 if (r.status >= 400) {
-                  complianceFailures.push(`Zeffy ${s.kind} unreachable (${r.status}): ${s.url}`);
+                  complianceFailures.push(`${s.provider} donation ${s.kind} unreachable (${r.status}): ${s.url}`);
                 }
               } catch (e) {
                 donationChecks.push({ ...s, status: 0 });
-                complianceFailures.push(`Zeffy ${s.kind} fetch failed: ${s.url} (${e.message})`);
+                complianceFailures.push(`${s.provider} donation ${s.kind} fetch failed: ${s.url} (${e.message})`);
               }
             }
-            // ffc-interim: green smoke, but record it so the workflow keeps a
-            // standing known-issue open until a charity-specific campaign lands.
-            const donationInterim = donationScope === 'ffc-interim' && donationSurfaces.length > 0;
+            const donationInterim = donationScope === 'ffc-interim' && zeffySurfaces.length > 0;
+            // Working-but-non-preferred: real donations flow via PayPal etc.,
+            // no Zeffy yet -> tracked for migration, never failed.
+            const nonpreferredOnly = zeffySurfaces.length === 0 && otherProviders.length > 0 && donationScope !== 'none';
             require('fs').writeFileSync(process.env.GITHUB_WORKSPACE + '/artifacts/donation-status.json',
-              JSON.stringify({ scope: donationScope || 'undeclared', interim: donationInterim, surfaces: donationChecks }, null, 2));
+              JSON.stringify({ scope: donationScope || 'undeclared', interim: donationInterim, nonpreferredOnly, providers: otherProviders, surfaces: donationChecks }, null, 2));
 
             const summary = {
               url, status, title,
@@ -572,11 +598,14 @@ jobs:
             echo "Opened new smoke-failure issue"
           fi
 
-      - name: Maintain standing donation-interim known-issue
-        # SMOKE_DONATION_SCOPE=ffc-interim means the site is (acceptably)
-        # using a Free For Charity Zeffy campaign until the charity gets its
-        # own. Donations keep working and the smoke stays green, but this
-        # keeps ONE standing issue open so scans surface it until replaced.
+      - name: Maintain standing donation posture issues
+        # Two auto-managed standing issues, distinct states:
+        #   donation-interim   - site uses an FFC Zeffy campaign until the
+        #                        charity gets its own (SMOKE_DONATION_SCOPE=ffc-interim)
+        #   donation-migration - site takes donations via a non-preferred
+        #                        provider (PayPal etc.) and has no Zeffy yet
+        # Both keep the smoke green while staying visible in every scan;
+        # each auto-closes when its condition clears.
         if: always() && !cancelled() && steps.url.outputs.skip != 'true'
         env:
           GH_TOKEN: ${{ github.token }}
@@ -584,6 +613,42 @@ jobs:
         run: |
           set -euo pipefail
           REPO="${GITHUB_REPOSITORY}"
+
+          # --- donation-migration (auto-detected, provider-based) ---
+          nonpref="false"; providers=""
+          if [ -f artifacts/donation-status.json ]; then
+            nonpref=$(python3 -c "import json; d=json.load(open('artifacts/donation-status.json')); print(str(d.get('nonpreferredOnly', False)).lower())" 2>/dev/null || echo "false")
+            providers=$(python3 -c "import json; d=json.load(open('artifacts/donation-status.json')); print(', '.join(d.get('providers', [])))" 2>/dev/null || echo "")
+          fi
+          mig=$(gh api "repos/${REPO}/issues?state=open&labels=donation-migration&per_page=1" --jq '.[0].number // empty' || echo "")
+          if [ "$nonpref" = "true" ]; then
+            if [ -z "$mig" ]; then
+              gh api "repos/${REPO}/labels" --method POST -f name="donation-migration" \
+                -f color="d4c5f9" -f description="Donations work via a non-preferred provider; migrate to Zeffy" >/dev/null 2>&1 || true
+              body=$(printf '%s\n' \
+                "This site takes donations/payments through a non-preferred provider (${providers:-unknown}) and has no Zeffy surface yet." \
+                "" \
+                "That is a WORKING state (real charity money flows through it) - the smoke stays green - but Zeffy is FFC's preferred provider (0% fees), so this stays visible until migrated:" \
+                "1. Create the charity's own Zeffy campaign/form (or migrate the existing flows)." \
+                "2. Add the Zeffy embed/links to the site (keep or retire the old provider per the charity's wishes)." \
+                "" \
+                "Auto-managed: this issue closes itself on the first run that detects a Zeffy surface.")
+              gh api "repos/${REPO}/issues" --method POST \
+                -f title="Donations via non-preferred provider (${providers:-unknown}) — migrate to Zeffy" \
+                -f body="$body" \
+                -f "labels[]=donation-migration" -f "labels[]=priority: high" >/dev/null
+              echo "Opened donation-migration issue (providers: ${providers})"
+            else
+              echo "donation-migration issue #${mig} remains open (still ${providers:-non-preferred} only)"
+            fi
+          elif [ -n "$mig" ]; then
+            gh api "repos/${REPO}/issues/${mig}/comments" --method POST \
+              -f body="✅ A Zeffy surface is now detected (or scope changed) — migration complete. Auto-closing." >/dev/null
+            gh api -X PATCH "repos/${REPO}/issues/${mig}" -f state=closed >/dev/null
+            echo "Closed donation-migration issue #${mig}"
+          fi
+
+          # --- donation-interim (scope-declared) ---
           existing=$(gh api "repos/${REPO}/issues?state=open&labels=donation-interim&per_page=1" --jq '.[0].number // empty' || echo "")
           scope=$(echo "${SCOPE:-}" | tr '[:upper:]' '[:lower:]')
 
