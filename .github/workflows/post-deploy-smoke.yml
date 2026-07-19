@@ -20,6 +20,7 @@ on:
 permissions:
   contents: read
   issues: write
+  pages: read
 
 jobs:
   smoke:
@@ -29,21 +30,39 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v6
 
-      - name: Determine smoke URL (forces HTTPS)
+      - name: Determine smoke target from Pages config (ground truth)
         id: url
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
           echo "skip=false" >> "$GITHUB_OUTPUT"
+          echo "drift=false" >> "$GITHUB_OUTPUT"
+
+          # The Pages CONFIG is what GitHub actually serves; public/CNAME is
+          # only the build artifact's claim. Resolving from the API catches
+          # repos whose file and binding have drifted apart.
+          pages_cname=$(gh api "repos/${GITHUB_REPOSITORY}/pages" --jq '.cname // ""' 2>/dev/null || echo "")
+          pages_url=$(gh api "repos/${GITHUB_REPOSITORY}/pages" --jq '.html_url // ""' 2>/dev/null || echo "")
+          file_cname=""
+          [ -f public/CNAME ] && file_cname=$(tr -d '[:space:]' < public/CNAME)
+
           if [ -n "${{ inputs.url }}" ]; then
-            target="${{ inputs.url }}"
-          elif [ -f public/CNAME ]; then
-            cname=$(tr -d '[:space:]' < public/CNAME)
-            target="https://${cname}/"
+            mode="apex"; target="${{ inputs.url }}"
+          elif [ -n "$pages_cname" ]; then
+            # Custom domain bound -> full apex/custom-domain verification.
+            mode="apex"; target="https://${pages_cname}/"
+            if [ "$file_cname" != "$pages_cname" ]; then
+              echo "drift=true" >> "$GITHUB_OUTPUT"
+              echo "file_cname=${file_cname:-<missing>}" >> "$GITHUB_OUTPUT"
+            fi
+          elif [ -n "$pages_url" ]; then
+            # Pages enabled, no custom domain -> pre-cutover deployment smoke
+            # against the default location (reduced check set).
+            mode="default"; target="$pages_url"
           else
-            # No custom domain -> site is not cut over yet. A red run (and a
-            # high-priority issue) for a not-yet-live site is noise, so skip
-            # neutrally. Explicit dispatch with a url input still tests.
-            echo "::notice::No URL input and no public/CNAME — site not cut over; skipping smoke neutrally"
+            echo "::notice::GitHub Pages is not enabled on this repo — skipping smoke neutrally"
+            echo "mode=skip" >> "$GITHUB_OUTPUT"
             echo "skip=true" >> "$GITHUB_OUTPUT"
             exit 0
           fi
@@ -52,8 +71,20 @@ jobs:
           if [[ ! "$target" =~ ^https:// ]]; then
             target="https://${target}"
           fi
+          echo "mode=$mode" >> "$GITHUB_OUTPUT"
+          echo "pages_cname=$pages_cname" >> "$GITHUB_OUTPUT"
           echo "url=$target" >> "$GITHUB_OUTPUT"
-          echo "Smoke target: $target"
+          echo "Smoke target: $target (mode: $mode)"
+
+      - name: Assert public/CNAME matches the Pages custom domain
+        # The Next build keys basePath/asset URLs off public/CNAME, so a file
+        # that disagrees with the actual Pages binding means the site was
+        # built for the WRONG host (broken assets/links at the real domain).
+        if: steps.url.outputs.mode == 'apex' && steps.url.outputs.drift == 'true'
+        run: |
+          echo "::error::public/CNAME (${{ steps.url.outputs.file_cname }}) does not match the Pages custom domain (${{ steps.url.outputs.pages_cname }})."
+          echo "::error::Fix public/CNAME to match the Pages binding (or clear the binding) — the current build targets the wrong host."
+          exit 1
 
       - name: Probe live URL over HTTPS (cert-aware retry)
         id: probe
@@ -102,7 +133,8 @@ jobs:
         # Template repos (FFC-IN-*Template*) legitimately serve the template
         # default content on their working sites - the assertion is for
         # charity sites that failed to rebrand, not for the source templates.
-        if: steps.url.outputs.skip != 'true' && !contains(github.repository, 'Template')
+        # Apex mode only: pre-cutover scaffolds legitimately show the template.
+        if: steps.url.outputs.mode == 'apex' && !contains(github.repository, 'Template')
         env:
           # Block the FFC charity-mission template's distinctive title.
           # This is the exact regression the user flagged: staging.<domain> was
@@ -126,7 +158,7 @@ jobs:
           echo "✓ Template-default content NOT present"
 
       - name: Assert per-repo expected title (if configured)
-        if: steps.url.outputs.skip != 'true'
+        if: steps.url.outputs.mode == 'apex'
         env:
           EXPECTED_TITLE_FRAGMENT: ${{ vars.SMOKE_EXPECTED_TITLE }}
         run: |
@@ -143,7 +175,9 @@ jobs:
           echo "✓ Title contains expected fragment: $EXPECTED_TITLE_FRAGMENT"
 
       - name: Sitemap routes 200-check (every URL in sitemap.xml must HTTPS-resolve)
-        if: steps.url.outputs.skip != 'true'
+        # Apex mode only: sitemaps emit apex URLs; on the default Pages URL the
+        # basePath-prefixed rewrite would false-negative.
+        if: steps.url.outputs.mode == 'apex'
         env:
           URL: ${{ steps.url.outputs.url }}
         run: |
@@ -218,7 +252,10 @@ jobs:
           # (e.g., site uses NO cookies / NO analytics).
           SMOKE_REQUIRE_COOKIE_CONSENT: ${{ vars.SMOKE_REQUIRE_COOKIE_CONSENT }}
           # 'true' on template repos: their sites ARE the template default.
-          SMOKE_ALLOW_TEMPLATE_DEFAULT: ${{ contains(github.repository, 'Template') && 'true' || 'false' }}
+          SMOKE_ALLOW_TEMPLATE_DEFAULT: ${{ (contains(github.repository, 'Template') || steps.url.outputs.mode == 'default') && 'true' || 'false' }}
+          # default mode = pre-cutover deployment verification: page loads,
+          # not a GH 404, non-trivial body. Compliance is an apex concern.
+          SMOKE_MODE: ${{ steps.url.outputs.mode }}
         working-directory: /tmp/pw
         run: |
           mkdir -p $GITHUB_WORKSPACE/artifacts
@@ -226,8 +263,11 @@ jobs:
           const { chromium } = require('playwright');
           (async () => {
             const url = process.env.URL;
-            const placeholder = String(process.env.SMOKE_PLACEHOLDER || '').toLowerCase() === 'true';
-            const requiredLinks = (process.env.SMOKE_REQUIRED_FOOTER_LINKS || '/privacy-policy,/tos')
+            const placeholder = String(process.env.SMOKE_PLACEHOLDER || '').toLowerCase() === 'true'
+              || String(process.env.SMOKE_MODE || '') === 'default';
+            // Each comma-separated entry may list '|'-separated alternatives
+            // (the footer standard moved /tos -> /terms-of-service; accept both).
+            const requiredLinks = (process.env.SMOKE_REQUIRED_FOOTER_LINKS || '/privacy-policy,/terms-of-service|/tos')
               .split(',').map(s => s.trim()).filter(Boolean);
             const requireCookieConsent = String(process.env.SMOKE_REQUIRE_COOKIE_CONSENT || 'true').toLowerCase() !== 'false';
 
@@ -309,7 +349,7 @@ jobs:
               } else {
                 // Check each required policy link is present in the footer.
                 const missing = requiredLinks.filter(needed =>
-                  !footer.hrefs.some(h => h.includes(needed))
+                  !needed.split('|').some(alt => footer.hrefs.some(h => h.includes(alt)))
                 );
                 if (missing.length > 0) {
                   complianceFailures.push(`Footer missing required policy links: ${missing.join(', ')}`);
@@ -367,8 +407,9 @@ jobs:
         # Depth hook: a repo can ship its own Playwright smoke suite in
         # tests/smoke/ (optionally with playwright.smoke.config.ts reading
         # SMOKE_BASE_URL) and the engine runs it against the live URL.
-        # Adopted from the FFC-EX-mitchellnchistory.org pattern.
-        if: steps.url.outputs.skip != 'true'
+        # Adopted from the FFC-EX-mitchellnchistory.org pattern. Apex mode
+        # only: repo suites assert canonical-URL invariants.
+        if: steps.url.outputs.mode == 'apex'
         env:
           SMOKE_BASE_URL: ${{ steps.url.outputs.url }}
           SMOKE_URL: ${{ steps.url.outputs.url }}
@@ -408,6 +449,7 @@ jobs:
             echo "- **URL:** $URL"
             echo "- **HTTPS status:** ${STATUS:-n/a} (probed in ${ATTEMPTS:-n/a} attempt(s))"
             echo "- **Trigger:** ${{ github.event_name }} (schedule = daily uptime pass)"
+            echo "- **Mode:** ${{ steps.url.outputs.mode }} (apex = custom-domain verification; default = pre-cutover deployment check)"
             echo "- **Job result:** ${{ job.status }}"
             echo "- **Screenshots:** see \`smoke-visual-${{ github.run_number }}\` artifact"
           } >> "$GITHUB_STEP_SUMMARY"
@@ -420,6 +462,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           RESULT: ${{ job.status }}
           URL: ${{ steps.url.outputs.url }}
+          SMOKE_MODE: ${{ steps.url.outputs.mode }}
         run: |
           set -euo pipefail
           REPO="${GITHUB_REPOSITORY}"
@@ -452,7 +495,7 @@ jobs:
             body=$(printf '%s\n' \
               "The Post-Deploy Smoke Test is failing on this repo." \
               "" \
-              "- **Failing run:** ${RUN_URL} (trigger: ${GITHUB_EVENT_NAME}; schedule = daily uptime pass)" \
+              "- **Failing run:** ${RUN_URL} (trigger: ${GITHUB_EVENT_NAME}; mode: ${SMOKE_MODE:-apex} — apex = custom-domain verification, default = pre-cutover deployment check)" \
               "- **Target:** ${URL:-could not be determined (no public/CNAME?)}" \
               "- **Triage:** check the failed step in the run. Screenshot/summary artifact: smoke-visual-${GITHUB_RUN_NUMBER} on the run." \
               "" \
