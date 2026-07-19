@@ -162,7 +162,7 @@ You can add more pages to audit by adding URLs to the `url` array. To see which 
 
 ### Prerequisites
 
-- Node.js 20.x installed
+- Node.js 24.x installed
 - Site built and ready to serve
 
 ### Quick Start

@@ -92,7 +92,7 @@ Quick checklist of major content areas:
 git clone https://github.com/YOUR-ORG/YOUR-REPO-NAME.git
 cd YOUR-REPO-NAME
 
-# Verify Node.js version (requires 20.x)
+# Verify Node.js version (requires 24.x)
 node --version
 
 # Install dependencies
@@ -970,6 +970,6 @@ These cannot be automated by AI and require manual work:
 
 ---
 
-**Last Updated**: 2025-12-19  
+**Last Updated**: 2026-07-18  
 **Template Version**: 0.3.0  
-**Compatible with**: Next.js 16.0.7, Node.js 20.x
+**Compatible with**: Next.js 16.0.7, Node.js 24.x
