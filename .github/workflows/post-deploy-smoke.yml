@@ -1,0 +1,458 @@
+name: Post-Deploy Smoke Test
+
+on:
+  workflow_run:
+    workflows: ['Deploy to GitHub Pages']
+    types: [completed]
+    branches: [main]
+  # Daily uptime pass: same deep checks between deploys, so platform-level
+  # regressions (DNS, certs, CDN, zone security) surface within a day
+  # instead of on the next deploy. Supersedes the separate uptime.yml.
+  schedule:
+    - cron: '17 5 * * *'
+  workflow_dispatch:
+    inputs:
+      url:
+        description: 'URL to test (defaults to public/CNAME)'
+        type: string
+        default: ''
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    if: ${{ github.event.workflow_run.conclusion == 'success' || github.event_name == 'workflow_dispatch' || github.event_name == 'schedule' }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Determine smoke URL (forces HTTPS)
+        id: url
+        run: |
+          set -euo pipefail
+          echo "skip=false" >> "$GITHUB_OUTPUT"
+          if [ -n "${{ inputs.url }}" ]; then
+            target="${{ inputs.url }}"
+          elif [ -f public/CNAME ]; then
+            cname=$(tr -d '[:space:]' < public/CNAME)
+            target="https://${cname}/"
+          else
+            # No custom domain -> site is not cut over yet. A red run (and a
+            # high-priority issue) for a not-yet-live site is noise, so skip
+            # neutrally. Explicit dispatch with a url input still tests.
+            echo "::notice::No URL input and no public/CNAME — site not cut over; skipping smoke neutrally"
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          # Force https://
+          target="${target/http:\/\//https://}"
+          if [[ ! "$target" =~ ^https:// ]]; then
+            target="https://${target}"
+          fi
+          echo "url=$target" >> "$GITHUB_OUTPUT"
+          echo "Smoke target: $target"
+
+      - name: Probe live URL over HTTPS (cert-aware retry)
+        id: probe
+        if: steps.url.outputs.skip != 'true'
+        env:
+          URL: ${{ steps.url.outputs.url }}
+        run: |
+          set -uo pipefail
+          # HTTPS is required. No fallback to HTTP — real users in Chrome
+          # cannot reach an HTTP-only site if HSTS is set on the parent
+          # domain, and a missing GH Pages cert is a deployment failure.
+          #
+          # But: after a fresh cname (cutover, custom-domain change, or
+          # https_enforced toggle), Let's Encrypt provisioning takes 5-15
+          # min and HTTPS returns 000 (TLS handshake fail) during that
+          # window. Retry every 30s for up to 20 min before declaring a
+          # real deployment failure.
+          deadline=$(( $(date +%s) + 1200 ))
+          attempt=0
+          status="000"
+          while [ "$(date +%s)" -lt "$deadline" ]; do
+            attempt=$(( attempt + 1 ))
+            status=$(curl -sI --max-time 15 -L "$URL" -o /dev/null -w "%{http_code}" 2>&1 || echo "000")
+            if [ "$status" = "200" ]; then
+              echo "Attempt $attempt: HTTP $status (cert provisioned, site reachable)"
+              break
+            fi
+            echo "Attempt $attempt: HTTP $status — waiting 30s (cert may still be provisioning)"
+            sleep 30
+          done
+
+          echo "status=$status" >> "$GITHUB_OUTPUT"
+          echo "attempts=$attempt" >> "$GITHUB_OUTPUT"
+
+          if [ "$status" != "200" ]; then
+            echo "::error::HTTPS probe failed after $attempt attempts (~20 min): $URL returned HTTP $status"
+            echo "::error::Likely causes: cert provisioning stalled, DNS misconfigured, or apex not pointing at GH Pages."
+            echo "::error::Check Pages settings (Settings -> Pages -> Custom domain) and Cloudflare A/AAAA + www CNAME."
+            exit 1
+          fi
+          # Save body for next step (curl-based content checks)
+          curl -s --max-time 30 -L "$URL" > /tmp/page.html
+          echo "Body length: $(wc -c < /tmp/page.html) bytes"
+
+      - name: Assert no FFC-template-default content
+        if: steps.url.outputs.skip != 'true'
+        env:
+          # Block the FFC charity-mission template's distinctive title.
+          # This is the exact regression the user flagged: staging.<domain> was
+          # serving the unmodified template instead of the per-charity migration.
+          FORBIDDEN_TITLE_FRAGMENT: 'Free For Charity | Reduce Costs, Increase Impact'
+          FORBIDDEN_BODY_FRAGMENT: 'Reduce Costs, Increase Impact'
+        run: |
+          set -euo pipefail
+          title=$(grep -ohE '<title>[^<]+</title>' /tmp/page.html | head -1 | sed -E 's/<\/?title>//g' || echo "")
+          echo "Page title: $title"
+          if echo "$title" | grep -qF "$FORBIDDEN_TITLE_FRAGMENT"; then
+            echo "::error::Live URL is serving the FFC charity-mission template default title."
+            echo "::error::Expected charity-specific content; got template default."
+            echo "::error::Title: $title"
+            exit 1
+          fi
+          # Defensive body check: the template tagline shouldn't appear in the body
+          if grep -qF "$FORBIDDEN_BODY_FRAGMENT" /tmp/page.html; then
+            echo "::warning::FFC template tagline 'Reduce Costs, Increase Impact' appears in body — manual review advised"
+          fi
+          echo "✓ Template-default content NOT present"
+
+      - name: Assert per-repo expected title (if configured)
+        if: steps.url.outputs.skip != 'true'
+        env:
+          EXPECTED_TITLE_FRAGMENT: ${{ vars.SMOKE_EXPECTED_TITLE }}
+        run: |
+          set -euo pipefail
+          if [ -z "$EXPECTED_TITLE_FRAGMENT" ]; then
+            echo "::notice::SMOKE_EXPECTED_TITLE repo variable not set — skipping per-repo title assertion"
+            exit 0
+          fi
+          title=$(grep -ohE '<title>[^<]+</title>' /tmp/page.html | head -1 | sed -E 's/<\/?title>//g' || echo "")
+          if ! echo "$title" | grep -qF "$EXPECTED_TITLE_FRAGMENT"; then
+            echo "::error::Expected title to contain '$EXPECTED_TITLE_FRAGMENT'; got '$title'"
+            exit 1
+          fi
+          echo "✓ Title contains expected fragment: $EXPECTED_TITLE_FRAGMENT"
+
+      - name: Sitemap routes 200-check (every URL in sitemap.xml must HTTPS-resolve)
+        if: steps.url.outputs.skip != 'true'
+        env:
+          URL: ${{ steps.url.outputs.url }}
+        run: |
+          set -euo pipefail
+          base="${URL%/}"
+          sitemap_url="${base}/sitemap.xml"
+          sitemap=$(curl -s --max-time 30 -L "$sitemap_url" || true)
+          if ! echo "$sitemap" | grep -q "<loc>"; then
+            echo "::notice::No sitemap.xml found at $sitemap_url — skipping per-route check"
+            exit 0
+          fi
+          # Extract each <loc>, normalize to base host
+          mapfile -t locs < <(echo "$sitemap" | grep -oE "<loc>[^<]+</loc>" | sed -E 's/<\/?loc>//g')
+          host=$(echo "$base" | sed -E 's#^https?://([^/]+).*#\1#')
+          fail=0
+          checked=0
+          for loc in "${locs[@]}"; do
+            # Replace whatever host the sitemap emitted with our actual host
+            path=$(echo "$loc" | sed -E 's#^https?://[^/]+##')
+            [ -z "$path" ] && path="/"
+            url="https://${host}${path}"
+            code=$(curl -sI --max-time 15 -L "$url" -o /dev/null -w "%{http_code}" 2>&1 || echo "000")
+            if [ "$code" != "200" ]; then
+              # Try toggling trailing slash (some sitemaps drift from served form)
+              if [[ "$path" == */ ]]; then alt="${path%/}"; else alt="${path}/"; fi
+              code2=$(curl -sI --max-time 15 -L "https://${host}${alt}" -o /dev/null -w "%{http_code}" 2>&1 || echo "000")
+              if [ "$code2" = "200" ]; then
+                echo "::warning::Sitemap drift: $path emits $code but $alt is $code2"
+              else
+                echo "::error::Sitemap route $path returns $code (alt $alt → $code2)"
+                fail=$((fail + 1))
+              fi
+            fi
+            checked=$((checked + 1))
+          done
+          echo "Checked $checked routes; $fail failed"
+          if [ "$fail" -gt 0 ]; then exit 1; fi
+
+      - name: Setup Node for visual check
+        if: steps.url.outputs.skip != 'true'
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install Playwright (chromium only)
+        if: steps.url.outputs.skip != 'true'
+        run: |
+          # Install the npm package in an isolated dir so we don'\''t touch
+          # the repo'\''s own package.json (the FFC-EX repos use Next.js,
+          # not Playwright as a runtime dep).
+          mkdir -p /tmp/pw
+          cd /tmp/pw
+          npm init -y >/dev/null
+          npm install playwright@latest >/dev/null
+          # Install the browser binaries + OS deps for chromium.
+          npx playwright install --with-deps chromium
+
+      - name: Visual check + screenshot + compliance assertions
+        id: visual
+        if: steps.url.outputs.skip != 'true'
+        env:
+          URL: ${{ steps.url.outputs.url }}
+          # Repo variables (Settings -> Secrets and variables -> Actions -> Variables).
+          # Set SMOKE_PLACEHOLDER=true on placeholder/under-construction repos to
+          # skip ALL compliance assertions (footer + policy links + cookie consent).
+          # Real charity sites should leave it unset; the smoke enforces compliance.
+          SMOKE_PLACEHOLDER: ${{ vars.SMOKE_PLACEHOLDER }}
+          # Override: comma-separated list of href substrings the footer must contain.
+          # Default if unset: "/privacy-policy,/tos"
+          SMOKE_REQUIRED_FOOTER_LINKS: ${{ vars.SMOKE_REQUIRED_FOOTER_LINKS }}
+          # Override: set to "false" to skip the cookie-consent check even on real sites
+          # (e.g., site uses NO cookies / NO analytics).
+          SMOKE_REQUIRE_COOKIE_CONSENT: ${{ vars.SMOKE_REQUIRE_COOKIE_CONSENT }}
+        working-directory: /tmp/pw
+        run: |
+          mkdir -p $GITHUB_WORKSPACE/artifacts
+          cat > /tmp/pw/visual.js <<'JS'
+          const { chromium } = require('playwright');
+          (async () => {
+            const url = process.env.URL;
+            const placeholder = String(process.env.SMOKE_PLACEHOLDER || '').toLowerCase() === 'true';
+            const requiredLinks = (process.env.SMOKE_REQUIRED_FOOTER_LINKS || '/privacy-policy,/tos')
+              .split(',').map(s => s.trim()).filter(Boolean);
+            const requireCookieConsent = String(process.env.SMOKE_REQUIRE_COOKIE_CONSENT || 'true').toLowerCase() !== 'false';
+
+            const browser = await chromium.launch();
+            const ctx = await browser.newContext({
+              viewport: { width: 1366, height: 900 },
+              userAgent: 'FFC-Smoke/1.0 (Playwright; +gh-actions)',
+              ignoreHTTPSErrors: false,
+            });
+            const page = await ctx.newPage();
+            page.setDefaultTimeout(45000);
+            let resp = null;
+            try {
+              resp = await page.goto(url, { waitUntil: 'networkidle' });
+            } catch (e) {
+              console.error('navigation error:', e.message);
+            }
+            const status = resp ? resp.status() : 0;
+            const title = await page.title().catch(() => '');
+            const bodyText = await page.evaluate(() => document.body && document.body.innerText || '').catch(() => '');
+
+            // ----- Compliance probes (DOM inspection) -----
+            // 1) Footer present: any <footer> or [role="contentinfo"] with non-trivial text.
+            const footer = await page.evaluate(() => {
+              const el = document.querySelector('footer, [role="contentinfo"]');
+              if (!el) return null;
+              return {
+                tag: el.tagName.toLowerCase(),
+                text: (el.innerText || '').slice(0, 4000),
+                hrefs: Array.from(el.querySelectorAll('a[href]')).map(a => a.getAttribute('href') || ''),
+              };
+            }).catch(() => null);
+
+            // 2) Cookie-consent UI visible on first load. Multiple selectors because
+            //    different libraries use different markup. We treat a visible banner OR
+            //    a fixed-position element whose text mentions cookies as a hit.
+            const cookieConsent = await page.evaluate(() => {
+              const selectors = [
+                '[id*="cookie" i]', '[class*="cookie-consent" i]', '[class*="CookieConsent" i]',
+                '[aria-label*="cookie" i]', '[role="dialog"]',
+                '#cookie-banner', '#cookieConsent', '.cookie-banner', '.cc-window',
+              ];
+              for (const sel of selectors) {
+                const el = document.querySelector(sel);
+                if (!el) continue;
+                const rect = el.getBoundingClientRect();
+                if (rect.width < 50 || rect.height < 30) continue;
+                const txt = (el.innerText || '').toLowerCase();
+                if (txt.includes('cookie') || txt.includes('consent') || txt.includes('privacy')) {
+                  return { selector: sel, text: txt.slice(0, 400) };
+                }
+              }
+              return null;
+            }).catch(() => null);
+
+            // Known-bad markers that a 200 HTTP check would miss.
+            const failureMarkers = [
+              "There isn't a GitHub Pages site here", // GH Pages "site not found" page
+              "Site not found",
+              "404 Not Found",
+              "This page could not be found",
+              "Free For Charity | Reduce Costs, Increase Impact", // FFC template default
+              "Reduce Costs, Increase Impact",
+              "Apache",                                // unlikely in body, kept off
+            ].filter(m => m !== "Apache");
+            const matches = failureMarkers.filter(m => bodyText.includes(m) || title.includes(m));
+
+            const artifactsDir = process.env.GITHUB_WORKSPACE + '/artifacts';
+            await page.screenshot({ path: artifactsDir + '/live-fullpage.png', fullPage: true });
+            await page.screenshot({ path: artifactsDir + '/live-viewport.png', fullPage: false });
+
+            // Evaluate compliance failures (unless placeholder mode).
+            const complianceFailures = [];
+            if (!placeholder) {
+              if (!footer) {
+                complianceFailures.push('No <footer> or [role="contentinfo"] element found in rendered page');
+              } else {
+                // Check each required policy link is present in the footer.
+                const missing = requiredLinks.filter(needed =>
+                  !footer.hrefs.some(h => h.includes(needed))
+                );
+                if (missing.length > 0) {
+                  complianceFailures.push(`Footer missing required policy links: ${missing.join(', ')}`);
+                }
+              }
+              if (requireCookieConsent && !cookieConsent) {
+                complianceFailures.push('No cookie-consent UI visible on first load (required because site likely uses analytics/cookies; set SMOKE_REQUIRE_COOKIE_CONSENT=false to skip)');
+              }
+            } else {
+              console.log('Placeholder mode (SMOKE_PLACEHOLDER=true) — skipping compliance assertions.');
+            }
+
+            const summary = {
+              url, status, title,
+              bodyLength: bodyText.length,
+              failureMarkers: matches,
+              placeholder,
+              footer: footer ? { tag: footer.tag, hrefCount: footer.hrefs.length, hrefs: footer.hrefs } : null,
+              cookieConsent: cookieConsent ? { selector: cookieConsent.selector, textSnippet: cookieConsent.text } : null,
+              complianceFailures,
+            };
+            require('fs').writeFileSync(artifactsDir + '/visual-summary.json', JSON.stringify(summary, null, 2));
+            console.log(JSON.stringify(summary, null, 2));
+
+            await browser.close();
+
+            if (status !== 200) {
+              console.error(`::error::Visual: page status ${status} (expected 200)`);
+              process.exit(1);
+            }
+            if (matches.length > 0) {
+              console.error(`::error::Visual: failure markers found in rendered page: ${matches.join(' | ')}`);
+              process.exit(1);
+            }
+            if (bodyText.trim().length < 50) {
+              console.error(`::error::Visual: body text is only ${bodyText.length} chars — likely blank page`);
+              process.exit(1);
+            }
+            if (complianceFailures.length > 0) {
+              for (const f of complianceFailures) {
+                console.error(`::error::Compliance: ${f}`);
+              }
+              process.exit(1);
+            }
+            console.log('Visual + compliance checks passed.');
+          })();
+          JS
+          # Run from /tmp/pw so `require('playwright')` resolves to the
+          # isolated install we just did. Pass GITHUB_WORKSPACE so the
+          # script writes screenshots back to the repo workspace where
+          # upload-artifact looks for them.
+          GITHUB_WORKSPACE="$GITHUB_WORKSPACE" node /tmp/pw/visual.js
+
+      - name: Run repo-local smoke specs (if present)
+        # Depth hook: a repo can ship its own Playwright smoke suite in
+        # tests/smoke/ (optionally with playwright.smoke.config.ts reading
+        # SMOKE_BASE_URL) and the engine runs it against the live URL.
+        # Adopted from the FFC-EX-mitchellnchistory.org pattern.
+        if: steps.url.outputs.skip != 'true'
+        env:
+          SMOKE_BASE_URL: ${{ steps.url.outputs.url }}
+          SMOKE_URL: ${{ steps.url.outputs.url }}
+          PLAYWRIGHT_BASE_URL: ${{ steps.url.outputs.url }}
+        run: |
+          set -euo pipefail
+          if ! ls tests/smoke/*.spec.* >/dev/null 2>&1; then
+            echo "::notice::No tests/smoke/*.spec.* in repo — skipping repo-local smoke specs"
+            exit 0
+          fi
+          npm ci
+          npx playwright install --with-deps chromium
+          if [ -f playwright.smoke.config.ts ]; then
+            npx playwright test --config playwright.smoke.config.ts --reporter=list
+          else
+            npx playwright test tests/smoke --reporter=list
+          fi
+
+      - name: Upload screenshot + summary artifact
+        if: always() && steps.url.outputs.skip != 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: smoke-visual-${{ github.run_number }}
+          path: artifacts/
+          if-no-files-found: warn
+
+      - name: Smoke summary
+        if: always()
+        env:
+          URL: ${{ steps.url.outputs.url }}
+          STATUS: ${{ steps.probe.outputs.status }}
+          ATTEMPTS: ${{ steps.probe.outputs.attempts }}
+        run: |
+          {
+            echo "## Post-Deploy Smoke Test"
+            echo ""
+            echo "- **URL:** $URL"
+            echo "- **HTTPS status:** ${STATUS:-n/a} (probed in ${ATTEMPTS:-n/a} attempt(s))"
+            echo "- **Trigger:** ${{ github.event_name }} (schedule = daily uptime pass)"
+            echo "- **Job result:** ${{ job.status }}"
+            echo "- **Screenshots:** see \`smoke-visual-${{ github.run_number }}\` artifact"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upsert / auto-close high-priority smoke-failure issue
+        # Failure -> ensure ONE open issue labeled smoke-failure + "priority: high"
+        # (daily triage keys on these labels org-wide). Success -> auto-close it.
+        if: always() && !cancelled() && steps.url.outputs.skip != 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RESULT: ${{ job.status }}
+          URL: ${{ steps.url.outputs.url }}
+        run: |
+          set -euo pipefail
+          REPO="${GITHUB_REPOSITORY}"
+          RUN_URL="${GITHUB_SERVER_URL}/${REPO}/actions/runs/${GITHUB_RUN_ID}"
+          existing=$(gh api "repos/${REPO}/issues?state=open&labels=smoke-failure&per_page=1" --jq '.[0].number // empty' || echo "")
+
+          if [ "$RESULT" = "success" ]; then
+            if [ -n "$existing" ]; then
+              gh api "repos/${REPO}/issues/${existing}/comments" --method POST \
+                -f body="✅ Smoke recovered in run [${GITHUB_RUN_NUMBER}](${RUN_URL}) (${GITHUB_EVENT_NAME}). Auto-closing." >/dev/null
+              gh api -X PATCH "repos/${REPO}/issues/${existing}" -f state=closed >/dev/null
+              echo "Closed recovered smoke-failure issue #${existing}"
+            else
+              echo "Smoke green; no open smoke-failure issue."
+            fi
+            exit 0
+          fi
+
+          # Ensure triage labels exist (idempotent; POST 422s if present)
+          gh api "repos/${REPO}/labels" --method POST -f name="smoke-failure" \
+            -f color="d73a4a" -f description="Post-deploy smoke test is failing" >/dev/null 2>&1 || true
+          gh api "repos/${REPO}/labels" --method POST -f name="priority: high" \
+            -f color="b60205" -f description="High priority — surfaced to daily triage" >/dev/null 2>&1 || true
+
+          if [ -n "$existing" ]; then
+            gh api "repos/${REPO}/issues/${existing}/comments" --method POST \
+              -f body="🔴 Still failing: run [${GITHUB_RUN_NUMBER}](${RUN_URL}) (${GITHUB_EVENT_NAME})" >/dev/null
+            echo "Commented on existing smoke-failure issue #${existing}"
+          else
+            body=$(printf '%s\n' \
+              "The Post-Deploy Smoke Test is failing on this repo." \
+              "" \
+              "- **Failing run:** ${RUN_URL} (trigger: ${GITHUB_EVENT_NAME}; schedule = daily uptime pass)" \
+              "- **Target:** ${URL:-could not be determined (no public/CNAME?)}" \
+              "- **Triage:** check the failed step in the run. Screenshot/summary artifact: smoke-visual-${GITHUB_RUN_NUMBER} on the run." \
+              "" \
+              "This issue is auto-managed: subsequent failing runs comment here instead of opening duplicates, and the first green run auto-closes it.")
+            gh api "repos/${REPO}/issues" --method POST \
+              -f title="Post-deploy smoke FAILING: ${URL:-site URL undetermined}" \
+              -f body="$body" \
+              -f "labels[]=smoke-failure" -f "labels[]=priority: high" >/dev/null
+            echo "Opened new smoke-failure issue"
+          fi
