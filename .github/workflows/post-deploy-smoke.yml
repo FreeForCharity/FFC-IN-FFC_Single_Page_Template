@@ -251,9 +251,16 @@ jobs:
           # Override: set to "false" to skip the cookie-consent check even on real sites
           # (e.g., site uses NO cookies / NO analytics).
           SMOKE_REQUIRE_COOKIE_CONSENT: ${{ vars.SMOKE_REQUIRE_COOKIE_CONSENT }}
-          # Donation sites (Zeffy iframe embeds): set SMOKE_REQUIRE_DONATION_EMBED=true
-          # to make the presence of a working Zeffy embed mandatory. When embeds are
-          # present they are always reachability-checked, required or not.
+          # Donations are a first-class feature of every charity site.
+          # SMOKE_DONATION_SCOPE declares the site's donation posture:
+          #   charity     - charity-specific Zeffy campaign expected (default for live sites)
+          #   ffc-interim - temporarily using a Free For Charity campaign; smoke stays
+          #                 green but a standing donation-interim issue is kept open
+          #                 until replaced with the charity's own campaign
+          #   none        - site intentionally has no donations (suppresses the
+          #                 no-donation-capability failure)
+          SMOKE_DONATION_SCOPE: ${{ vars.SMOKE_DONATION_SCOPE }}
+          # Legacy (v3.2): require at least one Zeffy iframe embed specifically.
           SMOKE_REQUIRE_DONATION_EMBED: ${{ vars.SMOKE_REQUIRE_DONATION_EMBED }}
           # 'true' on template repos: their sites ARE the template default.
           SMOKE_ALLOW_TEMPLATE_DEFAULT: ${{ (contains(github.repository, 'Template') || steps.url.outputs.mode == 'default') && 'true' || 'false' }}
@@ -331,12 +338,21 @@ jobs:
               return null;
             }).catch(() => null);
 
-            // Donation embeds: Zeffy iframes (Zeffy runs on Stripe under the
-            // hood, which is why its widgets emit stripe.com/googlepay/amplitude
-            // beacons — see the waitUntil note above).
-            const donationEmbeds = await page.evaluate(() =>
-              Array.from(document.querySelectorAll('iframe[src*="zeffy.com"]')).map(f => f.getAttribute('src'))
-            ).catch(() => []);
+            // Donation surfaces: Zeffy iframes (embedded forms) AND Zeffy
+            // links/payment buttons. Zeffy runs on Stripe under the hood, which
+            // is why its widgets emit stripe.com/googlepay/amplitude beacons —
+            // see the waitUntil note above.
+            const donationSurfaces = await page.evaluate(() => {
+              const out = [];
+              for (const f of document.querySelectorAll('iframe[src*="zeffy.com"]')) {
+                out.push({ kind: 'embed', url: f.getAttribute('src') });
+              }
+              for (const a of document.querySelectorAll('a[href*="zeffy.com"]')) {
+                out.push({ kind: 'link', url: a.getAttribute('href'), text: (a.innerText || '').slice(0, 60) });
+              }
+              return out;
+            }).catch(() => []);
+            const donationEmbeds = donationSurfaces.filter(s => s.kind === 'embed').map(s => s.url);
 
             // Known-bad markers that a 200 HTTP check would miss.
             const allowTemplateDefault = String(process.env.SMOKE_ALLOW_TEMPLATE_DEFAULT || '').toLowerCase() === 'true';
@@ -377,25 +393,38 @@ jobs:
               console.log('Placeholder mode (SMOKE_PLACEHOLDER=true) — skipping compliance assertions.');
             }
 
-            // Donation-embed assertions (apply in apex mode even for placeholders:
-            // a donation site must never silently lose its form).
+            // Donation assertions — first-class: a charity site must never
+            // silently lose its donation capability.
+            const donationScope = String(process.env.SMOKE_DONATION_SCOPE || '').toLowerCase();
             const requireDonation = String(process.env.SMOKE_REQUIRE_DONATION_EMBED || '').toLowerCase() === 'true';
             const donationChecks = [];
             if (requireDonation && donationEmbeds.length === 0) {
               complianceFailures.push('SMOKE_REQUIRE_DONATION_EMBED=true but no Zeffy iframe found on the page');
             }
-            for (const src of donationEmbeds) {
+            // Live apex site with NO donation surface of any kind = failure,
+            // unless the site explicitly declares scope 'none'.
+            const isApex = String(process.env.SMOKE_MODE || '') !== 'default';
+            if (isApex && !placeholder && donationSurfaces.length === 0 && donationScope !== 'none') {
+              complianceFailures.push('No donation capability detected (no Zeffy embed, link, or button). Wire a Zeffy campaign, or set SMOKE_DONATION_SCOPE=none only if this site intentionally takes no donations.');
+            }
+            // Every surface must be reachable (embed or button target).
+            for (const s of donationSurfaces) {
               try {
-                const r = await fetch(src, { method: 'GET', redirect: 'follow' });
-                donationChecks.push({ src, status: r.status });
+                const r = await fetch(s.url, { method: 'GET', redirect: 'follow' });
+                donationChecks.push({ ...s, status: r.status });
                 if (r.status >= 400) {
-                  complianceFailures.push(`Zeffy embed unreachable (${r.status}): ${src}`);
+                  complianceFailures.push(`Zeffy ${s.kind} unreachable (${r.status}): ${s.url}`);
                 }
               } catch (e) {
-                donationChecks.push({ src, status: 0 });
-                complianceFailures.push(`Zeffy embed fetch failed: ${src} (${e.message})`);
+                donationChecks.push({ ...s, status: 0 });
+                complianceFailures.push(`Zeffy ${s.kind} fetch failed: ${s.url} (${e.message})`);
               }
             }
+            // ffc-interim: green smoke, but record it so the workflow keeps a
+            // standing known-issue open until a charity-specific campaign lands.
+            const donationInterim = donationScope === 'ffc-interim' && donationSurfaces.length > 0;
+            require('fs').writeFileSync(process.env.GITHUB_WORKSPACE + '/artifacts/donation-status.json',
+              JSON.stringify({ scope: donationScope || 'undeclared', interim: donationInterim, surfaces: donationChecks }, null, 2));
 
             const summary = {
               url, status, title,
@@ -404,7 +433,7 @@ jobs:
               placeholder,
               footer: footer ? { tag: footer.tag, hrefCount: footer.hrefs.length, hrefs: footer.hrefs } : null,
               cookieConsent: cookieConsent ? { selector: cookieConsent.selector, textSnippet: cookieConsent.text } : null,
-              donationEmbeds: donationChecks,
+              donations: { scope: donationScope || 'undeclared', surfaces: donationChecks },
               complianceFailures,
             };
             require('fs').writeFileSync(artifactsDir + '/visual-summary.json', JSON.stringify(summary, null, 2));
@@ -541,4 +570,49 @@ jobs:
               -f body="$body" \
               -f "labels[]=smoke-failure" -f "labels[]=priority: high" >/dev/null
             echo "Opened new smoke-failure issue"
+          fi
+
+      - name: Maintain standing donation-interim known-issue
+        # SMOKE_DONATION_SCOPE=ffc-interim means the site is (acceptably)
+        # using a Free For Charity Zeffy campaign until the charity gets its
+        # own. Donations keep working and the smoke stays green, but this
+        # keeps ONE standing issue open so scans surface it until replaced.
+        if: always() && !cancelled() && steps.url.outputs.skip != 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          SCOPE: ${{ vars.SMOKE_DONATION_SCOPE }}
+        run: |
+          set -euo pipefail
+          REPO="${GITHUB_REPOSITORY}"
+          existing=$(gh api "repos/${REPO}/issues?state=open&labels=donation-interim&per_page=1" --jq '.[0].number // empty' || echo "")
+          scope=$(echo "${SCOPE:-}" | tr '[:upper:]' '[:lower:]')
+
+          if [ "$scope" = "ffc-interim" ]; then
+            if [ -z "$existing" ]; then
+              gh api "repos/${REPO}/labels" --method POST -f name="donation-interim" \
+                -f color="fbca04" -f description="Using an FFC Zeffy campaign until a charity-specific one replaces it" >/dev/null 2>&1 || true
+              body=$(printf '%s\n' \
+                "This site currently collects donations through a **Free For Charity** Zeffy campaign rather than a charity-specific one." \
+                "" \
+                "That is the intended interim state — donations keep working — but it must stay visible until replaced:" \
+                "1. Create the charity's own Zeffy campaign/form." \
+                "2. Swap the embed/button URLs in the site." \
+                "3. Set the repo variable SMOKE_DONATION_SCOPE=charity." \
+                "" \
+                "This issue is auto-managed by the smoke engine: it stays open while SMOKE_DONATION_SCOPE=ffc-interim and auto-closes once the scope changes.")
+              gh api "repos/${REPO}/issues" --method POST \
+                -f title="Donations run on an FFC campaign — replace with a charity-specific Zeffy campaign" \
+                -f body="$body" \
+                -f "labels[]=donation-interim" -f "labels[]=priority: high" >/dev/null
+              echo "Opened standing donation-interim issue"
+            else
+              echo "Standing donation-interim issue #${existing} remains open (scope still ffc-interim)"
+            fi
+          else
+            if [ -n "$existing" ]; then
+              gh api "repos/${REPO}/issues/${existing}/comments" --method POST \
+                -f body="✅ SMOKE_DONATION_SCOPE is no longer ffc-interim — charity-specific donations in place. Auto-closing." >/dev/null
+              gh api -X PATCH "repos/${REPO}/issues/${existing}" -f state=closed >/dev/null
+              echo "Closed donation-interim issue #${existing}"
+            fi
           fi
