@@ -99,7 +99,10 @@ jobs:
           echo "Body length: $(wc -c < /tmp/page.html) bytes"
 
       - name: Assert no FFC-template-default content
-        if: steps.url.outputs.skip != 'true'
+        # Template repos (FFC-IN-*Template*) legitimately serve the template
+        # default content on their working sites - the assertion is for
+        # charity sites that failed to rebrand, not for the source templates.
+        if: steps.url.outputs.skip != 'true' && !contains(github.repository, 'Template')
         env:
           # Block the FFC charity-mission template's distinctive title.
           # This is the exact regression the user flagged: staging.<domain> was
@@ -214,6 +217,8 @@ jobs:
           # Override: set to "false" to skip the cookie-consent check even on real sites
           # (e.g., site uses NO cookies / NO analytics).
           SMOKE_REQUIRE_COOKIE_CONSENT: ${{ vars.SMOKE_REQUIRE_COOKIE_CONSENT }}
+          # 'true' on template repos: their sites ARE the template default.
+          SMOKE_ALLOW_TEMPLATE_DEFAULT: ${{ contains(github.repository, 'Template') && 'true' || 'false' }}
         working-directory: /tmp/pw
         run: |
           mkdir -p $GITHUB_WORKSPACE/artifacts
@@ -279,6 +284,7 @@ jobs:
             }).catch(() => null);
 
             // Known-bad markers that a 200 HTTP check would miss.
+            const allowTemplateDefault = String(process.env.SMOKE_ALLOW_TEMPLATE_DEFAULT || '').toLowerCase() === 'true';
             const failureMarkers = [
               "There isn't a GitHub Pages site here", // GH Pages "site not found" page
               "Site not found",
@@ -287,7 +293,8 @@ jobs:
               "Free For Charity | Reduce Costs, Increase Impact", // FFC template default
               "Reduce Costs, Increase Impact",
               "Apache",                                // unlikely in body, kept off
-            ].filter(m => m !== "Apache");
+            ].filter(m => m !== "Apache")
+              .filter(m => !(allowTemplateDefault && m.includes('Reduce Costs, Increase Impact')));
             const matches = failureMarkers.filter(m => bodyText.includes(m) || title.includes(m));
 
             const artifactsDir = process.env.GITHUB_WORKSPACE + '/artifacts';
