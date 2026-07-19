@@ -281,10 +281,15 @@ jobs:
             page.setDefaultTimeout(45000);
             let resp = null;
             try {
-              resp = await page.goto(url, { waitUntil: 'networkidle' });
+              // 'load' fires deterministically; 'networkidle' never fires on pages
+              // with persistent analytics/embed traffic (GTM, social widgets), which
+              // times out goto and zeroes the status even though the page is fine.
+              resp = await page.goto(url, { waitUntil: 'load' });
             } catch (e) {
               console.error('navigation error:', e.message);
             }
+            // Best-effort settle for late-loading assets before the screenshot.
+            await page.waitForLoadState('networkidle', { timeout: 10000 }).catch(() => {});
             const status = resp ? resp.status() : 0;
             const title = await page.title().catch(() => '');
             const bodyText = await page.evaluate(() => document.body && document.body.innerText || '').catch(() => '');
