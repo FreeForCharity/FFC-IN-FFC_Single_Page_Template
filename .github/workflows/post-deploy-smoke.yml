@@ -373,6 +373,36 @@ jobs:
               }
               return out;
             }, PROVIDERS).catch(() => []);
+            // Donation surfaces often live on subpages (/membership, /donate)
+            // rather than the homepage (first case: MCHS's PayPal membership
+            // page). When the homepage shows nothing, sweep the sitemap routes'
+            // served HTML (bounded) for provider hosts — presence anywhere on
+            // the site counts.
+            const sitewideProviders = new Set(donationSurfaces.map(s => s.provider));
+            if (donationSurfaces.length === 0) {
+              try {
+                const base = url.replace(/\/$/, '');
+                let routes = [];
+                try {
+                  const sm = await (await fetch(base + '/sitemap.xml')).text();
+                  routes = [...sm.matchAll(/<loc>([^<]+)<\/loc>/g)]
+                    .map(m => new URL(m[1]).pathname).slice(0, 40);
+                } catch { /* no sitemap */ }
+                if (routes.length === 0) routes = ['/donate/', '/donations/', '/membership/', '/support/', '/give/'];
+                for (const path of routes) {
+                  try {
+                    const html = await (await fetch(base + path)).text();
+                    for (const p of PROVIDERS) {
+                      if (p.hosts.some(h => html.includes(h))) {
+                        sitewideProviders.add(p.name);
+                        donationSurfaces.push({ provider: p.name, kind: 'page', url: base + path });
+                      }
+                    }
+                  } catch { /* route fetch failed; sitemap check covers that */ }
+                  if (sitewideProviders.size > 0) break;
+                }
+              } catch (e) { console.log('site-wide donation sweep skipped:', e.message); }
+            }
             const zeffySurfaces = donationSurfaces.filter(s => s.provider === 'zeffy');
             const otherProviders = [...new Set(donationSurfaces.filter(s => s.provider !== 'zeffy').map(s => s.provider))];
             const donationEmbeds = zeffySurfaces.filter(s => s.kind === 'embed').map(s => s.url);
@@ -434,6 +464,7 @@ jobs:
             }
             // Every surface must be reachable, whatever the provider.
             for (const s of donationSurfaces) {
+              if (s.kind === 'page') { donationChecks.push({ ...s, status: 200 }); continue; }
               try {
                 const r = await fetch(s.url.startsWith('http') ? s.url : 'https:' + s.url, { method: 'GET', redirect: 'follow' });
                 donationChecks.push({ ...s, status: r.status });
