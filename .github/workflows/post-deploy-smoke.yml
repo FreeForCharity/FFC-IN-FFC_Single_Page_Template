@@ -251,6 +251,10 @@ jobs:
           # Override: set to "false" to skip the cookie-consent check even on real sites
           # (e.g., site uses NO cookies / NO analytics).
           SMOKE_REQUIRE_COOKIE_CONSENT: ${{ vars.SMOKE_REQUIRE_COOKIE_CONSENT }}
+          # Donation sites (Zeffy iframe embeds): set SMOKE_REQUIRE_DONATION_EMBED=true
+          # to make the presence of a working Zeffy embed mandatory. When embeds are
+          # present they are always reachability-checked, required or not.
+          SMOKE_REQUIRE_DONATION_EMBED: ${{ vars.SMOKE_REQUIRE_DONATION_EMBED }}
           # 'true' on template repos: their sites ARE the template default.
           SMOKE_ALLOW_TEMPLATE_DEFAULT: ${{ (contains(github.repository, 'Template') || steps.url.outputs.mode == 'default') && 'true' || 'false' }}
           # default mode = pre-cutover deployment verification: page loads,
@@ -327,6 +331,13 @@ jobs:
               return null;
             }).catch(() => null);
 
+            // Donation embeds: Zeffy iframes (Zeffy runs on Stripe under the
+            // hood, which is why its widgets emit stripe.com/googlepay/amplitude
+            // beacons — see the waitUntil note above).
+            const donationEmbeds = await page.evaluate(() =>
+              Array.from(document.querySelectorAll('iframe[src*="zeffy.com"]')).map(f => f.getAttribute('src'))
+            ).catch(() => []);
+
             // Known-bad markers that a 200 HTTP check would miss.
             const allowTemplateDefault = String(process.env.SMOKE_ALLOW_TEMPLATE_DEFAULT || '').toLowerCase() === 'true';
             const failureMarkers = [
@@ -366,6 +377,26 @@ jobs:
               console.log('Placeholder mode (SMOKE_PLACEHOLDER=true) — skipping compliance assertions.');
             }
 
+            // Donation-embed assertions (apply in apex mode even for placeholders:
+            // a donation site must never silently lose its form).
+            const requireDonation = String(process.env.SMOKE_REQUIRE_DONATION_EMBED || '').toLowerCase() === 'true';
+            const donationChecks = [];
+            if (requireDonation && donationEmbeds.length === 0) {
+              complianceFailures.push('SMOKE_REQUIRE_DONATION_EMBED=true but no Zeffy iframe found on the page');
+            }
+            for (const src of donationEmbeds) {
+              try {
+                const r = await fetch(src, { method: 'GET', redirect: 'follow' });
+                donationChecks.push({ src, status: r.status });
+                if (r.status >= 400) {
+                  complianceFailures.push(`Zeffy embed unreachable (${r.status}): ${src}`);
+                }
+              } catch (e) {
+                donationChecks.push({ src, status: 0 });
+                complianceFailures.push(`Zeffy embed fetch failed: ${src} (${e.message})`);
+              }
+            }
+
             const summary = {
               url, status, title,
               bodyLength: bodyText.length,
@@ -373,6 +404,7 @@ jobs:
               placeholder,
               footer: footer ? { tag: footer.tag, hrefCount: footer.hrefs.length, hrefs: footer.hrefs } : null,
               cookieConsent: cookieConsent ? { selector: cookieConsent.selector, textSnippet: cookieConsent.text } : null,
+              donationEmbeds: donationChecks,
               complianceFailures,
             };
             require('fs').writeFileSync(artifactsDir + '/visual-summary.json', JSON.stringify(summary, null, 2));
