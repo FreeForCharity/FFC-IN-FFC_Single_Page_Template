@@ -298,6 +298,10 @@ jobs:
                 console.error(`::error::.github/smoke.config.json exists but is not valid JSON: ${e.message}`);
                 process.exit(1);
               }
+              if (fileConfig === null || typeof fileConfig !== 'object' || Array.isArray(fileConfig)) {
+                console.error('::error::.github/smoke.config.json must contain a JSON object');
+                process.exit(1);
+              }
               const fileScope = String(fileConfig.donationScope || '').toLowerCase();
               if (fileScope && !['charity', 'ffc-interim', 'none'].includes(fileScope)) {
                 console.error(`::error::.github/smoke.config.json donationScope "${fileConfig.donationScope}" is not one of charity|ffc-interim|none`);
