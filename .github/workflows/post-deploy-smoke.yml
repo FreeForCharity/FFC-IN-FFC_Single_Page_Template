@@ -287,12 +287,18 @@ jobs:
             const requireCookieConsent = String(process.env.SMOKE_REQUIRE_COOKIE_CONSENT || 'true').toLowerCase() !== 'false';
             // Committed site declarations (.github/smoke.config.json) — the
             // repo-visible alternative to Actions variables. An explicitly-set
-            // variable still wins over the file.
+            // variable still wins over the file. A file that exists but does
+            // not parse is a hard error, not a silent fallback.
             let fileConfig = {};
-            try {
-              fileConfig = JSON.parse(require('fs').readFileSync(
-                process.env.GITHUB_WORKSPACE + '/.github/smoke.config.json', 'utf8'));
-            } catch { /* no committed config */ }
+            const smokeConfigPath = process.env.GITHUB_WORKSPACE + '/.github/smoke.config.json';
+            if (require('fs').existsSync(smokeConfigPath)) {
+              try {
+                fileConfig = JSON.parse(require('fs').readFileSync(smokeConfigPath, 'utf8'));
+              } catch (e) {
+                console.error(`::error::.github/smoke.config.json exists but is not valid JSON: ${e.message}`);
+                process.exit(1);
+              }
+            }
 
             const browser = await chromium.launch();
             const ctx = await browser.newContext({
@@ -658,9 +664,13 @@ jobs:
           REPO="${GITHUB_REPOSITORY}"
 
           # Committed declaration fallback: .github/smoke.config.json's
-          # donationScope applies when the SMOKE_DONATION_SCOPE variable is unset.
+          # donationScope applies when the SMOKE_DONATION_SCOPE variable is
+          # unset. A file that exists but does not parse is a hard error.
           if [ -z "${SCOPE:-}" ] && [ -f .github/smoke.config.json ]; then
-            SCOPE=$(jq -r '.donationScope // ""' .github/smoke.config.json 2>/dev/null || echo "")
+            if ! SCOPE=$(jq -r '.donationScope // ""' .github/smoke.config.json); then
+              echo "::error::.github/smoke.config.json exists but is not valid JSON"
+              exit 1
+            fi
           fi
 
           # --- donation-migration (auto-detected, provider-based) ---
