@@ -259,6 +259,10 @@ jobs:
           #                 until replaced with the charity's own campaign
           #   none        - site intentionally has no donations (suppresses the
           #                 no-donation-capability failure)
+          # Preferred declaration: commit .github/smoke.config.json with
+          # {"donationScope": "none"} — repo-visible and PR-reviewable (e.g.
+          # for-profit FFC-EX sites like towing companies). The variable, when
+          # set, still overrides the committed file.
           SMOKE_DONATION_SCOPE: ${{ vars.SMOKE_DONATION_SCOPE }}
           # Legacy (v3.2): require at least one Zeffy iframe embed specifically.
           SMOKE_REQUIRE_DONATION_EMBED: ${{ vars.SMOKE_REQUIRE_DONATION_EMBED }}
@@ -281,6 +285,29 @@ jobs:
             const requiredLinks = (process.env.SMOKE_REQUIRED_FOOTER_LINKS || '/privacy-policy,/terms-of-service|/tos')
               .split(',').map(s => s.trim()).filter(Boolean);
             const requireCookieConsent = String(process.env.SMOKE_REQUIRE_COOKIE_CONSENT || 'true').toLowerCase() !== 'false';
+            // Committed site declarations (.github/smoke.config.json) — the
+            // repo-visible alternative to Actions variables. An explicitly-set
+            // variable still wins over the file. A file that exists but does
+            // not parse is a hard error, not a silent fallback.
+            let fileConfig = {};
+            const smokeConfigPath = process.env.GITHUB_WORKSPACE + '/.github/smoke.config.json';
+            if (require('fs').existsSync(smokeConfigPath)) {
+              try {
+                fileConfig = JSON.parse(require('fs').readFileSync(smokeConfigPath, 'utf8'));
+              } catch (e) {
+                console.error(`::error::.github/smoke.config.json exists but is not valid JSON: ${e instanceof Error ? e.message : String(e)}`);
+                process.exit(1);
+              }
+              if (fileConfig === null || typeof fileConfig !== 'object' || Array.isArray(fileConfig)) {
+                console.error('::error::.github/smoke.config.json must contain a JSON object');
+                process.exit(1);
+              }
+              const fileScope = String(fileConfig.donationScope || '').trim().toLowerCase();
+              if (fileScope && !['charity', 'ffc-interim', 'none'].includes(fileScope)) {
+                console.error(`::error::.github/smoke.config.json donationScope "${fileConfig.donationScope}" is not one of charity|ffc-interim|none`);
+                process.exit(1);
+              }
+            }
 
             const browser = await chromium.launch();
             const ctx = await browser.newContext({
@@ -448,7 +475,7 @@ jobs:
 
             // Donation assertions — first-class: a charity site must never
             // silently lose its donation capability.
-            const donationScope = String(process.env.SMOKE_DONATION_SCOPE || '').toLowerCase();
+            const donationScope = String(process.env.SMOKE_DONATION_SCOPE || fileConfig.donationScope || '').trim().toLowerCase();
             const requireDonation = String(process.env.SMOKE_REQUIRE_DONATION_EMBED || '').toLowerCase() === 'true';
             const donationChecks = [];
             if (requireDonation && donationEmbeds.length === 0) {
@@ -460,7 +487,7 @@ jobs:
             //   Zeffy present                -> PASS (charity or ffc-interim per scope)
             const isApex = String(process.env.SMOKE_MODE || '') !== 'default';
             if (isApex && !placeholder && donationSurfaces.length === 0 && donationScope !== 'none') {
-              complianceFailures.push('No donation capability detected (no Zeffy, PayPal, or other donation provider found). Wire a Zeffy campaign, or set SMOKE_DONATION_SCOPE=none only if this site intentionally takes no donations.');
+              complianceFailures.push('No donation capability detected (no Zeffy, PayPal, or other donation provider found). Wire a Zeffy campaign, or declare {"donationScope": "none"} in .github/smoke.config.json (or set SMOKE_DONATION_SCOPE=none) only if this site intentionally takes no donations.');
             }
             // Every surface must be reachable, whatever the provider.
             for (const s of donationSurfaces) {
@@ -645,6 +672,24 @@ jobs:
           set -euo pipefail
           REPO="${GITHUB_REPOSITORY}"
 
+          # Committed declaration fallback: .github/smoke.config.json's
+          # donationScope applies when the SMOKE_DONATION_SCOPE variable is
+          # unset. A file that exists but does not parse is a hard error.
+          if [ -z "${SCOPE:-}" ] && [ -f .github/smoke.config.json ]; then
+            if ! SCOPE=$(jq -r '.donationScope // ""' .github/smoke.config.json); then
+              echo "::error::.github/smoke.config.json exists but is not valid JSON"
+              exit 1
+            fi
+            SCOPE=$(echo "$SCOPE" | tr '[:upper:]' '[:lower:]' | tr -d '[:space:]')
+            case "$SCOPE" in
+              '' | charity | ffc-interim | none) ;;
+              *)
+                echo "::error::.github/smoke.config.json donationScope \"$SCOPE\" is not one of charity|ffc-interim|none"
+                exit 1
+                ;;
+            esac
+          fi
+
           # --- donation-migration (auto-detected, provider-based) ---
           nonpref="false"; providers=""
           if [ -f artifacts/donation-status.json ]; then
@@ -693,9 +738,9 @@ jobs:
                 "That is the intended interim state — donations keep working — but it must stay visible until replaced:" \
                 "1. Create the charity's own Zeffy campaign/form." \
                 "2. Swap the embed/button URLs in the site." \
-                "3. Set the repo variable SMOKE_DONATION_SCOPE=charity." \
+                "3. Declare the scope as charity — set donationScope in the committed .github/smoke.config.json (preferred) or the SMOKE_DONATION_SCOPE repo variable." \
                 "" \
-                "This issue is auto-managed by the smoke engine: it stays open while SMOKE_DONATION_SCOPE=ffc-interim and auto-closes once the scope changes.")
+                "This issue is auto-managed by the smoke engine: it stays open while the declared donation scope is ffc-interim and auto-closes once the scope changes.")
               gh api "repos/${REPO}/issues" --method POST \
                 -f title="Donations run on an FFC campaign — replace with a charity-specific Zeffy campaign" \
                 -f body="$body" \
@@ -707,7 +752,7 @@ jobs:
           else
             if [ -n "$existing" ]; then
               gh api "repos/${REPO}/issues/${existing}/comments" --method POST \
-                -f body="✅ SMOKE_DONATION_SCOPE is no longer ffc-interim — charity-specific donations in place. Auto-closing." >/dev/null
+                -f body="✅ The declared donation scope is no longer ffc-interim — charity-specific donations in place. Auto-closing." >/dev/null
               gh api -X PATCH "repos/${REPO}/issues/${existing}" -f state=closed >/dev/null
               echo "Closed donation-interim issue #${existing}"
             fi
