@@ -295,14 +295,14 @@ jobs:
               try {
                 fileConfig = JSON.parse(require('fs').readFileSync(smokeConfigPath, 'utf8'));
               } catch (e) {
-                console.error(`::error::.github/smoke.config.json exists but is not valid JSON: ${e.message}`);
+                console.error(`::error::.github/smoke.config.json exists but is not valid JSON: ${e instanceof Error ? e.message : String(e)}`);
                 process.exit(1);
               }
               if (fileConfig === null || typeof fileConfig !== 'object' || Array.isArray(fileConfig)) {
                 console.error('::error::.github/smoke.config.json must contain a JSON object');
                 process.exit(1);
               }
-              const fileScope = String(fileConfig.donationScope || '').toLowerCase();
+              const fileScope = String(fileConfig.donationScope || '').trim().toLowerCase();
               if (fileScope && !['charity', 'ffc-interim', 'none'].includes(fileScope)) {
                 console.error(`::error::.github/smoke.config.json donationScope "${fileConfig.donationScope}" is not one of charity|ffc-interim|none`);
                 process.exit(1);
@@ -475,7 +475,7 @@ jobs:
 
             // Donation assertions — first-class: a charity site must never
             // silently lose its donation capability.
-            const donationScope = String(process.env.SMOKE_DONATION_SCOPE || fileConfig.donationScope || '').toLowerCase();
+            const donationScope = String(process.env.SMOKE_DONATION_SCOPE || fileConfig.donationScope || '').trim().toLowerCase();
             const requireDonation = String(process.env.SMOKE_REQUIRE_DONATION_EMBED || '').toLowerCase() === 'true';
             const donationChecks = [];
             if (requireDonation && donationEmbeds.length === 0) {
@@ -680,7 +680,7 @@ jobs:
               echo "::error::.github/smoke.config.json exists but is not valid JSON"
               exit 1
             fi
-            SCOPE=$(echo "$SCOPE" | tr '[:upper:]' '[:lower:]')
+            SCOPE=$(echo "$SCOPE" | tr '[:upper:]' '[:lower:]' | tr -d '[:space:]')
             case "$SCOPE" in
               '' | charity | ffc-interim | none) ;;
               *)
