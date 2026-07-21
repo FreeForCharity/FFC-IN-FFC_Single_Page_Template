@@ -259,6 +259,10 @@ jobs:
           #                 until replaced with the charity's own campaign
           #   none        - site intentionally has no donations (suppresses the
           #                 no-donation-capability failure)
+          # Preferred declaration: commit .github/smoke.config.json with
+          # {"donationScope": "none"} — repo-visible and PR-reviewable (e.g.
+          # for-profit FFC-EX sites like towing companies). The variable, when
+          # set, still overrides the committed file.
           SMOKE_DONATION_SCOPE: ${{ vars.SMOKE_DONATION_SCOPE }}
           # Legacy (v3.2): require at least one Zeffy iframe embed specifically.
           SMOKE_REQUIRE_DONATION_EMBED: ${{ vars.SMOKE_REQUIRE_DONATION_EMBED }}
@@ -281,6 +285,14 @@ jobs:
             const requiredLinks = (process.env.SMOKE_REQUIRED_FOOTER_LINKS || '/privacy-policy,/terms-of-service|/tos')
               .split(',').map(s => s.trim()).filter(Boolean);
             const requireCookieConsent = String(process.env.SMOKE_REQUIRE_COOKIE_CONSENT || 'true').toLowerCase() !== 'false';
+            // Committed site declarations (.github/smoke.config.json) — the
+            // repo-visible alternative to Actions variables. An explicitly-set
+            // variable still wins over the file.
+            let fileConfig = {};
+            try {
+              fileConfig = JSON.parse(require('fs').readFileSync(
+                process.env.GITHUB_WORKSPACE + '/.github/smoke.config.json', 'utf8'));
+            } catch { /* no committed config */ }
 
             const browser = await chromium.launch();
             const ctx = await browser.newContext({
@@ -448,7 +460,7 @@ jobs:
 
             // Donation assertions — first-class: a charity site must never
             // silently lose its donation capability.
-            const donationScope = String(process.env.SMOKE_DONATION_SCOPE || '').toLowerCase();
+            const donationScope = String(process.env.SMOKE_DONATION_SCOPE || fileConfig.donationScope || '').toLowerCase();
             const requireDonation = String(process.env.SMOKE_REQUIRE_DONATION_EMBED || '').toLowerCase() === 'true';
             const donationChecks = [];
             if (requireDonation && donationEmbeds.length === 0) {
@@ -460,7 +472,7 @@ jobs:
             //   Zeffy present                -> PASS (charity or ffc-interim per scope)
             const isApex = String(process.env.SMOKE_MODE || '') !== 'default';
             if (isApex && !placeholder && donationSurfaces.length === 0 && donationScope !== 'none') {
-              complianceFailures.push('No donation capability detected (no Zeffy, PayPal, or other donation provider found). Wire a Zeffy campaign, or set SMOKE_DONATION_SCOPE=none only if this site intentionally takes no donations.');
+              complianceFailures.push('No donation capability detected (no Zeffy, PayPal, or other donation provider found). Wire a Zeffy campaign, or declare {"donationScope": "none"} in .github/smoke.config.json (or set SMOKE_DONATION_SCOPE=none) only if this site intentionally takes no donations.');
             }
             // Every surface must be reachable, whatever the provider.
             for (const s of donationSurfaces) {
@@ -644,6 +656,12 @@ jobs:
         run: |
           set -euo pipefail
           REPO="${GITHUB_REPOSITORY}"
+
+          # Committed declaration fallback: .github/smoke.config.json's
+          # donationScope applies when the SMOKE_DONATION_SCOPE variable is unset.
+          if [ -z "${SCOPE:-}" ] && [ -f .github/smoke.config.json ]; then
+            SCOPE=$(jq -r '.donationScope // ""' .github/smoke.config.json 2>/dev/null || echo "")
+          fi
 
           # --- donation-migration (auto-detected, provider-based) ---
           nonpref="false"; providers=""
