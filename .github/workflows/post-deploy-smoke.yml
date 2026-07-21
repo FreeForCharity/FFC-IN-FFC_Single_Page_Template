@@ -738,9 +738,9 @@ jobs:
                 "That is the intended interim state — donations keep working — but it must stay visible until replaced:" \
                 "1. Create the charity's own Zeffy campaign/form." \
                 "2. Swap the embed/button URLs in the site." \
-                "3. Set the repo variable SMOKE_DONATION_SCOPE=charity." \
+                "3. Declare the scope as charity — set donationScope in the committed .github/smoke.config.json (preferred) or the SMOKE_DONATION_SCOPE repo variable." \
                 "" \
-                "This issue is auto-managed by the smoke engine: it stays open while SMOKE_DONATION_SCOPE=ffc-interim and auto-closes once the scope changes.")
+                "This issue is auto-managed by the smoke engine: it stays open while the declared donation scope is ffc-interim and auto-closes once the scope changes.")
               gh api "repos/${REPO}/issues" --method POST \
                 -f title="Donations run on an FFC campaign — replace with a charity-specific Zeffy campaign" \
                 -f body="$body" \
@@ -752,7 +752,7 @@ jobs:
           else
             if [ -n "$existing" ]; then
               gh api "repos/${REPO}/issues/${existing}/comments" --method POST \
-                -f body="✅ SMOKE_DONATION_SCOPE is no longer ffc-interim — charity-specific donations in place. Auto-closing." >/dev/null
+                -f body="✅ The declared donation scope is no longer ffc-interim — charity-specific donations in place. Auto-closing." >/dev/null
               gh api -X PATCH "repos/${REPO}/issues/${existing}" -f state=closed >/dev/null
               echo "Closed donation-interim issue #${existing}"
             fi
