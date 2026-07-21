@@ -298,6 +298,11 @@ jobs:
                 console.error(`::error::.github/smoke.config.json exists but is not valid JSON: ${e.message}`);
                 process.exit(1);
               }
+              const fileScope = String(fileConfig.donationScope || '').toLowerCase();
+              if (fileScope && !['charity', 'ffc-interim', 'none'].includes(fileScope)) {
+                console.error(`::error::.github/smoke.config.json donationScope "${fileConfig.donationScope}" is not one of charity|ffc-interim|none`);
+                process.exit(1);
+              }
             }
 
             const browser = await chromium.launch();
@@ -671,6 +676,14 @@ jobs:
               echo "::error::.github/smoke.config.json exists but is not valid JSON"
               exit 1
             fi
+            SCOPE=$(echo "$SCOPE" | tr '[:upper:]' '[:lower:]')
+            case "$SCOPE" in
+              '' | charity | ffc-interim | none) ;;
+              *)
+                echo "::error::.github/smoke.config.json donationScope \"$SCOPE\" is not one of charity|ffc-interim|none"
+                exit 1
+                ;;
+            esac
           fi
 
           # --- donation-migration (auto-detected, provider-based) ---
