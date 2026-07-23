@@ -44,7 +44,9 @@ export function safeLinkedInUrl(url: string | undefined): string | undefined {
   if (parsed.protocol !== 'https:') return undefined
   const host = parsed.hostname.toLowerCase()
   if (host !== 'linkedin.com' && !host.endsWith('.linkedin.com')) return undefined
-  return url
+  // Return the parsed/serialized form so the href is normalized (whitespace
+  // and other odd-but-parseable input are stripped) rather than echoed raw.
+  return parsed.href
 }
 
 export default function TeamMemberCard({ name, role, linkedinUrl }: TeamMemberCardProps) {

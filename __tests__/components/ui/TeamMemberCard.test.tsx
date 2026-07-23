@@ -13,6 +13,11 @@ describe('safeLinkedInUrl', () => {
     expect(safeLinkedInUrl('https://linkedin.com/in/x')).toBe('https://linkedin.com/in/x')
     expect(safeLinkedInUrl('https://uk.linkedin.com/in/x')).toBe('https://uk.linkedin.com/in/x')
   })
+  it('normalizes the returned URL (trims surrounding whitespace)', () => {
+    expect(safeLinkedInUrl('  https://www.linkedin.com/in/x  ')).toBe(
+      'https://www.linkedin.com/in/x'
+    )
+  })
   it('rejects non-https schemes and off-site or malformed hosts', () => {
     expect(safeLinkedInUrl('javascript:alert(1)')).toBeUndefined()
     expect(safeLinkedInUrl('http://www.linkedin.com/in/x')).toBeUndefined()

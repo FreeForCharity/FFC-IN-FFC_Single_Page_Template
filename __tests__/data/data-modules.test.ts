@@ -27,7 +27,7 @@ describe('data modules', () => {
       expect(Array.isArray(team)).toBe(true)
       expect(team.length).toBeGreaterThan(0)
     })
-    it('every member has a name and role; LinkedIn, when present, is an https:// linkedin.com URL', () => {
+    it('every member has a name and role; LinkedIn, when present, is an https://linkedin.com URL', () => {
       for (const m of team) {
         expect(m.name).toBeTruthy()
         expect(m.role).toBeTruthy()
