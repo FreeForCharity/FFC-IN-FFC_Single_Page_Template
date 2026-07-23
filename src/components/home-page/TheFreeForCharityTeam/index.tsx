@@ -1,17 +1,17 @@
 import React from 'react'
 import TeamMemberCard from '@/components/ui/TeamMemberCard'
 import { assetPath } from '@/lib/assetPath'
-import { team } from '@/data/team'
+import { configuredTeam } from '@/data/team'
 
 // Team members are sourced from src/data/team/*.json (aggregated in
 // src/data/team.ts). To change the team, edit those JSON files — no need to
 // touch this component. The first three members render in the top row and the
 // remaining members in a second row, matching the original layout.
 const index = () => {
-  if (team.length === 0) return null
+  if (configuredTeam.length === 0) return null
 
-  const topRow = team.slice(0, 3)
-  const bottomRow = team.slice(3)
+  const topRow = configuredTeam.slice(0, 3)
+  const bottomRow = configuredTeam.slice(3)
 
   return (
     <div id="team" className="py-[50px]">

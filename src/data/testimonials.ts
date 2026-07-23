@@ -18,3 +18,11 @@ export type Testimonial = {
 }
 
 export const testimonials: Testimonial[] = [testimonial1, testimonial2, testimonial3, testimonial4]
+
+// Mirrors `configuredTeam`: `testimonials` is a fixed list of JSON imports, so
+// blanking the JSON files leaves its length unchanged. `configuredTestimonials`
+// keeps only entries with the required `heading` and `text` populated, so the
+// section self-hides when a fork clears them rather than rendering empty quotes.
+export const configuredTestimonials: Testimonial[] = testimonials.filter(
+  (t) => t.heading.trim().length > 0 && t.text.trim().length > 0
+)

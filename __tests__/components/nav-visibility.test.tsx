@@ -10,7 +10,7 @@ import { render, screen } from '@testing-library/react'
 // Declared before the Header/Footer imports (which read `team` at module load)
 // so the components resolve the mocked empty array without relying on
 // jest.mock hoisting.
-jest.mock('@/data/team', () => ({ team: [] }))
+jest.mock('@/data/team', () => ({ team: [], configuredTeam: [] }))
 
 import { siteConfig } from '@/lib/site.config'
 import Header from '@/components/header'

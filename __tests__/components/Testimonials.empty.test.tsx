@@ -18,7 +18,7 @@ jest.mock('swiper/react', () => ({
 jest.mock('swiper/modules', () => ({ Navigation: {}, Autoplay: {} }))
 jest.mock('swiper/css', () => ({}), { virtual: true })
 jest.mock('swiper/css/navigation', () => ({}), { virtual: true })
-jest.mock('@/data/testimonials', () => ({ testimonials: [] }))
+jest.mock('@/data/testimonials', () => ({ testimonials: [], configuredTestimonials: [] }))
 
 import TestimonialSlider from '../../src/components/home-page/Testimonials'
 

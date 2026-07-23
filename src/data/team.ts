@@ -23,3 +23,10 @@ export const team: TeamMember[] = [
   brennanDarling,
   rebeccaCook,
 ]
+
+// `team` is assembled from a fixed list of JSON imports, so its length never
+// drops to 0 when a fork blanks those JSON files (rather than deleting entries).
+// `configuredTeam` is the subset with the required `name` populated — the Team
+// section and its Header/Footer nav link all key visibility off this list so
+// they self-hide together instead of rendering empty cards / dead anchors.
+export const configuredTeam: TeamMember[] = team.filter((member) => member.name.trim().length > 0)

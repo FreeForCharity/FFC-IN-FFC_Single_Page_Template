@@ -5,7 +5,7 @@ import { render } from '@testing-library/react'
 // that empties src/data/team/*.json should render NOTHING here rather than the
 // FFC sample team. Mock the data module to the empty case for this file only;
 // the populated render is covered by TheFreeForCharityTeam.test.tsx.
-jest.mock('@/data/team', () => ({ team: [] }))
+jest.mock('@/data/team', () => ({ team: [], configuredTeam: [] }))
 
 import Team from '../../../src/components/home-page/TheFreeForCharityTeam'
 
