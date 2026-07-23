@@ -37,4 +37,6 @@ export const team: TeamMember[] = [
 // `configuredTeam` is the subset with the required `name` populated — the Team
 // section and its Header/Footer nav link all key visibility off this list so
 // they self-hide together instead of rendering empty cards / dead anchors.
-export const configuredTeam: TeamMember[] = team.filter((member) => member.name.trim().length > 0)
+export const configuredTeam: TeamMember[] = team.filter(
+  (member) => typeof member.name === 'string' && member.name.trim().length > 0
+)

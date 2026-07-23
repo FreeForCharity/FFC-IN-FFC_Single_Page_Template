@@ -2,7 +2,10 @@ import React from 'react'
 import { siteConfig } from '@/lib/site.config'
 
 const Events = () => {
-  if (!siteConfig.sections.showEvents || !siteConfig.integrations.sociableKitEventsWidgetUrl) {
+  if (
+    !siteConfig.sections.showEvents ||
+    !siteConfig.integrations.sociableKitEventsWidgetUrl.trim()
+  ) {
     return null
   }
 

@@ -24,5 +24,9 @@ export const testimonials: Testimonial[] = [testimonial1, testimonial2, testimon
 // keeps only entries with the required `heading` and `text` populated, so the
 // section self-hides when a fork clears them rather than rendering empty quotes.
 export const configuredTestimonials: Testimonial[] = testimonials.filter(
-  (t) => t.heading.trim().length > 0 && t.text.trim().length > 0
+  (t) =>
+    typeof t.heading === 'string' &&
+    t.heading.trim().length > 0 &&
+    typeof t.text === 'string' &&
+    t.text.trim().length > 0
 )

@@ -15,13 +15,20 @@ describe('configuredTeam', () => {
     }
   })
 
-  it('excludes members whose required name field is blank', () => {
-    // Uses the real TeamMember shape ({ name, role, linkedinUrl? }).
+  it('excludes members with a blank, missing, or non-string name (fails closed)', () => {
+    // Uses the real TeamMember shape ({ name, role, linkedinUrl? }) plus the
+    // malformed cases a partially-blanked JSON can produce (null / missing key).
+    // The guard must filter them out, never throw at module init.
     const blanked = [
       { name: '', role: '' },
       { name: '   ', role: 'Volunteer', linkedinUrl: 'https://linkedin.com/in/x' },
-    ]
-    expect(blanked.filter((m) => m.name.trim().length > 0)).toHaveLength(0)
+      { name: null, role: 'Nulled' },
+      { role: 'No name key' },
+    ] as unknown as { name: string }[]
+    const isConfigured = (m: { name: unknown }) =>
+      typeof m.name === 'string' && m.name.trim().length > 0
+    expect(() => blanked.filter(isConfigured)).not.toThrow()
+    expect(blanked.filter(isConfigured)).toHaveLength(0)
   })
 })
 
@@ -34,14 +41,20 @@ describe('configuredTestimonials', () => {
     }
   })
 
-  it('excludes entries missing heading or text', () => {
+  it('excludes entries with blank, missing, or non-string heading/text (fails closed)', () => {
     const blanked = [
       { heading: '', text: '' },
       { heading: 'x', text: '' },
       { heading: '', text: 'x' },
-    ]
-    expect(
-      blanked.filter((t) => t.heading.trim().length > 0 && t.text.trim().length > 0)
-    ).toHaveLength(0)
+      { heading: null, text: null },
+      {},
+    ] as unknown as { heading: string; text: string }[]
+    const isConfigured = (t: { heading: unknown; text: unknown }) =>
+      typeof t.heading === 'string' &&
+      t.heading.trim().length > 0 &&
+      typeof t.text === 'string' &&
+      t.text.trim().length > 0
+    expect(() => blanked.filter(isConfigured)).not.toThrow()
+    expect(blanked.filter(isConfigured)).toHaveLength(0)
   })
 })

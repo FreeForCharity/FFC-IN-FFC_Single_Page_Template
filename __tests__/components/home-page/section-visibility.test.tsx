@@ -50,4 +50,11 @@ describe('home-page section visibility flags', () => {
     const { container } = render(<Events />)
     expect(container).toBeEmptyDOMElement()
   })
+
+  it('Events treats a whitespace-only widget URL as unconfigured', () => {
+    siteConfig.sections.showEvents = true
+    siteConfig.integrations.sociableKitEventsWidgetUrl = '   '
+    const { container } = render(<Events />)
+    expect(container).toBeEmptyDOMElement()
+  })
 })

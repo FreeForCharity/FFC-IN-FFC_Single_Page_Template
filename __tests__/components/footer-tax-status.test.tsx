@@ -28,4 +28,12 @@ describe('footer tax-status label', () => {
     expect(bar).not.toHaveTextContent('501c3')
     expect(bar).toHaveTextContent(`Reserved by ${siteConfig.name}`)
   })
+
+  it('treats a whitespace-only label as empty (no dangling space)', () => {
+    siteConfig.taxStatusLabel = '   '
+    render(<Footer />)
+    const bar = screen.getByText(/All Rights Are Reserved/)
+    // Normalized text ends at the org name — the trimmed clause adds nothing.
+    expect(bar).toHaveTextContent(`Reserved by ${siteConfig.name}`)
+  })
 })
