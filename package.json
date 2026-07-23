@@ -43,7 +43,7 @@
     "@lhci/cli": "^0.15.1",
     "@next/bundle-analyzer": "^16.2.11",
     "@playwright/test": "^1.61.1",
-    "@tailwindcss/postcss": "^4.3.1",
+    "@tailwindcss/postcss": "^4.3.3",
     "@testing-library/dom": "^10.4.1",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.2",
@@ -60,7 +60,7 @@
     "jest-axe": "^10.0.0",
     "jest-environment-jsdom": "^30.4.1",
     "linkinator": "^7.6.1",
-    "prettier": "^3.9.0",
+    "prettier": "^3.9.6",
     "tailwindcss": "^4.3.1",
     "typescript": "^5"
   },
