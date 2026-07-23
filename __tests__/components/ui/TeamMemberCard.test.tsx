@@ -1,6 +1,27 @@
 import React from 'react'
 import { render, screen } from '@testing-library/react'
-import TeamMemberCard, { memberInitials } from '../../../src/components/ui/TeamMemberCard'
+import TeamMemberCard, {
+  memberInitials,
+  safeLinkedInUrl,
+} from '../../../src/components/ui/TeamMemberCard'
+
+describe('safeLinkedInUrl', () => {
+  it('accepts https LinkedIn URLs (including subdomains)', () => {
+    expect(safeLinkedInUrl('https://www.linkedin.com/in/janedoe')).toBe(
+      'https://www.linkedin.com/in/janedoe'
+    )
+    expect(safeLinkedInUrl('https://linkedin.com/in/x')).toBe('https://linkedin.com/in/x')
+    expect(safeLinkedInUrl('https://uk.linkedin.com/in/x')).toBe('https://uk.linkedin.com/in/x')
+  })
+  it('rejects non-https schemes and off-site or malformed hosts', () => {
+    expect(safeLinkedInUrl('javascript:alert(1)')).toBeUndefined()
+    expect(safeLinkedInUrl('http://www.linkedin.com/in/x')).toBeUndefined()
+    expect(safeLinkedInUrl('https://evil.com/in/x')).toBeUndefined()
+    expect(safeLinkedInUrl('https://notlinkedin.com/in/x')).toBeUndefined()
+    expect(safeLinkedInUrl('not a url')).toBeUndefined()
+    expect(safeLinkedInUrl(undefined)).toBeUndefined()
+  })
+})
 
 describe('memberInitials', () => {
   it('takes the first + last initial and upper-cases them', () => {
@@ -50,5 +71,11 @@ describe('TeamMemberCard', () => {
     render(<TeamMemberCard name="No Link" role="Volunteer" />)
     expect(screen.queryByRole('link')).not.toBeInTheDocument()
     expect(screen.getByRole('heading', { level: 3, name: 'No Link' })).toBeInTheDocument()
+  })
+
+  it('renders no link for an unsafe (non-https / off-site) linkedinUrl', () => {
+    render(<TeamMemberCard name="Bad Link" role="Advisor" linkedinUrl="javascript:alert(1)" />)
+    expect(screen.queryByRole('link')).not.toBeInTheDocument()
+    expect(screen.getByRole('heading', { level: 3, name: 'Bad Link' })).toBeInTheDocument()
   })
 })

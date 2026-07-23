@@ -27,15 +27,16 @@ describe('data modules', () => {
       expect(Array.isArray(team)).toBe(true)
       expect(team.length).toBeGreaterThan(0)
     })
-    it('every member has a name and role; LinkedIn, when present, is an http(s) URL', () => {
+    it('every member has a name and role; LinkedIn, when present, is an https:// URL', () => {
       for (const m of team) {
         expect(m.name).toBeTruthy()
         expect(m.role).toBeTruthy()
         // Photos were removed in favor of initials monograms — no imageUrl field.
         expect('imageUrl' in m).toBe(false)
-        // linkedinUrl is optional; validate the format only when it is set.
+        // linkedinUrl is optional; when set it must be https:// (matches the
+        // documented contract in CONTENT_REPLACEMENT_GUIDE.md).
         if (m.linkedinUrl !== undefined) {
-          expect(m.linkedinUrl).toMatch(/^https?:\/\//)
+          expect(m.linkedinUrl).toMatch(/^https:\/\//)
         }
       }
     })

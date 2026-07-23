@@ -1,13 +1,13 @@
-'use client'
-
 import React from 'react'
 
 interface TeamMemberCardProps {
   name: string
   role: string
   /**
-   * Optional LinkedIn profile URL. When provided, the whole card becomes a
-   * link to it (new tab, safe rel). When omitted, the card is plain content.
+   * Optional LinkedIn profile URL. When it is a safe `https://` LinkedIn URL,
+   * the whole card becomes a link to it (new tab, safe rel). Anything else
+   * (a non-https scheme like `javascript:`, or a non-LinkedIn host) is treated
+   * as "no link" so this component can never emit an unsafe external href.
    */
   linkedinUrl?: string
 }
@@ -27,7 +27,29 @@ export function memberInitials(name: string): string {
   return (first + last).toUpperCase()
 }
 
+/**
+ * Accept a URL only if it is `https://` on linkedin.com (or a subdomain like
+ * `www.`/`uk.`). This is defence-in-depth: the committed team JSON is trusted,
+ * but the component takes an arbitrary prop, so we refuse `javascript:` and
+ * off-site hrefs rather than rendering them.
+ */
+export function safeLinkedInUrl(url: string | undefined): string | undefined {
+  if (!url) return undefined
+  let parsed: URL
+  try {
+    parsed = new URL(url)
+  } catch {
+    return undefined
+  }
+  if (parsed.protocol !== 'https:') return undefined
+  const host = parsed.hostname.toLowerCase()
+  if (host !== 'linkedin.com' && !host.endsWith('.linkedin.com')) return undefined
+  return url
+}
+
 export default function TeamMemberCard({ name, role, linkedinUrl }: TeamMemberCardProps) {
+  const safeUrl = safeLinkedInUrl(linkedinUrl)
+
   const content = (
     <div className="flex flex-col items-center max-w-[388px] w-full mx-auto">
       {/* Initials monogram on the site brand color (no photos) */}
@@ -48,10 +70,10 @@ export default function TeamMemberCard({ name, role, linkedinUrl }: TeamMemberCa
     </div>
   )
 
-  if (linkedinUrl) {
+  if (safeUrl) {
     return (
       <a
-        href={linkedinUrl}
+        href={safeUrl}
         target="_blank"
         rel="noopener noreferrer"
         aria-label={`${name} on LinkedIn`}
