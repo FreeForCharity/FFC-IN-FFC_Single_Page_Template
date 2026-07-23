@@ -8,7 +8,7 @@ import { LiaSearchSolid } from 'react-icons/lia'
 import { RxCross2 } from 'react-icons/rx'
 import { assetPath } from '@/lib/assetPath'
 import { siteConfig } from '@/lib/site.config'
-import { team } from '@/data/team'
+import { configuredTeam } from '@/data/team'
 
 interface MenuItem {
   label: string
@@ -42,12 +42,13 @@ const Header: React.FC = () => {
   const [activeSection, setActiveSection] = useState<string>('')
 
   // Drop nav entries whose section self-hides so we never link to a missing
-  // #anchor (Programs -> sections.showPrograms; Team -> non-empty team data).
+  // #anchor (Programs -> sections.showPrograms; Team -> configuredTeam, i.e. at
+  // least one member with a populated name — matches the Team section's guard).
   // Built directly each render so it reflects the current config; the scroll-spy
   // uses the stable module-level SCROLL_SPY_SECTIONS instead.
   const menuItems: MenuItem[] = ALL_MENU_ITEMS.filter((item) => {
     if (item.path === '/#programs') return siteConfig.sections.showPrograms
-    if (item.path === '/#team') return team.length > 0
+    if (item.path === '/#team') return configuredTeam.length > 0
     return true
   })
 

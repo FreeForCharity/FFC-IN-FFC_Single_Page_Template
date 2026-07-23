@@ -16,9 +16,10 @@ describe('configuredTeam', () => {
   })
 
   it('excludes members whose required name field is blank', () => {
+    // Uses the real TeamMember shape ({ name, role, linkedinUrl? }).
     const blanked = [
-      { name: '', title: '', imageUrl: '', linkedinUrl: '' },
-      { name: '   ', title: 'x', imageUrl: '/x.webp', linkedinUrl: 'https://x' },
+      { name: '', role: '' },
+      { name: '   ', role: 'Volunteer', linkedinUrl: 'https://linkedin.com/in/x' },
     ]
     expect(blanked.filter((m) => m.name.trim().length > 0)).toHaveLength(0)
   })
