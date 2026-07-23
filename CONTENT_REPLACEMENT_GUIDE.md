@@ -330,15 +330,22 @@ Introduce your charity's leadership team or key staff members.
 
 ### Team Members
 
-| #   | Photo                  | Name              | Title                                              | LinkedIn URL                                            | Your Photo                                        | Your Name | Your Title | Your LinkedIn |
-| --- | ---------------------- | ----------------- | -------------------------------------------------- | ------------------------------------------------------- | ------------------------------------------------- | --------- | ---------- | ------------- |
-| 1   | `/Images/member1.webp` | "Clarke Moyer"    | "Free For Charity Founder/ President of the Board" | "https://www.linkedin.com/in/clarkemoyer/"              | _(Photo file, recommended: 400px × 400px square)_ |           |            |               |
-| 2   | `/Images/member2.webp` | "Chris Rae"       | "Free For Charity Vice President"                  | "https://www.linkedin.com/in/christopher-rae-540493a5/" |                                                   |           |            |               |
-| 3   | `/Images/member3.webp` | "Tyler Carlotto"  | "Free For Charity Secretary"                       | "https://www.linkedin.com/in/tylercarlotto/"            |                                                   |           |            |               |
-| 4   | `/Images/member4.webp` | "Brennan Darling" | "Free For Charity Treasurer"                       | "https://www.linkedin.com/in/brennon-darling-80953038/" |                                                   |           |            |               |
-| 5   | `/Images/member5.webp` | "Rebecca Cook"    | "Free For Charity Member at Large"                 | "https://www.linkedin.com/in/rebecca-cook-a91599265/"   |                                                   |           |            |               |
+Each member is a JSON file in `src/data/team/` with just three fields: `name`,
+`role`, and an optional `linkedinUrl`. **There are no photos** — every card
+renders an initials monogram (first + last initial) on your brand color, so you
+never have to source, size, or host portrait images. When `linkedinUrl` is set,
+the whole card links to that profile in a new tab; omit it and the card is not a
+link.
 
-_Note: Add more team members or use fewer by adding rows or removing entries. LinkedIn URLs are optional._
+| #   | Name              | Role                                               | LinkedIn URL (optional)                                 | Your Name | Your Role | Your LinkedIn |
+| --- | ----------------- | -------------------------------------------------- | ------------------------------------------------------- | --------- | --------- | ------------- |
+| 1   | "Clarke Moyer"    | "Free For Charity Founder/ President of the Board" | "https://www.linkedin.com/in/clarkemoyer/"              |           |           |               |
+| 2   | "Chris Rae"       | "Free For Charity Vice President"                  | "https://www.linkedin.com/in/christopher-rae-540493a5/" |           |           |               |
+| 3   | "Tyler Carlotto"  | "Free For Charity Secretary"                       | "https://www.linkedin.com/in/tylercarlotto/"            |           |           |               |
+| 4   | "Brennan Darling" | "Free For Charity Treasurer"                       | "https://www.linkedin.com/in/brennon-darling-80953038/" |           |           |               |
+| 5   | "Rebecca Cook"    | "Free For Charity Member at Large"                 | "https://www.linkedin.com/in/rebecca-cook-a91599265/"   |           |           |               |
+
+_Note: Add more team members or use fewer by adding/removing JSON files in `src/data/team/` (and their import in `src/data/team.ts`). A LinkedIn URL, when present, must start with `https://`._
 
 ---
 

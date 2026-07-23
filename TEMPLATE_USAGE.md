@@ -668,8 +668,8 @@ Files to update:
 
 **Team members**: Edit `src/data/team/`
 
-- Add/remove team member files
-- Update photos in `/public/team/`
+- Add/remove team member files (`name`, `role`, optional `linkedinUrl`)
+- No photos needed — cards render an initials monogram automatically
 
 **FAQs**: Edit `src/data/faqs/`
 
@@ -937,8 +937,7 @@ Based on the information in issue #[number], update all instances of:
 These cannot be automated by AI and require manual work:
 
 - Logo files (`/public/logo.svg`, `/public/favicon.ico`) - Must upload new files
-- Team member photos (`/public/team/`) - Must upload new images
-- Team member data (`src/data/team/*.json`) - Can be updated by Copilot with provided information
+- Team member data (`src/data/team/*.json`) - Can be updated by Copilot with provided information (no photos — cards use initials monograms)
 - FAQs (`src/data/faqs/*.json`) - Can be updated by Copilot with provided Q&A content
 - Testimonials (`src/data/testimonials/*.json`) - Can be updated by Copilot with provided testimonial text
 

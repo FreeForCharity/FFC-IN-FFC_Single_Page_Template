@@ -488,7 +488,7 @@ If both pass, the rebrand is complete rather than skin-deep. **Estimated time:
 After Copilot completes the updates, you will need to manually:
 
 1. Replace logo and favicon files in `/public` directory with the assets attached to this issue
-2. Add team member photos to `/public/team/` directory with filenames matching the data files
+2. Review the team members in `src/data/team/` (name, role, optional LinkedIn) — no photos are needed; cards render an initials monogram
 3. Review and adjust color scheme in `src/app/globals.css` with the hex codes provided above
 4. Test all changes locally with `npm run dev`
 

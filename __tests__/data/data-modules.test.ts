@@ -27,12 +27,16 @@ describe('data modules', () => {
       expect(Array.isArray(team)).toBe(true)
       expect(team.length).toBeGreaterThan(0)
     })
-    it('every member has name, title, an /Images/ photo, and an http(s) LinkedIn URL', () => {
+    it('every member has a name and role; LinkedIn, when present, is an http(s) URL', () => {
       for (const m of team) {
         expect(m.name).toBeTruthy()
-        expect(m.title).toBeTruthy()
-        expect(m.imageUrl).toMatch(/^\/Images\//)
-        expect(m.linkedinUrl).toMatch(/^https?:\/\//)
+        expect(m.role).toBeTruthy()
+        // Photos were removed in favor of initials monograms — no imageUrl field.
+        expect('imageUrl' in m).toBe(false)
+        // linkedinUrl is optional; validate the format only when it is set.
+        if (m.linkedinUrl !== undefined) {
+          expect(m.linkedinUrl).toMatch(/^https?:\/\//)
+        }
       }
     })
   })
