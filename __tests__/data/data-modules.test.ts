@@ -27,12 +27,19 @@ describe('data modules', () => {
       expect(Array.isArray(team)).toBe(true)
       expect(team.length).toBeGreaterThan(0)
     })
-    it('every member has name, title, an /Images/ photo, and an http(s) LinkedIn URL', () => {
+    it('every member has a name and role; LinkedIn, when present, is an https://linkedin.com URL', () => {
       for (const m of team) {
         expect(m.name).toBeTruthy()
-        expect(m.title).toBeTruthy()
-        expect(m.imageUrl).toMatch(/^\/Images\//)
-        expect(m.linkedinUrl).toMatch(/^https?:\/\//)
+        expect(m.role).toBeTruthy()
+        // Photos were removed in favor of initials monograms — no imageUrl field.
+        expect('imageUrl' in m).toBe(false)
+        // linkedinUrl is optional; when set it must be an https:// URL on
+        // linkedin.com (or a subdomain) — the only shape TeamMemberCard turns
+        // into a link (safeLinkedInUrl). Enforcing the host here means bad data
+        // fails the suite instead of silently rendering as a non-link.
+        if (m.linkedinUrl !== undefined) {
+          expect(m.linkedinUrl).toMatch(/^https:\/\/([a-z0-9-]+\.)*linkedin\.com(\/|$)/i)
+        }
       }
     })
   })

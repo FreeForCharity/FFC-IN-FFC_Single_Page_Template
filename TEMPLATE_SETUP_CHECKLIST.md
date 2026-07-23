@@ -149,8 +149,7 @@ You don't have to edit either workflow when you rename the repo.
 
 ### Content Data
 
-- [ ] Update team members in `src/data/team/`
-- [ ] Update team photos in `/public/team/`
+- [ ] Update team members in `src/data/team/` (name, role, optional LinkedIn — no photos; cards use initials monograms)
 - [ ] Update FAQs in `src/data/faqs/`
 - [ ] Update testimonials in `src/data/testimonials/`
 
