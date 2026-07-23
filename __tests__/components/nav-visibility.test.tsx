@@ -1,15 +1,20 @@
 import React from 'react'
 import { render, screen } from '@testing-library/react'
-import { siteConfig } from '@/lib/site.config'
-import Header from '@/components/header'
-import Footer from '@/components/footer'
 
 // Dead-anchor guard (FFC-Cloudflare-Automation#816 Part B follow-up): when a
 // home-page section self-hides, its Header/Footer in-page nav link must go with
 // it, or the fork ends up with a link to a missing #anchor. Team keys off empty
 // `team` data (mocked here); Programs/Events key off siteConfig.sections. The
 // default (all sections shown) is covered by Header.test.tsx / Footer.test.tsx.
+//
+// Declared before the Header/Footer imports (which read `team` at module load)
+// so the components resolve the mocked empty array without relying on
+// jest.mock hoisting.
 jest.mock('@/data/team', () => ({ team: [] }))
+
+import { siteConfig } from '@/lib/site.config'
+import Header from '@/components/header'
+import Footer from '@/components/footer'
 
 describe('nav links respect section visibility', () => {
   const original = {
