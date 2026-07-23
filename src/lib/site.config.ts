@@ -107,11 +107,6 @@ export type SiteConfig = {
    */
   parentOrg?: { name: string; url: string; hubUrl: string }
   /**
-   * Third-party integration endpoints. Each fork points these at its own
-   * accounts — the domains are already allow-listed in the CSP, so only the
-   * path/ID changes here.
-   */
-  /**
    * Label appended after the org name in the footer copyright line to describe
    * tax status, e.g. 'a US 501c3 Non Profit' or 'a pre-501(c)(3) nonprofit'.
    * Empty string renders just the org name with no trailing status clause.
@@ -132,6 +127,11 @@ export type SiteConfig = {
     /** SociableKit Facebook-events embed (also self-hides when the URL is empty). */
     showEvents: boolean
   }
+  /**
+   * Third-party integration endpoints. Each fork points these at its own
+   * accounts — the domains are already allow-listed in the CSP, so only the
+   * path/ID changes here.
+   */
   integrations: {
     /** Zeffy donation-form embed URL (the iframe `src`). */
     zeffyDonationUrl: string

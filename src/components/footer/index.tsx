@@ -10,6 +10,7 @@ import type { IconType } from 'react-icons'
 
 import { siteConfig } from '@/lib/site.config'
 import { assetPath } from '@/lib/assetPath'
+import { team } from '@/data/team'
 
 // Maps a social link's label (as defined in siteConfig.social) to an icon.
 // Unknown labels fall back to a generic link icon (FiLink2) so a charity
@@ -79,12 +80,19 @@ const Footer: React.FC = () => {
               {[
                 { name: 'Home', href: '/#hero' },
                 { name: 'Mission', href: '/#mission' },
-                { name: 'Programs', href: '/#programs' },
-                { name: 'Events', href: '/#events' },
+                // Programs / Events self-hide (sections.showPrograms /
+                // showEvents + widget URL); drop the dead quick-link too.
+                ...(siteConfig.sections.showPrograms
+                  ? [{ name: 'Programs', href: '/#programs' }]
+                  : []),
+                ...(siteConfig.sections.showEvents &&
+                siteConfig.integrations.sociableKitEventsWidgetUrl
+                  ? [{ name: 'Events', href: '/#events' }]
+                  : []),
                 { name: 'Donate', href: '/#donate' },
                 { name: 'Volunteer', href: '/#volunteer' },
                 { name: 'FAQ', href: '/#faq' },
-                { name: 'Team', href: '/#team' },
+                ...(team.length > 0 ? [{ name: 'Team', href: '/#team' }] : []),
                 // FFC footer standard: every supported charity site links back
                 // to the supporting org's hub. Always rendered — keep this
                 // entry when customizing a fork.

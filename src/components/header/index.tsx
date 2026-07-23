@@ -8,6 +8,7 @@ import { LiaSearchSolid } from 'react-icons/lia'
 import { RxCross2 } from 'react-icons/rx'
 import { assetPath } from '@/lib/assetPath'
 import { siteConfig } from '@/lib/site.config'
+import { team } from '@/data/team'
 
 interface MenuItem {
   label: string
@@ -26,11 +27,14 @@ const Header: React.FC = () => {
     () => [
       { label: 'Home', path: '/#hero' },
       { label: 'Mission', path: '/#mission' },
-      { label: 'Programs', path: '/#programs' },
+      // Programs / Team can self-hide (siteConfig.sections.showPrograms / empty
+      // team data); drop their nav entries too so a fork doesn't render a link
+      // to a missing #anchor.
+      ...(siteConfig.sections.showPrograms ? [{ label: 'Programs', path: '/#programs' }] : []),
       { label: 'Volunteer', path: '/#volunteer' },
       { label: 'Donate', path: '/#donate' },
       { label: 'FAQ', path: '/#faq' },
-      { label: 'Team', path: '/#team' },
+      ...(team.length > 0 ? [{ label: 'Team', path: '/#team' }] : []),
     ],
     []
   )
