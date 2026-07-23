@@ -16,7 +16,11 @@ export type TeamMember = {
   name: string
   /** Role or title, e.g. "Founder", "Program Lead", "Treasurer". */
   role: string
-  /** Optional LinkedIn profile URL (https). When set, the card links to it. */
+  /**
+   * Optional LinkedIn profile URL. Must be `https://` on linkedin.com (or a
+   * subdomain) to render as a link — TeamMemberCard's `safeLinkedInUrl()`
+   * ignores any other host or scheme, so the card shows without a link.
+   */
   linkedinUrl?: string
 }
 

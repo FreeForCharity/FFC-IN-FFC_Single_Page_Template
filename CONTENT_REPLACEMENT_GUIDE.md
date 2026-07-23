@@ -345,7 +345,7 @@ link.
 | 4   | "Brennan Darling" | "Free For Charity Treasurer"                       | "https://www.linkedin.com/in/brennon-darling-80953038/" |           |           |               |
 | 5   | "Rebecca Cook"    | "Free For Charity Member at Large"                 | "https://www.linkedin.com/in/rebecca-cook-a91599265/"   |           |           |               |
 
-_Note: Add more team members or use fewer by adding/removing JSON files in `src/data/team/` (and their import in `src/data/team.ts`). A LinkedIn URL, when present, must start with `https://`._
+_Note: Add more team members or use fewer by adding/removing JSON files in `src/data/team/` (and their import in `src/data/team.ts`). A LinkedIn URL, when present, must be an `https://` link on `linkedin.com` (or a subdomain such as `www.` / `uk.`) — any other host (or a non-`https://` scheme) is ignored and the card simply renders without a link._
 
 ---
 
