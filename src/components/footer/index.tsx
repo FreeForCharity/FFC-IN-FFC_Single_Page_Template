@@ -241,7 +241,8 @@ const Footer: React.FC = () => {
       {/* Bottom Bar */}
       <div className="mt-12 py-6 px-4 border-t border-gray-800 text-center text-[18px] font-[500] w-full aria-font">
         <p>
-          © {currentYear} All Rights Are Reserved by {siteConfig.name} a US 501c3 Non Profit
+          © {currentYear} All Rights Are Reserved by {siteConfig.name}
+          {siteConfig.taxStatusLabel ? ` ${siteConfig.taxStatusLabel}` : ''}
           {/* FFC footer standard: the permanent "Supported by" attribution.
               Always rendered — do NOT remove or hide it when customizing. */}
           {' | Supported by '}

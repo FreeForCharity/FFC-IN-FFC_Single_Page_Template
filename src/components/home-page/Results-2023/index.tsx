@@ -6,6 +6,8 @@ import { results } from '@/data/results'
 // the impact numbers or labels, edit that file — no need to touch this
 // component.
 const index = () => {
+  if (results.stats.length === 0) return null
+
   return (
     <div id="results">
       <div className="w-[90%] mx-auto py-[52px] lg:px-[20px]">

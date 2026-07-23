@@ -43,6 +43,8 @@ const TestimonialSlider: React.FC = () => {
     swiperInstance?.slideTo(index)
   }
 
+  if (testimonials.length === 0) return null
+
   return (
     <section id="testimonials" className="py-16 pb-25 bg-[#FCFCFC]">
       <div className="container mx-auto px-4 max-w-[1150px] text-center">

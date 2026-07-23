@@ -111,6 +111,27 @@ export type SiteConfig = {
    * accounts — the domains are already allow-listed in the CSP, so only the
    * path/ID changes here.
    */
+  /**
+   * Label appended after the org name in the footer copyright line to describe
+   * tax status, e.g. 'a US 501c3 Non Profit' or 'a pre-501(c)(3) nonprofit'.
+   * Empty string renders just the org name with no trailing status clause.
+   */
+  taxStatusLabel: string
+  /**
+   * Visibility flags for home-page sections whose default content is
+   * FFC-specific marketing rather than per-charity data. A rebranded fork sets
+   * these false so the section self-hides instead of showing FFC placeholders.
+   * Data-driven sections (Team, Testimonials, Results) self-hide on their own
+   * when their data files are emptied and need no flag here.
+   */
+  sections: {
+    /** FFC Endowment feature cards. */
+    showEndowment: boolean
+    /** FFC's own three-program (Domains/Hosting/Consulting) marketing block. */
+    showPrograms: boolean
+    /** SociableKit Facebook-events embed (also self-hides when the URL is empty). */
+    showEvents: boolean
+  }
   integrations: {
     /** Zeffy donation-form embed URL (the iframe `src`). */
     zeffyDonationUrl: string
@@ -182,6 +203,12 @@ export const siteConfig: SiteConfig = {
     name: 'Free For Charity',
     url: 'https://freeforcharity.org',
     hubUrl: 'https://freeforcharity.org/hub/',
+  },
+  taxStatusLabel: 'a US 501c3 Non Profit',
+  sections: {
+    showEndowment: true,
+    showPrograms: true,
+    showEvents: true,
   },
   integrations: {
     zeffyDonationUrl: 'https://www.zeffy.com/embed/donation-form/free-for-charity-endowment-fund',

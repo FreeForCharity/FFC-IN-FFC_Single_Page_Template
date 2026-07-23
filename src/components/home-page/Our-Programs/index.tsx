@@ -3,8 +3,11 @@ import Image from 'next/image'
 import OrangeFaqItem from '@/components/ui/OrangeFaqItem'
 import ApplicationFormButton from '@/components/ui/ApplicationFormButton'
 import { assetPath } from '@/lib/assetPath'
+import { siteConfig } from '@/lib/site.config'
 
 const index = () => {
+  if (!siteConfig.sections.showPrograms) return null
+
   return (
     <div id="programs" className="py-[52px]">
       <div className="w-[90%] lg:px-[20px] mx-auto">

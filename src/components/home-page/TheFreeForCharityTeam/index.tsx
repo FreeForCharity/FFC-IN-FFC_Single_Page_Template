@@ -8,6 +8,8 @@ import { team } from '@/data/team'
 // touch this component. The first three members render in the top row and the
 // remaining members in a second row, matching the original layout.
 const index = () => {
+  if (team.length === 0) return null
+
   const topRow = team.slice(0, 3)
   const bottomRow = team.slice(3)
 
