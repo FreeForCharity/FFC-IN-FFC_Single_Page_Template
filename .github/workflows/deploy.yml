@@ -92,6 +92,11 @@ jobs:
         uses: actions/upload-pages-artifact@v5
         with:
           path: ./out
+          # Keep dot-entries (.well-known/, .nojekyll) in the Pages artifact.
+          # upload-pages-artifact@v5 defaults include-hidden-files to false,
+          # which drops public/.well-known/security.txt and 404s the canonical
+          # RFC 9116 path. See FFC-Cloudflare-Automation#788.
+          include-hidden-files: true
 
   deploy:
     name: Deploy to GitHub Pages
