@@ -30,7 +30,7 @@ describe('TheFreeForCharityTeam with an empty roster', () => {
 
   it('renders nothing when the team array is empty', () => {
     jest.isolateModules(() => {
-      jest.doMock('@/data/team', () => ({ team: [] }))
+      jest.doMock('@/data/team', () => ({ team: [], configuredTeam: [] }))
       const EmptyTeam = require('../../../src/components/home-page/TheFreeForCharityTeam').default
       const { container } = render(<EmptyTeam />)
       expect(container.firstChild).toBeNull()

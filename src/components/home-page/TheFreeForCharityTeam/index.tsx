@@ -1,6 +1,6 @@
 import React from 'react'
 import TeamMemberCard from '@/components/ui/TeamMemberCard'
-import { team } from '@/data/team'
+import { configuredTeam } from '@/data/team'
 
 // Team members are sourced from src/data/team/*.json (aggregated in
 // src/data/team.ts). To change the team, edit those JSON files — no need to
@@ -8,12 +8,14 @@ import { team } from '@/data/team'
 // links to the member's LinkedIn when one is provided. The first three members
 // render in the top row and the remaining members in a second row.
 const index = () => {
-  // Safety guard: with no members there is nothing to show (a pre-501(c)(3)
-  // application supplies at least three, so this is normally populated).
-  if (team.length === 0) return null
+  // Self-hide when no member is configured. `team` is a fixed list of JSON
+  // imports, so a fork that blanks those files (rather than removing entries)
+  // leaves team.length non-zero; configuredTeam keeps only members with a
+  // populated name, so the section renders nothing instead of empty cards.
+  if (configuredTeam.length === 0) return null
 
-  const topRow = team.slice(0, 3)
-  const bottomRow = team.slice(3)
+  const topRow = configuredTeam.slice(0, 3)
+  const bottomRow = configuredTeam.slice(3)
 
   return (
     <div id="team" className="py-[50px]">
