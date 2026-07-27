@@ -213,6 +213,39 @@ describe('donation scope resolution — an unrecognised repo variable', () => {
   })
 })
 
+describe('donation scope resolution — values reaching workflow commands are escaped', () => {
+  // ::error::/::warning:: lines are newline-delimited and percent-escaped.
+  // An unescaped value can close the annotation and have the remainder
+  // parsed as further commands — including ::stop-commands::, which would
+  // silence every annotation the rest of the run emits.
+  it('escapes CR, LF and % in a rejected file donationScope', () => {
+    const r = run(JSON.stringify({ donationScope: 'bad\nvalue\rwith%percent' }))
+    expect(r.code).toBe(1)
+    const line = r.stderr.split('\n').find((l) => l.startsWith('::error::'))!
+    expect(line).toContain('%0A')
+    expect(line).toContain('%0D')
+    expect(line).toContain('%25')
+    // The whole annotation is one line: nothing escaped from it.
+    expect(r.stderr.trim().split('\n')).toHaveLength(1)
+  })
+
+  it('escapes a forged command smuggled through the file', () => {
+    const r = run(JSON.stringify({ donationScope: 'x\n::stop-commands::abc' }))
+    expect(r.code).toBe(1)
+    expect(r.stderr).not.toMatch(/^::stop-commands::/m)
+  })
+
+  it('escapes CR, LF and % in an unrecognised repo variable', () => {
+    const r = run(null, 'bad\nvalue\rwith%percent')
+    expect(r.code).toBe(0)
+    const line = r.stdout.split('\n').find((l) => l.startsWith('::warning::'))!
+    expect(line).toContain('%0A')
+    expect(line).toContain('%0D')
+    expect(line).toContain('%25')
+    expect(r.stdout).not.toMatch(/^::stop-commands::/m)
+  })
+})
+
 describe('the contract has exactly one implementation', () => {
   const stepBodies = (heading: string) => {
     const start = workflow.indexOf(heading)
