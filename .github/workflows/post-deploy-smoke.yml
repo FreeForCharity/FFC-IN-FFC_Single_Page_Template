@@ -30,6 +30,17 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v6
 
+      - name: Setup Node
+        # Ahead of the scope resolver, not just ahead of Playwright. The
+        # resolver is a node script, so the toolchain it runs on is declared
+        # here rather than inherited from whatever the runner image happens
+        # to ship. Unconditional for the same reason: it must be in place
+        # before the first step that needs it, which now runs before the
+        # skip decision.
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
       - name: Resolve donation scope (one contract, both engine paths consume it)
         # The donation posture is declared in two places (the
         # SMOKE_DONATION_SCOPE repo variable and the committed
@@ -282,12 +293,6 @@ jobs:
           done
           echo "Checked $checked routes; $fail failed"
           if [ "$fail" -gt 0 ]; then exit 1; fi
-
-      - name: Setup Node for visual check
-        if: steps.url.outputs.skip != 'true'
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
 
       - name: Install Playwright (chromium only)
         if: steps.url.outputs.skip != 'true'

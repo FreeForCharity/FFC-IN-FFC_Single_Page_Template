@@ -233,6 +233,25 @@ describe('the contract has exactly one implementation', () => {
     }
   })
 
+  it('node is set up before the resolver runs, not inherited from the image', () => {
+    // The resolver is a node script that runs before the smoke even knows
+    // its target, so it must not depend on whatever node the runner image
+    // happens to ship. Ordering is the whole guarantee here, and ordering is
+    // exactly what a later edit reshuffles without noticing.
+    const names = [...workflow.matchAll(/\n      - name: (.*)/g)].map((m) => m[1])
+    const setupNode = names.findIndex((n) => n === 'Setup Node')
+    const resolver = names.findIndex((n) => n.startsWith('Resolve donation scope'))
+    expect(setupNode).toBeGreaterThan(-1)
+    expect(resolver).toBeGreaterThan(-1)
+    expect(setupNode).toBeLessThan(resolver)
+
+    // ...and it must be unconditional: every `if:` in this job keys off the
+    // skip decision, which is made in a step that now runs AFTER the resolver.
+    const step = stepBodies('- name: Setup Node\n')
+    expect(step).toContain('actions/setup-node')
+    expect(step).not.toContain('if:')
+  })
+
   it('the Playwright compliance step consumes the resolved output', () => {
     const step = stepBodies('- name: Visual check + screenshot + compliance assertions')
     expect(step).toContain('SMOKE_DONATION_SCOPE: ${{ steps.scope.outputs.scope }}')
