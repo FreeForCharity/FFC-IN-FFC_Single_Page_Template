@@ -264,17 +264,40 @@ describe('the contract has exactly one implementation', () => {
     )
     expect(resolvers).toHaveLength(1)
 
+    // Two signals, both required, deliberately not on the same line. The
+    // implementation this guard replaced built its path on one line and
+    // called existsSync on the next:
+    //
+    //   const smokeConfigPath = process.env.GITHUB_WORKSPACE + '/.github/smoke.config.json'
+    //   if (require('fs').existsSync(smokeConfigPath)) {
+    //
+    // so a regex demanding the primitive and the path together would miss
+    // the exact regression this exists to catch. Requiring both anywhere in
+    // the SAME STEP keeps that catch while leaving a step that reads some
+    // unrelated file — and never mentions this config — alone.
     const readPrimitives = [
       /existsSync/,
       /readFileSync/,
       /\[ -f \.github\/smoke\.config\.json/,
       /jq -r '\.donationScope/,
     ]
+    const NEAR = 3
     const otherSteps = steps.filter((s) => !resolvers.includes(s))
     for (const step of otherSteps) {
-      const name = step.split('\n')[0]
+      const lines = step.split('\n')
+      const name = lines[0]
+      // The Playwright step legitimately names the config in a compliance
+      // message, so "mentions it anywhere" is not the signal either — it is
+      // a read PRIMITIVE sitting within a few lines of the path.
+      const mentions = lines.flatMap((l, i) => (l.includes('smoke.config.json') ? [i] : []))
+      if (mentions.length === 0) continue
       for (const primitive of readPrimitives) {
-        expect(`${name}: ${primitive.test(step)}`).toBe(`${name}: false`)
+        const near = lines.flatMap((l, i) =>
+          primitive.test(l) && mentions.some((m) => Math.abs(i - m) <= NEAR) ? [i + 1] : []
+        )
+        expect(`${name}: ${near.length ? `reads config at line ${near[0]}` : 'clean'}`).toBe(
+          `${name}: clean`
+        )
       }
     }
   })
