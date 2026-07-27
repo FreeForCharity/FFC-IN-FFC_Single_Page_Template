@@ -95,7 +95,13 @@ jobs:
           const rawVar = process.env.SMOKE_DONATION_SCOPE;
           const varScope = norm(rawVar);
           if (varScope && !VALID.includes(varScope)) {
-            console.log(`::warning::SMOKE_DONATION_SCOPE "${rawVar}" is not one of ${VALID.join('|')} — ignoring it and falling back to ${CONFIG_PATH}`);
+            // Name the outcome, not the intention: with no usable declaration
+            // in the file there is nothing to fall back TO, and a maintainer
+            // told otherwise goes looking for a file that isn't there.
+            const outcome = fileScope
+              ? `falling back to ${CONFIG_PATH} ("${fileScope}")`
+              : `scope is undeclared (no usable donationScope in ${CONFIG_PATH})`;
+            console.log(`::warning::SMOKE_DONATION_SCOPE "${rawVar}" is not one of ${VALID.join('|')} — ignoring it; ${outcome}`);
           }
           const effectiveVar = VALID.includes(varScope) ? varScope : '';
 

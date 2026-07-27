@@ -187,16 +187,29 @@ describe('donation scope resolution — an unrecognised repo variable', () => {
     const r = run(JSON.stringify({ donationScope: 'none' }), 'nonee')
     expect(r.code).toBe(0)
     expect(r.stdout).toContain('::warning::')
+    expect(r.stdout).toContain('falling back to .github/smoke.config.json ("none")')
     expect(r.scope).toBe('none')
     expect(r.source).toBe('file')
   })
 
+  // The warning must describe what actually happened. Promising a fallback
+  // to a file that does not exist sends a maintainer looking for it.
   it('warns and reports undeclared when there is no file to fall back to', () => {
     const r = run(null, 'nonee')
     expect(r.code).toBe(0)
     expect(r.stdout).toContain('::warning::')
+    expect(r.stdout).toContain('scope is undeclared')
+    expect(r.stdout).not.toContain('falling back to')
     expect(r.scope).toBe('')
     expect(r.source).toBe('undeclared')
+  })
+
+  it('says undeclared when the file exists but declares no scope', () => {
+    const r = run('{}', 'nonee')
+    expect(r.code).toBe(0)
+    expect(r.stdout).toContain('scope is undeclared')
+    expect(r.stdout).not.toContain('falling back to')
+    expect(r.scope).toBe('')
   })
 })
 
