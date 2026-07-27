@@ -110,6 +110,44 @@ describe('check-drift CSP: the inert file never masks the live control', () => {
   })
 })
 
+describe('check-drift CSP: unreadable is not the same as absent', () => {
+  // The warning severity above is correct only for a file that is genuinely
+  // absent. A file that exists but cannot be read (permissions, EISDIR, I/O)
+  // is a different fact, and collapsing the two would both misdiagnose it
+  // ("restore the file" — it is already there) and let the run pass, because
+  // the absent case is only a warning.
+  function runWithUnreadableHeaders(): { code: number; output: string } {
+    const dir = mkdtempSync(join(tmpdir(), 'ffc-drift-unreadable-'))
+    try {
+      mkdirSync(join(dir, 'scripts'), { recursive: true })
+      mkdirSync(join(dir, 'src/app'), { recursive: true })
+      mkdirSync(join(dir, 'src/lib'), { recursive: true })
+      mkdirSync(join(dir, 'public/.well-known'), { recursive: true })
+      cpSync(join(root, 'scripts/check-drift.mjs'), join(dir, 'scripts/check-drift.mjs'))
+      cpSync(join(root, 'src/lib/site.config.ts'), join(dir, 'src/lib/site.config.ts'))
+      cpSync(join(root, 'public/security.txt'), join(dir, 'public/security.txt'))
+      cpSync(
+        join(root, 'public/.well-known/security.txt'),
+        join(dir, 'public/.well-known/security.txt')
+      )
+      writeFileSync(join(dir, 'src/app/layout.tsx'), layoutSource(true))
+      // A directory where the file should be: readFile gives EISDIR, which is
+      // portable and needs no chmod (root ignores permission bits in CI).
+      mkdirSync(join(dir, 'public/_headers'))
+      return runScript(join(dir, 'scripts/check-drift.mjs'))
+    } finally {
+      rmSync(dir, { recursive: true, force: true })
+    }
+  }
+
+  it('errors, and does not report it as missing', () => {
+    const { code, output } = runWithUnreadableHeaders()
+    expect(output).toContain('Could not read public/_headers')
+    expect(output).not.toContain('public/_headers is missing')
+    expect(code).toBe(1)
+  })
+})
+
 describe('check-drift CSP: _headers findings are warnings, not coverage', () => {
   it('warns rather than errors when public/_headers is missing', () => {
     const { code, output } = run('absent', true)

@@ -349,11 +349,25 @@ function extractCspDirectives(policy) {
   return out
 }
 
+// Returned when a file exists but could not be read. Distinct from null
+// ("absent"), because the two call for opposite responses: absent means restore
+// it, unreadable means the file is already there and something else is wrong.
+// Collapsing them tells the reader to restore a file they already have — and
+// since the _headers finding is only a warning, it would let the run pass on a
+// filesystem error.
+const UNREADABLE = Symbol('unreadable')
+
 async function readIfExists(path) {
   try {
     return await readFile(path, 'utf8')
-  } catch {
-    return null
+  } catch (err) {
+    if (err.code === 'ENOENT') return null
+    errors.push(
+      `Could not read ${relative(ROOT, path)} (${err.code || err.message}). ` +
+        `The file is present but unreadable — this is not the same as it being absent, ` +
+        `so fix the read error rather than restoring the file from the template.`
+    )
+    return UNREADABLE
   }
 }
 
@@ -366,6 +380,10 @@ async function checkCspSync() {
   // reported only "public/_headers is missing".
   const headersBody = await readIfExists(join(ROOT, 'public', '_headers'))
   const layoutBody = await readIfExists(join(ROOT, 'src', 'app', 'layout.tsx'))
+
+  // readIfExists has already recorded the read failure as an error. Asserting
+  // on a file we could not read would only add a wrong diagnosis on top.
+  if (headersBody === UNREADABLE || layoutBody === UNREADABLE) return
 
   if (!headersBody) {
     warnings.push(
