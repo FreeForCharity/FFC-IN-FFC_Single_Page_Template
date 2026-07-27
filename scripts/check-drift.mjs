@@ -561,6 +561,9 @@ async function checkBrandIdentity() {
 // Footer_Only_Template, where removing the input alone flipped
 // /privacy-policy/ from 404 to 200 (FFC-Cloudflare-Automation#880).
 const UNREADABLE_NEXT_CONFIG = /^next\.config\.(ts|mts|cts)$/
+// The two the action does read. `.cjs` is deliberately absent: the action looks
+// for .js/.mjs, so a .cjs alongside a .ts still ends in a generated config.
+const READABLE_NEXT_CONFIG = /^next\.config\.(js|mjs)$/
 const NEXT_CONFIG_FILE = /^next\.config\./
 
 // Matches the input as a YAML mapping key, quoted or not, with or without a
@@ -584,6 +587,12 @@ const STATIC_SITE_GENERATOR_NEXT = /^(?:-\s*)?static_site_generator\s*:\s*(['"]?
 export function pagesConfigDiscardFindings(workflows, nextConfigFilenames) {
   const unreadable = nextConfigFilenames.filter((n) => UNREADABLE_NEXT_CONFIG.test(n))
   if (unreadable.length === 0) return []
+  // A readable config sitting alongside changes the mechanism: the action edits
+  // that file rather than generating one, and Next prefers it over the .ts with
+  // or without this input. The .ts is dead there for a different reason — a real
+  // problem, but not one this rule owns or that removing the input would fix.
+  // Failing CI with a diagnosis that does not apply is worse than staying quiet.
+  if (nextConfigFilenames.some((n) => READABLE_NEXT_CONFIG.test(n))) return []
   const findings = []
   for (const { path, body } of workflows) {
     const lines = body.split('\n')
@@ -593,11 +602,13 @@ export function pagesConfigDiscardFindings(workflows, nextConfigFilenames) {
         path,
         line: i + 1,
         message:
-          `${path}:${i + 1} passes "static_site_generator: next" to actions/configure-pages, ` +
-          `but this repo's Next config is ${unreadable.join(', ')} — which the action cannot read. ` +
-          `It will write its own next.config.js and Next will prefer it, silently discarding ` +
-          `every setting in ${unreadable[0]} on each deploy. Remove the input; the workflow's own ` +
-          `basePath step already computes the right value from public/CNAME. ` +
+          `${path}:${i + 1} sets "static_site_generator: next" (the actions/configure-pages input) ` +
+          `while this repo's Next config is ${unreadable.join(', ')} — which that action cannot ` +
+          `read. It writes its own next.config.js and Next prefers it, silently discarding every ` +
+          `setting in ${unreadable[0]} on each deploy. Remove the input and let the workflow's own ` +
+          `basePath step decide: public/CNAME when present, otherwise the repo name. Confirm that ` +
+          `value matches the repo's actual Pages binding first — a stale CNAME with no binding ` +
+          `builds root-relative assets for a subpath deploy, and every one of them 404s. ` +
           `See FreeForCharity/FFC-Cloudflare-Automation#880.`,
       })
     }

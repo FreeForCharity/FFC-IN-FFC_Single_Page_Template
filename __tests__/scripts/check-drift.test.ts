@@ -86,10 +86,23 @@ describe('check-drift: Pages config discard', () => {
     expect(findingsInChild(wf(ACTIVE_INPUT), ['next.config.mjs'])).toEqual([])
   })
 
-  it('flags every TypeScript config form the action cannot read', () => {
+  it('flags every TypeScript config extension the action cannot read', () => {
     for (const cfg of ['next.config.ts', 'next.config.mts', 'next.config.cts']) {
       expect(findingsInChild(wf(ACTIVE_INPUT), [cfg])).toHaveLength(1)
     }
+  })
+
+  it('stays quiet when a readable JS config sits alongside the TypeScript one', () => {
+    // The action edits that file instead of generating one, and Next prefers it
+    // over the .ts either way — so the .ts is dead for a reason removing this
+    // input would not fix. Wrong diagnosis, no CI failure.
+    for (const readable of ['next.config.js', 'next.config.mjs']) {
+      expect(findingsInChild(wf(ACTIVE_INPUT), [readable, 'next.config.ts'])).toEqual([])
+    }
+  })
+
+  it('still flags a .cjs alongside the TypeScript config — the action reads neither', () => {
+    expect(findingsInChild(wf(ACTIVE_INPUT), ['next.config.cjs', 'next.config.ts'])).toHaveLength(1)
   })
 
   it('is not fooled by quoting, spacing, or a trailing comment', () => {
