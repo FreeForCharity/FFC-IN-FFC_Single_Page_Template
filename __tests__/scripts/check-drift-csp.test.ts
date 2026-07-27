@@ -116,7 +116,7 @@ describe('check-drift CSP: unreadable is not the same as absent', () => {
   // is a different fact, and collapsing the two would both misdiagnose it
   // ("restore the file" — it is already there) and let the run pass, because
   // the absent case is only a warning.
-  function runWithUnreadableHeaders(): { code: number; output: string } {
+  function runWithUnreadableHeaders(layoutMeta = true): { code: number; output: string } {
     const dir = mkdtempSync(join(tmpdir(), 'ffc-drift-unreadable-'))
     try {
       mkdirSync(join(dir, 'scripts'), { recursive: true })
@@ -130,7 +130,7 @@ describe('check-drift CSP: unreadable is not the same as absent', () => {
         join(root, 'public/.well-known/security.txt'),
         join(dir, 'public/.well-known/security.txt')
       )
-      writeFileSync(join(dir, 'src/app/layout.tsx'), layoutSource(true))
+      writeFileSync(join(dir, 'src/app/layout.tsx'), layoutSource(layoutMeta))
       // A directory where the file should be: readFile gives EISDIR, which is
       // portable and needs no chmod (root ignores permission bits in CI).
       mkdirSync(join(dir, 'public/_headers'))
@@ -144,6 +144,21 @@ describe('check-drift CSP: unreadable is not the same as absent', () => {
     const { code, output } = runWithUnreadableHeaders()
     expect(output).toContain('Could not read public/_headers')
     expect(output).not.toContain('public/_headers is missing')
+    expect(code).toBe(1)
+  })
+
+  // Unreadable is the fourth state _headers can be in, and it must obey the
+  // same rule as the other three: never end the check before the layout CSP has
+  // been assessed. The run fails either way, so the cost here is not a silent
+  // pass — it is a reader who fixes the read error, re-runs, and only then
+  // learns their site has no CSP. One finding at a time is the failure mode
+  // this function was rewritten to remove.
+  it('still reports the missing live CSP alongside the read error', () => {
+    const { code, output } = runWithUnreadableHeaders(false)
+    expect(output).toContain('Could not read public/_headers')
+    expect(output).toContain(
+      'src/app/layout.tsx has no <meta http-equiv="Content-Security-Policy">'
+    )
     expect(code).toBe(1)
   })
 })

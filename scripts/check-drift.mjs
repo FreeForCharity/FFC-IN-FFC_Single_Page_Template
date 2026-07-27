@@ -378,14 +378,27 @@ async function checkCspSync() {
   // so a site with no CSP at all would be told only about a file that does
   // nothing. Measured against the shipped code before this fix: deleting BOTH
   // reported only "public/_headers is missing".
-  const headersBody = await readIfExists(join(ROOT, 'public', '_headers'))
-  const layoutBody = await readIfExists(join(ROOT, 'src', 'app', 'layout.tsx'))
+  const headersRaw = await readIfExists(join(ROOT, 'public', '_headers'))
+  const layoutRaw = await readIfExists(join(ROOT, 'src', 'app', 'layout.tsx'))
 
-  // readIfExists has already recorded the read failure as an error. Asserting
-  // on a file we could not read would only add a wrong diagnosis on top.
-  if (headersBody === UNREADABLE || layoutBody === UNREADABLE) return
+  // Only layout.tsx can end the check early, because the live CSP lives in it
+  // and there is nothing left to assert without it. An unreadable _headers must
+  // NOT end it: readIfExists has already recorded that read failure as its own
+  // error, and stopping here would suppress the layout finding — the same
+  // masking bug this function was rewritten to remove, wearing a fourth costume.
+  if (layoutRaw === UNREADABLE) return // error already recorded by readIfExists
+  if (!layoutRaw) {
+    errors.push('src/app/layout.tsx is missing. Restore the file from the template.')
+    return
+  }
+  const layoutBody = layoutRaw
 
-  if (!headersBody) {
+  // Unreadable and absent are both "no forward-compatible copy to compare
+  // against", but only absent earns the warning — an unreadable file is already
+  // reported with its real cause, and calling it missing would be a wrong
+  // diagnosis on top of a correct one.
+  const headersBody = headersRaw === UNREADABLE ? null : headersRaw
+  if (headersRaw !== UNREADABLE && !headersBody) {
     warnings.push(
       'public/_headers is missing. Neither GitHub Pages nor the Cloudflare proxy in front of it ' +
         'reads this file, so it is inert on FFC deploys and nothing is served differently ' +
@@ -393,13 +406,6 @@ async function checkCspSync() {
         'Pages deploy.'
     )
   }
-  if (!layoutBody) {
-    errors.push('src/app/layout.tsx is missing. Restore the file from the template.')
-    return // nothing left to assert: the live CSP lives in this file
-  }
-  // A null here means the inert file is absent — already warned about above.
-  // The layout check below still runs, because whether the live CSP exists is
-  // independent of that file.
   const headersMatch = headersBody ? headersBody.match(/Content-Security-Policy:\s*([^\n]+)/) : null
   // Tolerate single or double quotes around the content attribute and
   // multi-line JSX formatting. The CSP itself contains nested quotes
