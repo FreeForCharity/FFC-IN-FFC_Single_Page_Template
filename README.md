@@ -205,6 +205,9 @@ If you encounter any of the following, STOP and ask before editing:
 - A request to embed a third-party widget — the new origin must be added to
   BOTH public/\_headers AND the CSP meta tag in src/app/layout.tsx. The
   drift check enforces these two stay in sync; CI will fail on mismatch.
+  Only the meta tag is actually served (public/\_headers is inert on FFC's
+  GitHub Pages + Cloudflare proxy stack), so the meta tag is the one that
+  decides whether the widget loads.
 ```
 
 </details>

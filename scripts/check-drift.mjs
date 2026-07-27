@@ -297,6 +297,26 @@ async function checkSiteConfigExists() {
   }
 }
 
+// What actually protects an FFC site, and what only looks like it does:
+//
+//   public/_headers is INERT on the stack FFC deploys. It is a Cloudflare
+//   Pages / Netlify *build* feature; FFC sites are a GitHub Pages origin
+//   behind the Cloudflare *proxy*, and neither of those reads the file.
+//   Measured on the wire, not inferred: FFC-Cloudflare-Automation#884.
+//   It is kept for forward-compatibility with a future Cloudflare Pages
+//   deploy, so its CSP is still worth keeping in sync — but its presence is
+//   not coverage, which is why its findings below are warnings, not errors.
+//
+//   The <meta http-equiv="Content-Security-Policy"> tag in layout.tsx is the
+//   only security header an FFC site actually serves today. Its absence is an
+//   error, and no finding about the inert file may mask it.
+//
+//   The other five headers (HSTS, X-Frame-Options, X-Content-Type-Options,
+//   Referrer-Policy, Permissions-Policy) cannot be set from a static export at
+//   all — <meta http-equiv> is ignored for them. They need a response-header
+//   mechanism on the zone (Cloudflare Transform Rule); fleet posture is
+//   measured by FFC-Cloudflare-Automation#894.
+//
 // CSP directives that are honored in <meta http-equiv> AND in HTTP headers.
 // We diff each of these between public/_headers and src/app/layout.tsx so
 // the two stay in lockstep on third-party origins.
@@ -329,24 +349,39 @@ function extractCspDirectives(policy) {
   return out
 }
 
+async function readIfExists(path) {
+  try {
+    return await readFile(path, 'utf8')
+  } catch {
+    return null
+  }
+}
+
 async function checkCspSync() {
-  let headersBody, layoutBody
-  try {
-    headersBody = await readFile(join(ROOT, 'public', '_headers'), 'utf8')
-  } catch {
-    errors.push(
-      'public/_headers is missing. CSP and other security headers will not be served on ' +
-        'Cloudflare/Netlify deploys. Restore the file from the template.'
+  // Read both surfaces up front and report on each independently. Returning
+  // early on a finding about the inert _headers file would suppress the finding
+  // about the layout CSP meta tag — the only control that is actually served —
+  // so a site with no CSP at all would be told only about a file that does
+  // nothing. Measured against the shipped code before this fix: deleting BOTH
+  // reported only "public/_headers is missing".
+  const headersBody = await readIfExists(join(ROOT, 'public', '_headers'))
+  const layoutBody = await readIfExists(join(ROOT, 'src', 'app', 'layout.tsx'))
+
+  if (!headersBody) {
+    warnings.push(
+      'public/_headers is missing. It is inert on FFC deploys (GitHub Pages origin behind the ' +
+        'Cloudflare proxy reads neither), so nothing is served differently today — restore it ' +
+        'from the template only to stay forward-compatible with a Cloudflare Pages deploy.'
     )
-    return
   }
-  try {
-    layoutBody = await readFile(join(ROOT, 'src', 'app', 'layout.tsx'), 'utf8')
-  } catch {
+  if (!layoutBody) {
     errors.push('src/app/layout.tsx is missing. Restore the file from the template.')
-    return
+    return // nothing left to assert: the live CSP lives in this file
   }
-  const headersMatch = headersBody.match(/Content-Security-Policy:\s*([^\n]+)/)
+  // A null here means the inert file is absent — already warned about above.
+  // The layout check below still runs, because whether the live CSP exists is
+  // independent of that file.
+  const headersMatch = headersBody ? headersBody.match(/Content-Security-Policy:\s*([^\n]+)/) : null
   // Tolerate single or double quotes around the content attribute and
   // multi-line JSX formatting. The CSP itself contains nested quotes
   // (e.g. 'self', 'unsafe-inline') so we match the OUTER delimiter
@@ -355,20 +390,21 @@ async function checkCspSync() {
     layoutBody.match(/httpEquiv=["']Content-Security-Policy["'][\s\S]*?content="([^"]+)"/) ||
     layoutBody.match(/httpEquiv=["']Content-Security-Policy["'][\s\S]*?content='([^']+)'/) ||
     layoutBody.match(/httpEquiv=["']Content-Security-Policy["'][\s\S]*?content=\{`([^`]+)`\}/)
-  if (!headersMatch) {
-    errors.push(
-      'public/_headers has no Content-Security-Policy directive. Add one to keep the site ' +
-        'protected on Cloudflare/Netlify deploys.'
+  if (headersBody && !headersMatch) {
+    warnings.push(
+      'public/_headers has no Content-Security-Policy directive. This changes nothing that is ' +
+        'served today (the file is inert on FFC deploys); add one to keep the forward-compatible ' +
+        'copy aligned with the layout.tsx meta tag.'
     )
-    return
   }
   if (!layoutMatch) {
     errors.push(
-      'src/app/layout.tsx has no <meta http-equiv="Content-Security-Policy"> tag. Add one so ' +
-        'GitHub Pages deploys still get baseline CSP protection.'
+      'src/app/layout.tsx has no <meta http-equiv="Content-Security-Policy"> tag. This is the ' +
+        'ONLY security header an FFC site actually serves — without it the site has no CSP at ' +
+        'all, whatever public/_headers contains.'
     )
-    return
   }
+  if (!headersMatch || !layoutMatch) return
 
   const headersCsp = extractCspDirectives(headersMatch[1])
   const layoutCsp = extractCspDirectives(layoutMatch[1])
