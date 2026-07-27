@@ -421,7 +421,9 @@ async function checkCspSync() {
       if (onlyInLayout.length) detail.push(`only in layout.tsx: ${onlyInLayout.join(' ')}`)
       errors.push(
         `CSP "${directive}" drifted between public/_headers and src/app/layout.tsx — ${detail.join(' / ')}. ` +
-          `Resource will load on one host and fail on the other. Update both files together.`
+          `The layout.tsx tag alone decides what loads today; _headers is the forward-compatible ` +
+          `copy. A drift means one was edited and the other was not, so whichever is behind is ` +
+          `wrong — check which, then update both files together.`
       )
     }
   }
