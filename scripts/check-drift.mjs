@@ -369,9 +369,10 @@ async function checkCspSync() {
 
   if (!headersBody) {
     warnings.push(
-      'public/_headers is missing. It is inert on FFC deploys (GitHub Pages origin behind the ' +
-        'Cloudflare proxy reads neither), so nothing is served differently today — restore it ' +
-        'from the template only to stay forward-compatible with a Cloudflare Pages deploy.'
+      'public/_headers is missing. Neither GitHub Pages nor the Cloudflare proxy in front of it ' +
+        'reads this file, so it is inert on FFC deploys and nothing is served differently ' +
+        'today — restore it from the template only to stay forward-compatible with a Cloudflare ' +
+        'Pages deploy.'
     )
   }
   if (!layoutBody) {
