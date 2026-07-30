@@ -137,6 +137,11 @@ jobs:
             PROBE_ATTEMPTS=0
             while :; do
               PROBE_ATTEMPTS=$(( PROBE_ATTEMPTS + 1 ))
+              # Truncate explicitly. curl -D does this anyway, but both probes
+              # share this file, and a stale apex cf-ray surviving into the www
+              # probe would read as "mode C, proxied" on a TLS failure that
+              # never returned a header. Not worth depending on curl for.
+              : > "$PROBE_HEADERS"
               probe_out=$(curl -sI --max-time 15 -L "$url" -D "$PROBE_HEADERS" -o /dev/null -w '%{http_code} %{url_effective}' 2>/dev/null)
               PROBE_CURL_RC=$?
               PROBE_STATUS="${probe_out%% *}"
@@ -235,11 +240,21 @@ jobs:
 
           # shellcheck source=/dev/null
           . "$RUNNER_TEMP/probe-https.sh"
-          # 5 min rather than the apex's 20: the only retryable failure here is
-          # a www certificate still being issued right after someone bound www
-          # as the Pages host. Everything else is settled and returns at once,
-          # so the known-broken sites cost seconds, not a stalled job.
-          probe_https "$www_url" 300 tls || true
+
+          # Modes A and C settle in one attempt. Mode B does not, and cannot:
+          # a certificate that will never exist and one still being issued are
+          # the same TLS failure from out here. So the patience is only worth
+          # paying where issuance is actually plausible — just after a deploy
+          # or a manual cutover run. On the daily pass there is nothing to wait
+          # for, and a permanently-broken site would otherwise burn the whole
+          # budget every single day. One retry there, to ride out a transient
+          # handshake blip without turning a 5-minute stall into a daily cost.
+          if [ "${GITHUB_EVENT_NAME:-}" = "schedule" ]; then
+            www_budget=30
+          else
+            www_budget=300
+          fi
+          probe_https "$www_url" "$www_budget" tls || true
 
           effective_host=$(printf '%s' "$PROBE_URL_EFFECTIVE" | sed -E 's#^[a-z]+://##; s#[:/].*$##')
 
