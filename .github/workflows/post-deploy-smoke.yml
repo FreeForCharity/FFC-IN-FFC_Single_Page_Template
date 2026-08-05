@@ -30,6 +30,96 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v6
 
+      - name: Setup Node
+        # Ahead of the scope resolver, not just ahead of Playwright. The
+        # resolver is a node script, so the toolchain it runs on is declared
+        # here rather than inherited from whatever the runner image happens
+        # to ship. Unconditional for the same reason: it must be in place
+        # before the first step that needs it, which now runs before the
+        # skip decision.
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Resolve donation scope (one contract, both engine paths consume it)
+        # The donation posture is declared in two places (the
+        # SMOKE_DONATION_SCOPE repo variable and the committed
+        # .github/smoke.config.json) and consumed in two places (the
+        # Playwright compliance script and the standing-issue shell step).
+        # It is resolved HERE, once. Neither consumer reads the config file
+        # or the raw variable, because two implementations of one contract
+        # drift: they disagreed on when the file is validated, on whether a
+        # `null` config is empty or invalid, and on whether a
+        # variable-sourced value is trimmed. Refs FFC-Cloudflare-Automation#893.
+        id: scope
+        env:
+          SMOKE_DONATION_SCOPE: ${{ vars.SMOKE_DONATION_SCOPE }}
+        run: |
+          set -euo pipefail
+          cat > /tmp/resolve-donation-scope.js <<'RESOLVE_JS'
+          const fs = require('fs');
+          const VALID = ['charity', 'ffc-interim', 'none'];
+          const CONFIG_PATH = '.github/smoke.config.json';
+          const norm = (v) => String(v ?? '').trim().toLowerCase();
+          // Workflow commands are newline-delimited and percent-escaped, so a
+          // value carrying %, CR or LF can close the annotation early and have
+          // the rest parsed as further commands — a committed donationScope
+          // could emit ::stop-commands:: and silence the run's annotations.
+          // Escape anything interpolated into a ::error::/::warning:: line.
+          const esc = (v) => String(v ?? '').replace(/%/g, '%25').replace(/\r/g, '%0D').replace(/\n/g, '%0A');
+
+          // The committed file is validated whenever it exists — including
+          // when the variable overrides it. A config that cannot be honoured
+          // is a defect in the repo whether or not today's run reads it.
+          let fileScope = '';
+          if (fs.existsSync(CONFIG_PATH)) {
+            let parsed;
+            try {
+              parsed = JSON.parse(fs.readFileSync(CONFIG_PATH, 'utf8'));
+            } catch (e) {
+              console.error(`::error::${CONFIG_PATH} exists but is not valid JSON: ${esc(e instanceof Error ? e.message : String(e))}`);
+              process.exit(1);
+            }
+            // Wrong TYPE is not bad syntax: null, [], "str" and 42 all parse.
+            // Reporting those as a syntax error sends the maintainer looking
+            // for a missing brace in a file that has none.
+            if (parsed === null || typeof parsed !== 'object' || Array.isArray(parsed)) {
+              const got = parsed === null ? 'null' : Array.isArray(parsed) ? 'array' : typeof parsed;
+              console.error(`::error::${CONFIG_PATH} must contain a JSON object (got ${got})`);
+              process.exit(1);
+            }
+            fileScope = norm(parsed.donationScope);
+            if (fileScope && !VALID.includes(fileScope)) {
+              console.error(`::error::${CONFIG_PATH} donationScope "${esc(parsed.donationScope)}" is not one of ${VALID.join('|')}`);
+              process.exit(1);
+            }
+          }
+
+          // An unrecognised repo variable is a typo, not a declaration: warn
+          // and fall through to the committed file rather than letting it
+          // silently mask a valid one.
+          const rawVar = process.env.SMOKE_DONATION_SCOPE;
+          const varScope = norm(rawVar);
+          if (varScope && !VALID.includes(varScope)) {
+            // Name the outcome, not the intention: with no usable declaration
+            // in the file there is nothing to fall back TO, and a maintainer
+            // told otherwise goes looking for a file that isn't there.
+            const outcome = fileScope
+              ? `falling back to ${CONFIG_PATH} ("${esc(fileScope)}")`
+              : `scope is undeclared (no usable donationScope in ${CONFIG_PATH})`;
+            console.log(`::warning::SMOKE_DONATION_SCOPE "${esc(rawVar)}" is not one of ${VALID.join('|')} — ignoring it; ${outcome}`);
+          }
+          const effectiveVar = VALID.includes(varScope) ? varScope : '';
+
+          const scope = effectiveVar || fileScope;
+          const source = effectiveVar ? 'variable' : fileScope ? 'file' : 'undeclared';
+          console.log(`Donation scope: ${scope || '(undeclared)'} (source: ${source})`);
+          if (process.env.GITHUB_OUTPUT) {
+            fs.appendFileSync(process.env.GITHUB_OUTPUT, `scope=${scope}\nsource=${source}\n`);
+          }
+          RESOLVE_JS
+          node /tmp/resolve-donation-scope.js
+
       - name: Determine smoke target from Pages config (ground truth)
         id: url
         env:
@@ -216,12 +306,6 @@ jobs:
           echo "Checked $checked routes; $fail failed"
           if [ "$fail" -gt 0 ]; then exit 1; fi
 
-      - name: Setup Node for visual check
-        if: steps.url.outputs.skip != 'true'
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-
       - name: Install Playwright (chromium only)
         if: steps.url.outputs.skip != 'true'
         run: |
@@ -263,7 +347,9 @@ jobs:
           # {"donationScope": "none"} — repo-visible and PR-reviewable (e.g.
           # for-profit FFC-EX sites like towing companies). The variable, when
           # set, still overrides the committed file.
-          SMOKE_DONATION_SCOPE: ${{ vars.SMOKE_DONATION_SCOPE }}
+          # Already resolved, validated and normalized by the `scope` step —
+          # this script must not re-read the file or the raw variable.
+          SMOKE_DONATION_SCOPE: ${{ steps.scope.outputs.scope }}
           # Legacy (v3.2): require at least one Zeffy iframe embed specifically.
           SMOKE_REQUIRE_DONATION_EMBED: ${{ vars.SMOKE_REQUIRE_DONATION_EMBED }}
           # 'true' on template repos: their sites ARE the template default.
@@ -285,29 +371,6 @@ jobs:
             const requiredLinks = (process.env.SMOKE_REQUIRED_FOOTER_LINKS || '/privacy-policy,/terms-of-service|/tos')
               .split(',').map(s => s.trim()).filter(Boolean);
             const requireCookieConsent = String(process.env.SMOKE_REQUIRE_COOKIE_CONSENT || 'true').toLowerCase() !== 'false';
-            // Committed site declarations (.github/smoke.config.json) — the
-            // repo-visible alternative to Actions variables. An explicitly-set
-            // variable still wins over the file. A file that exists but does
-            // not parse is a hard error, not a silent fallback.
-            let fileConfig = {};
-            const smokeConfigPath = process.env.GITHUB_WORKSPACE + '/.github/smoke.config.json';
-            if (require('fs').existsSync(smokeConfigPath)) {
-              try {
-                fileConfig = JSON.parse(require('fs').readFileSync(smokeConfigPath, 'utf8'));
-              } catch (e) {
-                console.error(`::error::.github/smoke.config.json exists but is not valid JSON: ${e instanceof Error ? e.message : String(e)}`);
-                process.exit(1);
-              }
-              if (fileConfig === null || typeof fileConfig !== 'object' || Array.isArray(fileConfig)) {
-                console.error('::error::.github/smoke.config.json must contain a JSON object');
-                process.exit(1);
-              }
-              const fileScope = String(fileConfig.donationScope || '').trim().toLowerCase();
-              if (fileScope && !['charity', 'ffc-interim', 'none'].includes(fileScope)) {
-                console.error(`::error::.github/smoke.config.json donationScope "${fileConfig.donationScope}" is not one of charity|ffc-interim|none`);
-                process.exit(1);
-              }
-            }
 
             const browser = await chromium.launch();
             const ctx = await browser.newContext({
@@ -475,7 +538,7 @@ jobs:
 
             // Donation assertions — first-class: a charity site must never
             // silently lose its donation capability.
-            const donationScope = String(process.env.SMOKE_DONATION_SCOPE || fileConfig.donationScope || '').trim().toLowerCase();
+            const donationScope = String(process.env.SMOKE_DONATION_SCOPE || '');
             const requireDonation = String(process.env.SMOKE_REQUIRE_DONATION_EMBED || '').toLowerCase() === 'true';
             const donationChecks = [];
             if (requireDonation && donationEmbeds.length === 0) {
@@ -667,28 +730,12 @@ jobs:
         if: always() && !cancelled() && steps.url.outputs.skip != 'true'
         env:
           GH_TOKEN: ${{ github.token }}
-          SCOPE: ${{ vars.SMOKE_DONATION_SCOPE }}
+          # Already resolved, validated and normalized by the `scope` step —
+          # this step must not re-read the file or the raw variable.
+          SCOPE: ${{ steps.scope.outputs.scope }}
         run: |
           set -euo pipefail
           REPO="${GITHUB_REPOSITORY}"
-
-          # Committed declaration fallback: .github/smoke.config.json's
-          # donationScope applies when the SMOKE_DONATION_SCOPE variable is
-          # unset. A file that exists but does not parse is a hard error.
-          if [ -z "${SCOPE:-}" ] && [ -f .github/smoke.config.json ]; then
-            if ! SCOPE=$(jq -r '.donationScope // ""' .github/smoke.config.json); then
-              echo "::error::.github/smoke.config.json exists but is not valid JSON"
-              exit 1
-            fi
-            SCOPE=$(echo "$SCOPE" | tr '[:upper:]' '[:lower:]' | tr -d '[:space:]')
-            case "$SCOPE" in
-              '' | charity | ffc-interim | none) ;;
-              *)
-                echo "::error::.github/smoke.config.json donationScope \"$SCOPE\" is not one of charity|ffc-interim|none"
-                exit 1
-                ;;
-            esac
-          fi
 
           # --- donation-migration (auto-detected, provider-based) ---
           nonpref="false"; providers=""
@@ -726,7 +773,7 @@ jobs:
 
           # --- donation-interim (scope-declared) ---
           existing=$(gh api "repos/${REPO}/issues?state=open&labels=donation-interim&per_page=1" --jq '.[0].number // empty' || echo "")
-          scope=$(echo "${SCOPE:-}" | tr '[:upper:]' '[:lower:]')
+          scope="${SCOPE:-}"
 
           if [ "$scope" = "ffc-interim" ]; then
             if [ -z "$existing" ]; then
