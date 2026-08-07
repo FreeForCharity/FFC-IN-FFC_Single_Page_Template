@@ -192,19 +192,74 @@ jobs:
           # min and HTTPS returns 000 (TLS handshake fail) during that
           # window. Retry every 30s for up to 20 min before declaring a
           # real deployment failure.
-          deadline=$(( $(date +%s) + 1200 ))
-          attempt=0
-          status="000"
-          while [ "$(date +%s)" -lt "$deadline" ]; do
-            attempt=$(( attempt + 1 ))
-            status=$(curl -sI --max-time 15 -L "$URL" -o /dev/null -w "%{http_code}" 2>&1 || echo "000")
-            if [ "$status" = "200" ]; then
-              echo "Attempt $attempt: HTTP $status (cert provisioned, site reachable)"
-              break
-            fi
-            echo "Attempt $attempt: HTTP $status — waiting 30s (cert may still be provisioning)"
-            sleep 30
-          done
+          #
+          # The retry lives in $RUNNER_TEMP so the www probe below runs this
+          # exact loop rather than a second copy of it. A hand-rolled second
+          # loop flakes on the failure mode where www resolves correctly and
+          # only TLS fails, which is the one this file most needs to report.
+          cat > "$RUNNER_TEMP/probe-https.sh" <<'PROBE_LIB'
+          PROBE_HEADERS="${RUNNER_TEMP}/probe-headers.txt"
+
+          # curl exit codes meaning the TLS handshake itself failed — the shape
+          # a Pages certificate that is still being issued takes.
+          probe_is_tls_failure() {
+            case "$1" in
+              35 | 51 | 58 | 59 | 60 | 77 | 83) return 0 ;;
+              *) return 1 ;;
+            esac
+          }
+
+          # probe_https <url> <budget_seconds> [retry_on: all|tls]
+          #   Retries every 30s until HTTP 200 (after redirects) or the budget
+          #   runs out.
+          #     all — wait through any non-200. During a cutover both DNS
+          #           propagation and cert issuance are legitimately slow.
+          #     tls — stop early on a settled answer (a 5xx, or a name that
+          #           does not resolve). Twenty minutes will not change either,
+          #           and the daily schedule re-probes anyway.
+          #   Sets PROBE_STATUS, PROBE_CURL_RC, PROBE_ATTEMPTS,
+          #   PROBE_URL_EFFECTIVE; last response headers land in $PROBE_HEADERS.
+          probe_https() {
+            url="$1"
+            budget="$2"
+            retry_on="${3:-all}"
+            deadline=$(( $(date +%s) + budget ))
+            PROBE_ATTEMPTS=0
+            while :; do
+              PROBE_ATTEMPTS=$(( PROBE_ATTEMPTS + 1 ))
+              # Truncate explicitly. curl -D does this anyway, but both probes
+              # share this file, and a stale apex cf-ray surviving into the www
+              # probe would read as "mode C, proxied" on a TLS failure that
+              # never returned a header. Not worth depending on curl for.
+              : > "$PROBE_HEADERS"
+              probe_out=$(curl -sI --max-time 15 -L "$url" -D "$PROBE_HEADERS" -o /dev/null -w '%{http_code} %{url_effective}' 2>/dev/null)
+              PROBE_CURL_RC=$?
+              PROBE_STATUS="${probe_out%% *}"
+              PROBE_URL_EFFECTIVE="${probe_out##* }"
+              [ -n "$PROBE_STATUS" ] || PROBE_STATUS="000"
+              if [ "$PROBE_STATUS" = "200" ]; then
+                echo "Attempt $PROBE_ATTEMPTS: HTTP 200 (cert provisioned, reachable) — $url"
+                return 0
+              fi
+              if [ "$retry_on" = "tls" ] && ! probe_is_tls_failure "$PROBE_CURL_RC"; then
+                echo "Attempt $PROBE_ATTEMPTS: HTTP $PROBE_STATUS (curl exit $PROBE_CURL_RC) — settled answer, not retrying"
+                return 1
+              fi
+              if [ "$(date +%s)" -ge "$deadline" ]; then
+                echo "Attempt $PROBE_ATTEMPTS: HTTP $PROBE_STATUS (curl exit $PROBE_CURL_RC) — retry budget exhausted"
+                return 1
+              fi
+              echo "Attempt $PROBE_ATTEMPTS: HTTP $PROBE_STATUS (curl exit $PROBE_CURL_RC) — waiting 30s (cert may still be provisioning)"
+              sleep 30
+            done
+          }
+          PROBE_LIB
+          # shellcheck source=/dev/null
+          . "$RUNNER_TEMP/probe-https.sh"
+
+          probe_https "$URL" 1200 all || true
+          status="$PROBE_STATUS"
+          attempt="$PROBE_ATTEMPTS"
 
           echo "status=$status" >> "$GITHUB_OUTPUT"
           echo "attempts=$attempt" >> "$GITHUB_OUTPUT"
@@ -218,6 +273,159 @@ jobs:
           # Save body for next step (curl-based content checks)
           curl -s --max-time 30 -L "$URL" > /tmp/page.html
           echo "Body length: $(wc -c < /tmp/page.html) bytes"
+
+      - name: Probe www over HTTPS (a redirect to the apex is a pass)
+        # Until now "www" appeared in this file exactly once, inside an
+        # ::error:: hint string — the engine told you to check www when
+        # something else failed and never probed it. A fleet sweep found 13 of
+        # 55 live sites broken on www while every smoke run was green.
+        #
+        # This is an HTTPS probe and deliberately not a DNS assertion: a www
+        # CNAME can point at GitHub Pages correctly and still fail TLS, because
+        # Pages issues a certificate only for the host named in public/CNAME.
+        # A DNS-level check passes that site while real visitors get a
+        # handshake error.
+        id: www
+        if: steps.url.outputs.mode == 'apex' && steps.url.outputs.skip != 'true'
+        env:
+          PAGES_CNAME: ${{ steps.url.outputs.pages_cname }}
+          REQUIRE_WWW: ${{ vars.SMOKE_REQUIRE_WWW }}
+        run: |
+          set -uo pipefail
+
+          # One-line verdict for the run summary, so the www result is visible
+          # without opening the log. Falls back to /dev/null so this script can
+          # be run outside Actions.
+          verdict() { echo "verdict=$1" >> "${GITHUB_OUTPUT:-/dev/null}"; }
+
+          # Defaults ON, matching the other SMOKE_* variables. A site whose www
+          # is known-broken opts itself out with SMOKE_REQUIRE_WWW=false until
+          # its DNS is fixed, instead of the fleet turning the check off.
+          case "$(printf '%s' "${REQUIRE_WWW:-true}" | tr '[:upper:]' '[:lower:]')" in
+            false | 0 | no | off)
+              echo "::notice::SMOKE_REQUIRE_WWW is off — www probe skipped for this repo"
+              verdict "skipped (SMOKE_REQUIRE_WWW off)"
+              exit 0
+              ;;
+          esac
+
+          # Ground truth is the Pages config resolved above, never re-derived.
+          if [ -z "$PAGES_CNAME" ]; then
+            echo "::notice::No Pages custom domain bound (manual URL dispatch) — no apex to derive www from; skipping"
+            verdict "skipped (no Pages custom domain)"
+            exit 0
+          fi
+          # `mode` is "apex" for ANY custom domain — it means "a domain is
+          # bound", not "that domain is a registrable apex". Every other step
+          # only ever probes the bound host, so the distinction never mattered
+          # before; this step is the first to DERIVE a new hostname from it,
+          # and a subdomain binding makes it derive one nobody intends.
+          #
+          # The general rule is "skip unless the cname is its registrable
+          # apex", but deciding that needs the Public Suffix List — a label
+          # count says lifelessonslearned.us.org is a subdomain when it is
+          # not. `staging.` is the shape the fleet actually has (10 repos as
+          # of 2026-08-05), so it is matched by name rather than guessed at
+          # structurally. Add sibling prefixes here if others appear.
+          case "$PAGES_CNAME" in
+            www.*)
+              echo "::notice::Pages custom domain is '$PAGES_CNAME' — www is the canonical host and was probed above; skipping"
+              verdict "skipped (www is the canonical host)"
+              exit 0
+              ;;
+            staging.*)
+              echo "::notice::Pages custom domain is '$PAGES_CNAME' — a pre-cutover staging host has no www of its own; skipping"
+              verdict "skipped (staging host)"
+              exit 0
+              ;;
+          esac
+
+          apex="$PAGES_CNAME"
+          www_host="www.${apex}"
+          www_url="https://${www_host}/"
+          echo "Probing $www_url (apex: https://${apex}/)"
+
+          # shellcheck source=/dev/null
+          . "$RUNNER_TEMP/probe-https.sh"
+
+          # Modes A and C settle in one attempt. Mode B does not, and cannot:
+          # a certificate that will never exist and one still being issued are
+          # the same TLS failure from out here. So the patience is only worth
+          # paying where issuance is actually plausible — just after a deploy
+          # or a manual cutover run. On the daily pass there is nothing to wait
+          # for, and a permanently-broken site would otherwise burn the whole
+          # budget every single day. One retry there, to ride out a transient
+          # handshake blip without turning a 5-minute stall into a daily cost.
+          if [ "${GITHUB_EVENT_NAME:-}" = "schedule" ]; then
+            www_budget=30
+          else
+            www_budget=300
+          fi
+          probe_https "$www_url" "$www_budget" tls || true
+
+          effective_host=$(printf '%s' "$PROBE_URL_EFFECTIVE" | sed -E 's#^[a-z]+://##; s#[:/].*$##')
+
+          case "$PROBE_STATUS" in
+            2??)
+              # -L already followed any redirect, so "3xx landing on the apex"
+              # arrives here as a 2xx whose effective host is the apex.
+              if [ "$effective_host" = "$apex" ]; then
+                echo "✓ www redirects to the apex and serves HTTP $PROBE_STATUS ($www_url -> $PROBE_URL_EFFECTIVE)"
+                verdict "OK — redirects to the apex"
+                exit 0
+              fi
+              if [ "$effective_host" = "$www_host" ]; then
+                echo "✓ www serves HTTP $PROBE_STATUS directly ($PROBE_URL_EFFECTIVE)"
+                verdict "OK — serves directly"
+                exit 0
+              fi
+              echo "::error::www is reachable but lands off-site: $www_url -> $PROBE_URL_EFFECTIVE"
+              echo "::error::Remediation: a visitor typing www reaches '${effective_host}', not '${apex}'. Point the www record at this site, or remove the off-site redirect."
+              verdict "FAILED — lands off-site at ${effective_host}"
+              exit 1
+              ;;
+          esac
+
+          # Classify the failure, because the three modes have three different
+          # fixes and a status code alone does not tell them apart. DNS is
+          # checked directly rather than inferred from curl's exit code, which
+          # varies with whatever resolver sits in front of the runner.
+          resolved=$(getent hosts "$www_host" 2>/dev/null | head -1 || true)
+
+          echo "::error::www is not reachable over HTTPS: $www_url (HTTP $PROBE_STATUS, curl exit $PROBE_CURL_RC, $PROBE_ATTEMPTS attempt(s))"
+
+          case "$PROBE_STATUS" in
+            5??)
+              # Any 5xx fails. The fleet shows both 526 and 500 for the same
+              # proxied-www defect, so a rule keyed on 526 misses half of them.
+              if grep -qiE '^(cf-ray:|server: *cloudflare)' "$PROBE_HEADERS" 2>/dev/null; then
+                echo "::error::Mode C — www is proxied by Cloudflare (cf-ray header present) and Cloudflare answered $PROBE_STATUS."
+                echo "::error::Remediation: set the www record to DNS-only (grey cloud) so it reaches GitHub Pages directly."
+                verdict "FAILED — mode C, proxied by Cloudflare (HTTP $PROBE_STATUS)"
+              else
+                echo "::error::Mode C — www answered $PROBE_STATUS from ${resolved:-an unidentified host}."
+                echo "::error::Remediation: whatever serves www is failing. Point it at GitHub Pages, or fix that origin."
+                verdict "FAILED — mode C, origin error (HTTP $PROBE_STATUS)"
+              fi
+              ;;
+            *)
+              if [ -z "$resolved" ]; then
+                echo "::error::Mode A — no www record: '$www_host' does not resolve."
+                echo "::error::Remediation: create a CNAME 'www' -> the Pages host, DNS-only (not proxied)."
+                verdict "FAILED — mode A, no www DNS record"
+              elif probe_is_tls_failure "$PROBE_CURL_RC"; then
+                echo "::error::Mode B — '$www_host' resolves (${resolved}) but the TLS handshake failed."
+                echo "::error::GitHub Pages issues a certificate only for the host in public/CNAME, so a correct www CNAME still has no certificate of its own."
+                echo "::error::Remediation: redirect www to the apex at the DNS/CDN layer, or bind www as the Pages custom domain and wait 5-15 min for the certificate."
+                verdict "FAILED — mode B, no certificate for www"
+              else
+                echo "::error::'$www_host' resolves (${resolved}) but the connection failed before any HTTP response (curl exit $PROBE_CURL_RC)."
+                echo "::error::Remediation: check that the www record points at GitHub Pages and that nothing in front of it is dropping the connection."
+                verdict "FAILED — connection error (curl exit $PROBE_CURL_RC)"
+              fi
+              ;;
+          esac
+          exit 1
 
       - name: Assert no FFC-template-default content
         # Template repos (FFC-IN-*Template*) legitimately serve the template
@@ -654,12 +862,14 @@ jobs:
           URL: ${{ steps.url.outputs.url }}
           STATUS: ${{ steps.probe.outputs.status }}
           ATTEMPTS: ${{ steps.probe.outputs.attempts }}
+          WWW_VERDICT: ${{ steps.www.outputs.verdict }}
         run: |
           {
             echo "## Post-Deploy Smoke Test"
             echo ""
             echo "- **URL:** $URL"
             echo "- **HTTPS status:** ${STATUS:-n/a} (probed in ${ATTEMPTS:-n/a} attempt(s))"
+            echo "- **www:** ${WWW_VERDICT:-not probed}"
             echo "- **Trigger:** ${{ github.event_name }} (schedule = daily uptime pass)"
             echo "- **Mode:** ${{ steps.url.outputs.mode }} (apex = custom-domain verification; default = pre-cutover deployment check)"
             echo "- **Job result:** ${{ job.status }}"
