@@ -315,10 +315,27 @@ jobs:
             verdict "skipped (no Pages custom domain)"
             exit 0
           fi
+          # `mode` is "apex" for ANY custom domain — it means "a domain is
+          # bound", not "that domain is a registrable apex". Every other step
+          # only ever probes the bound host, so the distinction never mattered
+          # before; this step is the first to DERIVE a new hostname from it,
+          # and a subdomain binding makes it derive one nobody intends.
+          #
+          # The general rule is "skip unless the cname is its registrable
+          # apex", but deciding that needs the Public Suffix List — a label
+          # count says lifelessonslearned.us.org is a subdomain when it is
+          # not. `staging.` is the shape the fleet actually has (10 repos as
+          # of 2026-08-05), so it is matched by name rather than guessed at
+          # structurally. Add sibling prefixes here if others appear.
           case "$PAGES_CNAME" in
             www.*)
               echo "::notice::Pages custom domain is '$PAGES_CNAME' — www is the canonical host and was probed above; skipping"
               verdict "skipped (www is the canonical host)"
+              exit 0
+              ;;
+            staging.*)
+              echo "::notice::Pages custom domain is '$PAGES_CNAME' — a pre-cutover staging host has no www of its own; skipping"
+              verdict "skipped (staging host)"
               exit 0
               ;;
           esac
