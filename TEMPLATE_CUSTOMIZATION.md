@@ -107,22 +107,38 @@ If you have a real need to change one of these, open an issue first.
 
 ## Security surface
 
-| Concern                  | Where it lives                                                       |
-| ------------------------ | -------------------------------------------------------------------- |
-| CSP (Cloudflare/Netlify) | `public/_headers`                                                    |
-| CSP (GitHub Pages)       | `<meta httpEquiv="Content-Security-Policy">` in `src/app/layout.tsx` |
-| security.txt             | `public/.well-known/security.txt`                                    |
-| Vuln disclosure page     | `src/app/vulnerability-disclosure-policy/page.tsx`                   |
-| Branch protection        | `SECURITY.md` (configure in GitHub repo settings)                    |
-| Dep scanning             | `.github/dependabot.yml`, `.github/workflows/security-audit.yml`     |
-| Static analysis (CodeQL) | GitHub code scanning **default setup** (no `codeql.yml` workflow)    |
-| Supply-chain score       | `.github/workflows/scorecard.yml`                                    |
-| Secret patterns          | `scripts/check-drift.mjs` (locally) + GitHub secret scanning         |
+| Concern                     | Where it lives                                                       |
+| --------------------------- | -------------------------------------------------------------------- |
+| CSP (**the one served**)    | `<meta httpEquiv="Content-Security-Policy">` in `src/app/layout.tsx` |
+| CSP (inert, forward-compat) | `public/_headers` — see the warning below                            |
+| security.txt                | `public/.well-known/security.txt`                                    |
+| Vuln disclosure page        | `src/app/vulnerability-disclosure-policy/page.tsx`                   |
+| Branch protection           | `SECURITY.md` (configure in GitHub repo settings)                    |
+| Dep scanning                | `.github/dependabot.yml`, `.github/workflows/security-audit.yml`     |
+| Static analysis (CodeQL)    | GitHub code scanning **default setup** (no `codeql.yml` workflow)    |
+| Supply-chain score          | `.github/workflows/scorecard.yml`                                    |
+| Secret patterns             | `scripts/check-drift.mjs` (locally) + GitHub secret scanning         |
+
+> **`public/_headers` is inert on FFC deploys.** It is a Cloudflare Pages /
+> Netlify build feature. FFC sites are a GitHub Pages origin behind the
+> Cloudflare _proxy_, and neither reads the file — measured on the wire in
+> [FFC-Cloudflare-Automation#884](https://github.com/FreeForCharity/FFC-Cloudflare-Automation/issues/884).
+> Do not count it as security coverage, and do not treat adding it to a site as
+> closing a header gap.
+
+Only the CSP `<meta>` tag is actually served. The other five headers in
+`public/_headers` — HSTS, `X-Frame-Options`, `X-Content-Type-Options`,
+`Referrer-Policy`, `Permissions-Policy` — **cannot be set from a static export
+at all**; `<meta http-equiv>` is ignored for them. Serving those needs a
+response-header rule on the Cloudflare zone, tracked fleet-wide in
+[FFC-Cloudflare-Automation#894](https://github.com/FreeForCharity/FFC-Cloudflare-Automation/issues/894).
 
 When you add a new third-party origin (analytics, embed, payment), update
-**both** `public/_headers` and the CSP `<meta>` tag in `src/app/layout.tsx` —
-otherwise the resource will load on Cloudflare-hosted sites but fail on
-GitHub Pages, or vice versa.
+**both** `public/_headers` and the CSP `<meta>` tag in `src/app/layout.tsx`.
+Only the `<meta>` tag changes what the live site allows today; the `_headers`
+copy is kept in lockstep so a future move to Cloudflare Pages inherits a
+correct policy rather than a stale one. `npm run check:drift` errors if the two
+disagree.
 
 ## Verifying nothing drifted
 

@@ -301,6 +301,26 @@ async function checkSiteConfigExists() {
   }
 }
 
+// What actually protects an FFC site, and what only looks like it does:
+//
+//   public/_headers is INERT on the stack FFC deploys. It is a Cloudflare
+//   Pages / Netlify *build* feature; FFC sites are a GitHub Pages origin
+//   behind the Cloudflare *proxy*, and neither of those reads the file.
+//   Measured on the wire, not inferred: FFC-Cloudflare-Automation#884.
+//   It is kept for forward-compatibility with a future Cloudflare Pages
+//   deploy, so its CSP is still worth keeping in sync — but its presence is
+//   not coverage, which is why its findings below are warnings, not errors.
+//
+//   The <meta http-equiv="Content-Security-Policy"> tag in layout.tsx is the
+//   only security header an FFC site actually serves today. Its absence is an
+//   error, and no finding about the inert file may mask it.
+//
+//   The other five headers (HSTS, X-Frame-Options, X-Content-Type-Options,
+//   Referrer-Policy, Permissions-Policy) cannot be set from a static export at
+//   all — <meta http-equiv> is ignored for them. They need a response-header
+//   mechanism on the zone (Cloudflare Transform Rule); fleet posture is
+//   measured by FFC-Cloudflare-Automation#894.
+//
 // CSP directives that are honored in <meta http-equiv> AND in HTTP headers.
 // We diff each of these between public/_headers and src/app/layout.tsx so
 // the two stay in lockstep on third-party origins.
@@ -333,24 +353,69 @@ function extractCspDirectives(policy) {
   return out
 }
 
-async function checkCspSync() {
-  let headersBody, layoutBody
+// Returned when a file exists but could not be read. Distinct from null
+// ("absent"), because the two call for opposite responses: absent means restore
+// it, unreadable means the file is already there and something else is wrong.
+// Collapsing them tells the reader to restore a file they already have — and
+// since the _headers finding is only a warning, it would let the run pass on a
+// filesystem error.
+const UNREADABLE = Symbol('unreadable')
+
+async function readIfExists(path) {
   try {
-    headersBody = await readFile(join(ROOT, 'public', '_headers'), 'utf8')
-  } catch {
+    return await readFile(path, 'utf8')
+  } catch (err) {
+    if (err.code === 'ENOENT') return null
+    // Normalise to forward slashes. `relative()` returns platform separators,
+    // so on Windows this message alone would spell the file `public\_headers`
+    // while every hard-coded mention in this script — and in the tests — uses a
+    // forward slash. One run would name one file two ways.
+    const rel = relative(ROOT, path).split(sep).join('/')
     errors.push(
-      'public/_headers is missing. CSP and other security headers will not be served on ' +
-        'Cloudflare/Netlify deploys. Restore the file from the template.'
+      `Could not read ${rel} (${err.code || err.message}). ` +
+        `The file is present but unreadable — this is not the same as it being absent, ` +
+        `so fix the read error rather than restoring the file from the template.`
     )
-    return
+    return UNREADABLE
   }
-  try {
-    layoutBody = await readFile(join(ROOT, 'src', 'app', 'layout.tsx'), 'utf8')
-  } catch {
+}
+
+async function checkCspSync() {
+  // Read both surfaces up front and report on each independently. Returning
+  // early on a finding about the inert _headers file would suppress the finding
+  // about the layout CSP meta tag — the only control that is actually served —
+  // so a site with no CSP at all would be told only about a file that does
+  // nothing. Measured against the shipped code before this fix: deleting BOTH
+  // reported only "public/_headers is missing".
+  const headersRaw = await readIfExists(join(ROOT, 'public', '_headers'))
+  const layoutRaw = await readIfExists(join(ROOT, 'src', 'app', 'layout.tsx'))
+
+  // Only layout.tsx can end the check early, because the live CSP lives in it
+  // and there is nothing left to assert without it. An unreadable _headers must
+  // NOT end it: readIfExists has already recorded that read failure as its own
+  // error, and stopping here would suppress the layout finding — the same
+  // masking bug this function was rewritten to remove, wearing a fourth costume.
+  if (layoutRaw === UNREADABLE) return // error already recorded by readIfExists
+  if (!layoutRaw) {
     errors.push('src/app/layout.tsx is missing. Restore the file from the template.')
     return
   }
-  const headersMatch = headersBody.match(/Content-Security-Policy:\s*([^\n]+)/)
+  const layoutBody = layoutRaw
+
+  // Unreadable and absent are both "no forward-compatible copy to compare
+  // against", but only absent earns the warning — an unreadable file is already
+  // reported with its real cause, and calling it missing would be a wrong
+  // diagnosis on top of a correct one.
+  const headersBody = headersRaw === UNREADABLE ? null : headersRaw
+  if (headersRaw !== UNREADABLE && !headersBody) {
+    warnings.push(
+      'public/_headers is missing. Neither GitHub Pages nor the Cloudflare proxy in front of it ' +
+        'reads this file, so it is inert on FFC deploys and nothing is served differently ' +
+        'today — restore it from the template only to stay forward-compatible with a Cloudflare ' +
+        'Pages deploy.'
+    )
+  }
+  const headersMatch = headersBody ? headersBody.match(/Content-Security-Policy:\s*([^\n]+)/) : null
   // Tolerate single or double quotes around the content attribute and
   // multi-line JSX formatting. The CSP itself contains nested quotes
   // (e.g. 'self', 'unsafe-inline') so we match the OUTER delimiter
@@ -359,20 +424,21 @@ async function checkCspSync() {
     layoutBody.match(/httpEquiv=["']Content-Security-Policy["'][\s\S]*?content="([^"]+)"/) ||
     layoutBody.match(/httpEquiv=["']Content-Security-Policy["'][\s\S]*?content='([^']+)'/) ||
     layoutBody.match(/httpEquiv=["']Content-Security-Policy["'][\s\S]*?content=\{`([^`]+)`\}/)
-  if (!headersMatch) {
-    errors.push(
-      'public/_headers has no Content-Security-Policy directive. Add one to keep the site ' +
-        'protected on Cloudflare/Netlify deploys.'
+  if (headersBody && !headersMatch) {
+    warnings.push(
+      'public/_headers has no Content-Security-Policy directive. This changes nothing that is ' +
+        'served today (the file is inert on FFC deploys); add one to keep the forward-compatible ' +
+        'copy aligned with the layout.tsx meta tag.'
     )
-    return
   }
   if (!layoutMatch) {
     errors.push(
-      'src/app/layout.tsx has no <meta http-equiv="Content-Security-Policy"> tag. Add one so ' +
-        'GitHub Pages deploys still get baseline CSP protection.'
+      'src/app/layout.tsx has no <meta http-equiv="Content-Security-Policy"> tag. This is the ' +
+        'ONLY security header an FFC site actually serves — without it the site has no CSP at ' +
+        'all, whatever public/_headers contains.'
     )
-    return
   }
+  if (!headersMatch || !layoutMatch) return
 
   const headersCsp = extractCspDirectives(headersMatch[1])
   const layoutCsp = extractCspDirectives(layoutMatch[1])
@@ -388,7 +454,9 @@ async function checkCspSync() {
       if (onlyInLayout.length) detail.push(`only in layout.tsx: ${onlyInLayout.join(' ')}`)
       errors.push(
         `CSP "${directive}" drifted between public/_headers and src/app/layout.tsx — ${detail.join(' / ')}. ` +
-          `Resource will load on one host and fail on the other. Update both files together.`
+          `The layout.tsx tag alone decides what loads today; _headers is the forward-compatible ` +
+          `copy. A drift means one was edited and the other was not, so whichever is behind is ` +
+          `wrong — check which, then update both files together.`
       )
     }
   }
