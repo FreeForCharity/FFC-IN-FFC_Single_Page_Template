@@ -366,8 +366,13 @@ async function readIfExists(path) {
     return await readFile(path, 'utf8')
   } catch (err) {
     if (err.code === 'ENOENT') return null
+    // Normalise to forward slashes. `relative()` returns platform separators,
+    // so on Windows this message alone would spell the file `public\_headers`
+    // while every hard-coded mention in this script — and in the tests — uses a
+    // forward slash. One run would name one file two ways.
+    const rel = relative(ROOT, path).split(sep).join('/')
     errors.push(
-      `Could not read ${relative(ROOT, path)} (${err.code || err.message}). ` +
+      `Could not read ${rel} (${err.code || err.message}). ` +
         `The file is present but unreadable — this is not the same as it being absent, ` +
         `so fix the read error rather than restoring the file from the template.`
     )
