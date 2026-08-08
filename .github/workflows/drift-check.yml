@@ -5,6 +5,8 @@ name: FFC Drift Check
 #  - assetPath() wrapping of /Images, /Svgs, /videos paths
 #  - common committed-secret patterns
 #  - placeholder URL still left in site config when CNAME points elsewhere
+#  - a workflow passing `static_site_generator: next` to configure-pages while
+#    the Next config is TypeScript (the action then discards next.config.ts)
 #
 # See scripts/check-drift.mjs for the full ruleset.
 

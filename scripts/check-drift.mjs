@@ -17,6 +17,10 @@
  *     components after a child site rebrands — the footer platform-credit
  *     attribution is the one allowlisted exception. This is the enforced
  *     complement to the advisory `npm run check:rebrand` config/data checklist.
+ *  7. A workflow passing `static_site_generator: next` to
+ *     actions/configure-pages while this repo's Next config is TypeScript —
+ *     the action then writes its own next.config.js and the repo's real
+ *     config is discarded on every deploy.
  *
  * Run: `node scripts/check-drift.mjs` or `npm run check:drift`.
  * Always resolves paths relative to the repo root, so it works regardless
@@ -25,7 +29,7 @@
  */
 import { readdir, readFile, stat } from 'node:fs/promises'
 import { dirname, join, relative, sep } from 'node:path'
-import { fileURLToPath } from 'node:url'
+import { fileURLToPath, pathToFileURL } from 'node:url'
 
 // Anchor everything to the repo root (scripts/check-drift.mjs lives one
 // level down) so the check produces the same result no matter where it's
@@ -612,31 +616,137 @@ async function checkBrandIdentity() {
   }
 }
 
-await checkSiteConfigExists()
-await checkSiteConfigUrl()
-await checkKebabCaseRoutes()
-await checkAssetPathUsage()
-await checkSecrets()
-await checkPlaceholderUrl()
-await checkBrandIdentity()
-await checkCspSync()
-await checkSecurityTxtSync()
+// Next config filenames actions/configure-pages CANNOT read. The action only
+// understands next.config.js / .mjs; given anything else it logs "Using default
+// blank configuration" and WRITES its own next.config.js holding just
+// {output, basePath, images.unoptimized}. Next prefers .js over .ts, so the
+// repo's real config is discarded on every deploy — measured on
+// Footer_Only_Template, where removing the input alone flipped
+// /privacy-policy/ from 404 to 200 (FFC-Cloudflare-Automation#880).
+const UNREADABLE_NEXT_CONFIG = /^next\.config\.(ts|mts|cts)$/
+// The two the action does read. `.cjs` is deliberately absent: the action looks
+// for .js/.mjs, so a .cjs alongside a .ts still ends in a generated config.
+const READABLE_NEXT_CONFIG = /^next\.config\.(js|mjs)$/
+const NEXT_CONFIG_FILE = /^next\.config\./
 
-if (warnings.length) {
-  console.warn('\n⚠️  Drift warnings:')
-  for (const w of warnings) console.warn('  - ' + w)
+// Matches the input as a YAML mapping key, quoted or not, with or without a
+// trailing comment. Anchored to the start of the line's content (after
+// indentation and an optional list dash), so a line that merely *mentions* the
+// input inside a `#` comment cannot match — a comment line's first non-space
+// character is `#`. That distinction matters: the fix for this defect is a
+// comment block explaining why the input is deliberately absent.
+const STATIC_SITE_GENERATOR_NEXT = /^(?:-\s*)?static_site_generator\s*:\s*(['"]?)next\1\s*(?:#.*)?$/
+
+/**
+ * Pure detector, exported for tests: given the repo's workflow files and the
+ * `next.config.*` filenames present at its root, report every workflow line
+ * that actively sets `static_site_generator: next` while the Next config is
+ * one the action cannot read.
+ *
+ * @param {{path: string, body: string}[]} workflows
+ * @param {string[]} nextConfigFilenames
+ * @returns {{path: string, line: number, message: string}[]}
+ */
+export function pagesConfigDiscardFindings(workflows, nextConfigFilenames) {
+  const unreadable = nextConfigFilenames.filter((n) => UNREADABLE_NEXT_CONFIG.test(n))
+  if (unreadable.length === 0) return []
+  // A readable config sitting alongside changes the mechanism: the action edits
+  // that file rather than generating one, and Next prefers it over the .ts with
+  // or without this input. The .ts is dead there for a different reason — a real
+  // problem, but not one this rule owns or that removing the input would fix.
+  // Failing CI with a diagnosis that does not apply is worse than staying quiet.
+  if (nextConfigFilenames.some((n) => READABLE_NEXT_CONFIG.test(n))) return []
+  const findings = []
+  for (const { path, body } of workflows) {
+    const lines = body.split('\n')
+    for (let i = 0; i < lines.length; i++) {
+      if (!STATIC_SITE_GENERATOR_NEXT.test(lines[i].trim())) continue
+      findings.push({
+        path,
+        line: i + 1,
+        message:
+          `${path}:${i + 1} sets "static_site_generator: next" (the actions/configure-pages input) ` +
+          `while this repo's Next config is ${unreadable.join(', ')} — which that action cannot ` +
+          `read. It writes its own next.config.js and Next prefers it, silently discarding every ` +
+          `setting in ${unreadable[0]} on each deploy. Remove the input and let the workflow's own ` +
+          `basePath step decide: public/CNAME when present, otherwise the repo name. Confirm that ` +
+          `value matches the repo's actual Pages binding first — a stale CNAME with no binding ` +
+          `builds root-relative assets for a subpath deploy, and every one of them 404s. ` +
+          `See FreeForCharity/FFC-Cloudflare-Automation#880.`,
+      })
+    }
+  }
+  return findings
 }
-if (errors.length) {
-  console.error('\n❌ Drift errors:')
-  for (const e of errors) console.error('  - ' + e)
-  console.error(
-    '\nThese violate FFC best practices. Fix them or open an issue if you believe one is a false positive.'
+
+async function checkPagesConfigDiscard() {
+  let rootEntries
+  try {
+    rootEntries = await readdir(ROOT, { withFileTypes: true })
+  } catch {
+    return
+  }
+  const nextConfigFilenames = rootEntries
+    .filter((e) => e.isFile() && NEXT_CONFIG_FILE.test(e.name))
+    .map((e) => e.name)
+
+  const workflowDir = join(ROOT, '.github', 'workflows')
+  let workflowEntries
+  try {
+    workflowEntries = await readdir(workflowDir, { withFileTypes: true })
+  } catch {
+    return // no workflows (e.g. a fresh scaffold) — nothing to check
+  }
+  const workflows = []
+  for (const entry of workflowEntries) {
+    // Only live workflows: GitHub runs .yml/.yaml here, so a .bak or .disabled
+    // copy cannot discard anything and is not this check's business.
+    if (!entry.isFile() || !/\.ya?ml$/.test(entry.name)) continue
+    workflows.push({
+      path: `.github/workflows/${entry.name}`,
+      body: await readFile(join(workflowDir, entry.name), 'utf8'),
+    })
+  }
+
+  for (const finding of pagesConfigDiscardFindings(workflows, nextConfigFilenames)) {
+    errors.push(finding.message)
+  }
+}
+
+async function main() {
+  await checkSiteConfigExists()
+  await checkSiteConfigUrl()
+  await checkKebabCaseRoutes()
+  await checkAssetPathUsage()
+  await checkSecrets()
+  await checkPlaceholderUrl()
+  await checkBrandIdentity()
+  await checkCspSync()
+  await checkSecurityTxtSync()
+  await checkPagesConfigDiscard()
+
+  if (warnings.length) {
+    console.warn('\n⚠️  Drift warnings:')
+    for (const w of warnings) console.warn('  - ' + w)
+  }
+  if (errors.length) {
+    console.error('\n❌ Drift errors:')
+    for (const e of errors) console.error('  - ' + e)
+    console.error(
+      '\nThese violate FFC best practices. Fix them or open an issue if you believe one is a false positive.'
+    )
+    process.exit(1)
+  }
+
+  console.log(
+    warnings.length
+      ? `\n✅ No drift errors (${warnings.length} warning${warnings.length === 1 ? '' : 's'}).`
+      : '\n✅ No drift detected. Repo aligned with FFC best practices.'
   )
-  process.exit(1)
 }
 
-console.log(
-  warnings.length
-    ? `\n✅ No drift errors (${warnings.length} warning${warnings.length === 1 ? '' : 's'}).`
-    : '\n✅ No drift detected. Repo aligned with FFC best practices.'
-)
+// Only run the checks when executed directly, so a test can import the pure
+// detector above without the whole suite firing — and exiting — on import.
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
+  await main()
+}
