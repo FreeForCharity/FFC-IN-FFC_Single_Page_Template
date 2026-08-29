@@ -316,12 +316,12 @@ Cloudflare Pages if HTTP headers are required.
 
 ## Summary
 
-| Deployment                                        | HTTPS                          | Edge caching / headers           | `public/_headers` honored    |
-| ------------------------------------------------- | ------------------------------ | -------------------------------- | ---------------------------- |
-| **GitHub Pages, default URL** (this template)     | GitHub-managed                 | ❌ (no Cloudflare involved)      | ❌ (GitHub Pages ignores it) |
+| Deployment                                             | HTTPS                          | Edge caching / headers           | `public/_headers` honored    |
+| ------------------------------------------------------ | ------------------------------ | -------------------------------- | ---------------------------- |
+| **GitHub Pages, default URL** (this template)          | GitHub-managed                 | ❌ (no Cloudflare involved)      | ❌ (GitHub Pages ignores it) |
 | **GitHub Pages + Cloudflare DNS-only** (custom domain) | GitHub-managed (Let's Encrypt) | ❌ none (Cloudflare not in path) | ❌ (GitHub Pages ignores it) |
-| **Cloudflare Pages** (proxied)                    | Cloudflare-managed             | ✅ full                          | ✅ natively                  |
-| ⛔ GitHub Pages + Cloudflare **proxied**          | **breaks on cert renewal**     | —                                | —                            |
+| **Cloudflare Pages** (proxied)                         | Cloudflare-managed             | ✅ full                          | ✅ natively                  |
+| ⛔ GitHub Pages + Cloudflare **proxied**               | **breaks on cert renewal**     | —                                | —                            |
 
 ---
 
