@@ -96,14 +96,14 @@ Then run `npm run dev` and visit `#events`.
 
 ## Troubleshooting
 
-| Symptom                                  | Likely cause                                                                                             |
-| ---------------------------------------- | -------------------------------------------------------------------------------------------------------- |
+| Symptom                                  | Likely cause                                                                                                                                                                                                          |
+| ---------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Section hidden despite secrets set       | Secrets only reach the refresh workflow, not deploy builds — the section appears once a refresh PR with events has merged (or a build runs with EVENTS_* variables set). Also check `siteConfig.sections.showEvents`. |
-| Empty state shown despite secrets set    | The refresh workflow hasn't run yet (or its PR is unmerged) — trigger **Refresh Events Snapshot** manually and merge its PR.  |
-| All sources missing from snapshot        | Check the workflow logs — each source logs the exact reason it was skipped.                              |
-| Facebook events disappear after ~60 days | Token expired — rotate per the section above.                                                            |
-| Events appear in wrong time zone         | All-day events use UTC; timed events show the source's `TZID`. Compare with the calendar's own settings. |
-| Build keeps the old snapshot             | Intentional: if a fetch returns 0 events we keep the last good snapshot to avoid wiping the section.     |
+| Empty state shown despite secrets set    | The refresh workflow hasn't run yet (or its PR is unmerged) — trigger **Refresh Events Snapshot** manually and merge its PR.                                                                                          |
+| All sources missing from snapshot        | Check the workflow logs — each source logs the exact reason it was skipped.                                                                                                                                           |
+| Facebook events disappear after ~60 days | Token expired — rotate per the section above.                                                                                                                                                                         |
+| Events appear in wrong time zone         | All-day events use UTC; timed events show the source's `TZID`. Compare with the calendar's own settings.                                                                                                              |
+| Build keeps the old snapshot             | Intentional: if a fetch returns 0 events we keep the last good snapshot to avoid wiping the section.                                                                                                                  |
 
 ## Related files
 
