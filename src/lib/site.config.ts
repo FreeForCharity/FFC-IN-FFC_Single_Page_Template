@@ -173,7 +173,7 @@ export const siteConfig: SiteConfig = {
     { label: 'Facebook', href: 'https://www.facebook.com/freeforcharity' },
     { label: 'X (Twitter)', href: 'https://x.com/freeforcharity1' },
     { label: 'LinkedIn', href: 'https://www.linkedin.com/company/freeforcharity/' },
-    { label: 'GitHub', href: 'https://github.com/FreeForCharity/FFC_Single_Page_Template' },
+    { label: 'GitHub', href: 'https://github.com/FreeForCharity/FFC-IN-FFC_Single_Page_Template' },
   ],
   ein: '46-2471893',
   foundingDate: '2014',

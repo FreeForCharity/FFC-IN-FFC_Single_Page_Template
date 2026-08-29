@@ -308,8 +308,8 @@ check:drift` will fail if any are missing
 ## Need Help?
 
 - 📖 **Complete Guide**: [TEMPLATE_USAGE.md](./TEMPLATE_USAGE.md)
-- 🐛 **Report Issues**: [GitHub Issues](https://github.com/FreeForCharity/FFC_Single_Page_Template/issues)
-- 💬 **Ask Questions**: [GitHub Discussions](https://github.com/FreeForCharity/FFC_Single_Page_Template/discussions)
+- 🐛 **Report Issues**: [GitHub Issues](https://github.com/FreeForCharity/FFC-IN-FFC_Single_Page_Template/issues)
+- 💬 **Ask Questions**: [GitHub Discussions](https://github.com/FreeForCharity/FFC-IN-FFC_Single_Page_Template/discussions)
 - 📚 **Documentation**: Review all `.md` files in repository root
 
 ---

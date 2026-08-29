@@ -12,7 +12,7 @@ authors:
     family-names: Moyer
     email: clarkemoyer@freeforcharity.org
     affiliation: Free For Charity
-repository-code: 'https://github.com/FreeForCharity/FFC_Single_Page_Template'
+repository-code: 'https://github.com/FreeForCharity/FFC-IN-FFC_Single_Page_Template'
 url: 'https://freeforcharity.github.io/FFC-IN-FFC_Single_Page_Template'
 abstract: >-
   Single-page Next.js 16.0.7 website template built with App

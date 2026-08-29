@@ -21,7 +21,7 @@ Before starting implementation, ensure you have:
 - [x] Confirmed Free For Charity Facebook page URL: `https://www.facebook.com/freeforcharity`
 - [x] Verified Facebook page has upcoming events posted
 - [x] Development environment set up (Node.js 24.x, npm)
-- [x] Access to repository: `FreeForCharity/FFC_Single_Page_Template`
+- [x] Access to repository: `FreeForCharity/FFC-IN-FFC_Single_Page_Template`
 - [x] Reviewed existing cookie consent implementation in `src/components/cookie-consent/index.tsx`
 
 ## Phase 1: Facebook Page Plugin Implementation
@@ -1124,7 +1124,7 @@ Set up monitoring for:
 
 **Technical Issues:**
 
-- Repository: https://github.com/FreeForCharity/FFC_Single_Page_Template/issues
+- Repository: https://github.com/FreeForCharity/FFC-IN-FFC_Single_Page_Template/issues
 - Email: clarkemoyer@freeforcharity.org
 
 **Facebook Developer Support:**

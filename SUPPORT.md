@@ -16,8 +16,8 @@ If you have general questions about using this template or Free For Charity's se
 
 If you encounter technical issues, bugs, or need development help:
 
-1. **Search Existing Issues**: Check if your issue has already been reported in the [Issues](https://github.com/FreeForCharity/FFC_Single_Page_Template/issues) section
-2. **Open a New Issue**: If your issue is new, [create an issue](https://github.com/FreeForCharity/FFC_Single_Page_Template/issues/new) with detailed information:
+1. **Search Existing Issues**: Check if your issue has already been reported in the [Issues](https://github.com/FreeForCharity/FFC-IN-FFC_Single_Page_Template/issues) section
+2. **Open a New Issue**: If your issue is new, [create an issue](https://github.com/FreeForCharity/FFC-IN-FFC_Single_Page_Template/issues/new) with detailed information:
    - Description of the problem
    - Steps to reproduce
    - Expected vs actual behavior

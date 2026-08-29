@@ -99,7 +99,7 @@ _Last updated: December 13, 2025_
 - **Pull Requests**: See GitHub Insights
 - **Issues Closed**: See GitHub Insights
 
-_Note: For current statistics, visit the repository's [Insights tab](https://github.com/FreeForCharity/FFC_Single_Page_Template/pulse) or [Contributors page](https://github.com/FreeForCharity/FFC_Single_Page_Template/graphs/contributors) on GitHub._
+_Note: For current statistics, visit the repository's [Insights tab](https://github.com/FreeForCharity/FFC-IN-FFC_Single_Page_Template/pulse) or [Contributors page](https://github.com/FreeForCharity/FFC-IN-FFC_Single_Page_Template/graphs/contributors) on GitHub._
 
 ## Recognition Guidelines
 
@@ -204,7 +204,7 @@ All contributors are expected to:
 If you have questions about contributor recognition:
 
 - **Email**: clarkemoyer@freeforcharity.org
-- **GitHub Discussions**: [Ask a question](https://github.com/FreeForCharity/FFC_Single_Page_Template/discussions)
+- **GitHub Discussions**: [Ask a question](https://github.com/FreeForCharity/FFC-IN-FFC_Single_Page_Template/discussions)
 - **Support Guide**: [SUPPORT.md](./SUPPORT.md)
 
 ## Updates to This Document

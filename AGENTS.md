@@ -1,6 +1,6 @@
-# AI Agent Instructions: FFC_Single_Page_Template
+# AI Agent Instructions: FFC-IN-FFC_Single_Page_Template
 
-**Project:** FFC_Single_Page_Template -- a Free For Charity nonprofit website
+**Project:** FFC-IN-FFC_Single_Page_Template -- a Free For Charity nonprofit website
 
 **Organization:** [Free For Charity](https://freeforcharity.org) provides free, professionally built websites for 501(c)(3) nonprofit organizations. Every repo in this organization serves that mission.
 
@@ -90,7 +90,7 @@ Component files use PascalCase: `HeroSection.tsx`, `DonateButton.tsx`.
 
 ## GitHub Pages & Asset Paths
 
-These sites deploy to `https://freeforcharity.github.io/FFC_Single_Page_Template/` and optionally to a custom domain if one is configured for this repo.
+These sites deploy to `https://freeforcharity.github.io/FFC-IN-FFC_Single_Page_Template/` and optionally to a custom domain if one is configured for this repo.
 
 **Always use the `assetPath()` helper** from `src/lib/assetPath.ts` for image and asset references:
 

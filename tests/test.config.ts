@@ -71,7 +71,7 @@ export const testConfig = {
       ariaLabel: 'LinkedIn',
     },
     github: {
-      url: 'github.com/FreeForCharity/FFC_Single_Page_Template',
+      url: 'github.com/FreeForCharity/FFC-IN-FFC_Single_Page_Template',
       ariaLabel: 'GitHub',
     },
   },

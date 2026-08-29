@@ -76,7 +76,7 @@ Quick checklist of major content areas:
 
 ### Step 1: Use GitHub Template Feature
 
-1. Navigate to https://github.com/FreeForCharity/FFC_Single_Page_Template
+1. Navigate to https://github.com/FreeForCharity/FFC-IN-FFC_Single_Page_Template
 2. Click the green **"Use this template"** button at the top right
 3. Select **"Create a new repository"**
 4. Choose your organization or personal account as the owner
@@ -287,20 +287,20 @@ The deploy workflow sets `NEXT_PUBLIC_BASE_PATH` for GitHub Pages routing:
 
 ```yaml
 env:
-  NEXT_PUBLIC_BASE_PATH: /FFC_Single_Page_Template
+  NEXT_PUBLIC_BASE_PATH: /FFC-IN-FFC_Single_Page_Template
 ```
 
 **This needs to be updated** in `.github/workflows/deploy.yml` and `.github/workflows/lighthouse.yml`:
 
 **Option A: Using AI/Copilot (Recommended)**
 
-- Ask Copilot: "Update `NEXT_PUBLIC_BASE_PATH` in both `.github/workflows/deploy.yml` and `.github/workflows/lighthouse.yml` from `/FFC_Single_Page_Template` to `/YOUR-REPO-NAME`"
+- Ask Copilot: "Update `NEXT_PUBLIC_BASE_PATH` in both `.github/workflows/deploy.yml` and `.github/workflows/lighthouse.yml` from `/FFC-IN-FFC_Single_Page_Template` to `/YOUR-REPO-NAME`"
 - Copilot will automatically find and replace the values in both files
 
 **Option B: Manual Update**
 
 1. Open `.github/workflows/deploy.yml`
-2. Search for `NEXT_PUBLIC_BASE_PATH: /FFC_Single_Page_Template`
+2. Search for `NEXT_PUBLIC_BASE_PATH: /FFC-IN-FFC_Single_Page_Template`
 3. Replace with your repository name, for example: `NEXT_PUBLIC_BASE_PATH: /YOUR-REPO-NAME`
 4. Repeat steps 1–3 for `.github/workflows/lighthouse.yml`
 5. Commit the changes
@@ -826,8 +826,8 @@ After completing the setup:
 **Getting Help**:
 
 - Review existing documentation in the repository
-- Check the [GitHub Discussions](https://github.com/FreeForCharity/FFC_Single_Page_Template/discussions) for Q&A
-- Open an [Issue](https://github.com/FreeForCharity/FFC_Single_Page_Template/issues) for bugs or questions
+- Check the [GitHub Discussions](https://github.com/FreeForCharity/FFC-IN-FFC_Single_Page_Template/discussions) for Q&A
+- Open an [Issue](https://github.com/FreeForCharity/FFC-IN-FFC_Single_Page_Template/issues) for bugs or questions
 - Read [SUPPORT.md](./SUPPORT.md) for support resources
 
 ---

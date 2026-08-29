@@ -17,8 +17,8 @@ Get up and running with the FFC Single Page Template in 5 minutes.
 ### 1. Clone the Repository (30 seconds)
 
 ```bash
-git clone https://github.com/FreeForCharity/FFC_Single_Page_Template.git
-cd FFC_Single_Page_Template
+git clone https://github.com/FreeForCharity/FFC-IN-FFC_Single_Page_Template.git
+cd FFC-IN-FFC_Single_Page_Template
 ```
 
 ### 2. Install Dependencies (17 seconds)
@@ -140,7 +140,7 @@ git push origin feature/your-feature-name
 ## Project Structure (Quick Reference)
 
 ```
-FFC_Single_Page_Template/
+FFC-IN-FFC_Single_Page_Template/
 ├── src/
 │   ├── app/
 │   │   ├── layout.tsx          # Root layout with metadata
@@ -358,8 +358,8 @@ Now that you're set up, check out:
 
 ## Getting Help
 
-- **Issues**: [GitHub Issues](https://github.com/FreeForCharity/FFC_Single_Page_Template/issues)
-- **Discussions**: [GitHub Discussions](https://github.com/FreeForCharity/FFC_Single_Page_Template/discussions)
+- **Issues**: [GitHub Issues](https://github.com/FreeForCharity/FFC-IN-FFC_Single_Page_Template/issues)
+- **Discussions**: [GitHub Discussions](https://github.com/FreeForCharity/FFC-IN-FFC_Single_Page_Template/discussions)
 - **Documentation**: Check the `*.md` files in the repository root
 
 ---
