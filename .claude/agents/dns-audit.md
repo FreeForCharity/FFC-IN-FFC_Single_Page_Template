@@ -9,10 +9,11 @@ You are auditing DNS for a Free For Charity site. Use the `dig` / `host` CLI too
 ## Checklist
 
 1. **Apex and `www`**
-   - `A` (apex) records resolve to the GitHub Pages IPs (185.199.108.153, .109.153, .110.153, .111.153) **or** the Cloudflare proxy IPs if Cloudflare is fronting the site.
+   - `A` (apex) records resolve to the GitHub Pages IPs (185.199.108.153, .109.153, .110.153, .111.153) **or** the Cloudflare proxy IPs if the site is hosted on Cloudflare Pages.
    - `www` is a `CNAME` to `<org>.github.io` or to the Cloudflare origin.
    - The `CNAME` file in `public/CNAME` matches whichever host is intended to be canonical.
-2. **TLS / HTTPS** — Confirm a current certificate. GitHub Pages issues per-domain certs automatically once DNS is correct; flag if it's been > 24h without a cert.
+   - **GitHub Pages + Cloudflare proxy = Action required.** If the intended host is GitHub Pages (per `public/CNAME` / config) but the apex resolves to Cloudflare proxy IPs (e.g. `104.x` / `172.67.x`) instead of the four `185.199.10x.153` addresses, the records are **proxied (orange cloud)**. This breaks GitHub's automatic certificate renewal and HTTPS fails ~90 days later — flag it and recommend switching the records to **DNS only** (grey cloud). See `CLOUDFLARE_SETUP.md`. (Proxy IPs are correct only when the site is actually hosted on Cloudflare Pages.)
+2. **TLS / HTTPS** — Confirm a current certificate. GitHub Pages issues per-domain certs automatically once DNS is correct **and not proxied**; flag if it's been > 24h without a cert, and cross-check item 1 for proxying as the likely cause.
 3. **Email auth (if the charity uses the domain for mail)**
    - `MX` records present and pointing somewhere real (Google Workspace, Microsoft 365, etc.).
    - `TXT` SPF record (`v=spf1 ...`) with a single `~all` or `-all`.
