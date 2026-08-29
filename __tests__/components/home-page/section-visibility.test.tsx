@@ -17,13 +17,17 @@ describe('home-page section visibility flags', () => {
     showEndowment: siteConfig.sections.showEndowment,
     showPrograms: siteConfig.sections.showPrograms,
     showEvents: siteConfig.sections.showEvents,
-    widgetUrl: siteConfig.integrations.sociableKitEventsWidgetUrl,
+    sourcesConfigured: process.env.EVENTS_SOURCES_CONFIGURED,
   }
   afterEach(() => {
     siteConfig.sections.showEndowment = original.showEndowment
     siteConfig.sections.showPrograms = original.showPrograms
     siteConfig.sections.showEvents = original.showEvents
-    siteConfig.integrations.sociableKitEventsWidgetUrl = original.widgetUrl
+    if (original.sourcesConfigured === undefined) {
+      delete process.env.EVENTS_SOURCES_CONFIGURED
+    } else {
+      process.env.EVENTS_SOURCES_CONFIGURED = original.sourcesConfigured
+    }
   })
 
   it('Endowment-Features renders nothing when showEndowment is false', () => {
@@ -40,21 +44,26 @@ describe('home-page section visibility flags', () => {
 
   it('Events renders nothing when showEvents is false', () => {
     siteConfig.sections.showEvents = false
+    // Even with a configured source the flag alone must hide the section.
+    process.env.EVENTS_SOURCES_CONFIGURED = 'true'
     const { container } = render(<Events />)
     expect(container).toBeEmptyDOMElement()
   })
 
-  it('Events renders nothing when the widget URL is empty even if enabled', () => {
+  it('Events renders nothing when no sources are configured and the snapshot is empty', () => {
+    // The template default: flag on, no EVENTS_* sources wired up, and the
+    // committed src/data/events.generated.json snapshot is empty.
     siteConfig.sections.showEvents = true
-    siteConfig.integrations.sociableKitEventsWidgetUrl = ''
+    delete process.env.EVENTS_SOURCES_CONFIGURED
     const { container } = render(<Events />)
     expect(container).toBeEmptyDOMElement()
   })
 
-  it('Events treats a whitespace-only widget URL as unconfigured', () => {
+  it('Events renders (empty state) when a source is configured but has no events yet', () => {
     siteConfig.sections.showEvents = true
-    siteConfig.integrations.sociableKitEventsWidgetUrl = '   '
+    process.env.EVENTS_SOURCES_CONFIGURED = 'true'
     const { container } = render(<Events />)
-    expect(container).toBeEmptyDOMElement()
+    expect(container).not.toBeEmptyDOMElement()
+    expect(container.querySelector('[data-testid="events-empty-state"]')).not.toBeNull()
   })
 })

@@ -1,7 +1,22 @@
 import type { NextConfig } from 'next'
 
+// The Events section (and the footer's Events nav link, a client component)
+// must know at render time whether any calendar source is configured. The raw
+// EVENTS_* variables can carry secret ICS URLs / tokens and must never reach
+// the client bundle, so expose only this derived non-secret boolean — it is
+// inlined into both server and client bundles, keeping prerender and
+// hydration in agreement. See src/lib/events/visibility.ts.
+const eventsSourcesConfigured = Boolean(
+  process.env.EVENTS_GOOGLE_ICS_URL ||
+  process.env.EVENTS_MICROSOFT_ICS_URL ||
+  (process.env.EVENTS_FACEBOOK_PAGE_ID && process.env.EVENTS_FACEBOOK_ACCESS_TOKEN)
+)
+
 const nextConfig: NextConfig = {
   output: 'export',
+  env: {
+    EVENTS_SOURCES_CONFIGURED: eventsSourcesConfigured ? 'true' : '',
+  },
   // Images configuration
   images: {
     // This allows all images, local or external, to load without optimization

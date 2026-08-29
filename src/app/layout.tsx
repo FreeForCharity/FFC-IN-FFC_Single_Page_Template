@@ -92,10 +92,8 @@ export default function RootLayout({
         <link rel="preconnect" href="https://www.googletagmanager.com" />
         <link rel="preconnect" href="https://www.zeffy.com" />
         <link rel="preconnect" href="https://widgets.guidestar.org" />
-        <link rel="preconnect" href="https://widgets.sociablekit.com" />
         <link rel="dns-prefetch" href="https://www.googletagmanager.com" />
         <link rel="dns-prefetch" href="https://www.zeffy.com" />
-        <link rel="dns-prefetch" href="https://widgets.sociablekit.com" />
         <link rel="dns-prefetch" href="https://www.idealist.org" />
         {/* Analytics endpoints load conditionally through GTM — dns-prefetch
             only (cheaper than preconnect for resources that may not load). */}

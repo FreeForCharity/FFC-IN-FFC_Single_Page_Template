@@ -20,10 +20,10 @@
 # - 'unsafe-inline' on script/style is required for Next.js inline runtime
 #   chunks and Tailwind. Tighten with nonces if you migrate off static export.
 # - GTM, GA4 (incl. regional collectors), Clarity, Zeffy, GuideStar, Facebook
-#   Pixel, Microsoft Forms, SociableKit (Facebook events widget), and YouTube
-#   are whitelisted because they are loaded by the layout, cookie-consent,
-#   and home-page components. Add new third parties here when you integrate
-#   them, and update src/app/layout.tsx in the same commit.
+#   Pixel, Microsoft Forms, and YouTube are whitelisted because they are
+#   loaded by the layout, cookie-consent, and home-page components. Add new
+#   third parties here when you integrate them, and update
+#   src/app/layout.tsx in the same commit.
 #
 # Header notes:
 # - HSTS does NOT set `preload`; that flag is a binding promise template

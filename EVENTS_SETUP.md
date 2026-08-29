@@ -8,16 +8,16 @@ Events are fetched **at build time** by `scripts/fetch-events.mjs` and persisted
 - No third-party cookies are set by the events section.
 - The section is fully renderable in a static export.
 
-A scheduled GitHub Action (`.github/workflows/refresh-events.yml`) re-runs the fetch every 6 hours, commits any changes, and triggers a redeploy.
+A scheduled GitHub Action (`.github/workflows/refresh-events.yml`) re-runs the fetch every 6 hours and, when the snapshot changed, opens (or updates) a pull request on the fixed `automation/events-refresh` branch. It never pushes to `main` — merging that PR is what deploys the refreshed snapshot through the normal pipeline.
 
 ## Quick start
 
 1. Decide which sources you want to enable. Each is independent.
 2. Add the matching secrets to your GitHub repo at **Settings → Secrets and variables → Actions**.
-3. Manually trigger the **Refresh Events Snapshot** workflow once to populate `src/data/events.generated.json` (or wait up to 6 hours).
-4. The Pages deploy workflow then publishes the refreshed snapshot.
+3. Manually trigger the **Refresh Events Snapshot** workflow once to populate `src/data/events.generated.json` (or wait up to 6 hours). It opens a PR on the `automation/events-refresh` branch when the snapshot changed.
+4. Review and merge that PR; the Pages deploy workflow then publishes the refreshed snapshot.
 
-If you have no sources configured yet, the section shows a friendly empty state with a link to the charity's Facebook page — the template ships in that state.
+With no sources configured and an empty committed snapshot, the whole section (and its footer quick-link) self-hides — the template ships in that state. Once at least one source is configured, a refresh with zero upcoming events shows a friendly empty state instead, linking to the Facebook page set in `siteConfig.integrations.eventsFacebookPageUrl` (`src/lib/site.config.ts`). Turn the section off entirely with `siteConfig.sections.showEvents = false`.
 
 ## Secrets
 
@@ -98,7 +98,8 @@ Then run `npm run dev` and visit `#events`.
 
 | Symptom                                  | Likely cause                                                                                             |
 | ---------------------------------------- | -------------------------------------------------------------------------------------------------------- |
-| Empty state shown despite secrets set    | The workflow hasn't run yet — trigger **Refresh Events Snapshot** manually.                              |
+| Section hidden despite secrets set       | Secrets only reach the refresh workflow, not deploy builds — the section appears once a refresh PR with events has merged (or a build runs with EVENTS_* variables set). Also check `siteConfig.sections.showEvents`. |
+| Empty state shown despite secrets set    | The refresh workflow hasn't run yet (or its PR is unmerged) — trigger **Refresh Events Snapshot** manually and merge its PR.  |
 | All sources missing from snapshot        | Check the workflow logs — each source logs the exact reason it was skipped.                              |
 | Facebook events disappear after ~60 days | Token expired — rotate per the section above.                                                            |
 | Events appear in wrong time zone         | All-day events use UTC; timed events show the source's `TZID`. Compare with the calendar's own settings. |
@@ -109,7 +110,7 @@ Then run `npm run dev` and visit `#events`.
 - `src/lib/events/` — Types, config helpers, ICS + Facebook parsers, format/grouping/add-to-calendar utilities.
 - `src/components/home-page/Events/` — Section component, cards, badges, empty state, add-to-calendar menu.
 - `scripts/fetch-events.mjs` — Build-time aggregation script (also invoked by `prebuild`).
-- `.github/workflows/refresh-events.yml` — Scheduled refresh + commit workflow.
+- `.github/workflows/refresh-events.yml` — Scheduled refresh workflow (opens a PR; never pushes to `main`).
 - `__tests__/lib/events/` — Unit tests for parsers and helpers.
 - `__tests__/components/Events.test.tsx` — Component-level and a11y tests.
 - `tests/events.spec.ts` — Playwright E2E spec.

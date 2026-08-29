@@ -45,7 +45,9 @@ export const testConfig = {
     heading: 'Upcoming Events',
     footerLinkText: 'Events',
     facebookLinkText: 'View all events on Facebook',
-    facebookUrl: 'https://www.facebook.com/freeforcharity',
+    // Sourced from siteConfig so the expected link always matches what the
+    // Events component renders (single source of truth).
+    facebookUrl: siteConfig.integrations.eventsFacebookPageUrl,
     descriptionText: 'volunteer opportunities',
     emptyStateHeading: 'No upcoming events right now',
     emptyStateButton: 'Follow us on Facebook',

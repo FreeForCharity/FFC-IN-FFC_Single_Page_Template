@@ -1,8 +1,10 @@
 import React from 'react'
 import snapshot from '@/data/events.generated.json'
+import { siteConfig } from '@/lib/site.config'
 import type { EventsSnapshot, UnifiedEvent } from '@/lib/events/types'
 import { groupByMonth } from '@/lib/events/grouping'
 import { safeHttpUrl, safeHttpsImageUrl } from '@/lib/events/safeUrl'
+import { eventsSectionVisible } from '@/lib/events/visibility'
 import EventCard from './EventCard'
 import EmptyState from './EmptyState'
 
@@ -28,10 +30,18 @@ function eventJsonLd(event: UnifiedEvent) {
 }
 
 const Events = () => {
+  // Self-hide (FFC section-visibility convention): render nothing when the
+  // section is flagged off, or when no calendar source is configured and the
+  // committed snapshot is empty. See src/lib/events/visibility.ts.
+  if (!eventsSectionVisible()) return null
+
   const data = snapshot as EventsSnapshot
   const buckets = groupByMonth(data.events ?? [])
   const hasEvents = buckets.length > 0
   const updatedAt = data.updatedAt ? new Date(data.updatedAt) : null
+  // Public page link is per-charity config, never hardcoded; whitespace-only
+  // behaves like empty (link self-hides), matching the other sections.
+  const facebookPageUrl = siteConfig.integrations.eventsFacebookPageUrl.trim()
 
   return (
     <section id="events" className="py-[52px]" aria-label="Upcoming Events">
@@ -101,16 +111,21 @@ const Events = () => {
             </>
           ) : (
             <>Events are aggregated automatically from our calendar sources.</>
-          )}{' '}
-          <a
-            href="https://www.facebook.com/freeforcharity"
-            target="_blank"
-            rel="noopener noreferrer"
-            aria-label="View all events on Facebook (opens in new tab)"
-            className="text-[#2B627B] underline hover:no-underline focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[#2B627B]"
-          >
-            View all events on Facebook
-          </a>
+          )}
+          {facebookPageUrl && (
+            <>
+              {' '}
+              <a
+                href={facebookPageUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="View all events on Facebook (opens in new tab)"
+                className="text-[#2B627B] underline hover:no-underline focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[#2B627B]"
+              >
+                View all events on Facebook
+              </a>
+            </>
+          )}
         </p>
       </div>
 

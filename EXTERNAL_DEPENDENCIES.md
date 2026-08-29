@@ -77,7 +77,7 @@ These are services we directly integrate into our application code.
 - **Setup guide:** [`EVENTS_SETUP.md`](./EVENTS_SETUP.md)
 - **Status:** Active
 
-**Getting your own widget URL:** Create a free account at https://www.sociablekit.com, add a "Facebook Page Events" widget for your charity's Facebook Page, and copy the iframe URL it generates. Set it in `siteConfig.integrations.sociableKitEventsWidgetUrl` in `src/lib/site.config.ts` (the `widgets.sociablekit.com` domain is already allow-listed in the CSP).
+**Pointing it at your own events:** Configure any combination of the `EVENTS_*` GitHub Secrets per [`EVENTS_SETUP.md`](./EVENTS_SETUP.md), and set your public Facebook page in `siteConfig.integrations.eventsFacebookPageUrl` (`src/lib/site.config.ts`) — it drives the "View all events on Facebook" link and the empty-state follow button.
 
 ### Forms & User Input
 

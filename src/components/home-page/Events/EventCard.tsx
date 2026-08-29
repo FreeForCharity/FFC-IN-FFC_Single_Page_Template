@@ -1,6 +1,9 @@
 import React from 'react'
 import Image from 'next/image'
-import { Calendar, Clock, MapPin } from 'lucide-react'
+// react-icons is the icon library the rest of the template uses (see the
+// footer); lucide-react was dropped from the dependencies after this
+// component was first written.
+import { FiCalendar, FiClock, FiMapPin } from 'react-icons/fi'
 import type { UnifiedEvent } from '@/lib/events/types'
 import { SOURCE_LABELS } from '@/lib/events/types'
 import {
@@ -77,7 +80,7 @@ export default function EventCard({ event }: Props) {
 
           <ul className="space-y-1 text-sm text-gray-600 mb-3" id="lato-font">
             <li className="flex items-start gap-2">
-              <Calendar
+              <FiCalendar
                 className="w-4 h-4 mt-0.5 text-[#2B627B] flex-shrink-0"
                 aria-hidden="true"
               />
@@ -87,7 +90,7 @@ export default function EventCard({ event }: Props) {
               </span>
             </li>
             <li className="flex items-start gap-2">
-              <Clock className="w-4 h-4 mt-0.5 text-[#2B627B] flex-shrink-0" aria-hidden="true" />
+              <FiClock className="w-4 h-4 mt-0.5 text-[#2B627B] flex-shrink-0" aria-hidden="true" />
               <span>
                 <span className="sr-only">Time: </span>
                 {timeRange}
@@ -95,7 +98,7 @@ export default function EventCard({ event }: Props) {
             </li>
             {event.location && (
               <li className="flex items-start gap-2">
-                <MapPin
+                <FiMapPin
                   className="w-4 h-4 mt-0.5 text-[#2B627B] flex-shrink-0"
                   aria-hidden="true"
                 />

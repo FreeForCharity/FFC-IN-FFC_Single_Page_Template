@@ -124,7 +124,12 @@ export type SiteConfig = {
     showEndowment: boolean
     /** FFC's own three-program (Domains/Hosting/Consulting) marketing block. */
     showPrograms: boolean
-    /** SociableKit Facebook-events embed (also self-hides when the URL is empty). */
+    /**
+     * Unified events section (Google Calendar / Microsoft 365 / Facebook).
+     * Also self-hides when no event sources are configured and the committed
+     * snapshot (src/data/events.generated.json) is empty — see
+     * src/lib/events/visibility.ts.
+     */
     showEvents: boolean
   }
   /**
@@ -137,8 +142,14 @@ export type SiteConfig = {
     zeffyDonationUrl: string
     /** Idealist volunteer-opportunities profile URL. */
     idealistUrl: string
-    /** SociableKit Facebook-events widget iframe URL. */
-    sociableKitEventsWidgetUrl: string
+    /**
+     * Public Facebook page URL used by the Events section ("View all events
+     * on Facebook" link and the empty-state follow button). This is public
+     * identity, not a secret — the calendar-source endpoints/tokens stay in
+     * EVENTS_* environment variables (see EVENTS_SETUP.md). Empty string
+     * hides those links.
+     */
+    eventsFacebookPageUrl: string
     /** Microsoft Forms application-form URL (https://forms.office.com/r/<id>). */
     microsoftFormUrl: string
   }
@@ -214,8 +225,7 @@ export const siteConfig: SiteConfig = {
     zeffyDonationUrl: 'https://www.zeffy.com/embed/donation-form/free-for-charity-endowment-fund',
     idealistUrl:
       'https://www.idealist.org/en/nonprofit/356bfc8e2ae64f83beea4a4e677e99d7-free-for-charity-state-college#opportunities',
-    sociableKitEventsWidgetUrl:
-      'https://widgets.sociablekit.com/facebook-page-events/iframe/25631700',
+    eventsFacebookPageUrl: 'https://www.facebook.com/freeforcharity',
     microsoftFormUrl: 'https://forms.office.com/r/vePxGq6JqG',
   },
 }

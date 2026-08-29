@@ -14,7 +14,7 @@ You are helping a Free For Charity volunteer or charity admin stand up a new sit
    - Production URL (custom domain) — if none yet, default to the GitHub Pages URL.
    - Twitter/X handle (optional), primary contact email, security disclosure email, primary social links (Facebook, X, LinkedIn, GitHub, others).
    - EIN, mailing address(es), phone number(s) — collected for `siteConfig` (`ein`, `phone`, `addresses`); these are no longer footer-hardcoded.
-   - GuideStar/Candid profile links, parent-organization details, and any third-party integration URLs (Zeffy, Idealist, SociableKit events, Microsoft Forms) — also collected for `siteConfig`.
+   - GuideStar/Candid profile links, parent-organization details, and any third-party integration URLs (Zeffy, Idealist, events Facebook page, Microsoft Forms) — also collected for `siteConfig`.
 
 2. **Update `src/lib/site.config.ts`** with the values above. This is the canonical source — never duplicate. It now drives the full per-charity value set: identity/SEO (`name`, `tagline`, `description`, `shortDescription`, `url`, `twitterHandle`, `keywords`, `themeColor`), `contactEmail`, `social`, AND `ein`, `phone`, `addresses`, `guidestar`, `parentOrg`, and `integrations`. Helpers (`siteUrl`, `twitterSite`, `cardDescription`) drive layout/robots/sitemap/manifest/footer; do NOT change their signatures. Analytics IDs (GTM / GA / Clarity / Meta Pixel) are set separately in `src/lib/analytics.config.ts`.
 
