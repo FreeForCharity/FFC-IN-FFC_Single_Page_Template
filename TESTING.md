@@ -103,10 +103,10 @@ pnpm run test:coverage
 pnpm run test:watch
 
 # Run specific test file
-pnpm test -- __tests__/components/Header.test.tsx
+pnpm test __tests__/components/Header.test.tsx
 
 # Run tests matching a pattern
-pnpm test -- -t "Header"
+pnpm test -t "Header"
 ```
 
 ### Test File Structure
@@ -226,7 +226,7 @@ describe('MyComponent', () => {
 pnpm test
 
 # Run specific component accessibility test
-pnpm test -- -t "should not have accessibility violations"
+pnpm test -t "should not have accessibility violations"
 ```
 
 ### Test Configuration

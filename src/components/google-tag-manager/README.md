@@ -101,7 +101,7 @@ Comprehensive tests are available in `tests/google-tag-manager.spec.ts`:
 
 ```bash
 # Run GTM tests
-pnpm run test:e2e -- tests/google-tag-manager.spec.ts
+pnpm run test:e2e tests/google-tag-manager.spec.ts
 ```
 
 Test coverage includes:
