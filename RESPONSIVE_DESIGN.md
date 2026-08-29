@@ -169,7 +169,7 @@ Test the following on each major component change:
 Run responsive tests:
 
 ```bash
-npm run test:e2e
+pnpm run test:e2e
 ```
 
 Tests include:
@@ -185,8 +185,8 @@ Tests include:
 Lighthouse CI automatically tests mobile and desktop performance:
 
 ```bash
-npm run build
-npx lhci autorun
+pnpm run build
+pnpm exec lhci autorun
 ```
 
 **Key Metrics**:

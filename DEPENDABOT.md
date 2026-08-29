@@ -203,7 +203,7 @@ To get full Dependabot functionality, you need to enable features in your reposi
 2. **Review the Code Changes**
    - Click on **Files changed** tab
    - For `package.json`: Verify version numbers
-   - For `package-lock.json`: Usually safe to trust Dependabot
+   - For `pnpm-lock.yaml`: Usually safe to trust Dependabot
    - For GitHub Actions: Review workflow file changes
 
 3. **Check CI/CD Status**
@@ -306,9 +306,9 @@ You can interact with Dependabot by commenting on its pull requests:
 2. **Test locally**:
    ```bash
    gh pr checkout <PR_NUMBER>  # Check out the Dependabot PR
-   npm install                  # Install new dependencies
-   npm run dev                  # Test the application
-   npm test                     # Run tests
+   pnpm install                  # Install new dependencies
+   pnpm run dev                  # Test the application
+   pnpm test                     # Run tests
    ```
 3. **Fix compatibility issues** in a separate commit on the PR
 4. **Ignore the version** if it's too breaking:
@@ -472,7 +472,7 @@ Dependabot doesn't auto-merge by default in this configuration. To enable auto-m
 1. **Review security updates promptly** - Within 24-48 hours
 2. **Test security patches** - Even security updates can break things
 3. **Monitor advisory database** - Check GitHub Security Advisories regularly
-4. **Use `npm audit`** - Run locally to catch issues early
+4. **Use `pnpm audit`** - Run locally to catch issues early
 5. **Keep all dependencies updated** - Outdated deps = security risk
 6. **Review transitive dependencies** - Vulnerabilities can be deep in the tree
 
@@ -512,7 +512,7 @@ Valid reasons to ignore or delay updates:
 
 ### Related Tools
 
-- [npm audit](https://docs.npmjs.com/cli/v10/commands/npm-audit)
+- [pnpm audit](https://pnpm.io/cli/audit)
 - [CodeQL](https://codeql.github.com/)
 - [Snyk](https://snyk.io/)
 

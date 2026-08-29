@@ -1,0 +1,14 @@
+# pnpm settings. Since v10 pnpm reads workspace-local settings from this
+# file; no `packages` list is defined, so the repo stays a single-package
+# project (the repo root is the workspace root and its only package).
+#
+# Supply-chain hardening (FFC fleet standard):
+# - minimumReleaseAge: refuse to resolve package versions published less than
+#   7 days ago (value is in minutes). Compromised releases are typically
+#   caught and unpublished within days; the cooldown means freshly poisoned
+#   versions never reach our lockfile. Frozen-lockfile installs in CI are
+#   unaffected — this only gates NEW resolutions (adds/updates).
+# - Dependency lifecycle scripts (postinstall etc.) are blocked by default in
+#   pnpm 10+. If a dependency legitimately needs its build script, allowlist
+#   it explicitly under onlyBuiltDependencies rather than re-enabling all.
+minimumReleaseAge: 10080

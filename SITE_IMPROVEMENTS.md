@@ -343,7 +343,7 @@ ANALYZE=true pnpm build
 
 1. Install: `@next/bundle-analyzer`
 2. Update `next.config.ts` to use bundle analyzer
-3. Add npm script: `"analyze": "ANALYZE=true npm run build"`
+3. Add package.json script: `"analyze": "ANALYZE=true pnpm run build"`
 4. Document usage in README.md
 5. Optional: Add bundle size CI check
 
@@ -598,7 +598,7 @@ Runs after build to detect broken internal and external links.
 
 #### Implementation Notes
 
-- Should run after `npm run build`
+- Should run after `pnpm run build`
 - Can be integrated into CI/CD pipeline
 - Skip patterns needed for placeholder links
 - May require fixing existing broken links
@@ -1620,7 +1620,7 @@ docker build -t kccf-web .
 docker run -p 3000:3000 kccf-web
 
 # Development mode
-docker run -v $(pwd):/app -p 3000:3000 kccf-web npm run dev
+docker run -v $(pwd):/app -p 3000:3000 kccf-web pnpm run dev
 ````
 
 #### Benefits
@@ -2108,7 +2108,7 @@ trim_trailing_whitespace = false
 
 **Monthly:**
 
-- Update dependencies (npm audit)
+- Update dependencies (pnpm audit)
 - Review and close stale issues
 - Update documentation as needed
 

@@ -22,15 +22,15 @@
 
 ## Core Commands
 
-| Command            | What It Does                | Typical Duration |
-| ------------------ | --------------------------- | ---------------- |
-| `npm install`      | Install dependencies        | ~17s             |
-| `npm run dev`      | Start dev server            | ~1s startup      |
-| `npm run format`   | Run Prettier to format code | ~2s              |
-| `npm run lint`     | Run ESLint                  | ~2s              |
-| `npm test`         | Run Jest unit tests         | ~5s              |
-| `npm run build`    | Production static build     | ~30s             |
-| `npm run test:e2e` | Run Playwright E2E tests    | ~15s             |
+| Command             | What It Does                | Typical Duration |
+| ------------------- | --------------------------- | ---------------- |
+| `pnpm install`      | Install dependencies        | ~17s             |
+| `pnpm run dev`      | Start dev server            | ~1s startup      |
+| `pnpm run format`   | Run Prettier to format code | ~2s              |
+| `pnpm run lint`     | Run ESLint                  | ~2s              |
+| `pnpm test`         | Run Jest unit tests         | ~5s              |
+| `pnpm run build`    | Production static build     | ~30s             |
+| `pnpm run test:e2e` | Run Playwright E2E tests    | ~15s             |
 
 **NEVER CANCEL long-running commands.** Builds and E2E tests take time. Set your timeout to 180+ seconds and let them finish.
 
@@ -44,12 +44,12 @@ All changes follow this process:
 2. **Branch** -- Create a feature branch from `main`
 3. **Develop** -- Make changes, commit frequently
 4. **Pre-commit checklist** (run in this order):
-   1. `npm run format` -- Auto-fix formatting
-   2. `npm run lint` -- Catch code quality issues
-   3. `npm run check:drift` -- FFC best-practice enforcement (kebab-case routes, assetPath usage, CSP sync, committed-secret patterns, placeholder URLs)
-   4. `npm test` -- Run unit tests
-   5. `npm run build` -- Verify the static export succeeds
-   6. `npm run test:e2e` -- Run end-to-end tests
+   1. `pnpm run format` -- Auto-fix formatting
+   2. `pnpm run lint` -- Catch code quality issues
+   3. `pnpm run check:drift` -- FFC best-practice enforcement (kebab-case routes, assetPath usage, CSP sync, committed-secret patterns, placeholder URLs)
+   4. `pnpm test` -- Run unit tests
+   5. `pnpm run build` -- Verify the static export succeeds
+   6. `pnpm run test:e2e` -- Run end-to-end tests
 5. **PR** -- Open a Pull Request, link to the issue with `Fixes #NNN` or `Refs #NNN`
 6. **Merge** -- Merge via merge queue (no direct commits to `main`)
 
@@ -162,11 +162,11 @@ Example: `feat: add volunteer signup form with validation`
 
 GitHub Actions (items 1–5) plus GitHub code scanning (item 6) enforce the following on every PR:
 
-1. **Prettier** -- `npm run format:check` (formatting must pass)
-2. **ESLint** -- `npm run lint` (no errors allowed)
-3. **Jest** -- `npm test` (all unit tests must pass)
-4. **Build** -- `npm run build` (static export must succeed)
-5. **Playwright** -- `npm run test:e2e` (E2E tests must pass)
+1. **Prettier** -- `pnpm run format:check` (formatting must pass)
+2. **ESLint** -- `pnpm run lint` (no errors allowed)
+3. **Jest** -- `pnpm test` (all unit tests must pass)
+4. **Build** -- `pnpm run build` (static export must succeed)
+5. **Playwright** -- `pnpm run test:e2e` (E2E tests must pass)
 6. **CodeQL** -- Static analysis and security scanning via GitHub code scanning **default setup** (no `codeql.yml` workflow; an advanced workflow would conflict with default setup)
 
 PRs cannot merge until all checks pass.

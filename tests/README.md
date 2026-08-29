@@ -10,16 +10,16 @@ This directory contains end-to-end (E2E) tests that validate the website functio
 
 ```bash
 # Build the site first
-npm run build
+pnpm run build
 
 # Run tests
-npm run test:e2e
+pnpm run test:e2e
 
 # Run tests with UI (interactive)
-npm run test:e2e:ui
+pnpm run test:e2e:ui
 
 # Run tests in headed mode (see browser)
-npm run test:e2e:headed
+pnpm run test:e2e:headed
 ```
 
 ## Customizing Tests for Your Organization
@@ -154,7 +154,7 @@ These tests use values from `test.config.ts`:
 2. **CI Environment**: Tests run sequentially for stability
 3. **Targeted Testing**: Run specific test files during development:
    ```bash
-   npx playwright test mission-video.spec.ts
+   pnpm exec playwright test mission-video.spec.ts
    ```
 
 ## Benefits of This Approach
@@ -200,8 +200,8 @@ These tests use values from `test.config.ts`:
 
 If tests continue to fail after updating the configuration:
 
-1. Run tests with UI to see what's happening: `npm run test:e2e:ui`
-2. Check the Playwright HTML report: `npx playwright show-report`
+1. Run tests with UI to see what's happening: `pnpm run test:e2e:ui`
+2. Check the Playwright HTML report: `pnpm exec playwright show-report`
 3. Review the test file to understand what it's checking
 4. Verify your page content matches the test expectations
 
@@ -298,8 +298,8 @@ export const testConfig = {
 After updating the configuration file, run the tests:
 
 ```bash
-npm run build
-npm run test:e2e
+pnpm run build
+pnpm run test:e2e
 ```
 
 All 62 tests should pass with your customized content!

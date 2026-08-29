@@ -134,7 +134,7 @@ The project has **1 React Hooks ESLint warning** remaining after recent refactor
 
 ### Current Status (December 2025)
 
-The project has **4 low severity vulnerabilities** identified by npm audit:
+The project has **4 low severity vulnerabilities** identified by pnpm audit:
 
 #### 1. tmp Package Vulnerabilities (4 low severity)
 
@@ -151,7 +151,7 @@ The project has **4 low severity vulnerabilities** identified by npm audit:
 
 **Available Fixes:**
 
-- `npm audit fix --force` - May introduce breaking changes to Lighthouse CI
+- `pnpm audit --fix` - May introduce breaking changes to Lighthouse CI
 - Wait for Lighthouse CI to update their dependencies
 
 **Current Decision:** Monitor via Dependabot, low priority to fix manually
@@ -185,16 +185,16 @@ This critical vulnerability in Next.js has been resolved by upgrading to version
 
 ```bash
 # Check for vulnerabilities
-npm audit
+pnpm audit
 
 # View details
-npm audit --json
+pnpm audit --json
 
-# Attempt automatic fix (use with caution)
-npm audit fix
+# Attempt automatic fix — writes overrides to package.json (use with caution)
+pnpm audit --fix
 
-# Fix including breaking changes (test thoroughly first!)
-npm audit fix --force
+# Review the added overrides, then apply them
+pnpm install
 ```
 
 **Response Protocol:**
@@ -251,7 +251,7 @@ These are internal code quality improvements that don't affect user experience:
 
 - **TypeScript Strict Mode**: Enable additional strict flags for better type safety
 - **Import Organization**: Add eslint-plugin-import for consistent import sorting
-- **npm audit CI Integration**: Add automated npm audit checks with failure threshold
+- **pnpm audit CI Integration**: Add automated pnpm audit checks with failure threshold
 
 **Priority:** Low  
 **Impact:** Improves code maintainability and catches bugs earlier

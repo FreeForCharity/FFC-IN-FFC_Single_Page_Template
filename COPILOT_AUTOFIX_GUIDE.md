@@ -97,15 +97,15 @@ Repository Actions workflows, plus GitHub-managed CodeQL code scanning (default 
 
 ```bash
 # Build Status
-✅ npm run build        # ~30 seconds, 12 pages generated
+✅ pnpm run build        # ~30 seconds, 12 pages generated
 
 # Code Quality
-✅ npm run lint         # 16 expected warnings (documented as acceptable)
-✅ npm run format:check # Formatting verified
+✅ pnpm run lint         # 16 expected warnings (documented as acceptable)
+✅ pnpm run format:check # Formatting verified
 
 # Testing
-✅ npm test            # 26 unit tests passing
-✅ npm run test:e2e    # E2E tests passing (after build)
+✅ pnpm test            # 26 unit tests passing
+✅ pnpm run test:e2e    # E2E tests passing (after build)
 ```
 
 ## How to Address Copilot Suggestions
