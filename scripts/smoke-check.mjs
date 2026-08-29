@@ -203,7 +203,14 @@ async function smoke() {
           // subpath doubled the path and 404'd a healthy deploy. The #319
           // case — a custom-domain deploy advertising /repo/... — still
           // resolves to a real 404 under this rule and stays caught.
-          const abs = new URL(icon.src, `${BASE}${manifestPath}`).toString()
+          // A malformed src must fail its own check line, not crash the run.
+          let abs
+          try {
+            abs = new URL(icon.src, `${BASE}${manifestPath}`).toString()
+          } catch {
+            record(`manifest icon ${icon.src} resolves`, false, 'src is not a resolvable URL')
+            continue
+          }
           if (!abs.startsWith(`${BASE}/`) && abs !== BASE) {
             record(
               `manifest icon ${icon.src} resolves`,
