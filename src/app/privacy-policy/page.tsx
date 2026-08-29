@@ -345,9 +345,10 @@ export default function PrivacyPolicy() {
             <a href="mailto:clarkemoyer@freeforcharity.org" className="text-[#0062CC] underline">
               clarkemoyer@freeforcharity.org
             </a>{' '}
-            to exercise any of these rights; we will respond within the time limits the GDPR sets.
-            You also have the right to lodge a complaint with your national data protection
-            supervisory authority (in the UK, the Information Commissioner&apos;s Office).
+            or 520-222-8104 to exercise any of these rights; we will respond within the time limits
+            the GDPR sets. You also have the right to lodge a complaint with your national data
+            protection supervisory authority (in the UK, the Information Commissioner&apos;s
+            Office).
           </p>
 
           {/* Section 9 */}
@@ -388,10 +389,10 @@ export default function PrivacyPolicy() {
             <strong>Exercising your rights.</strong> Submit a request to{' '}
             <a href="mailto:clarkemoyer@freeforcharity.org" className="text-[#0062CC] underline">
               clarkemoyer@freeforcharity.org
-            </a>
-            . We will verify your request using information associated with your interactions with
-            us, and you may use an authorized agent to submit a request on your behalf. We will
-            respond within the timeframes California law requires.
+            </a>{' '}
+            or 520-222-8104. We will verify your request using information associated with your
+            interactions with us, and you may use an authorized agent to submit a request on your
+            behalf. We will respond within the timeframes California law requires.
           </p>
 
           {/* Section 10 */}
