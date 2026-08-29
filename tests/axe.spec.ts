@@ -28,21 +28,21 @@ test.describe('axe-core homepage guardrail', () => {
   test('homepage has no new serious or critical violations', async ({ page }) => {
     await page.goto('/')
     // Don't wait for 'networkidle': the homepage embeds always-on third-party
-    // resources (GTM, Zeffy, SociableKit, Google Maps) that keep the network
-    // busy, so networkidle never settles and the test times out. Instead wait
-    // for the DOM and for the footer — the last major landmark — to render,
-    // which means the page has hydrated and is ready for an a11y scan.
+    // resources (GTM, Zeffy, Google Maps) that keep the network busy, so
+    // networkidle never settles and the test times out. Instead wait for the
+    // DOM and for the footer — the last major landmark — to render, which
+    // means the page has hydrated and is ready for an a11y scan.
     await page.waitForLoadState('domcontentloaded')
     await page.locator('footer').waitFor({ state: 'visible' })
 
     const results = await new AxeBuilder({ page })
       .include('body')
-      // Exclude third-party embed iframes (Zeffy donation form, SociableKit,
-      // Google Maps, Microsoft Forms, GTM). axe descends into iframes, but
-      // their internal markup is owned by those vendors — e.g. Zeffy's own
-      // form ships `focusable-no-name` / `nested-interactive` violations we
-      // can't fix. This guardrail exists to catch regressions in OUR markup,
-      // so scope it to the top document.
+      // Exclude third-party embed iframes (Zeffy donation form, Google Maps,
+      // Microsoft Forms, GTM). axe descends into iframes, but their internal
+      // markup is owned by those vendors — e.g. Zeffy's own form ships
+      // `focusable-no-name` / `nested-interactive` violations we can't fix.
+      // This guardrail exists to catch regressions in OUR markup, so scope
+      // it to the top document.
       .exclude('iframe')
       .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'])
       .analyze()

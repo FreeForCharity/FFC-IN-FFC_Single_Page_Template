@@ -1,5 +1,7 @@
 # Facebook Events Integration - Setup Guide
 
+> ⚠️ **Superseded.** This document describes the original Facebook-only / SociableKit iframe approach. The events section now aggregates Google Calendar, Microsoft 365, and Facebook events. See **[EVENTS_SETUP.md](./EVENTS_SETUP.md)** for the current setup guide. This file is kept for historical context.
+
 **Last Updated:** December 9, 2024
 
 This guide provides step-by-step instructions for implementing the Facebook Events integration on the Free For Charity homepage. Follow this guide after reviewing `FACEBOOK_EVENTS_REQUIREMENTS.md`.

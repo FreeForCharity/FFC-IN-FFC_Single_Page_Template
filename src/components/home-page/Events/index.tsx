@@ -1,64 +1,135 @@
 import React from 'react'
+import snapshot from '@/data/events.generated.json'
 import { siteConfig } from '@/lib/site.config'
+import type { EventsSnapshot, UnifiedEvent } from '@/lib/events/types'
+import { groupByMonth } from '@/lib/events/grouping'
+import { safeHttpUrl, safeHttpsImageUrl } from '@/lib/events/safeUrl'
+import { safeJsonLdSerialize } from '@/lib/events/jsonLd'
+import { eventsSectionVisible } from '@/lib/events/visibility'
+import EventCard from './EventCard'
+import EmptyState from './EmptyState'
+
+function eventJsonLd(event: UnifiedEvent) {
+  const url = safeHttpUrl(event.url)
+  const image = safeHttpsImageUrl(event.imageUrl)
+  const online = event.location === 'Online event'
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'Event',
+    name: event.title,
+    description: event.description,
+    startDate: event.startUtc,
+    endDate: event.endUtc,
+    eventAttendanceMode: online
+      ? 'https://schema.org/OnlineEventAttendanceMode'
+      : 'https://schema.org/OfflineEventAttendanceMode',
+    eventStatus: 'https://schema.org/EventScheduled',
+    // An online event must not advertise a physical Place named "Online
+    // event"; schema.org models it as a VirtualLocation carrying the join
+    // URL (omitted entirely when the event has no safe URL).
+    ...(online
+      ? url && { location: { '@type': 'VirtualLocation', url } }
+      : event.location && { location: { '@type': 'Place', name: event.location } }),
+    ...(url && { url }),
+    ...(image && { image }),
+  }
+}
 
 const Events = () => {
-  if (
-    !siteConfig.sections.showEvents ||
-    !siteConfig.integrations.sociableKitEventsWidgetUrl.trim()
-  ) {
-    return null
-  }
+  // Self-hide (FFC section-visibility convention): render nothing when the
+  // section is flagged off, or when no calendar source is configured and the
+  // committed snapshot is empty. See src/lib/events/visibility.ts.
+  if (!eventsSectionVisible()) return null
+
+  const data = snapshot as EventsSnapshot
+  const buckets = groupByMonth(data.events ?? [])
+  const hasEvents = buckets.length > 0
+  const updatedAt = data.updatedAt ? new Date(data.updatedAt) : null
+  // Public page link is per-charity config, never hardcoded; whitespace-only
+  // behaves like empty (link self-hides), matching the other sections.
+  const facebookPageUrl = siteConfig.integrations.eventsFacebookPageUrl.trim()
 
   return (
-    <div id="events" className="py-[52px]">
+    <section id="events" className="py-[52px]" aria-label="Upcoming Events">
       <div className="w-[90%] mx-auto max-w-[1280px]">
-        <h2 className="font-[400] text-[40px] lg:text-[48px] leading-[100%] tracking-[0] text-center mx-auto mb-[50px] faustina-font">
+        <h2 className="font-[400] text-[40px] lg:text-[48px] leading-[100%] tracking-[0] text-center mx-auto mb-[20px] faustina-font">
           Upcoming Events
         </h2>
 
-        <div className="text-center mb-8">
-          <p className="text-[20px] lg:text-[25px] font-[500] lato-font">
-            Join us for upcoming volunteer opportunities, training sessions, and community events.
-          </p>
-        </div>
+        <p className="text-center mx-auto mb-[50px] max-w-3xl text-[18px] lg:text-[20px] font-[400] text-gray-700 lato-font">
+          Join us for upcoming volunteer opportunities, training sessions, and community events
+          aggregated from our Google Calendar, Microsoft 365 calendar, and Facebook page.
+        </p>
 
-        {/* SociableKit Facebook Events Widget */}
-        <div className="flex justify-center">
-          <div className="relative w-full max-w-[1200px]">
-            {/* CSS-only loading placeholder shown until the lazy iframe loads. */}
-            <div
-              className="absolute inset-0 animate-pulse bg-gray-100 rounded-lg pointer-events-none motion-reduce:animate-none"
-              aria-hidden="true"
-            />
-            <iframe
-              src={siteConfig.integrations.sociableKitEventsWidgetUrl}
-              frameBorder={0}
-              width="100%"
-              height="1000"
-              title="Facebook Events"
-              loading="lazy"
-              className="relative rounded-lg"
-              sandbox="allow-scripts allow-same-origin"
-            ></iframe>
+        {hasEvents ? (
+          <div className="space-y-12">
+            {buckets.map((bucket) => (
+              <div key={bucket.monthKey}>
+                <h3 className="mb-6 border-b border-gray-200 pb-2 text-2xl font-semibold text-[#2B627B] lato-font">
+                  {bucket.monthLabel}
+                </h3>
+                <ul
+                  className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3"
+                  role="list"
+                  data-testid="events-grid"
+                >
+                  {bucket.events.map((event) => (
+                    <li key={event.id} className="h-full">
+                      <EventCard event={event} />
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ))}
           </div>
-        </div>
+        ) : (
+          <EmptyState />
+        )}
 
-        <div className="text-center mt-8">
-          <p className="text-[18px] font-[400] text-gray-600 lato-font">
-            <a
-              href="https://www.facebook.com/freeforcharity"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-[#227AB5] underline"
-            >
-              View all events on Facebook
-            </a>
-          </p>
-        </div>
+        {hasEvents && (
+          <script
+            type="application/ld+json"
+            // Event JSON-LD for Google rich results. Static at build time,
+            // but titles/descriptions/locations come from upstream calendars
+            // and Facebook — safeJsonLdSerialize escapes `<` so a value
+            // containing </script> cannot break out of this element.
+            dangerouslySetInnerHTML={{
+              __html: safeJsonLdSerialize((data.events ?? []).map(eventJsonLd).filter(Boolean)),
+            }}
+          />
+        )}
+
+        <p className="text-center mt-10 text-sm text-gray-500 lato-font">
+          {updatedAt ? (
+            <>
+              Events last refreshed{' '}
+              <time dateTime={updatedAt.toISOString()}>
+                {updatedAt.toLocaleString('en-US', { timeZone: 'UTC' })} UTC
+              </time>
+              .
+            </>
+          ) : (
+            <>Events are aggregated automatically from our calendar sources.</>
+          )}
+          {facebookPageUrl && (
+            <>
+              {' '}
+              <a
+                href={facebookPageUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="View all events on Facebook (opens in new tab)"
+                className="text-[#2B627B] underline hover:no-underline focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[#2B627B]"
+              >
+                View all events on Facebook
+              </a>
+            </>
+          )}
+        </p>
       </div>
 
       <div className="w-[95%] mt-[50px] mx-auto border border-[#2B627B]"></div>
-    </div>
+    </section>
   )
 }
 

@@ -188,6 +188,36 @@ export default function PrivacyPolicy() {
             </li>
           </ul>
 
+          <h3 className="text-[18px] leading-[26px] font-[700] text-[#333] mt-[20px] mb-[10px]">
+            Events Aggregation
+          </h3>
+          <p className="text-[14px] text-[#666] pb-[10px] leading-[24px] font-[500]">
+            The &quot;Upcoming Events&quot; section aggregates events from our Google Calendar,
+            Microsoft 365 calendar, and Facebook page. These sources are fetched server-side at
+            build time (every six hours via an automated workflow) and stored as a static JSON
+            snapshot in our public source repository. As a result:
+          </p>
+          <ul className="list-inside list-disc space-y-[4px] pb-[1em]">
+            <li className="text-[14px] text-[#666] leading-[24px] font-[500]">
+              No third-party cookies, scripts, or tracking pixels are loaded by the events section
+              when you view our site.
+            </li>
+            <li className="text-[14px] text-[#666] leading-[24px] font-[500]">
+              We never send your IP address, browser fingerprint, or any other identifier to Google,
+              Microsoft, or Meta as part of displaying events.
+            </li>
+            <li className="text-[14px] text-[#666] leading-[24px] font-[500]">
+              When you click &quot;View on Facebook/Google/Microsoft&quot; or &quot;Add to
+              calendar&quot;, you leave our site and the destination&apos;s own privacy policy
+              applies.
+            </li>
+            <li className="text-[14px] text-[#666] leading-[24px] font-[500]">
+              If an event is deleted at the source, it is removed from our snapshot at the next
+              scheduled refresh (up to six hours). For immediate deletion of personal data shown on
+              an event, contact us at the address below.
+            </li>
+          </ul>
+
           {/* Section 4 */}
           <h2 className="text-[26px] leading-[26px] font-[700] text-[#333] mb-[10px]">
             <strong>4. How We Use Your Information</strong>

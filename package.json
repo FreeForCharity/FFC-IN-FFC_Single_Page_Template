@@ -4,6 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev --turbopack",
+    "prebuild": "node scripts/fetch-events.mjs",
     "build": "next build",
     "analyze": "ANALYZE=true next build --webpack",
     "preview": "npx serve -s out -l 3000",

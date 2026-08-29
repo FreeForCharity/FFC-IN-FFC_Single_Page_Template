@@ -26,12 +26,16 @@ describe('nav links respect section visibility', () => {
   const original = {
     showPrograms: siteConfig.sections.showPrograms,
     showEvents: siteConfig.sections.showEvents,
-    widgetUrl: siteConfig.integrations.sociableKitEventsWidgetUrl,
+    sourcesConfigured: process.env.EVENTS_SOURCES_CONFIGURED,
   }
   afterEach(() => {
     siteConfig.sections.showPrograms = original.showPrograms
     siteConfig.sections.showEvents = original.showEvents
-    siteConfig.integrations.sociableKitEventsWidgetUrl = original.widgetUrl
+    if (original.sourcesConfigured === undefined) {
+      delete process.env.EVENTS_SOURCES_CONFIGURED
+    } else {
+      process.env.EVENTS_SOURCES_CONFIGURED = original.sourcesConfigured
+    }
   })
 
   it('Header drops Team (empty data) and Programs (flag off) links', () => {
@@ -52,16 +56,28 @@ describe('nav links respect section visibility', () => {
   it('Footer drops Team, Programs, and Events links when hidden', () => {
     siteConfig.sections.showPrograms = false
     siteConfig.sections.showEvents = false
+    // Even with a configured source the flag alone must drop the link.
+    process.env.EVENTS_SOURCES_CONFIGURED = 'true'
     render(<Footer />)
     expect(screen.queryAllByText('Team')).toHaveLength(0)
     expect(screen.queryAllByText('Programs')).toHaveLength(0)
     expect(screen.queryAllByText('Events')).toHaveLength(0)
   })
 
-  it('Footer drops Events when the widget URL is empty even if the flag is on', () => {
+  it('Footer drops Events when no sources are configured even if the flag is on', () => {
+    // The template default: flag on, no EVENTS_* sources wired up, and the
+    // committed snapshot empty — the section self-hides, so the quick-link
+    // must go with it (dead-anchor guard).
     siteConfig.sections.showEvents = true
-    siteConfig.integrations.sociableKitEventsWidgetUrl = ''
+    delete process.env.EVENTS_SOURCES_CONFIGURED
     render(<Footer />)
     expect(screen.queryAllByText('Events')).toHaveLength(0)
+  })
+
+  it('Footer keeps Events when the flag is on and a source is configured', () => {
+    siteConfig.sections.showEvents = true
+    process.env.EVENTS_SOURCES_CONFIGURED = 'true'
+    render(<Footer />)
+    expect(screen.queryAllByText('Events').length).toBeGreaterThan(0)
   })
 })

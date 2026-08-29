@@ -44,13 +44,13 @@ export const testConfig = {
     sectionId: 'events',
     heading: 'Upcoming Events',
     footerLinkText: 'Events',
-    iframeTitle: 'Facebook Events',
     facebookLinkText: 'View all events on Facebook',
-    facebookUrl: 'https://www.facebook.com/freeforcharity',
-    descriptionText: 'volunteer opportunities',
-    // Sourced from siteConfig so the expected iframe src always matches what the
+    // Sourced from siteConfig so the expected link always matches what the
     // Events component renders (single source of truth).
-    widgetUrl: siteConfig.integrations.sociableKitEventsWidgetUrl,
+    facebookUrl: siteConfig.integrations.eventsFacebookPageUrl,
+    descriptionText: 'volunteer opportunities',
+    emptyStateHeading: 'No upcoming events right now',
+    emptyStateButton: 'Follow us on Facebook',
   },
 
   /**

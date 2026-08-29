@@ -154,15 +154,15 @@ Encourage people to volunteer with your charity.
 
 Display upcoming events for your charity.
 
-| Section | Variable                   | Current Free For Charity Content                                                         | Your Content                                                              |
-| ------- | -------------------------- | ---------------------------------------------------------------------------------------- | ------------------------------------------------------------------------- |
-| Events  | Section Heading            | "Upcoming Events"                                                                        |                                                                           |
-| Events  | Description Text           | "Join us for upcoming volunteer opportunities, training sessions, and community events." | _(Brief description of your events)_                                      |
-| Events  | Facebook Events Widget URL | "https://widgets.sociablekit.com/facebook-page-events/iframe/25631700"                   | _(Your SociableKit Facebook events widget URL, or leave blank to remove)_ |
-| Events  | Facebook Page Link Text    | "View all events on Facebook"                                                            |                                                                           |
-| Events  | Facebook Page Link URL     | "https://www.facebook.com/freeforcharity"                                                | _(Link to your Facebook page)_                                            |
+| Section | Variable                | Current Free For Charity Content                                                                | Your Content                                                     |
+| ------- | ----------------------- | ----------------------------------------------------------------------------------------------- | ---------------------------------------------------------------- |
+| Events  | Section Heading         | "Upcoming Events"                                                                               |                                                                  |
+| Events  | Description Text        | "Join us for upcoming volunteer opportunities, training sessions, and community events."        | _(Brief description of your events)_                             |
+| Events  | Calendar sources        | _(none committed — set the `EVENTS_*` GitHub Secrets per [EVENTS_SETUP.md](./EVENTS_SETUP.md))_ | _(Your Google/Microsoft ICS feeds and/or Facebook page + token)_ |
+| Events  | Facebook Page Link Text | "View all events on Facebook"                                                                   |                                                                  |
+| Events  | Facebook Page Link URL  | "https://www.facebook.com/freeforcharity"                                                       | _(Link to your Facebook page)_                                   |
 
-_Note: If you don't use Facebook events, you can replace this section with a custom event list or calendar._
+_Note: The section self-hides when no calendar sources are configured and the committed snapshot is empty; set `siteConfig.sections.showEvents = false` to turn it off outright. The Facebook page link comes from `siteConfig.integrations.eventsFacebookPageUrl`._
 
 ---
 

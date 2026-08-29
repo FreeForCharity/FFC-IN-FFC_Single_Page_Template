@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test'
+import { test, expect, type Page } from '@playwright/test'
 import { testConfig } from './test.config'
 
 /**
@@ -13,9 +13,27 @@ import { testConfig } from './test.config'
  * Note: Test expectations use values from test.config.ts for easy customization
  */
 
+/**
+ * GTM is injected via Next.js `<Script strategy="lazyOnload">`, which appends
+ * the inline bootstrap during browser idle *after* the load event. Asserting
+ * immediately after `page.goto` therefore races the injection and flakes
+ * (this also fails on main). Wait for the element and dataLayer first. The
+ * inline snippet sets `window.dataLayer` synchronously when it runs, so this
+ * resolves without the external gtm.js needing to load over the network.
+ */
+async function waitForGtm(page: Page): Promise<void> {
+  await page.waitForSelector('script#gtm-script', { state: 'attached', timeout: 15000 })
+  await page.waitForFunction(
+    () => Array.isArray((window as unknown as { dataLayer?: unknown[] }).dataLayer),
+    undefined,
+    { timeout: 15000 }
+  )
+}
+
 test.describe('Google Tag Manager Integration', () => {
   test('should initialize dataLayer on page load', async ({ page }) => {
     await page.goto('/')
+    await waitForGtm(page)
 
     // GTM loads via next/script (lazyOnload), so dataLayer appears after the
     // load event — wait for it rather than reading immediately (avoids a race).
@@ -34,6 +52,7 @@ test.describe('Google Tag Manager Integration', () => {
 
   test('should load GTM script with correct ID', async ({ page }) => {
     await page.goto('/')
+    await waitForGtm(page)
 
     // The GTM snippet is injected by next/script (lazyOnload) after load, so
     // wait for it to attach instead of counting immediately (avoids a race).
@@ -58,6 +77,7 @@ test.describe('Google Tag Manager Integration', () => {
 
   test('should push events to dataLayer', async ({ page }) => {
     await page.goto('/')
+    await waitForGtm(page)
 
     // dataLayer is initialized by the lazyOnload GTM snippet — wait for it.
     await page.waitForFunction(() => typeof window.dataLayer !== 'undefined', null, {
@@ -78,6 +98,7 @@ test.describe('Google Tag Manager Integration', () => {
 
   test('should load GTM script after page interaction', async ({ page }) => {
     await page.goto('/')
+    await waitForGtm(page)
 
     // Next.js Script (lazyOnload) defers the GTM snippet + dataLayer until
     // after the page is interactive — wait for both before asserting.
@@ -136,6 +157,7 @@ test.describe('Google Tag Manager Configuration', () => {
     // The GTM_ID is configured in the component
 
     await page.goto('/')
+    await waitForGtm(page)
 
     // GTM snippet is injected by next/script (lazyOnload) after load — wait for
     // it to attach rather than counting immediately (avoids a race).

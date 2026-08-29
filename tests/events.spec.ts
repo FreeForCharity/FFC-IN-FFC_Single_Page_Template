@@ -1,187 +1,140 @@
-import { test, expect } from '@playwright/test'
+import { test, expect, type Page } from '@playwright/test'
 import { testConfig } from './test.config'
 
 /**
  * Events Section Tests
  *
- * These tests verify that:
- * 1. The Events section renders correctly on the homepage
- * 2. The iframe loads with proper sandbox attributes
- * 3. The section is accessible via the #events anchor
- * 4. The Facebook link works correctly
- * 5. The component is keyboard accessible
+ * Covers the unified Events section that aggregates Google Calendar,
+ * Microsoft 365, and Facebook events into a single branded card grid.
  *
- * Note: Test expectations use values from test.config.ts for easy customization
+ * The section follows the FFC self-hide convention: it renders nothing when
+ * `siteConfig.sections.showEvents` is off, or when no EVENTS_* calendar
+ * source was configured at build time and the committed snapshot is empty.
+ * The default template build has no sources wired up, so the hidden path is
+ * what this repo's CI exercises; a charity build with sources configured
+ * exercises the rendered path. Both are covered below — the inapplicable
+ * describe block skips itself against the build under test.
  */
 
+async function eventsSectionCount(page: Page): Promise<number> {
+  await page.goto('/')
+  await page.waitForLoadState('domcontentloaded')
+  return page.locator(`#${testConfig.events.sectionId}`).count()
+}
+
 test.describe('Events Section', () => {
-  test('should render the Events section on homepage', async ({ page }) => {
-    // Navigate to the homepage
+  test('never embeds a SociableKit iframe', async ({ page }) => {
     await page.goto('/')
-
-    // Verify Events section exists with correct ID
-    const eventsSection = page.locator(`#${testConfig.events.sectionId}`)
-    await expect(eventsSection).toBeVisible()
-
-    // Verify section heading is present
-    const heading = eventsSection.locator('h2')
-    await expect(heading).toBeVisible()
-    await expect(heading).toContainText(testConfig.events.heading)
+    const sociableKitFrames = page.locator('iframe[src*="sociablekit"]')
+    await expect(sociableKitFrames).toHaveCount(0)
   })
 
-  test('should load iframe with proper sandbox attributes', async ({ page }) => {
-    // Navigate to the homepage
-    await page.goto('/')
-
-    // Locate the Events iframe
-    const eventsIframe = page.locator(
-      `#${testConfig.events.sectionId} iframe[title="${testConfig.events.iframeTitle}"]`
-    )
-    await expect(eventsIframe).toBeVisible()
-
-    // Verify iframe has correct src (sourced from siteConfig via test.config)
-    await expect(eventsIframe).toHaveAttribute('src', testConfig.events.widgetUrl)
-
-    // Verify iframe has sandbox attribute for security
-    const sandboxAttr = await eventsIframe.getAttribute('sandbox')
-    expect(sandboxAttr).toBeTruthy()
-    expect(sandboxAttr).toContain('allow-scripts')
-    expect(sandboxAttr).toContain('allow-same-origin')
-
-    // Verify iframe has lazy loading
-    await expect(eventsIframe).toHaveAttribute('loading', 'lazy')
-
-    // Verify iframe has accessible title
-    await expect(eventsIframe).toHaveAttribute('title', testConfig.events.iframeTitle)
+  test('footer Events link presence matches section presence (no dead anchors)', async ({
+    page,
+  }) => {
+    const sectionCount = await eventsSectionCount(page)
+    const footerLink = page.locator(`footer a[href="/#${testConfig.events.sectionId}"]`)
+    await expect(footerLink).toHaveCount(sectionCount > 0 ? 1 : 0)
   })
 
-  test('should be accessible via #events anchor link', async ({ page }) => {
-    // Navigate directly to the events section via anchor
-    await page.goto(`/#${testConfig.events.sectionId}`)
-
-    // Wait for page to load (use domcontentloaded instead of networkidle)
-    await page.waitForLoadState('domcontentloaded')
-
-    // Verify Events section is visible
-    const eventsSection = page.locator(`#${testConfig.events.sectionId}`)
-    await expect(eventsSection).toBeVisible()
-
-    // Section should be at least partially visible
-    const boundingBox = await eventsSection.boundingBox()
-    expect(boundingBox).toBeTruthy()
-  })
-
-  test('should have working Facebook link', async ({ page }) => {
-    // Navigate to the homepage
-    await page.goto('/')
-
-    // Locate the Facebook link in Events section
-    const facebookLink = page.locator(
-      `#${testConfig.events.sectionId} a[href*="${testConfig.events.facebookUrl}"]`
-    )
-    await expect(facebookLink).toBeVisible()
-
-    // Verify link text
-    await expect(facebookLink).toContainText(testConfig.events.facebookLinkText)
-
-    // Verify link opens in new tab
-    await expect(facebookLink).toHaveAttribute('target', '_blank')
-
-    // Verify link has security attributes
-    await expect(facebookLink).toHaveAttribute('rel', 'noopener noreferrer')
-
-    // Verify link href
-    await expect(facebookLink).toHaveAttribute('href', testConfig.events.facebookUrl)
-  })
-
-  test('should be keyboard accessible', async ({ page }) => {
-    // Navigate to the homepage
-    await page.goto('/')
-
-    // Scroll to Events section
-    await page.locator(`#${testConfig.events.sectionId}`).scrollIntoViewIfNeeded()
-
-    // Tab to the Facebook link in Events section
-    const facebookLink = page.locator(
-      `#${testConfig.events.sectionId} a[href*="${testConfig.events.facebookUrl}"]`
-    )
-
-    // Focus the link using keyboard navigation
-    await facebookLink.focus()
-
-    // Verify the link is focused
-    await expect(facebookLink).toBeFocused()
-
-    // Verify pressing Enter would activate the link (we won't actually click to avoid navigation)
-    // Just verify the link is interactive
-    const isClickable = await facebookLink.evaluate((el) => {
-      return el instanceof HTMLAnchorElement && el.href.length > 0
+  test.describe('when self-hidden (default template build: no sources, empty snapshot)', () => {
+    test.beforeEach(async ({ page }) => {
+      const count = await eventsSectionCount(page)
+      test.skip(count > 0, 'Events section is rendered in this build')
     })
-    expect(isClickable).toBe(true)
+
+    test('renders no #events section and no empty-state placeholder', async ({ page }) => {
+      await expect(page.locator(`#${testConfig.events.sectionId}`)).toHaveCount(0)
+      await expect(page.locator('[data-testid="events-empty-state"]')).toHaveCount(0)
+      await expect(page.locator('[data-testid="events-grid"]')).toHaveCount(0)
+    })
   })
 
-  test('should have proper section structure and styling', async ({ page }) => {
-    // Navigate to the homepage
-    await page.goto('/')
+  test.describe('when rendered (a calendar source is configured or the snapshot has events)', () => {
+    test.beforeEach(async ({ page }) => {
+      const count = await eventsSectionCount(page)
+      test.skip(count === 0, 'Events section self-hides in this build')
+    })
 
-    const eventsSection = page.locator(`#${testConfig.events.sectionId}`)
+    test('renders the Events section heading', async ({ page }) => {
+      const section = page.locator(`#${testConfig.events.sectionId}`)
+      await expect(section).toBeVisible()
+      // The page-level h1 lives in the Hero; Events section heading is h2.
+      const heading = section.getByRole('heading', {
+        level: 2,
+        name: testConfig.events.heading,
+      })
+      await expect(heading).toBeVisible()
+    })
 
-    // Verify section has proper padding class
-    const classes = await eventsSection.getAttribute('class')
-    expect(classes).toContain('py-[52px]')
+    test('section is reachable via the #events anchor', async ({ page }) => {
+      await page.goto(`/#${testConfig.events.sectionId}`)
+      await page.waitForLoadState('domcontentloaded')
+      const section = page.locator(`#${testConfig.events.sectionId}`)
+      await expect(section).toBeVisible()
+      const box = await section.boundingBox()
+      expect(box).toBeTruthy()
+    })
 
-    // Verify description text is present
-    const description = eventsSection.locator('p').first()
-    await expect(description).toBeVisible()
-    await expect(description).toContainText(testConfig.events.descriptionText)
+    test('renders either an event grid or the empty state', async ({ page }) => {
+      const section = page.locator(`#${testConfig.events.sectionId}`)
+      await section.scrollIntoViewIfNeeded()
 
-    // Verify section has separator line at bottom
-    const separator = eventsSection.locator('div.border')
-    await expect(separator).toBeVisible()
-  })
+      const grid = section.locator('[data-testid="events-grid"]').first()
+      const emptyState = section.locator('[data-testid="events-empty-state"]')
 
-  test('should appear in footer navigation', async ({ page }) => {
-    // Navigate to the homepage
-    await page.goto('/')
+      const hasGrid = (await grid.count()) > 0
+      if (hasGrid) {
+        const cards = section.locator('article')
+        const count = await cards.count()
+        expect(count).toBeGreaterThan(0)
+        await expect(cards.first().getByRole('button', { name: /add to calendar/i })).toBeVisible()
+      } else {
+        await expect(emptyState).toBeVisible()
+        await expect(
+          emptyState.getByRole('heading', { name: testConfig.events.emptyStateHeading })
+        ).toBeVisible()
+        await expect(
+          emptyState.getByRole('link', { name: testConfig.events.emptyStateButton })
+        ).toBeVisible()
+      }
+    })
 
-    // Verify Events link exists in footer
-    const footerEventsLink = page.locator(`footer a[href="/#${testConfig.events.sectionId}"]`)
-    await expect(footerEventsLink).toBeVisible()
-    await expect(footerEventsLink).toContainText(testConfig.events.footerLinkText)
+    test('exposes a working Facebook link', async ({ page }) => {
+      const section = page.locator(`#${testConfig.events.sectionId}`)
+      const facebookLink = section.locator(`a[href*="${testConfig.events.facebookUrl}"]`).first()
+      await expect(facebookLink).toBeVisible()
+      await expect(facebookLink).toHaveAttribute('target', '_blank')
+      const rel = await facebookLink.getAttribute('rel')
+      expect(rel ?? '').toContain('noopener')
+    })
 
-    // Click the footer link and verify it navigates to Events section
-    await footerEventsLink.click()
+    test('is keyboard accessible', async ({ page }) => {
+      const section = page.locator(`#${testConfig.events.sectionId}`)
+      await section.scrollIntoViewIfNeeded()
+      const link = section.locator('a').first()
+      await link.focus()
+      await expect(link).toBeFocused()
+    })
 
-    // Wait for navigation/scroll
-    await page.waitForTimeout(500)
+    test('appears in footer navigation and scrolls to section', async ({ page }) => {
+      const footerLink = page.locator(`footer a[href="/#${testConfig.events.sectionId}"]`)
+      await expect(footerLink).toBeVisible()
+      await expect(footerLink).toContainText(testConfig.events.footerLinkText)
+      await footerLink.click()
+      await page.waitForTimeout(500)
+      await expect(page.locator(`#${testConfig.events.sectionId}`)).toBeVisible()
+    })
 
-    // Verify Events section is visible after clicking footer link
-    const eventsSection = page.locator(`#${testConfig.events.sectionId}`)
-    await expect(eventsSection).toBeVisible()
-  })
-
-  test('should load on mobile viewport', async ({ page }) => {
-    // Set mobile viewport
-    await page.setViewportSize({ width: 375, height: 667 })
-
-    // Navigate to the homepage
-    await page.goto('/')
-
-    // Scroll to Events section
-    await page.locator(`#${testConfig.events.sectionId}`).scrollIntoViewIfNeeded()
-
-    // Verify Events section is visible on mobile
-    const eventsSection = page.locator(`#${testConfig.events.sectionId}`)
-    await expect(eventsSection).toBeVisible()
-
-    // Verify iframe is visible on mobile
-    const eventsIframe = page.locator(
-      `#${testConfig.events.sectionId} iframe[title="${testConfig.events.iframeTitle}"]`
-    )
-    await expect(eventsIframe).toBeVisible()
-
-    // Verify heading is visible on mobile
-    const heading = eventsSection.locator('h2')
-    await expect(heading).toBeVisible()
+    test('renders on a mobile viewport', async ({ page }) => {
+      await page.setViewportSize({ width: 375, height: 667 })
+      await page.goto('/')
+      const section = page.locator(`#${testConfig.events.sectionId}`)
+      await section.scrollIntoViewIfNeeded()
+      await expect(section).toBeVisible()
+      await expect(
+        section.getByRole('heading', { level: 2, name: testConfig.events.heading })
+      ).toBeVisible()
+    })
   })
 })
