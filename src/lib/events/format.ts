@@ -5,43 +5,61 @@ interface FormatOptions {
   timeZone?: string
 }
 
+// Intl.DateTimeFormat construction is expensive and EventCard calls several
+// formatters per event, so cache instances per kind+timeZone at module level.
+// The cache is tiny in practice: one entry per formatter kind per distinct
+// event timezone in the snapshot.
+const formatterCache = new Map<string, Intl.DateTimeFormat>()
+
+function cachedFormatter(
+  kind: string,
+  timeZone: string,
+  options: Intl.DateTimeFormatOptions
+): Intl.DateTimeFormat {
+  const key = `${kind}|${timeZone}`
+  let fmt = formatterCache.get(key)
+  if (!fmt) {
+    fmt = new Intl.DateTimeFormat('en-US', { ...options, timeZone })
+    formatterCache.set(key, fmt)
+  }
+  return fmt
+}
+
 function dayFormatter(timeZone: string): Intl.DateTimeFormat {
-  return new Intl.DateTimeFormat('en-US', { day: '2-digit', timeZone })
+  return cachedFormatter('day', timeZone, { day: '2-digit' })
 }
 
 function monthShortFormatter(timeZone: string): Intl.DateTimeFormat {
-  return new Intl.DateTimeFormat('en-US', { month: 'short', timeZone })
+  return cachedFormatter('monthShort', timeZone, { month: 'short' })
 }
 
 function weekdayFormatter(timeZone: string): Intl.DateTimeFormat {
-  return new Intl.DateTimeFormat('en-US', { weekday: 'long', timeZone })
+  return cachedFormatter('weekday', timeZone, { weekday: 'long' })
 }
 
 function dateFormatter(timeZone: string): Intl.DateTimeFormat {
-  return new Intl.DateTimeFormat('en-US', {
+  return cachedFormatter('date', timeZone, {
     weekday: 'long',
     month: 'long',
     day: 'numeric',
     year: 'numeric',
-    timeZone,
   })
 }
 
 function timeFormatter(timeZone: string): Intl.DateTimeFormat {
-  return new Intl.DateTimeFormat('en-US', {
+  return cachedFormatter('time', timeZone, {
     hour: 'numeric',
     minute: '2-digit',
-    timeZone,
   })
 }
 
-function shortTimezoneLabel(timeZone: string): string {
+// The zone abbreviation depends on the INSTANT being rendered, not on when
+// the site was built: a January event in America/New_York is EST even when
+// the build runs in July under EDT. Callers pass the event's own instant.
+function shortTimezoneLabel(timeZone: string, at: Date): string {
   try {
-    const fmt = new Intl.DateTimeFormat('en-US', {
-      timeZone,
-      timeZoneName: 'short',
-    })
-    const part = fmt.formatToParts(new Date()).find((p) => p.type === 'timeZoneName')
+    const fmt = cachedFormatter('zoneName', timeZone, { timeZoneName: 'short' })
+    const part = fmt.formatToParts(at).find((p) => p.type === 'timeZoneName')
     return part?.value ?? timeZone
   } catch {
     return timeZone
@@ -100,7 +118,7 @@ export function formatEventTimeRange(event: UnifiedEvent): string {
 
 function appendZoneLabel(value: string, event: UnifiedEvent): string {
   if (!event.timezone) return value
-  return `${value} ${shortTimezoneLabel(event.timezone)}`
+  return `${value} ${shortTimezoneLabel(event.timezone, new Date(event.startUtc))}`
 }
 
 export function truncate(value: string, max = 160): string {

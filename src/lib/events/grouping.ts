@@ -15,17 +15,33 @@ const MONTH_LABEL_OPTS: Intl.DateTimeFormatOptions = {
   year: 'numeric',
 }
 
+// Formatter construction is expensive and groupByMonth calls both helpers
+// once per event, so cache instances per timezone at module level.
+const keyFormatters = new Map<string, Intl.DateTimeFormat>()
+const labelFormatters = new Map<string, Intl.DateTimeFormat>()
+
+function cached(
+  cache: Map<string, Intl.DateTimeFormat>,
+  timeZone: string,
+  options: Intl.DateTimeFormatOptions
+): Intl.DateTimeFormat {
+  let fmt = cache.get(timeZone)
+  if (!fmt) {
+    fmt = new Intl.DateTimeFormat('en-US', { ...options, timeZone })
+    cache.set(timeZone, fmt)
+  }
+  return fmt
+}
+
 function monthKey(iso: string, timeZone: string): string {
-  const parts = new Intl.DateTimeFormat('en-US', { ...MONTH_KEY_OPTS, timeZone }).formatToParts(
-    new Date(iso)
-  )
+  const parts = cached(keyFormatters, timeZone, MONTH_KEY_OPTS).formatToParts(new Date(iso))
   const year = parts.find((p) => p.type === 'year')?.value ?? '0000'
   const month = parts.find((p) => p.type === 'month')?.value ?? '00'
   return `${year}-${month}`
 }
 
 function monthLabel(iso: string, timeZone: string): string {
-  return new Intl.DateTimeFormat('en-US', { ...MONTH_LABEL_OPTS, timeZone }).format(new Date(iso))
+  return cached(labelFormatters, timeZone, MONTH_LABEL_OPTS).format(new Date(iso))
 }
 
 export function groupByMonth(events: UnifiedEvent[]): EventBucket[] {

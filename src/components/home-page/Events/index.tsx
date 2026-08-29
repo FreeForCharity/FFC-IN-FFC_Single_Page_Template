@@ -4,6 +4,7 @@ import { siteConfig } from '@/lib/site.config'
 import type { EventsSnapshot, UnifiedEvent } from '@/lib/events/types'
 import { groupByMonth } from '@/lib/events/grouping'
 import { safeHttpUrl, safeHttpsImageUrl } from '@/lib/events/safeUrl'
+import { safeJsonLdSerialize } from '@/lib/events/jsonLd'
 import { eventsSectionVisible } from '@/lib/events/visibility'
 import EventCard from './EventCard'
 import EmptyState from './EmptyState'
@@ -92,10 +93,12 @@ const Events = () => {
         {hasEvents && (
           <script
             type="application/ld+json"
-            // Event JSON-LD for Google rich results. Static at build time;
-            // no user input flows into this block.
+            // Event JSON-LD for Google rich results. Static at build time,
+            // but titles/descriptions/locations come from upstream calendars
+            // and Facebook — safeJsonLdSerialize escapes `<` so a value
+            // containing </script> cannot break out of this element.
             dangerouslySetInnerHTML={{
-              __html: JSON.stringify((data.events ?? []).map(eventJsonLd).filter(Boolean)),
+              __html: safeJsonLdSerialize((data.events ?? []).map(eventJsonLd).filter(Boolean)),
             }}
           />
         )}
