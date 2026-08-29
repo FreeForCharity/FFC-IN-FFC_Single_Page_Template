@@ -2,6 +2,13 @@ import React from 'react'
 import { siteConfig } from '@/lib/site.config'
 
 const Events = () => {
+  if (
+    !siteConfig.sections.showEvents ||
+    !siteConfig.integrations.sociableKitEventsWidgetUrl.trim()
+  ) {
+    return null
+  }
+
   return (
     <div id="events" className="py-[52px]">
       <div className="w-[90%] mx-auto max-w-[1280px]">

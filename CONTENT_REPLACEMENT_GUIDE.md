@@ -330,15 +330,22 @@ Introduce your charity's leadership team or key staff members.
 
 ### Team Members
 
-| #   | Photo                  | Name              | Title                                              | LinkedIn URL                                            | Your Photo                                        | Your Name | Your Title | Your LinkedIn |
-| --- | ---------------------- | ----------------- | -------------------------------------------------- | ------------------------------------------------------- | ------------------------------------------------- | --------- | ---------- | ------------- |
-| 1   | `/Images/member1.webp` | "Clarke Moyer"    | "Free For Charity Founder/ President of the Board" | "https://www.linkedin.com/in/clarkemoyer/"              | _(Photo file, recommended: 400px × 400px square)_ |           |            |               |
-| 2   | `/Images/member2.webp` | "Chris Rae"       | "Free For Charity Vice President"                  | "https://www.linkedin.com/in/christopher-rae-540493a5/" |                                                   |           |            |               |
-| 3   | `/Images/member3.webp` | "Tyler Carlotto"  | "Free For Charity Secretary"                       | "https://www.linkedin.com/in/tylercarlotto/"            |                                                   |           |            |               |
-| 4   | `/Images/member4.webp` | "Brennan Darling" | "Free For Charity Treasurer"                       | "https://www.linkedin.com/in/brennon-darling-80953038/" |                                                   |           |            |               |
-| 5   | `/Images/member5.webp` | "Rebecca Cook"    | "Free For Charity Member at Large"                 | "https://www.linkedin.com/in/rebecca-cook-a91599265/"   |                                                   |           |            |               |
+Each member is a JSON file in `src/data/team/` with just three fields: `name`,
+`role`, and an optional `linkedinUrl`. **There are no photos** — every card
+renders an initials monogram (first + last initial) on your brand color, so you
+never have to source, size, or host portrait images. When `linkedinUrl` is set,
+the whole card links to that profile in a new tab; omit it and the card is not a
+link.
 
-_Note: Add more team members or use fewer by adding rows or removing entries. LinkedIn URLs are optional._
+| #   | Name              | Role                                               | LinkedIn URL (optional)                                 | Your Name | Your Role | Your LinkedIn |
+| --- | ----------------- | -------------------------------------------------- | ------------------------------------------------------- | --------- | --------- | ------------- |
+| 1   | "Clarke Moyer"    | "Free For Charity Founder/ President of the Board" | "https://www.linkedin.com/in/clarkemoyer/"              |           |           |               |
+| 2   | "Chris Rae"       | "Free For Charity Vice President"                  | "https://www.linkedin.com/in/christopher-rae-540493a5/" |           |           |               |
+| 3   | "Tyler Carlotto"  | "Free For Charity Secretary"                       | "https://www.linkedin.com/in/tylercarlotto/"            |           |           |               |
+| 4   | "Brennan Darling" | "Free For Charity Treasurer"                       | "https://www.linkedin.com/in/brennon-darling-80953038/" |           |           |               |
+| 5   | "Rebecca Cook"    | "Free For Charity Member at Large"                 | "https://www.linkedin.com/in/rebecca-cook-a91599265/"   |           |           |               |
+
+_Note: Add more team members or use fewer by adding/removing JSON files in `src/data/team/` (and their import in `src/data/team.ts`). A LinkedIn URL, when present, must be an `https://` link on `linkedin.com` (or a subdomain such as `www.` / `uk.`) — any other host (or a non-`https://` scheme) is ignored and the card simply renders without a link._
 
 ---
 
@@ -432,13 +439,13 @@ _Note: If you don't have a second location, you can remove the secondary address
 
 _Edit location: `src/lib/site.config.ts` — the `social[]` array (each entry's `href`). The footer renders the rail from siteConfig._
 
-| Section | Variable              | Current Free For Charity Content                             | Your Content                                         |
-| ------- | --------------------- | ------------------------------------------------------------ | ---------------------------------------------------- |
-| Footer  | Facebook URL          | "https://www.facebook.com/freeforcharity"                    | _(Your Facebook page URL)_                           |
-| Footer  | Twitter/X URL         | "https://x.com/freeforcharity1"                              | _(Your Twitter/X profile URL)_                       |
-| Footer  | LinkedIn URL          | "https://www.linkedin.com/company/freeforcharity/"           | _(Your LinkedIn company page URL)_                   |
-| Footer  | GitHub URL            | "https://github.com/FreeForCharity/FFC_Single_Page_Template" | _(Your GitHub organization URL, or leave blank)_     |
-| Footer  | Icon Background Color | #F57C20 (orange)                                             | _(Hex color code for social media icon backgrounds)_ |
+| Section | Variable              | Current Free For Charity Content                                    | Your Content                                         |
+| ------- | --------------------- | ------------------------------------------------------------------- | ---------------------------------------------------- |
+| Footer  | Facebook URL          | "https://www.facebook.com/freeforcharity"                           | _(Your Facebook page URL)_                           |
+| Footer  | Twitter/X URL         | "https://x.com/freeforcharity1"                                     | _(Your Twitter/X profile URL)_                       |
+| Footer  | LinkedIn URL          | "https://www.linkedin.com/company/freeforcharity/"                  | _(Your LinkedIn company page URL)_                   |
+| Footer  | GitHub URL            | "https://github.com/FreeForCharity/FFC-IN-FFC_Single_Page_Template" | _(Your GitHub organization URL, or leave blank)_     |
+| Footer  | Icon Background Color | #F57C20 (orange)                                                    | _(Hex color code for social media icon backgrounds)_ |
 
 ### Copyright / Bottom Bar
 

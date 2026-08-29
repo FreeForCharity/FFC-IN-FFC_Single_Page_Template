@@ -1,8 +1,11 @@
 import React from 'react'
 import { SustainableFundingCard } from '@/components/ui/SustainableFundingCard'
 import { assetPath } from '@/lib/assetPath'
+import { siteConfig } from '@/lib/site.config'
 
 const Home: React.FC = () => {
+  if (!siteConfig.sections.showEndowment) return null
+
   return (
     <div className="pb-[30px]">
       <div className="w-[90%] mx-auto lg:px-[20px] max-w-[1280px]">

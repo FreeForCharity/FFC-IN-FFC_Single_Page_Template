@@ -2,6 +2,14 @@
 
 This guide explains how to use Cloudflare **alongside** a GitHub Pages site. **All features listed are available on Cloudflare's Free plan.**
 
+> [!NOTE]
+> **This whole guide is optional.** This template deploys and is tested on the
+> GitHub Pages default URL
+> (`https://freeforcharity.github.io/FFC-IN-FFC_Single_Page_Template/`), which
+> needs no Cloudflare configuration at all. Everything below applies only if
+> your fork adds a **custom domain** (e.g., `your-domain.org`) and you want
+> Cloudflare as its DNS provider.
+
 > [!WARNING]
 > **Do NOT proxy your GitHub Pages records (keep the cloud grey / "DNS only").**
 >
@@ -43,8 +51,10 @@ This guide explains how to use Cloudflare **alongside** a GitHub Pages site. **A
 ## Prerequisites
 
 - A Cloudflare account (free plan is sufficient) used **for DNS**
-- Your custom domain delegated to Cloudflare nameservers
-- GitHub Pages site deployed with a custom domain and **Enforce HTTPS** enabled
+- A custom domain for your fork (this template itself uses none), delegated to
+  Cloudflare nameservers
+- GitHub Pages site deployed, with the custom domain configured and **Enforce
+  HTTPS** enabled
 
 ---
 
@@ -54,7 +64,7 @@ This guide explains how to use Cloudflare **alongside** a GitHub Pages site. **A
 
 1. Log in to the [Cloudflare Dashboard](https://dash.cloudflare.com/)
 2. Click **"Add a Site"**
-3. Enter your domain name (e.g., `ffcworkingsite1.org`)
+3. Enter your domain name (e.g., `your-domain.org`)
 4. Select the **Free** plan
 5. Cloudflare will scan your existing DNS records
 
@@ -89,6 +99,9 @@ GitHub Pages uses Let's Encrypt:
 ```
 Type: CAA   Name: @   Flags: 0   Tag: issue   Value: letsencrypt.org
 ```
+
+If you use CAA records at all, at least one must allow `letsencrypt.org`, or
+GitHub cannot obtain the certificate.
 
 ---
 
@@ -189,7 +202,7 @@ High level:
    export in `next.config.ts`).
 3. Point the custom domain at the Pages project (proxied is correct **here** —
    Cloudflare is the host, so there is no GitHub certificate to break).
-4. `public/_headers` and `public/CNAME` deploy as-is; verify headers with
+4. `public/_headers` deploys as-is; verify headers with
    [securityheaders.com](https://securityheaders.com/).
 
 Everything below — Page Rules, Transform-Rule headers, Auto Minify, Brotli,
@@ -236,7 +249,7 @@ break JS-heavy pages — test before leaving it on.
 
 ```bash
 # Should return GitHub Pages IPs (185.199.108-111.153), NOT Cloudflare IPs.
-dig +short ffcworkingsite1.org
+dig +short your-domain.org
 ```
 
 If you see Cloudflare IPs (e.g. `104.x` / `172.67.x`), the record is proxied —
@@ -245,7 +258,7 @@ switch it back to DNS-only.
 ### 2. Verify HTTPS and certificate issuer
 
 ```bash
-curl -sI https://ffcworkingsite1.org/ | grep -i '^HTTP'
+curl -sI https://your-domain.org/ | grep -i '^HTTP'
 # Expect: HTTP/2 200
 ```
 
@@ -255,7 +268,7 @@ HTTPS** is on.
 ### 3. Verify security posture
 
 ```
-https://securityheaders.com/?q=https://ffcworkingsite1.org
+https://securityheaders.com/?q=https://your-domain.org
 ```
 
 Expect the meta CSP to be detected and the HTTP-header items to be flagged —
@@ -265,7 +278,7 @@ that is the documented, accepted state for a GitHub-Pages-hosted site (see
 ### 4. Test SSL configuration
 
 ```
-https://www.ssllabs.com/ssltest/analyze.html?d=ffcworkingsite1.org
+https://www.ssllabs.com/ssltest/analyze.html?d=your-domain.org
 ```
 
 ---
@@ -289,7 +302,9 @@ stopped renewing the certificate because it can no longer validate the domain.
 1. Confirm records are **DNS only**, not proxied.
 2. Confirm the A records are GitHub's four `185.199.10x.153` addresses (and the
    `www` CNAME points to `yourusername.github.io`).
-3. Confirm `public/CNAME` in the repo matches the custom domain.
+3. Confirm your fork's `public/CNAME` file matches the custom domain. (This
+   template ships no `public/CNAME` — add one when you configure a custom
+   domain, or set the domain in the repository's Pages settings.)
 
 ### Issue: Expecting security headers but scanners show none
 
@@ -301,11 +316,12 @@ Cloudflare Pages if HTTP headers are required.
 
 ## Summary
 
-| Deployment                                         | HTTPS                          | Edge caching / headers           | `public/_headers` honored    |
-| -------------------------------------------------- | ------------------------------ | -------------------------------- | ---------------------------- |
-| **GitHub Pages + Cloudflare DNS-only** (this site) | GitHub-managed (Let's Encrypt) | ❌ none (Cloudflare not in path) | ❌ (GitHub Pages ignores it) |
-| **Cloudflare Pages** (proxied)                     | Cloudflare-managed             | ✅ full                          | ✅ natively                  |
-| ⛔ GitHub Pages + Cloudflare **proxied**           | **breaks on cert renewal**     | —                                | —                            |
+| Deployment                                        | HTTPS                          | Edge caching / headers           | `public/_headers` honored    |
+| ------------------------------------------------- | ------------------------------ | -------------------------------- | ---------------------------- |
+| **GitHub Pages, default URL** (this template)     | GitHub-managed                 | ❌ (no Cloudflare involved)      | ❌ (GitHub Pages ignores it) |
+| **GitHub Pages + Cloudflare DNS-only** (custom domain) | GitHub-managed (Let's Encrypt) | ❌ none (Cloudflare not in path) | ❌ (GitHub Pages ignores it) |
+| **Cloudflare Pages** (proxied)                    | Cloudflare-managed             | ✅ full                          | ✅ natively                  |
+| ⛔ GitHub Pages + Cloudflare **proxied**          | **breaks on cert renewal**     | —                                | —                            |
 
 ---
 
@@ -318,6 +334,6 @@ Cloudflare Pages if HTTP headers are required.
 
 ---
 
-**Last Updated:** 2026-07-05
+**Last Updated:** 2026-08-29
 
 For questions or issues, contact Free For Charity at hello@freeforcharity.org

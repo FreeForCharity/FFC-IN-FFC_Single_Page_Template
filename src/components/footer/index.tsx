@@ -10,6 +10,7 @@ import type { IconType } from 'react-icons'
 
 import { siteConfig } from '@/lib/site.config'
 import { assetPath } from '@/lib/assetPath'
+import { configuredTeam } from '@/data/team'
 
 // Maps a social link's label (as defined in siteConfig.social) to an icon.
 // Unknown labels fall back to a generic link icon (FiLink2) so a charity
@@ -27,6 +28,9 @@ const socialIconByLabel: Record<string, IconType> = {
 const Footer: React.FC = () => {
   const currentYear = React.useMemo(() => new Date().getFullYear(), [])
   const socialLinks = siteConfig.social.filter((s) => s.href)
+  // Trim so whitespace-only config behaves like empty (link/clause self-hides).
+  const taxStatusLabel = siteConfig.taxStatusLabel.trim()
+  const eventsWidgetUrl = siteConfig.integrations.sociableKitEventsWidgetUrl.trim()
   return (
     <footer className="bg-black text-white">
       <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 py-12 px-4 md:px-6 lg:px-8">
@@ -79,16 +83,22 @@ const Footer: React.FC = () => {
               {[
                 { name: 'Home', href: '/#hero' },
                 { name: 'Mission', href: '/#mission' },
-                { name: 'Programs', href: '/#programs' },
-                { name: 'Events', href: '/#events' },
+                // Programs / Events self-hide (sections.showPrograms /
+                // showEvents + widget URL); drop the dead quick-link too.
+                ...(siteConfig.sections.showPrograms
+                  ? [{ name: 'Programs', href: '/#programs' }]
+                  : []),
+                ...(siteConfig.sections.showEvents && eventsWidgetUrl
+                  ? [{ name: 'Events', href: '/#events' }]
+                  : []),
                 { name: 'Donate', href: '/#donate' },
                 { name: 'Volunteer', href: '/#volunteer' },
                 { name: 'FAQ', href: '/#faq' },
-                { name: 'Team', href: '/#team' },
-                // Only shown when this site is a project of a parent org with a hub.
-                ...(siteConfig.parentOrg?.hubUrl
-                  ? [{ name: 'Supported Charity Login', href: siteConfig.parentOrg.hubUrl }]
-                  : []),
+                ...(configuredTeam.length > 0 ? [{ name: 'Team', href: '/#team' }] : []),
+                // FFC footer standard: every supported charity site links back
+                // to the supporting org's hub. Always rendered — keep this
+                // entry when customizing a fork.
+                { name: 'Supported Charity Login', href: siteConfig.supportedBy.hubUrl },
               ].map((link) => {
                 const isExternal = link.href.startsWith('http')
                 return (
@@ -113,7 +123,11 @@ const Footer: React.FC = () => {
               <ul className="space-y-1 text-sm lato-font">
                 {[
                   {
-                    name: `${siteConfig.name} Donation Policy`,
+                    // Hardcoded on purpose: this page documents FFC's OWN
+                    // donation policy, so the label must keep FFC's name even
+                    // after a fork rebrands siteConfig.name. The adjacent
+                    // '/donation-policy' entry is the charity's own policy.
+                    name: 'Free For Charity Donation Policy',
                     href: '/free-for-charity-donation-policy',
                   },
                   {
@@ -237,7 +251,17 @@ const Footer: React.FC = () => {
       {/* Bottom Bar */}
       <div className="mt-12 py-6 px-4 border-t border-gray-800 text-center text-[18px] font-[500] w-full aria-font">
         <p>
-          © {currentYear} All Rights Are Reserved by {siteConfig.name} a US 501c3 Non Profit
+          © {currentYear} All Rights Are Reserved by {siteConfig.name}
+          {taxStatusLabel ? ` ${taxStatusLabel}` : ''}
+          {/* FFC footer standard: the permanent "Supported by" attribution.
+              Always rendered — do NOT remove or hide it when customizing. */}
+          {' | Supported by '}
+          <Link
+            href={siteConfig.supportedBy.url}
+            className="underline text-[#2EA3F2] hover:text-[#2EA3F2] transition-colors"
+          >
+            {siteConfig.supportedBy.name}
+          </Link>
           {siteConfig.parentOrg && (
             <>
               {' | A project of '}

@@ -111,7 +111,7 @@ You don't have to edit either workflow when you rename the repo.
       manifest, sitemap, robots, security headers)
 - [ ] Run `npm run check:drift` after editing — the placeholder-URL
       and CSP-sync rules will flag anything still pointing at
-      `ffcworkingsite1.org` or out of sync
+      the template's default URL or out of sync
 - [ ] Set the EIN, mailing addresses, phone number, and GuideStar
       profile links in `src/lib/site.config.ts` — `ein`, `phone`,
       `addresses`, and `guidestar.profileUrl` / `guidestar.directProfileUrl`.
@@ -149,8 +149,7 @@ You don't have to edit either workflow when you rename the repo.
 
 ### Content Data
 
-- [ ] Update team members in `src/data/team/`
-- [ ] Update team photos in `/public/team/`
+- [ ] Update team members in `src/data/team/` (name, role, optional LinkedIn — no photos; cards use initials monograms)
 - [ ] Update FAQs in `src/data/faqs/`
 - [ ] Update testimonials in `src/data/testimonials/`
 
@@ -309,12 +308,12 @@ check:drift` will fail if any are missing
 ## Need Help?
 
 - 📖 **Complete Guide**: [TEMPLATE_USAGE.md](./TEMPLATE_USAGE.md)
-- 🐛 **Report Issues**: [GitHub Issues](https://github.com/FreeForCharity/FFC_Single_Page_Template/issues)
-- 💬 **Ask Questions**: [GitHub Discussions](https://github.com/FreeForCharity/FFC_Single_Page_Template/discussions)
+- 🐛 **Report Issues**: [GitHub Issues](https://github.com/FreeForCharity/FFC-IN-FFC_Single_Page_Template/issues)
+- 💬 **Ask Questions**: [GitHub Discussions](https://github.com/FreeForCharity/FFC-IN-FFC_Single_Page_Template/discussions)
 - 📚 **Documentation**: Review all `.md` files in repository root
 
 ---
 
-**Last Updated**: 2025-12-19  
+**Last Updated**: 2026-07-18  
 **Template Version**: 0.3.0  
-**Compatible with**: Next.js 16.0.7, Node.js 20.x
+**Compatible with**: Next.js 16.0.7, Node.js 24.x

@@ -4,7 +4,7 @@ description: Review a pull request against FFC best practices — kebab-case rou
 tools: Bash, Read, Glob, Grep, mcp__github__pull_request_read, mcp__github__list_pull_requests
 ---
 
-You are reviewing a pull request on an FFC-supported nonprofit site built from `FFC_Single_Page_Template`. The repo holds itself to these rules — your review should too.
+You are reviewing a pull request on an FFC-supported nonprofit site built from `FFC-IN-FFC_Single_Page_Template`. The repo holds itself to these rules — your review should too.
 
 ## What to check
 

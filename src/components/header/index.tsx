@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useEffect, useMemo } from 'react'
+import React, { useState, useEffect } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { FiMenu } from 'react-icons/fi'
@@ -8,6 +8,7 @@ import { LiaSearchSolid } from 'react-icons/lia'
 import { RxCross2 } from 'react-icons/rx'
 import { assetPath } from '@/lib/assetPath'
 import { siteConfig } from '@/lib/site.config'
+import { configuredTeam } from '@/data/team'
 
 interface MenuItem {
   label: string
@@ -16,30 +17,40 @@ interface MenuItem {
 
 const SCROLL_OFFSET = 100
 
+// Full set of in-page nav targets. The rendered menu (built inside the
+// component) drops entries whose section can self-hide, but the scroll-spy
+// watches the full set — getElementById harmlessly skips any section a fork has
+// hidden. Kept at module scope so its identity is stable across renders (the
+// scroll-spy effect depends on it).
+const ALL_MENU_ITEMS: MenuItem[] = [
+  { label: 'Home', path: '/#hero' },
+  { label: 'Mission', path: '/#mission' },
+  { label: 'Programs', path: '/#programs' },
+  { label: 'Volunteer', path: '/#volunteer' },
+  { label: 'Donate', path: '/#donate' },
+  { label: 'FAQ', path: '/#faq' },
+  { label: 'Team', path: '/#team' },
+]
+const SCROLL_SPY_SECTIONS = ALL_MENU_ITEMS.map((item) => item.path.replace('/#', '')).filter(
+  (section) => section !== 'hero'
+)
+
 const Header: React.FC = () => {
   const [isScrolled, setIsScrolled] = useState(false)
   const [isSearchOpen, setIsSearchOpen] = useState(false)
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const [activeSection, setActiveSection] = useState<string>('')
 
-  const menuItems: MenuItem[] = useMemo(
-    () => [
-      { label: 'Home', path: '/#hero' },
-      { label: 'Mission', path: '/#mission' },
-      { label: 'Programs', path: '/#programs' },
-      { label: 'Volunteer', path: '/#volunteer' },
-      { label: 'Donate', path: '/#donate' },
-      { label: 'FAQ', path: '/#faq' },
-      { label: 'Team', path: '/#team' },
-    ],
-    []
-  )
-
-  const sections = useMemo(
-    () =>
-      menuItems.map((item) => item.path.replace('/#', '')).filter((section) => section !== 'hero'),
-    [menuItems]
-  )
+  // Drop nav entries whose section self-hides so we never link to a missing
+  // #anchor (Programs -> sections.showPrograms; Team -> configuredTeam, i.e. at
+  // least one member with a populated name — matches the Team section's guard).
+  // Built directly each render so it reflects the current config; the scroll-spy
+  // uses the stable module-level SCROLL_SPY_SECTIONS instead.
+  const menuItems: MenuItem[] = ALL_MENU_ITEMS.filter((item) => {
+    if (item.path === '/#programs') return siteConfig.sections.showPrograms
+    if (item.path === '/#team') return configuredTeam.length > 0
+    return true
+  })
 
   useEffect(() => {
     const handleScroll = () => setIsScrolled(window.scrollY > 50)
@@ -52,7 +63,7 @@ const Header: React.FC = () => {
     const handleScrollSpy = () => {
       const scrollPosition = window.scrollY + SCROLL_OFFSET
 
-      for (const sectionId of sections) {
+      for (const sectionId of SCROLL_SPY_SECTIONS) {
         const element = document.getElementById(sectionId)
         if (element) {
           const offsetTop = element.offsetTop
@@ -71,7 +82,7 @@ const Header: React.FC = () => {
 
     window.addEventListener('scroll', handleScrollSpy)
     return () => window.removeEventListener('scroll', handleScrollSpy)
-  }, [sections])
+  }, [])
 
   const handleSearchToggle = () => setIsSearchOpen(!isSearchOpen)
   const handleLinkClick = () => {

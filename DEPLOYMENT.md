@@ -19,15 +19,15 @@ This document explains how the Free For Charity website is deployed to GitHub Pa
 
 The Free For Charity website is a static Next.js application deployed to GitHub Pages. The site is accessible at:
 
-- **GitHub Pages URL**: https://freeforcharity.github.io/FFC_Single_Page_Template/
-- **Custom Domain**: https://ffcworkingsite1.org
+- **GitHub Pages URL**: https://freeforcharity.github.io/FFC-IN-FFC_Single_Page_Template/
+- **Custom Domain**: none — the template deploys, smoke-tests, and runs live footer checks entirely on the default URL. Forks can add one (see Custom Domain Setup below).
 
 ### Technology Stack
 
 - **Framework**: Next.js 16.0.7 with static export
 - **Hosting**: GitHub Pages
 - **CI/CD**: GitHub Actions
-- **Node.js**: Version 20.x
+- **Node.js**: Version 24.x
 
 ---
 
@@ -52,7 +52,7 @@ This generates a static site in the `./out` directory that can be served by any 
 
 The site uses the `assetPath()` helper function (located in `src/lib/assetPath.ts`) to handle assets correctly for both:
 
-1. **GitHub Pages subpath deployment**: `/FFC_Single_Page_Template/`
+1. **GitHub Pages subpath deployment**: `/FFC-IN-FFC_Single_Page_Template/`
 2. **Custom domain deployment**: Root path `/`
 
 The helper uses the `NEXT_PUBLIC_BASE_PATH` environment variable to determine the correct asset path.
@@ -82,7 +82,7 @@ The deployment workflow runs automatically when:
 Runs on all pull requests and pushes to main:
 
 1. **Checkout code**: Retrieves the latest code from the repository
-2. **Setup Node.js**: Installs Node.js 20.x
+2. **Setup Node.js**: Installs Node.js 24.x
 3. **Install dependencies**: Runs `npm ci` for a clean installation
 4. **Check formatting**: Runs Prettier format check
 5. **Run linting**: Executes ESLint to catch code issues
@@ -100,7 +100,7 @@ Triggered automatically after the CI workflow completes successfully on push to 
 The actual steps performed by the deploy workflow are:
 
 1. **Checkout code**: Retrieves the tested code from the repository
-2. **Setup Node.js**: Installs Node.js 20.x
+2. **Setup Node.js**: Installs Node.js 24.x
 3. **Setup Pages**: Configures GitHub Pages settings
 4. **Restore Next.js cache**: Restores build cache for faster builds
 5. **Install dependencies**: Runs `npm ci` for a clean installation
@@ -112,7 +112,7 @@ The actual steps performed by the deploy workflow are:
 
 ```yaml
 env:
-  NEXT_PUBLIC_BASE_PATH: /FFC_Single_Page_Template
+  NEXT_PUBLIC_BASE_PATH: /FFC-IN-FFC_Single_Page_Template
 ```
 
 This ensures images and assets work correctly at the GitHub Pages subpath.
@@ -132,7 +132,7 @@ While automated deployment is recommended, you can also deploy manually if neede
 
 ### Prerequisites
 
-- Node.js 20.x installed
+- Node.js 24.x installed
 - GitHub CLI (`gh`) or GitHub Personal Access Token
 - Write access to the repository
 
@@ -141,8 +141,8 @@ While automated deployment is recommended, you can also deploy manually if neede
 1. **Clone the repository** (if not already done):
 
    ```bash
-   git clone https://github.com/FreeForCharity/FFC_Single_Page_Template.git
-   cd FFC_Single_Page_Template
+   git clone https://github.com/FreeForCharity/FFC-IN-FFC_Single_Page_Template.git
+   cd FFC-IN-FFC_Single_Page_Template
    ```
 
 2. **Install dependencies**:
@@ -162,7 +162,7 @@ While automated deployment is recommended, you can also deploy manually if neede
 4. **Build the site** with the correct base path:
 
    ```bash
-   NEXT_PUBLIC_BASE_PATH=/FFC_Single_Page_Template npm run build
+   NEXT_PUBLIC_BASE_PATH=/FFC-IN-FFC_Single_Page_Template npm run build
    ```
 
 5. **Verify the build**:
@@ -207,7 +207,7 @@ If using a custom domain:
 1. **Add a CNAME file** to the `public` directory with your domain:
 
    ```
-   ffcworkingsite1.org
+   your-domain.org
    ```
 
 2. **Configure DNS records** at your domain provider:
@@ -252,7 +252,7 @@ Environment variables are set in the workflow file:
 - name: Build with Next.js
   run: npm run build
   env:
-    NEXT_PUBLIC_BASE_PATH: /FFC_Single_Page_Template
+    NEXT_PUBLIC_BASE_PATH: /FFC-IN-FFC_Single_Page_Template
 ```
 
 ### Local Development
@@ -365,12 +365,12 @@ To test the built site locally before deploying:
 
 ```bash
 # Build with GitHub Pages configuration
-NEXT_PUBLIC_BASE_PATH=/FFC_Single_Page_Template npm run build
+NEXT_PUBLIC_BASE_PATH=/FFC-IN-FFC_Single_Page_Template npm run build
 
 # Serve the built site
 npm run preview
 
-# Open http://localhost:3000/FFC_Single_Page_Template in your browser
+# Open http://localhost:3000/FFC-IN-FFC_Single_Page_Template in your browser
 ```
 
 This simulates how the site will behave on GitHub Pages.

@@ -29,7 +29,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v6
         with:
-          node-version: '20'
+          node-version: '24'
           cache: 'npm'
 
       - name: Install dependencies
@@ -55,6 +55,11 @@ jobs:
         # The basePath is only needed for actual GitHub Pages deployment (in deploy.yml)
         # E2E tests need to run against a build without basePath since the test server
         # (serve -s out) doesn't understand basePath routing
+
+      - name: Verify build output
+        # Fails the build if any indexable page is missing its single <h1> or a
+        # per-page canonical (invariants a rebrand often breaks in rendered HTML).
+        run: npm run verify:build
 
       - name: Check bundle size
         # Reuses the build above — fails if shipped JS exceeds the gzipped budget.
@@ -92,7 +97,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v6
         with:
-          node-version: '20'
+          node-version: '24'
           cache: 'npm'
 
       - name: Install dependencies

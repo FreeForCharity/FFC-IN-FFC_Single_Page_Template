@@ -18,30 +18,32 @@
     "test:e2e:ui": "playwright test --ui",
     "test:e2e:headed": "playwright test --headed",
     "check:drift": "node scripts/check-drift.mjs",
+    "check:site-config": "node scripts/check-site-config.mjs",
     "check:rebrand": "node scripts/rebrand-check.mjs",
+    "verify:build": "node scripts/verify-build.mjs",
     "check:bundle": "node scripts/check-bundle-size.mjs",
     "smoke": "node scripts/smoke-check.mjs",
     "audit:high": "npm audit --omit=dev --audit-level=high",
     "prepare": "husky"
   },
   "dependencies": {
-    "next": "^16.2.9",
-    "postcss": "^8.5.15",
+    "next": "^16.2.11",
+    "postcss": "^8.5.26",
     "react": "19.2.7",
     "react-dom": "19.2.7",
     "react-icons": "^5.6.0",
     "swiper": "^12.2.0"
   },
   "devDependencies": {
-    "@axe-core/playwright": "^4.12.1",
-    "@axe-core/react": "^4.12.1",
+    "@axe-core/playwright": "^4.13.0",
+    "@axe-core/react": "^4.13.0",
     "@commitlint/cli": "^20.5.3",
     "@commitlint/config-conventional": "^20.5.3",
     "@eslint/eslintrc": "^3",
     "@lhci/cli": "^0.15.1",
-    "@next/bundle-analyzer": "^16.2.9",
-    "@playwright/test": "^1.61.1",
-    "@tailwindcss/postcss": "^4.3.1",
+    "@next/bundle-analyzer": "^16.3.3",
+    "@playwright/test": "^1.62.1",
+    "@tailwindcss/postcss": "^4.3.3",
     "@testing-library/dom": "^10.4.1",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.2",
@@ -50,7 +52,7 @@
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "eslint": "^9",
-    "eslint-config-next": "16.2.9",
+    "eslint-config-next": "16.3.3",
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-prettier": "^5.5.6",
     "husky": "^9.1.7",
@@ -58,7 +60,7 @@
     "jest-axe": "^10.0.0",
     "jest-environment-jsdom": "^30.4.1",
     "linkinator": "^7.6.1",
-    "prettier": "^3.9.0",
+    "prettier": "^3.9.6",
     "tailwindcss": "^4.3.1",
     "typescript": "^5"
   },
@@ -66,6 +68,9 @@
     "qs": ">=6.15.2",
     "uuid": ">=11.1.1",
     "picomatch": ">=4.0.4",
-    "tmp": "^0.2.6"
+    "tmp": "^0.2.6",
+    "sharp": "^0.35.3",
+    "nanoid": "^3.3.18",
+    "postcss": "$postcss"
   }
 }

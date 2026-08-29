@@ -29,11 +29,11 @@ This document provides solutions to common issues, troubleshooting steps, and fr
 # Check your Node.js version
 node --version
 
-# Should be 20.x or higher
-# Install Node 20 if needed
+# Should be 24.x or higher
+# Install Node 24 if needed
 # Using nvm (recommended):
-nvm install 20
-nvm use 20
+nvm install 24
+nvm use 24
 
 # Or download from nodejs.org
 ```
@@ -207,7 +207,7 @@ Error: Cannot find module '@/components/Header'
 
    ```bash
    # For GitHub Pages
-   NEXT_PUBLIC_BASE_PATH=/FFC_Single_Page_Template npm run build
+   NEXT_PUBLIC_BASE_PATH=/FFC-IN-FFC_Single_Page_Template npm run build
 
    # For custom domain
    npm run build
@@ -416,14 +416,15 @@ npm run test:e2e
    output: 'export'
 
    // Build should use:
-   NEXT_PUBLIC_BASE_PATH=/FFC_Single_Page_Template
+   NEXT_PUBLIC_BASE_PATH=/FFC-IN-FFC_Single_Page_Template
    ```
 
 3. **Check CNAME file** (if using custom domain):
    ```bash
    # Should be in public/CNAME
    cat public/CNAME
-   # Should contain: ffcworkingsite1.org
+   # Should contain your custom domain, e.g. your-domain.org
+   # (the template itself ships no CNAME — it deploys to the default URL)
    ```
 
 ### Issue: Images Load Locally but Not in Production
@@ -674,7 +675,7 @@ See [LIGHTHOUSE.md](./LIGHTHOUSE.md) for detailed guidance. Quick tips:
 
 ### Where do I report bugs?
 
-1. **Check existing issues** first: [GitHub Issues](https://github.com/FreeForCharity/FFC_Single_Page_Template/issues)
+1. **Check existing issues** first: [GitHub Issues](https://github.com/FreeForCharity/FFC-IN-FFC_Single_Page_Template/issues)
 2. **Open a new issue** with:
    - Clear description
    - Steps to reproduce
@@ -699,8 +700,8 @@ If your issue isn't covered here:
 
 ---
 
-**Last Updated**: 2025-12-03  
-**Repository**: FreeForCharity/FFC_Single_Page_Template  
-**Node.js**: 20.x (validated with v20.19.6)
+**Last Updated**: 2026-07-18  
+**Repository**: FreeForCharity/FFC-IN-FFC_Single_Page_Template  
+**Node.js**: 24.x (validated with v24.18.0)
 
 _This document is continuously updated. If you solve an issue not listed here, please contribute by adding it!_

@@ -92,10 +92,41 @@ export type SiteConfig = {
   /** GuideStar / Candid transparency profile links shown in the footer. */
   guidestar: { profileUrl: string; directProfileUrl: string }
   /**
+   * Permanent attribution to the supporting organization (FFC). Drives the
+   * always-rendered "Supported by" clause in the footer bottom bar and the
+   * "Supported Charity Login" quick link (`hubUrl`). This is part of the FFC
+   * footer standard for every supported charity site: it is REQUIRED, always
+   * rendered, and NOT to be removed or repointed when customizing a fork.
+   * Distinct from `parentOrg` below, which covers genuine fiscal-sponsorship
+   * ("a project of") relationships.
+   */
+  supportedBy: { name: string; url: string; hubUrl: string }
+  /**
    * Parent / umbrella organization, when this site is "a project of" another
    * nonprofit. Omit for a standalone charity (the footer clause is hidden).
    */
   parentOrg?: { name: string; url: string; hubUrl: string }
+  /**
+   * Label appended after the org name in the footer copyright line to describe
+   * tax status, e.g. 'a US 501c3 Non Profit' or 'a pre-501(c)(3) nonprofit'.
+   * Empty string renders just the org name with no trailing status clause.
+   */
+  taxStatusLabel: string
+  /**
+   * Visibility flags for home-page sections whose default content is
+   * FFC-specific marketing rather than per-charity data. A rebranded fork sets
+   * these false so the section self-hides instead of showing FFC placeholders.
+   * Data-driven sections (Team, Testimonials, Results) self-hide on their own
+   * when their data files are emptied and need no flag here.
+   */
+  sections: {
+    /** FFC Endowment feature cards. */
+    showEndowment: boolean
+    /** FFC's own three-program (Domains/Hosting/Consulting) marketing block. */
+    showPrograms: boolean
+    /** SociableKit Facebook-events embed (also self-hides when the URL is empty). */
+    showEvents: boolean
+  }
   /**
    * Third-party integration endpoints. Each fork points these at its own
    * accounts — the domains are already allow-listed in the CSP, so only the
@@ -120,7 +151,11 @@ export const siteConfig: SiteConfig = {
     'Free For Charity connects students, professionals, and businesses with nonprofits to reduce costs and increase revenues—putting more resources back into their missions.',
   shortDescription:
     'Connecting students, professionals, and businesses with nonprofits to reduce costs and increase revenues.',
-  url: 'https://ffcworkingsite1.org',
+  // Bare origin only (drift-check enforced). The template deploys to the
+  // GitHub Pages default URL; the /FFC-IN-FFC_Single_Page_Template subpath
+  // comes from NEXT_PUBLIC_BASE_PATH, which siteUrl() folds in at build time.
+  // A fork with a custom domain sets its own origin here (and no basePath).
+  url: 'https://freeforcharity.github.io',
   twitterHandle: '@freeforcharity',
   contactEmail: 'security@freeforcharity.org',
   keywords: [
@@ -138,7 +173,7 @@ export const siteConfig: SiteConfig = {
     { label: 'Facebook', href: 'https://www.facebook.com/freeforcharity' },
     { label: 'X (Twitter)', href: 'https://x.com/freeforcharity1' },
     { label: 'LinkedIn', href: 'https://www.linkedin.com/company/freeforcharity/' },
-    { label: 'GitHub', href: 'https://github.com/FreeForCharity/FFC_Single_Page_Template' },
+    { label: 'GitHub', href: 'https://github.com/FreeForCharity/FFC-IN-FFC_Single_Page_Template' },
   ],
   ein: '46-2471893',
   foundingDate: '2014',
@@ -163,10 +198,21 @@ export const siteConfig: SiteConfig = {
     directProfileUrl:
       'https://www.guidestar.org/profile/shared/bbbe173a-87b9-4af9-a8a2-cae255a95742',
   },
+  supportedBy: {
+    name: 'Free For Charity',
+    url: 'https://freeforcharity.org',
+    hubUrl: 'https://freeforcharity.org/hub/',
+  },
   parentOrg: {
     name: 'Free For Charity',
     url: 'https://freeforcharity.org',
     hubUrl: 'https://freeforcharity.org/hub/',
+  },
+  taxStatusLabel: 'a US 501c3 Non Profit',
+  sections: {
+    showEndowment: true,
+    showPrograms: true,
+    showEvents: true,
   },
   integrations: {
     zeffyDonationUrl: 'https://www.zeffy.com/embed/donation-form/free-for-charity-endowment-fund',
@@ -191,7 +237,10 @@ export function siteUrl(path = '/'): string {
       `siteUrl: path must be a same-origin absolute path starting with a single "/" (got: ${JSON.stringify(path)})`
     )
   }
-  const base = siteConfig.url.replace(/\/$/, '')
+  // Fold in the GitHub Pages subpath (empty on custom-domain deploys) so
+  // canonical/OG/sitemap URLs stay correct on the default *.github.io URL.
+  const basePath = process.env.NEXT_PUBLIC_BASE_PATH || ''
+  const base = siteConfig.url.replace(/\/$/, '') + basePath
   return `${base}${path}`
 }
 

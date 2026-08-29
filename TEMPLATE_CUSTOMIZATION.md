@@ -14,25 +14,26 @@ is the **map** — what changes where, and why.
 truth for site-specific values. Update the `siteConfig` export with your
 charity's name, URL, contact email, social links, etc.
 
-| Property                      | Where it shows up                                                                           |
-| ----------------------------- | ------------------------------------------------------------------------------------------- |
-| `name`                        | `<title>`, OG/Twitter `site_name`, 404 page, error page, footer copyright, manifest         |
-| `tagline`                     | Default `<title>` and OG title                                                              |
-| `description`                 | `<meta description>` (long form for search engines), manifest fallback                      |
-| `shortDescription`            | OG / Twitter card description (tuned for social previews; falls back to `description`)      |
-| `url`                         | `metadataBase`, sitemap entries, robots `Sitemap:` line                                     |
-| `twitterHandle`               | Twitter card `site` attribute (the leading `@` is added automatically)                      |
-| `contactEmail`                | Footer e-mail link. `security.txt` has its own `Contact:` line — keep them in sync.         |
-| `keywords`                    | `<meta keywords>`                                                                           |
-| `themeColor`                  | Web manifest `theme_color` and `background_color`                                           |
-| `vulnerabilityDisclosurePath` | 404 page CTA, error page disclosure link                                                    |
-| `social`                      | Footer social-link rail (icon resolved by `label`: Facebook, X (Twitter), LinkedIn, GitHub) |
-| `ein`                         | Footer EIN display line                                                                     |
-| `phone`                       | Footer phone link (`phone.display` shown, `phone.tel` used for the `tel:` link)             |
-| `addresses`                   | Footer contact column (`addresses[].label` / `.lines` / `.mapUrl`)                          |
-| `guidestar`                   | Footer GuideStar/Candid seal links (`guidestar.profileUrl`, `guidestar.directProfileUrl`)   |
-| `parentOrg`                   | Footer "a project of" parent-org clause (omit for a standalone charity)                     |
-| `integrations`                | Zeffy donation embed, Idealist profile, SociableKit events widget, Microsoft Forms URL      |
+| Property                      | Where it shows up                                                                                                                                                                                                      |
+| ----------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `name`                        | `<title>`, OG/Twitter `site_name`, 404 page, error page, footer copyright, manifest                                                                                                                                    |
+| `tagline`                     | Default `<title>` and OG title                                                                                                                                                                                         |
+| `description`                 | `<meta description>` (long form for search engines), manifest fallback                                                                                                                                                 |
+| `shortDescription`            | OG / Twitter card description (tuned for social previews; falls back to `description`)                                                                                                                                 |
+| `url`                         | `metadataBase`, sitemap entries, robots `Sitemap:` line                                                                                                                                                                |
+| `twitterHandle`               | Twitter card `site` attribute (the leading `@` is added automatically)                                                                                                                                                 |
+| `contactEmail`                | Footer e-mail link. `security.txt` has its own `Contact:` line — keep them in sync.                                                                                                                                    |
+| `keywords`                    | `<meta keywords>`                                                                                                                                                                                                      |
+| `themeColor`                  | Web manifest `theme_color` and `background_color`                                                                                                                                                                      |
+| `vulnerabilityDisclosurePath` | 404 page CTA, error page disclosure link                                                                                                                                                                               |
+| `social`                      | Footer social-link rail (icon resolved by `label`: Facebook, X (Twitter), LinkedIn, GitHub)                                                                                                                            |
+| `ein`                         | Footer EIN display line                                                                                                                                                                                                |
+| `phone`                       | Footer phone link (`phone.display` shown, `phone.tel` used for the `tel:` link)                                                                                                                                        |
+| `addresses`                   | Footer contact column (`addresses[].label` / `.lines` / `.mapUrl`)                                                                                                                                                     |
+| `guidestar`                   | Footer GuideStar/Candid seal links (`guidestar.profileUrl`, `guidestar.directProfileUrl`)                                                                                                                              |
+| `supportedBy`                 | Permanent "Supported by Free For Charity" bottom-bar attribution and "Supported Charity Login" hub link. Part of the FFC footer standard: required, always rendered — do **not** change or remove it when customizing. |
+| `parentOrg`                   | Footer "a project of" parent-org clause (omit for a standalone charity)                                                                                                                                                |
+| `integrations`                | Zeffy donation embed, Idealist profile, SociableKit events widget, Microsoft Forms URL                                                                                                                                 |
 
 ### Things `siteConfig` does NOT drive
 
@@ -106,22 +107,38 @@ If you have a real need to change one of these, open an issue first.
 
 ## Security surface
 
-| Concern                  | Where it lives                                                       |
-| ------------------------ | -------------------------------------------------------------------- |
-| CSP (Cloudflare/Netlify) | `public/_headers`                                                    |
-| CSP (GitHub Pages)       | `<meta httpEquiv="Content-Security-Policy">` in `src/app/layout.tsx` |
-| security.txt             | `public/.well-known/security.txt`                                    |
-| Vuln disclosure page     | `src/app/vulnerability-disclosure-policy/page.tsx`                   |
-| Branch protection        | `SECURITY.md` (configure in GitHub repo settings)                    |
-| Dep scanning             | `.github/dependabot.yml`, `.github/workflows/security-audit.yml`     |
-| Static analysis (CodeQL) | GitHub code scanning **default setup** (no `codeql.yml` workflow)    |
-| Supply-chain score       | `.github/workflows/scorecard.yml`                                    |
-| Secret patterns          | `scripts/check-drift.mjs` (locally) + GitHub secret scanning         |
+| Concern                     | Where it lives                                                       |
+| --------------------------- | -------------------------------------------------------------------- |
+| CSP (**the one served**)    | `<meta httpEquiv="Content-Security-Policy">` in `src/app/layout.tsx` |
+| CSP (inert, forward-compat) | `public/_headers` — see the warning below                            |
+| security.txt                | `public/.well-known/security.txt`                                    |
+| Vuln disclosure page        | `src/app/vulnerability-disclosure-policy/page.tsx`                   |
+| Branch protection           | `SECURITY.md` (configure in GitHub repo settings)                    |
+| Dep scanning                | `.github/dependabot.yml`, `.github/workflows/security-audit.yml`     |
+| Static analysis (CodeQL)    | GitHub code scanning **default setup** (no `codeql.yml` workflow)    |
+| Supply-chain score          | `.github/workflows/scorecard.yml`                                    |
+| Secret patterns             | `scripts/check-drift.mjs` (locally) + GitHub secret scanning         |
+
+> **`public/_headers` is inert on FFC deploys.** It is a Cloudflare Pages /
+> Netlify build feature. FFC sites are a GitHub Pages origin behind the
+> Cloudflare _proxy_, and neither reads the file — measured on the wire in
+> [FFC-Cloudflare-Automation#884](https://github.com/FreeForCharity/FFC-Cloudflare-Automation/issues/884).
+> Do not count it as security coverage, and do not treat adding it to a site as
+> closing a header gap.
+
+Only the CSP `<meta>` tag is actually served. The other five headers in
+`public/_headers` — HSTS, `X-Frame-Options`, `X-Content-Type-Options`,
+`Referrer-Policy`, `Permissions-Policy` — **cannot be set from a static export
+at all**; `<meta http-equiv>` is ignored for them. Serving those needs a
+response-header rule on the Cloudflare zone, tracked fleet-wide in
+[FFC-Cloudflare-Automation#894](https://github.com/FreeForCharity/FFC-Cloudflare-Automation/issues/894).
 
 When you add a new third-party origin (analytics, embed, payment), update
-**both** `public/_headers` and the CSP `<meta>` tag in `src/app/layout.tsx` —
-otherwise the resource will load on Cloudflare-hosted sites but fail on
-GitHub Pages, or vice versa.
+**both** `public/_headers` and the CSP `<meta>` tag in `src/app/layout.tsx`.
+Only the `<meta>` tag changes what the live site allows today; the `_headers`
+copy is kept in lockstep so a future move to Cloudflare Pages inherits a
+correct policy rather than a stale one. `npm run check:drift` errors if the two
+disagree.
 
 ## Verifying nothing drifted
 

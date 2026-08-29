@@ -228,7 +228,7 @@ The repository uses automated quality checks to ensure code quality and security
 - **Only deploys if all tests pass** in the CI workflow
 - Can also be triggered manually via workflow dispatch (bypasses CI wait)
 - Steps include:
-  - Node.js 20 environment setup
+  - Node.js 24 environment setup
   - Clean dependency installation (`npm ci`)
   - Next.js static site build with basePath for GitHub Pages
   - Static site artifact upload
@@ -283,7 +283,7 @@ If you discover a security vulnerability in this repository:
 
 1. **Do NOT open a public issue** - this could put the live site at risk
 2. **Report privately** using one of these methods:
-   - **Preferred**: Use GitHub's [Security Advisories feature](https://github.com/FreeForCharity/FFC_Single_Page_Template/security/advisories/new)
+   - **Preferred**: Use GitHub's [Security Advisories feature](https://github.com/FreeForCharity/FFC-IN-FFC_Single_Page_Template/security/advisories/new)
    - **Alternative**: Email clarkemoyer@freeforcharity.org with subject line "Security Vulnerability Report"
 3. Include as much detail as possible:
    - Description of the vulnerability

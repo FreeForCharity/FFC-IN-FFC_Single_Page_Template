@@ -82,9 +82,18 @@ async function checkSiteConfig() {
     flag('Organization identity', `${rel} is missing — restore it from the template`, rel)
     return
   }
+  // siteConfig.supportedBy intentionally keeps Free For Charity's name and URL
+  // forever — it is the permanent "Supported by" footer attribution required by
+  // the FFC footer standard, NOT a rebrand target. Drop that block before
+  // scanning so it never shows up (or fails --strict) as an unfinished rebrand.
+  const scanned = cfg.replace(/supportedBy:\s*\{[^}]*\}/g, '')
   const defaults = [
     ['Charity name still "Free For Charity"', 'Free For Charity'],
     ['Domain still ffcworkingsite1.org', 'ffcworkingsite1.org'],
+    // The template ships no custom domain; its siteConfig.url is the bare
+    // GitHub Pages origin. A fork that keeps it is serving the template's
+    // identity, not its own.
+    ['Site URL still the template default (freeforcharity.github.io)', 'freeforcharity.github.io'],
     ['EIN (tax ID) still 46-2471893', '46-2471893'],
     ['Phone still (520) 222-8104', '5202228104'],
     ['Contact email still security@freeforcharity.org', 'security@freeforcharity.org'],
@@ -98,7 +107,7 @@ async function checkSiteConfig() {
     ['Founding date still FFC 2014', "foundingDate: '2014'"],
   ]
   for (const [label, needle] of defaults) {
-    if (cfg.includes(needle)) flag('Organization identity', label, rel)
+    if (scanned.includes(needle)) flag('Organization identity', label, rel)
   }
 }
 
@@ -151,6 +160,14 @@ async function checkDeployment() {
       'Deployment',
       'security.txt Canonical/Policy URLs still point at ffcworkingsite1.org',
       withUrl.join(', ')
+    )
+  }
+  const withTemplateUrl = filesWith('freeforcharity.github.io/FFC-IN-FFC_Single_Page_Template')
+  if (withTemplateUrl.length) {
+    flag(
+      'Deployment',
+      'security.txt Canonical/Policy URLs still point at the template default URL',
+      withTemplateUrl.join(', ')
     )
   }
 }

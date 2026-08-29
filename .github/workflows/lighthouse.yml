@@ -33,7 +33,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v6
         with:
-          node-version: '20'
+          node-version: '24'
           cache: 'npm'
 
       - name: Install dependencies
@@ -57,10 +57,36 @@ jobs:
         env:
           NEXT_PUBLIC_BASE_PATH: ${{ steps.basepath.outputs.value }}
 
+      - name: Stage site for Lighthouse
+        id: stage
+        # lighthouserc.json serves ./out at the domain root and audits
+        # root-relative URLs. That matches a custom-domain deploy, but a
+        # subpath build prefixes every asset URL with /<repo-name> — served
+        # from the root, all CSS/JS would 404 and Lighthouse would audit an
+        # unstyled skeleton page (bogus scores, e.g. tap-target failures from
+        # default user-agent styles). Nest the export under the same subpath
+        # the production Pages deploy uses and audit the subpath URLs instead.
+        # The page list is derived from lighthouserc.json (single source of
+        # truth) so it can't drift from the config.
+        run: |
+          base="${{ steps.basepath.outputs.value }}"
+          if [ -n "$base" ]; then
+            mkdir -p "_lhci-site${base}"
+            cp -r out/. "_lhci-site${base}/"
+            flags="--collect.staticDistDir=./_lhci-site"
+            pages=$(jq -r '.ci.collect.url[] | sub("^http://localhost/"; "")' lighthouserc.json)
+            for page in $pages; do
+              flags="$flags --collect.url=http://localhost${base}/${page}"
+            done
+            echo "flags=$flags" >> "$GITHUB_OUTPUT"
+          else
+            echo "flags=" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Run Lighthouse CI
         run: |
           npm install -g @lhci/cli
-          lhci autorun
+          lhci autorun ${{ steps.stage.outputs.flags }}
         env:
           LHCI_GITHUB_APP_TOKEN: ${{ secrets.LHCI_GITHUB_APP_TOKEN }}
 
@@ -137,7 +163,10 @@ jobs:
         # always() so the score breakdown still reaches the PR when an
         # error-level assertion (accessibility/SEO) fails the lhci step —
         # that's exactly when the author needs the per-page table.
-        if: always() && github.event_name == 'pull_request'
+        # Fork PRs get a read-only GITHUB_TOKEN, so createComment would 403
+        # and fail the whole run — skip the step there (scores remain in the
+        # workflow log and artifacts).
+        if: always() && github.event_name == 'pull_request' && !github.event.pull_request.head.repo.fork
         uses: actions/github-script@v8
         with:
           script: |
@@ -280,15 +309,24 @@ jobs:
             comment += `${context.payload.repository.html_url}/actions/runs/${context.runId}) for in-depth analysis.\n\n`;
             comment += '📖 Learn more about [Lighthouse scoring](https://developer.chrome.com/docs/lighthouse/performance/performance-scoring/)';
 
-            // Post comment on PR
-            await github.rest.issues.createComment({
-              issue_number: context.issue.number,
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              body: comment
-            });
-
-            console.log('Lighthouse results comment posted successfully');
+            // Post comment on PR. Never fail the workflow over a comment:
+            // a permissions hiccup (e.g. a repo-in-org token restriction, or
+            // a fork PR that slipped past the step-level guard) must not
+            // mask green Lighthouse results.
+            try {
+              await github.rest.issues.createComment({
+                issue_number: context.issue.number,
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                body: comment
+              });
+              console.log('Lighthouse results comment posted successfully');
+            } catch (error) {
+              core.notice(
+                `Could not post the Lighthouse results comment (${error.message}). ` +
+                'Scores are still available in the step log above and the workflow artifacts.'
+              );
+            }
             }
 
             await run();

@@ -18,7 +18,7 @@ The Free For Charity website is a static Next.js application deployed to GitHub 
 
 2. **Hosting and Deployment**
    - GitHub Pages (static hosting)
-   - Custom domain: ffcworkingsite1.org
+   - Custom domain: none (served from the GitHub Pages default URL, https://freeforcharity.github.io/FFC-IN-FFC_Single_Page_Template/); forks may configure their own
    - GitHub Actions CI/CD pipeline
 
 3. **Development Pipeline**

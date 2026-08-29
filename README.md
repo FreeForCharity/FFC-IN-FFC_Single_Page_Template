@@ -2,6 +2,17 @@
 
 Single-page Next.js 16.0.7 website built with App Router for Free For Charity nonprofit organization.
 
+## Who This Template Is For — and Where It Fits in the FFC Journey
+
+This template is the **starting point for charities that don't have a website yet** — most pre-501(c)(3) organizations, plus mature charities that never had one. An FFC volunteer builds a complete single-page site from the charity's own content, guaranteeing every section FFC requires (mission, programs, contact, legal/policy pages, cookie consent, analytics, footer) is present from day one.
+
+It is one of two website paths in the gated [FFC charity onboarding journey](https://freeforcharity.org/charity-onboarding-journey/):
+
+- **No existing website?** Start here — this template.
+- **Already have a designed website?** Use the sibling [FFC Footer-Only Template](https://github.com/FreeForCharity/FFC-IN-Footer_Only_Template) instead, which adds the FFC footer, policy pages, cookie consent, and analytics layer to the charity's existing design.
+
+Both paths converge on the same validation gate: the new site launches on its **free GitHub Pages address first** (no custom domain) and must be validated live there against the FFC standard. Only after the site passes validation does FFC purchase the charity's free .org domain — which in turn unlocks email setup.
+
 ## 🎉 Phase 5 Implementation Complete
 
 **Status:** ✅ All critical gaps closed. Repository now has enterprise-grade tooling, comprehensive testing, and professional documentation.
@@ -194,6 +205,9 @@ If you encounter any of the following, STOP and ask before editing:
 - A request to embed a third-party widget — the new origin must be added to
   BOTH public/\_headers AND the CSP meta tag in src/app/layout.tsx. The
   drift check enforces these two stay in sync; CI will fail on mismatch.
+  Only the meta tag is actually served (public/\_headers is inert on FFC's
+  GitHub Pages + Cloudflare proxy stack), so the meta tag is the one that
+  decides whether the widget loads.
 ```
 
 </details>
@@ -258,8 +272,8 @@ The site features two primary CTAs accessible throughout the experience via glob
 
 ## Deployment
 
-- **Live Site**: [https://ffcworkingsite1.org](https://ffcworkingsite1.org)
-- **GitHub Pages**: [https://freeforcharity.github.io/FFC_Single_Page_Template/](https://freeforcharity.github.io/FFC_Single_Page_Template/)
+- **Live Site (GitHub Pages default URL)**: [https://freeforcharity.github.io/FFC-IN-FFC_Single_Page_Template/](https://freeforcharity.github.io/FFC-IN-FFC_Single_Page_Template/)
+- **Custom domain**: none — the template deliberately deploys, tests, and smoke-checks on the default URL; forks add their own domain via `public/CNAME`
 - **Hosting**: GitHub Pages
 - **Deployment**: Automated via GitHub Actions on push to `main` branch
 
@@ -278,8 +292,8 @@ The site is live and fully functional with the following features:
 - Social media links configured (Facebook, Twitter/X, LinkedIn, GitHub)
 - Footer links fully functional with proper destinations
 - Contact information complete (email, phone, addresses)
-- Deployed to live domain: [https://ffcworkingsite1.org](https://ffcworkingsite1.org)
-- Dual deployment: Custom domain and GitHub Pages
+- Deployed to the GitHub Pages default URL: [https://freeforcharity.github.io/FFC-IN-FFC_Single_Page_Template/](https://freeforcharity.github.io/FFC-IN-FFC_Single_Page_Template/)
+- No custom domain required: build, deploy, smoke test, and footer checks all run against the default URL
 
 ⚠️ **Known Limitations:**
 
@@ -512,7 +526,7 @@ The project uses separate workflows for better separation of concerns:
 **CI Workflow** (`.github/workflows/ci.yml`)
 
 - ✅ Runs on all pull requests and pushes
-- ✅ Node.js 20 setup
+- ✅ Node.js 24 setup
 - ✅ Dependency installation (`npm ci`)
 - ✅ Code formatting check (Prettier)
 - ✅ Linting (ESLint)
@@ -526,7 +540,7 @@ The project uses separate workflows for better separation of concerns:
 
 - ✅ Runs only after CI workflow completes successfully
 - ✅ Ensures all tests pass before deployment
-- ✅ Node.js 20 setup
+- ✅ Node.js 24 setup
 - ✅ Dependency installation (`npm ci`)
 - ✅ Next.js build with GitHub Pages basePath
 - ✅ Static site artifact upload
@@ -680,7 +694,7 @@ Both platforms provide identical workflows:
 
 **Coexistence with GitHub Pages:**
 
-- Keep GitHub Pages for production (ffcworkingsite1.org)
+- Keep GitHub Pages for production (the default *.github.io URL, or your custom domain if configured)
 - Use Cloudflare Pages or Vercel for PR previews only
 - No conflicts between systems
 
@@ -700,7 +714,7 @@ Both platforms provide identical workflows:
    - Build command: `npm run build`
    - Build output directory: `out`
    - Environment variables: Leave `NEXT_PUBLIC_BASE_PATH` unset
-     - GitHub Pages needs `/FFC_Single_Page_Template` for subdirectory routing
+     - GitHub Pages needs `/FFC-IN-FFC_Single_Page_Template` for subdirectory routing
      - Cloudflare Pages deploys to root, no basePath needed
 
 4. **Enable Preview Deployments**
@@ -833,8 +847,8 @@ The site is configured for static export and deployed to GitHub Pages:
 
 **Production:**
 
-- Live at: [https://ffcworkingsite1.org](https://ffcworkingsite1.org)
-- GitHub Pages URL: [https://freeforcharity.github.io/FFC_Single_Page_Template/](https://freeforcharity.github.io/FFC_Single_Page_Template/)
+- Live at the GitHub Pages default URL: [https://freeforcharity.github.io/FFC-IN-FFC_Single_Page_Template/](https://freeforcharity.github.io/FFC-IN-FFC_Single_Page_Template/)
+- No custom domain is configured — this proves the full pipeline (build, deploy, post-deploy smoke, live footer checks) works without one
 - Deployment: Automatic via GitHub Actions (`.github/workflows/deploy.yml`)
 - Trigger: Push to `main` branch
 - Build output: Static files in `./out` directory
@@ -871,7 +885,7 @@ We welcome new contributors and believe fresh perspectives are invaluable! **You
 
 #### How to Get Started
 
-1. **Explore the live site:** [https://ffcworkingsite1.org](https://ffcworkingsite1.org)
+1. **Explore the live site:** [https://freeforcharity.github.io/FFC-IN-FFC_Single_Page_Template/](https://freeforcharity.github.io/FFC-IN-FFC_Single_Page_Template/)
 2. **Test thoroughly:** Try all features, navigation, and responsive behavior
 3. **Document findings:** Create a review issue using our template
 4. **Report issues:** File separate issues for bugs and enhancements you discover
@@ -880,7 +894,7 @@ We welcome new contributors and believe fresh perspectives are invaluable! **You
 
 Use our **Reviewer Onboarding template** to document your findings:
 
-[**Create Reviewer Onboarding Issue**](https://github.com/FreeForCharity/FFC_Single_Page_Template/issues/new?assignees=&labels=documentation%2Creview%2Conboarding&template=reviewer-onboarding.md)
+[**Create Reviewer Onboarding Issue**](https://github.com/FreeForCharity/FFC-IN-FFC_Single_Page_Template/issues/new?assignees=&labels=documentation%2Creview%2Conboarding&template=reviewer-onboarding.md)
 
 The template guides you through:
 
