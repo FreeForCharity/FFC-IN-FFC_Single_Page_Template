@@ -6,7 +6,7 @@
 
 **Last Updated:** July 2026  
 **Status:** Phase 5 Complete - All Critical Gaps Closed  
-**Repository:** FreeForCharity/FFC_Single_Page_Template  
+**Repository:** FreeForCharity/FFC-IN-FFC_Single_Page_Template  
 **Node.js:** 24.x (validated with v24.18.0)
 
 ---
@@ -49,7 +49,7 @@ This document is maintained for historical reference and future planning.
 
 ## Executive Summary
 
-This analysis compares FFC_Single_Page_Template against three sister repositories:
+This analysis compares FFC-IN-FFC_Single_Page_Template against three sister repositories:
 
 - **freeforcharity-web**: Production FFC website (near-identical to current repo)
 - **ffcadmin.org**: Administrative portal with extensive documentation and tooling
@@ -57,7 +57,7 @@ This analysis compares FFC_Single_Page_Template against three sister repositorie
 
 ### Key Findings
 
-**FFC_Single_Page_Template** is a single-page Next.js application with 23 component files (after removing unused scaffolding) covering the homepage sections, plus 7 policy pages.
+**FFC-IN-FFC_Single_Page_Template** is a single-page Next.js application with 23 component files (after removing unused scaffolding) covering the homepage sections, plus 7 policy pages.
 
 **Note:** As of Phase 5 completion, most critical gaps have been addressed. The items listed below were the original gaps identified, many of which have now been implemented. However, compared to sister sites, some differences remain:
 
@@ -76,27 +76,27 @@ This analysis compares FFC_Single_Page_Template against three sister repositorie
 
 ### Technology Stack Comparison
 
-| Feature             | FFC_Single_Page_Template | freeforcharity-web | ffcadmin.org | KCCF-web |
-| ------------------- | ------------------------ | ------------------ | ------------ | -------- |
-| **Next.js Version** | 16.0.7                   | 15.5.2             | 16.0.3       | 15.4.6   |
-| **React Version**   | 19.1.0                   | 19.1.0             | 19.2.0       | 19.1.0   |
-| **Node.js Target**  | 24.x                     | 20.x               | 20.x         | 20.x     |
-| **Package Manager** | npm                      | npm                | pnpm         | npm      |
-| **Static Export**   | ✅                       | ✅                 | ✅           | ✅       |
-| **TypeScript**      | ✅                       | ✅                 | ✅           | ✅       |
-| **Tailwind CSS**    | ✅ v4.1.12               | ✅ v4.1.12         | ✅ v4.1.17   | ✅ v4    |
+| Feature             | FFC-IN-FFC_Single_Page_Template | freeforcharity-web | ffcadmin.org | KCCF-web |
+| ------------------- | ------------------------------- | ------------------ | ------------ | -------- |
+| **Next.js Version** | 16.0.7                          | 15.5.2             | 16.0.3       | 15.4.6   |
+| **React Version**   | 19.1.0                          | 19.1.0             | 19.2.0       | 19.1.0   |
+| **Node.js Target**  | 24.x                            | 20.x               | 20.x         | 20.x     |
+| **Package Manager** | npm                             | npm                | pnpm         | npm      |
+| **Static Export**   | ✅                              | ✅                 | ✅           | ✅       |
+| **TypeScript**      | ✅                              | ✅                 | ✅           | ✅       |
+| **Tailwind CSS**    | ✅ v4.1.12                      | ✅ v4.1.12         | ✅ v4.1.17   | ✅ v4    |
 
 ### Dependency Comparison
 
-| Library/Tool         | FFC_Single_Page_Template     | freeforcharity-web | ffcadmin.org | KCCF-web |
-| -------------------- | ---------------------------- | ------------------ | ------------ | -------- |
-| **framer-motion**    | ✅ 12.23.24                  | ✅ 12.23.24        | ❌           | ❌       |
-| **lucide-react**     | ❌ removed (use react-icons) | ✅ 0.469.0         | ❌           | ❌       |
-| **react-icons**      | ✅ 5.5.0                     | ✅ 5.5.0           | ❌           | ❌       |
-| **swiper**           | ✅ 12.0.3                    | ✅ 12.0.3          | ❌           | ❌       |
-| **@playwright/test** | ✅ 1.56.0                    | ✅ 1.56.0          | ❌           | ❌       |
+| Library/Tool         | FFC-IN-FFC_Single_Page_Template | freeforcharity-web | ffcadmin.org | KCCF-web |
+| -------------------- | ------------------------------- | ------------------ | ------------ | -------- |
+| **framer-motion**    | ✅ 12.23.24                     | ✅ 12.23.24        | ❌           | ❌       |
+| **lucide-react**     | ❌ removed (use react-icons)    | ✅ 0.469.0         | ❌           | ❌       |
+| **react-icons**      | ✅ 5.5.0                        | ✅ 5.5.0           | ❌           | ❌       |
+| **swiper**           | ✅ 12.0.3                       | ✅ 12.0.3          | ❌           | ❌       |
+| **@playwright/test** | ✅ 1.56.0                       | ✅ 1.56.0          | ❌           | ❌       |
 
-**Observation:** FFC_Single_Page_Template and freeforcharity-web are nearly identical in their dependency stacks, suggesting they share similar feature sets.
+**Observation:** FFC-IN-FFC_Single_Page_Template and freeforcharity-web are nearly identical in their dependency stacks, suggesting they share similar feature sets.
 
 ---
 
@@ -293,7 +293,7 @@ module.exports = {
 ### GAP-4: Bundle Size Analysis
 
 **Status:** ⚠️ Partial (config present but not fully utilized)  
-**Present In:** ffcadmin.org (comprehensive), FFC_Single_Page_Template (basic)  
+**Present In:** ffcadmin.org (comprehensive), FFC-IN-FFC_Single_Page_Template (basic)  
 **Priority:** LOW
 
 #### Current State
@@ -1130,7 +1130,7 @@ export const FORM_CONFIGS: Record<FormType, FormConfig> = {
 ### GAP-14: Cookie Consent with Granular Controls
 
 **Status:** ⚠️ Basic implementation exists  
-**Present In:** KCCF-web (advanced), FFC_Single_Page_Template (basic)  
+**Present In:** KCCF-web (advanced), FFC-IN-FFC_Single_Page_Template (basic)  
 **Priority:** MEDIUM
 
 #### Current State
@@ -2132,69 +2132,69 @@ trim_trailing_whitespace = false
 
 ### Development Tooling Status
 
-| Feature             | FFC_Single_Page_Template | freeforcharity-web | ffcadmin.org | KCCF-web |
-| ------------------- | ------------------------ | ------------------ | ------------ | -------- |
-| **Prettier**        | ✅ 3.7.4                 | ❌                 | ✅ 3.4.2     | ❌       |
-| **Husky**           | ✅ 9.1.7                 | ❌                 | ✅ 9.1.7     | ❌       |
-| **Commitlint**      | ✅ 20.1.0                | ❌                 | ✅ 20.0.1    | ❌       |
-| **.editorconfig**   | ✅ Added                 | ❌                 | ✅           | ❌       |
-| **Linkinator**      | ✅ Latest                | ❌                 | ✅ 7.4.6     | ❌       |
-| **Bundle Analyzer** | ⚠️ Config only           | ⚠️ Config only     | ✅ Active    | ❌       |
+| Feature             | FFC-IN-FFC_Single_Page_Template | freeforcharity-web | ffcadmin.org | KCCF-web |
+| ------------------- | ------------------------------- | ------------------ | ------------ | -------- |
+| **Prettier**        | ✅ 3.7.4                        | ❌                 | ✅ 3.4.2     | ❌       |
+| **Husky**           | ✅ 9.1.7                        | ❌                 | ✅ 9.1.7     | ❌       |
+| **Commitlint**      | ✅ 20.1.0                       | ❌                 | ✅ 20.0.1    | ❌       |
+| **.editorconfig**   | ✅ Added                        | ❌                 | ✅           | ❌       |
+| **Linkinator**      | ✅ Latest                       | ❌                 | ✅ 7.4.6     | ❌       |
+| **Bundle Analyzer** | ⚠️ Config only                  | ⚠️ Config only     | ✅ Active    | ❌       |
 
 ### Testing Infrastructure Status
 
-| Feature                      | FFC_Single_Page_Template | freeforcharity-web | ffcadmin.org | KCCF-web |
-| ---------------------------- | ------------------------ | ------------------ | ------------ | -------- |
-| **Jest**                     | ✅ 30.2.0                | ❌                 | ✅ 30.2.0    | ❌       |
-| **React Testing Library**    | ✅ 16.3.0                | ❌                 | ✅ 16.3.0    | ❌       |
-| **jest-axe (Accessibility)** | ✅ 10.0.0                | ❌                 | ✅           | ❌       |
-| **Playwright (E2E)**         | ✅ 1.56.0                | ✅ 1.56.0          | ❌           | ❌       |
-| **Test Coverage**            | ✅ ~5% (25 tests)        | ❌                 | ✅ ~15%      | ❌       |
-| **Coverage Thresholds**      | ✅ Configured            | ❌                 | ✅           | ❌       |
+| Feature                      | FFC-IN-FFC_Single_Page_Template | freeforcharity-web | ffcadmin.org | KCCF-web |
+| ---------------------------- | ------------------------------- | ------------------ | ------------ | -------- |
+| **Jest**                     | ✅ 30.2.0                       | ❌                 | ✅ 30.2.0    | ❌       |
+| **React Testing Library**    | ✅ 16.3.0                       | ❌                 | ✅ 16.3.0    | ❌       |
+| **jest-axe (Accessibility)** | ✅ 10.0.0                       | ❌                 | ✅           | ❌       |
+| **Playwright (E2E)**         | ✅ 1.56.0                       | ✅ 1.56.0          | ❌           | ❌       |
+| **Test Coverage**            | ✅ ~5% (25 tests)               | ❌                 | ✅ ~15%      | ❌       |
+| **Coverage Thresholds**      | ✅ Configured                   | ❌                 | ✅           | ❌       |
 
 ### CI/CD & Security Status
 
-| Feature                          | FFC_Single_Page_Template | freeforcharity-web | ffcadmin.org | KCCF-web |
-| -------------------------------- | ------------------------ | ------------------ | ------------ | -------- |
-| **CodeQL Security Scanning**     | ✅ Active                | ❌                 | ✅ Active    | ✅       |
-| **Lighthouse CI**                | ✅ Active                | ❌                 | ✅ Active    | ❌       |
-| **Separate CI/Deploy Workflows** | ✅ Split                 | ❌ Monolithic      | ✅ Split     | ❌       |
-| **Dependabot**                   | ✅ Configured            | ✅                 | ✅           | ✅       |
-| **Link Validation in CI**        | ✅ Ready                 | ❌                 | ✅           | ❌       |
+| Feature                          | FFC-IN-FFC_Single_Page_Template | freeforcharity-web | ffcadmin.org | KCCF-web |
+| -------------------------------- | ------------------------------- | ------------------ | ------------ | -------- |
+| **CodeQL Security Scanning**     | ✅ Active                       | ❌                 | ✅ Active    | ✅       |
+| **Lighthouse CI**                | ✅ Active                       | ❌                 | ✅ Active    | ❌       |
+| **Separate CI/Deploy Workflows** | ✅ Split                        | ❌ Monolithic      | ✅ Split     | ❌       |
+| **Dependabot**                   | ✅ Configured                   | ✅                 | ✅           | ✅       |
+| **Link Validation in CI**        | ✅ Ready                        | ❌                 | ✅           | ❌       |
 
 ### Documentation Status
 
-| Documentation File       | FFC_Single_Page_Template | freeforcharity-web | ffcadmin.org | KCCF-web |
-| ------------------------ | ------------------------ | ------------------ | ------------ | -------- |
-| **README.md**            | ✅                       | ✅                 | ✅           | ✅       |
-| **CONTRIBUTING.md**      | ✅                       | ❌                 | ✅           | ❌       |
-| **TESTING.md**           | ✅                       | ✅                 | ✅           | ❌       |
-| **CODE_QUALITY.md**      | ✅                       | ❌                 | ✅           | ❌       |
-| **SECURITY.md**          | ✅                       | ❌                 | ✅           | ❌       |
-| **DEPLOYMENT.md**        | ✅                       | ❌                 | ✅           | ❌       |
-| **LIGHTHOUSE.md**        | ✅                       | ❌                 | ✅           | ❌       |
-| **ISSUE_RESOLUTION.md**  | ✅                       | ❌                 | ✅           | ❌       |
-| **RESPONSIVE_DESIGN.md** | ✅                       | ❌                 | ✅           | ❌       |
-| **QUICK_START.md**       | ✅                       | ❌                 | ✅           | ❌       |
-| **LESSONS_LEARNED.md**   | ✅                       | ❌                 | ✅           | ❌       |
-| **EXTERNAL_SERVICES.md** | ❌ Not needed            | ❌                 | ❌           | ✅       |
-| **GPG_SIGNING.md**       | ❌ Not implementing      | ❌                 | ✅           | ❌       |
+| Documentation File       | FFC-IN-FFC_Single_Page_Template | freeforcharity-web | ffcadmin.org | KCCF-web |
+| ------------------------ | ------------------------------- | ------------------ | ------------ | -------- |
+| **README.md**            | ✅                              | ✅                 | ✅           | ✅       |
+| **CONTRIBUTING.md**      | ✅                              | ❌                 | ✅           | ❌       |
+| **TESTING.md**           | ✅                              | ✅                 | ✅           | ❌       |
+| **CODE_QUALITY.md**      | ✅                              | ❌                 | ✅           | ❌       |
+| **SECURITY.md**          | ✅                              | ❌                 | ✅           | ❌       |
+| **DEPLOYMENT.md**        | ✅                              | ❌                 | ✅           | ❌       |
+| **LIGHTHOUSE.md**        | ✅                              | ❌                 | ✅           | ❌       |
+| **ISSUE_RESOLUTION.md**  | ✅                              | ❌                 | ✅           | ❌       |
+| **RESPONSIVE_DESIGN.md** | ✅                              | ❌                 | ✅           | ❌       |
+| **QUICK_START.md**       | ✅                              | ❌                 | ✅           | ❌       |
+| **LESSONS_LEARNED.md**   | ✅                              | ❌                 | ✅           | ❌       |
+| **EXTERNAL_SERVICES.md** | ❌ Not needed                   | ❌                 | ❌           | ✅       |
+| **GPG_SIGNING.md**       | ❌ Not implementing             | ❌                 | ✅           | ❌       |
 
 ### User Experience Features Status
 
-| Feature                         | FFC_Single_Page_Template | freeforcharity-web | ffcadmin.org | KCCF-web    |
-| ------------------------------- | ------------------------ | ------------------ | ------------ | ----------- |
-| **Dark Mode**                   | ❌ Not implemented       | ❌                 | ❌           | ✅          |
-| **Cookie Consent**              | ✅ Basic                 | ✅ Basic           | ❌           | ✅ Advanced |
-| **Modal/Popup System**          | ✅ Basic (2 modals)      | ✅ Basic           | ❌           | ✅ Advanced |
-| **Theme Context**               | ❌                       | ❌                 | ❌           | ✅          |
-| **Advanced Context Management** | ❌                       | ❌                 | ❌           | ✅          |
+| Feature                         | FFC-IN-FFC_Single_Page_Template | freeforcharity-web | ffcadmin.org | KCCF-web    |
+| ------------------------------- | ------------------------------- | ------------------ | ------------ | ----------- |
+| **Dark Mode**                   | ❌ Not implemented              | ❌                 | ❌           | ✅          |
+| **Cookie Consent**              | ✅ Basic                        | ✅ Basic           | ❌           | ✅ Advanced |
+| **Modal/Popup System**          | ✅ Basic (2 modals)             | ✅ Basic           | ❌           | ✅ Advanced |
+| **Theme Context**               | ❌                              | ❌                 | ❌           | ✅          |
+| **Advanced Context Management** | ❌                              | ❌                 | ❌           | ✅          |
 
 ### Summary of Remaining Gaps
 
 #### Features Not Implemented (By Design)
 
-These features are present in sister repositories but **intentionally not implemented** in FFC_Single_Page_Template:
+These features are present in sister repositories but **intentionally not implemented** in FFC-IN-FFC_Single_Page_Template:
 
 1. **GPG Commit Signing** (GAP-11) - Per issue requirements, commit bot/auto GPG signing excluded
 2. **Dark Mode** (GAP-12) - Optional feature, not prioritized
@@ -2437,7 +2437,7 @@ These enhancements focus on improving the **user experience** - what visitors se
 
 #### Current Status vs ffcadmin.org (Primary Reference)
 
-**Areas where FFC_Single_Page_Template equals or exceeds ffcadmin.org:**
+**Areas where FFC-IN-FFC_Single_Page_Template equals or exceeds ffcadmin.org:**
 
 - ✅ Playwright E2E testing (ffcadmin doesn't have this)
 - ✅ Accessibility testing with jest-axe (same)
@@ -2454,7 +2454,7 @@ These enhancements focus on improving the **user experience** - what visitors se
 
 ## Conclusion
 
-This analysis identified 19 technical capability gaps between FFC_Single_Page_Template and its sister repositories. Through 5 implementation phases, we have successfully closed the majority of critical gaps.
+This analysis identified 19 technical capability gaps between FFC-IN-FFC_Single_Page_Template and its sister repositories. Through 5 implementation phases, we have successfully closed the majority of critical gaps.
 
 ### Implementation Results
 
@@ -2502,7 +2502,7 @@ This analysis identified 19 technical capability gaps between FFC_Single_Page_Te
 
 ### Repository Maturity Status
 
-**FFC_Single_Page_Template** is now a **mature, production-ready template** with:
+**FFC-IN-FFC_Single_Page_Template** is now a **mature, production-ready template** with:
 
 1. **Enterprise-grade code quality tooling**
    - Automated formatting (Prettier)
@@ -2538,21 +2538,21 @@ This analysis identified 19 technical capability gaps between FFC_Single_Page_Te
 
 **vs freeforcharity-web:**
 
-- ✅ FFC_Single_Page_Template is now **significantly more advanced**
+- ✅ FFC-IN-FFC_Single_Page_Template is now **significantly more advanced**
 - Added: Testing, code quality tools, documentation, security scanning
 - freeforcharity-web should consider adopting these improvements
 
 **vs ffcadmin.org:**
 
 - ✅ Feature parity achieved in most areas
-- FFC_Single_Page_Template adds: Playwright E2E tests
+- FFC-IN-FFC_Single_Page_Template adds: Playwright E2E tests
 - ffcadmin.org advantage: Higher test coverage (~15% vs ~5%)
 
 **vs KCCF-web:**
 
 - ✅ Feature parity in infrastructure and tooling
 - KCCF-web advantages: Dark mode, advanced modal system
-- FFC_Single_Page_Template advantages: Testing, code quality automation
+- FFC-IN-FFC_Single_Page_Template advantages: Testing, code quality automation
 
 ### Future Recommendations
 
@@ -2585,7 +2585,7 @@ This analysis identified 19 technical capability gaps between FFC_Single_Page_Te
 
 **Project Status:** ✅ **Phase 5 Complete - All Critical Gaps Closed**
 
-The FFC_Single_Page_Template is now a **best-in-class Next.js template** with enterprise-grade tooling, comprehensive testing, professional documentation, and robust CI/CD. It meets or exceeds the capabilities of all sister repositories in most areas.
+The FFC-IN-FFC_Single_Page_Template is now a **best-in-class Next.js template** with enterprise-grade tooling, comprehensive testing, professional documentation, and robust CI/CD. It meets or exceeds the capabilities of all sister repositories in most areas.
 
 **Repository is production-ready and can serve as the foundation for future Free For Charity web projects.**
 

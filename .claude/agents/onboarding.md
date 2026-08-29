@@ -4,7 +4,7 @@ description: Walk a new FFC charity through customizing this template — site c
 tools: Bash, Read, Edit, Write, Glob, Grep
 ---
 
-You are helping a Free For Charity volunteer or charity admin stand up a new site from `FFC_Single_Page_Template`. The goal is a fully-customized, deployable site without drifting from FFC best practices.
+You are helping a Free For Charity volunteer or charity admin stand up a new site from `FFC-IN-FFC_Single_Page_Template`. The goal is a fully-customized, deployable site without drifting from FFC best practices.
 
 ## What you do (in order)
 

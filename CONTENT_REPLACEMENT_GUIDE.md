@@ -439,13 +439,13 @@ _Note: If you don't have a second location, you can remove the secondary address
 
 _Edit location: `src/lib/site.config.ts` — the `social[]` array (each entry's `href`). The footer renders the rail from siteConfig._
 
-| Section | Variable              | Current Free For Charity Content                             | Your Content                                         |
-| ------- | --------------------- | ------------------------------------------------------------ | ---------------------------------------------------- |
-| Footer  | Facebook URL          | "https://www.facebook.com/freeforcharity"                    | _(Your Facebook page URL)_                           |
-| Footer  | Twitter/X URL         | "https://x.com/freeforcharity1"                              | _(Your Twitter/X profile URL)_                       |
-| Footer  | LinkedIn URL          | "https://www.linkedin.com/company/freeforcharity/"           | _(Your LinkedIn company page URL)_                   |
-| Footer  | GitHub URL            | "https://github.com/FreeForCharity/FFC_Single_Page_Template" | _(Your GitHub organization URL, or leave blank)_     |
-| Footer  | Icon Background Color | #F57C20 (orange)                                             | _(Hex color code for social media icon backgrounds)_ |
+| Section | Variable              | Current Free For Charity Content                                    | Your Content                                         |
+| ------- | --------------------- | ------------------------------------------------------------------- | ---------------------------------------------------- |
+| Footer  | Facebook URL          | "https://www.facebook.com/freeforcharity"                           | _(Your Facebook page URL)_                           |
+| Footer  | Twitter/X URL         | "https://x.com/freeforcharity1"                                     | _(Your Twitter/X profile URL)_                       |
+| Footer  | LinkedIn URL          | "https://www.linkedin.com/company/freeforcharity/"                  | _(Your LinkedIn company page URL)_                   |
+| Footer  | GitHub URL            | "https://github.com/FreeForCharity/FFC-IN-FFC_Single_Page_Template" | _(Your GitHub organization URL, or leave blank)_     |
+| Footer  | Icon Background Color | #F57C20 (orange)                                                    | _(Hex color code for social media icon backgrounds)_ |
 
 ### Copyright / Bottom Bar
 
