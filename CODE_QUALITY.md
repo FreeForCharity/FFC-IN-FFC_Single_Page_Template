@@ -483,7 +483,7 @@ the validation logic into a separate function for better testability."
 pnpm run build
 
 # Run Lighthouse
-lhci autorun
+pnpm exec lhci autorun
 
 # Check bundle size
 pnpm run build

@@ -604,16 +604,16 @@ pnpm run test:e2e -- tests/logo.spec.ts
 
 ```bash
 # Check for updates
-npm outdated
+pnpm outdated
 
 # Update specific package
 npm update package-name
 
 # Update all to latest
-npm update
+pnpm update
 
 # Major version updates (careful!)
-npx npm-check-updates -u
+pnpm dlx npm-check-updates -u
 pnpm install
 ```
 
