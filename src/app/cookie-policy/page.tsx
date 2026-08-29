@@ -451,8 +451,9 @@ export default function CookiePolicy() {
             This site does not need to react to these browser signals to honor their intent:
             analytics and marketing cookies are off for every visitor until you opt in through the
             consent banner, and we do not sell or share personal information as defined by the
-            CCPA/CPRA. Declining consent — or withdrawing it later, which also deletes the tracking
-            cookies — keeps you in the untracked state those signals ask for.
+            CCPA/CPRA. Declining consent — or withdrawing it later, which stops the tracking scripts
+            and removes the cookies they set on this site — keeps you in the untracked state those
+            signals ask for.
           </p>
 
           {/* Section 6 */}
