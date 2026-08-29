@@ -453,7 +453,7 @@ Copy this into a comment on the issue, filling in the values from above:
 @copilot, follow the repository's `rebrand` skill and this issue to rebrand the site. Do ALL of the following, then run the verification step and paste its output back:
 
 IDENTITY & CONFIG
-1. Set every field in src/lib/site.config.ts (name, tagline, description, shortDescription, url, contactEmail, keywords, themeColor, social, parentOrg, guidestar, foundingDate) and the GTM container in src/lib/analytics.config.ts — this is the single source of truth. `npm run check:rebrand` lists exactly which FFC defaults remain.
+1. Set every field in src/lib/site.config.ts (name, tagline, description, shortDescription, url, contactEmail, keywords, themeColor, social, parentOrg, guidestar, foundingDate) and the GTM container in src/lib/analytics.config.ts — this is the single source of truth. `pnpm run check:rebrand` lists exactly which FFC defaults remain.
 2. Replace all instances of "ffcworkingsite1.org" with "[your-domain.org]" and update public/CNAME (or delete it for github.io-only).
 3. Update public/.well-known/security.txt AND public/security.txt: Contact = [security email], Canonical/Policy/Acknowledgments = new URL, Expires >= 12 months out.
 4. Update CODEOWNERS to: @[username1], @[username2], @[username3]; set NEXT_PUBLIC_BASE_PATH in deploy.yml/lighthouse.yml (empty for custom domain, /[repo] for github.io).
@@ -473,7 +473,7 @@ SEO:
 CONTENT & METADATA:
 11. Social links, footer (parent-org credit via siteConfig.parentOrg), README.md, CITATION.cff, .github/FUNDING.yml, repo description/topics.
 
-VERIFY (paste output): npm run format && npm run lint && npm run check:rebrand && npm run check:drift && npm test && npm run build
+VERIFY (paste output): pnpm run format && pnpm run lint && pnpm run check:rebrand && pnpm run check:drift && pnpm test && pnpm run build
 ```
 
 `check:drift` includes a **brand-identity gate** that fails if any Free For
@@ -490,7 +490,7 @@ After Copilot completes the updates, you will need to manually:
 1. Replace logo and favicon files in `/public` directory with the assets attached to this issue
 2. Review the team members in `src/data/team/` (name, role, optional LinkedIn) — no photos are needed; cards render an initials monogram
 3. Review and adjust color scheme in `src/app/globals.css` with the hex codes provided above
-4. Test all changes locally with `npm run dev`
+4. Test all changes locally with `pnpm run dev`
 
 **Estimated time: 20-40 minutes**
 

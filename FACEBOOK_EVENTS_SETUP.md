@@ -505,7 +505,7 @@ Before committing, perform these manual tests:
 1. **Start development server:**
 
    ```bash
-   npm run dev
+   pnpm run dev
    ```
 
 2. **Test without consent:**
@@ -942,23 +942,23 @@ export default Events
 
 ```bash
 # Build the site
-npm run build
+pnpm run build
 
 # Run Playwright tests
-npm run test:e2e
+pnpm run test:e2e
 
 # Or run with UI
-npm run test:e2e:ui
+pnpm run test:e2e:ui
 ```
 
 ### Run Lighthouse Performance Test
 
 ```bash
-npm run build
-npm run preview
+pnpm run build
+pnpm run preview
 
 # In another terminal
-npm run lighthouse
+pnpm run lighthouse
 ```
 
 **Acceptance criteria:**

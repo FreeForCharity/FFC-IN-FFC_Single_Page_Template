@@ -229,7 +229,7 @@ The repository uses automated quality checks to ensure code quality and security
 - Can also be triggered manually via workflow dispatch (bypasses CI wait)
 - Steps include:
   - Node.js 24 environment setup
-  - Clean dependency installation (`npm ci`)
+  - Clean dependency installation (`pnpm install --frozen-lockfile`)
   - Next.js static site build with basePath for GitHub Pages
   - Static site artifact upload
   - Deployment to GitHub Pages from `./out` directory
@@ -260,8 +260,8 @@ If you're new to this project, follow these security guidelines:
    - Check `.gitignore` to ensure sensitive files are excluded
 
 3. **Keep dependencies updated**
-   - Run `npm audit` to check for vulnerabilities
-   - Use `npm audit --audit-level=moderate` to set the CI exit threshold to moderate and higher severity issues
+   - Run `pnpm audit` to check for vulnerabilities
+   - Use `pnpm audit --audit-level=moderate` to set the CI exit threshold to moderate and higher severity issues
    - Update dependencies promptly when security patches are released
    - Review dependency changes in pull requests
 
@@ -272,9 +272,9 @@ If you're new to this project, follow these security guidelines:
    - Address all feedback before merging
 
 5. **Test your changes**
-   - Run `npm run lint` before committing
-   - Run `npm run build` to ensure your changes build successfully
-   - Run `npm test` to verify all tests pass
+   - Run `pnpm run lint` before committing
+   - Run `pnpm run build` to ensure your changes build successfully
+   - Run `pnpm test` to verify all tests pass
    - Test manually in your browser when changing UI
 
 ### Reporting Security Vulnerabilities
@@ -426,13 +426,13 @@ Beyond branch protection, this repository uses:
 
 ### Current Status (December 2025)
 
-The project currently has **4 low severity vulnerabilities** identified by npm audit:
+The project currently has **4 low severity vulnerabilities** identified by pnpm audit:
 
 - **4 low severity**: tmp package vulnerabilities
   - Affects: @lhci/cli (Lighthouse CI - dev dependency only)
   - Vulnerability: Arbitrary temporary file/directory write via symbolic link (GHSA-52f5-9888-hmc6)
   - Impact: Limited to development environment, does not affect production site
-  - Fix available via `npm audit fix --force` (may involve breaking changes to Lighthouse CI)
+  - Fix available via `pnpm audit fix --force` (may involve breaking changes to Lighthouse CI)
 
 **Good News**: The previously reported critical Next.js RCE vulnerability (GHSA-9qr9-h5gf-34mp) has been resolved. The project is now using next@16.0.7, which includes the security fix.
 
@@ -447,23 +447,23 @@ The project currently has **4 low severity vulnerabilities** identified by npm a
 
 ```bash
 # Check for known vulnerabilities
-npm audit
+pnpm audit
 
 # View detailed vulnerability information
-npm audit --json
+pnpm audit --json
 
 # Automatically fix vulnerabilities (use with caution)
-npm audit fix
+pnpm audit fix
 
 # Fix including breaking changes (⚠️ WARNING: Test thoroughly in development first!)
-npm audit fix --force
+pnpm audit fix --force
 ```
 
 **Important**: Always test security updates thoroughly before deploying to production:
 
 1. Run updates in a development environment first
-2. Run all tests: `npm test` and `npm run test:e2e`
-3. Build and preview: `npm run build && npm run preview`
+2. Run all tests: `pnpm test` and `pnpm run test:e2e`
+3. Build and preview: `pnpm run build && pnpm run preview`
 4. Manually test critical functionality
 5. Only deploy after confirming everything works correctly
 

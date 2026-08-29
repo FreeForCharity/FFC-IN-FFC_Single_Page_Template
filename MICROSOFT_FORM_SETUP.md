@@ -64,7 +64,7 @@ The following components now use the new `ApplicationFormButton`:
 
 After updating the URL, test the popup by:
 
-1. Running `npm run dev`
+1. Running `pnpm run dev`
 2. Navigate to the Programs section on the homepage
 3. Click "Apply to Become a Supported Charity"
 4. Verify the Microsoft Form loads in the popup

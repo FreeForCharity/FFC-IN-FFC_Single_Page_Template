@@ -154,7 +154,7 @@ The Lighthouse CI configuration is in `lighthouserc.json`:
 
 **Important**: URLs should point to the actual `.html` files in the `out` directory. Next.js static export generates flat HTML files at the root level. This site has a single homepage with sections (About Us, Donate, Volunteer) rather than separate pages for those features. However, the policy pages are separate routes that generate individual HTML files.
 
-You can add more pages to audit by adding URLs to the `url` array. To see which pages are generated, check the `out/` directory after running `npm run build`.
+You can add more pages to audit by adding URLs to the `url` array. To see which pages are generated, check the `out/` directory after running `pnpm run build`.
 
 ---
 
@@ -169,10 +169,10 @@ You can add more pages to audit by adding URLs to the `url` array. To see which 
 
 ```bash
 # Build the site
-npm run build
+pnpm run build
 
 # Install Lighthouse CI globally (if not already installed)
-npm install -g @lhci/cli
+pnpm add -g @lhci/cli
 
 # Run Lighthouse CI
 lhci autorun
@@ -337,7 +337,7 @@ identify image.webp
 Before making image optimizations, run Lighthouse to establish a baseline:
 
 ```bash
-npm run build
+pnpm run build
 lhci autorun
 ```
 
@@ -506,7 +506,7 @@ The Lighthouse CI is integrated into the deployment pipeline with the following 
    - Format check with Prettier
    - Linting with ESLint
    - Unit tests run with Jest
-   - Site is built with `npm run build`
+   - Site is built with `pnpm run build`
    - E2E tests run with Playwright
 
 2. **Deploy Workflow** (deploy.yml)

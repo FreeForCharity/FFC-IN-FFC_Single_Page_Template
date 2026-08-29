@@ -16,12 +16,12 @@ at the end is mandatory.
 
 ## Two checks, two jobs
 
-- `npm run check:rebrand` — an **advisory** checklist (exits 0) of FFC _config
+- `pnpm run check:rebrand` — an **advisory** checklist (exits 0) of FFC _config
   and data_ defaults still present: `site.config.ts` values, the real GTM
   container, `security.txt`, and the sample team/testimonials/FAQ data. Run it
-  early; run `npm run check:rebrand --strict` to make it exit non-zero while any
+  early; run `pnpm run check:rebrand --strict` to make it exit non-zero while any
   default remains.
-- `npm run check:drift` — an **enforced** CI gate. It now includes a
+- `pnpm run check:drift` — an **enforced** CI gate. It now includes a
   brand-identity check: once `siteConfig.name` differs from `Free For Charity`,
   any leftover `Free For Charity`, `freeforcharity.org`, EIN `46-2471893`, phone
   `520-222-8104`, or `@freeforcharity.org` email in `src/app/**` or
@@ -50,7 +50,7 @@ EIN, jurisdiction, or donation term is worse than an omitted one.
 
 ### 1. Central config — `src/lib/site.config.ts`
 
-Set every FFC default `npm run check:rebrand` reports: `name`, `tagline`,
+Set every FFC default `pnpm run check:rebrand` reports: `name`, `tagline`,
 `description`, `shortDescription`, `url` (bare origin, `https://`, no trailing
 slash), `contactEmail`, `keywords`, `themeColor`, `social`, `parentOrg`,
 `guidestar`, `foundingDate`, and the analytics/GTM container in
@@ -175,14 +175,14 @@ Surface these to the org rather than inventing values:
 ### 8. Verify — mandatory, in order
 
 ```
-npm run format
-npm run lint
-npm run check:rebrand   # advisory: config/data defaults still present
-npm run check:drift     # ENFORCED: includes the brand-identity gate
-npm test
-npm run build
-npm run verify:build    # built-HTML: one <h1> + a canonical per page
-npm run test:e2e
+pnpm run format
+pnpm run lint
+pnpm run check:rebrand   # advisory: config/data defaults still present
+pnpm run check:drift     # ENFORCED: includes the brand-identity gate
+pnpm test
+pnpm run build
+pnpm run verify:build    # built-HTML: one <h1> + a canonical per page
+pnpm run test:e2e
 ```
 
 Then a belt-and-suspenders grep for surfaces the gate doesn't scan:

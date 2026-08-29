@@ -28,13 +28,13 @@ Based on the provided screenshots and GitHub API data, here's what happened when
 - **Steps Executed:**
   - Checkout repository
   - Setup Node.js 24
-  - Install dependencies (`npm ci`)
-  - Check formatting (`npm run format:check`)
-  - Run linting (`npm run lint`)
-  - Run unit tests (`npm test`)
+  - Install dependencies (`pnpm install --frozen-lockfile`)
+  - Check formatting (`pnpm run format:check`)
+  - Run linting (`pnpm run lint`)
+  - Run unit tests (`pnpm test`)
   - Install Playwright browsers
-  - Build Next.js site (`npm run build`)
-  - Run E2E tests (`npm run test:e2e`)
+  - Build Next.js site (`pnpm run build`)
+  - Run E2E tests (`pnpm run test:e2e`)
 
 ### 3. Deploy Workflow (Automated Deployment)
 

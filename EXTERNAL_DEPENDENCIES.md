@@ -277,8 +277,8 @@ To improve performance, we preconnect to frequently used domains:
 
 - **Dependabot:** Automated dependency updates
 - **Security Advisories:** GitHub Advanced Security enabled
-- **Vulnerability Scanning:** Regular npm audit runs
-- **Version Pinning:** Exact versions in package-lock.json
+- **Vulnerability Scanning:** Regular pnpm audit runs
+- **Version Pinning:** Exact versions in pnpm-lock.yaml
 
 ## Monitoring and Compliance
 

@@ -41,12 +41,12 @@ charity's name, URL, contact email, social links, etc.
 - **GitHub Pages base path** — chosen automatically by `deploy.yml` and `lighthouse.yml` based on whether `public/CNAME` exists. With a CNAME the build uses an empty basePath (custom-domain root). Without a CNAME the build uses `/<repo-name>` for github.io subpath deploys. No manual workflow edit required when you rename the repo.
 - **OG/Twitter card image** — `layout.tsx` points at `/Images/og-image.png` (1200×630 landscape, the size social cards expect). To rebrand, replace `public/Images/og-image.png` with your own 1200×630 image (keep the filename). The square `/web-app-manifest-512x512.png` is still used separately for the PWA icon and the JSON-LD logo.
 
-After editing, **run `npm run check:drift`** to confirm nothing else still
+After editing, **run `pnpm run check:drift`** to confirm nothing else still
 references the old placeholder values.
 
-### Are you done rebranding? — `npm run check:rebrand`
+### Are you done rebranding? — `pnpm run check:rebrand`
 
-Run **`npm run check:rebrand`** at any point to get a checklist of every value
+Run **`pnpm run check:rebrand`** at any point to get a checklist of every value
 that still matches the Free For Charity template defaults — charity name, EIN,
 phone, contact email, domain/CNAME, the GTM analytics container, and the sample
 team / testimonials / FAQ content. It is a guide, not a gate: it always exits 0
@@ -137,19 +137,19 @@ When you add a new third-party origin (analytics, embed, payment), update
 **both** `public/_headers` and the CSP `<meta>` tag in `src/app/layout.tsx`.
 Only the `<meta>` tag changes what the live site allows today; the `_headers`
 copy is kept in lockstep so a future move to Cloudflare Pages inherits a
-correct policy rather than a stale one. `npm run check:drift` errors if the two
+correct policy rather than a stale one. `pnpm run check:drift` errors if the two
 disagree.
 
 ## Verifying nothing drifted
 
 ```
-npm run format         # auto-fix formatting
-npm run lint           # ESLint
-npm run check:drift    # FFC best-practices
-npm run check:rebrand  # remaining template defaults (guide only, never fails)
-npm test               # Jest unit tests
-npm run build          # static export
-npm run test:e2e       # Playwright
+pnpm run format         # auto-fix formatting
+pnpm run lint           # ESLint
+pnpm run check:drift    # FFC best-practices
+pnpm run check:rebrand  # remaining template defaults (guide only, never fails)
+pnpm test               # Jest unit tests
+pnpm run build          # static export
+pnpm run test:e2e       # Playwright
 ```
 
 CI runs the same set on every PR. Get it green locally first to keep PR

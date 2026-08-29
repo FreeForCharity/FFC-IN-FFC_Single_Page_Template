@@ -8,11 +8,11 @@ Issue -> branch -> PR -> merge queue. No direct commits to main.
 
 ## Pre-Push Checks (in order)
 
-1. `npm run format`
-2. `npm run lint`
-3. `npm test`
-4. `npm run build`
-5. `npm run test:e2e`
+1. `pnpm run format`
+2. `pnpm run lint`
+3. `pnpm test`
+4. `pnpm run build`
+5. `pnpm run test:e2e`
 
 ## Architecture
 
@@ -35,7 +35,7 @@ Issue -> branch -> PR -> merge queue. No direct commits to main.
 - Prettier `format:check`
 - ESLint (no errors)
 - Jest (all tests pass)
-- `npm run build` (static export succeeds)
+- `pnpm run build` (static export succeeds)
 - Playwright E2E
 - CodeQL (static analysis, GitHub code scanning default setup — no workflow file)
 

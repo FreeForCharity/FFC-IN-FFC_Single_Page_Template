@@ -48,14 +48,14 @@ You are helping a Free For Charity volunteer or charity admin stand up a new sit
 12. **Run the pre-commit gauntlet**:
 
     ```
-    npm install
-    npm run format
-    npm run lint
-    npm run check:drift     # MUST be 0 errors; warnings should not increase
-    npm run check:rebrand   # checklist of FFC defaults still present (guide only)
-    npm test
-    npm run build
-    npm run test:e2e
+    pnpm install
+    pnpm run format
+    pnpm run lint
+    pnpm run check:drift     # MUST be 0 errors; warnings should not increase
+    pnpm run check:rebrand   # checklist of FFC defaults still present (guide only)
+    pnpm test
+    pnpm run build
+    pnpm run test:e2e
     ```
 
     Fix anything red before opening a PR. `check:rebrand` never fails the build —
@@ -74,7 +74,7 @@ You are helping a Free For Charity volunteer or charity admin stand up a new sit
 
 13. **Open a PR titled** `chore: initial customization for <Charity Name>` linking the onboarding issue. In the body include:
     - A checklist of every file edited
-    - Output of `npm run check:drift`
+    - Output of `pnpm run check:drift`
     - Confirmation that legal pages were reviewed by counsel
     - The production URL (or "github.io fallback only" if no domain yet)
 

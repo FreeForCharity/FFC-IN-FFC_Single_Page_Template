@@ -46,10 +46,10 @@ Code quality is essential for maintainability, collaboration, and long-term succ
 
 ```bash
 # Check for errors
-npm run lint
+pnpm run lint
 
 # Auto-fix issues where possible
-npm run lint -- --fix
+pnpm run lint -- --fix
 ```
 
 **Key Rules**:
@@ -70,10 +70,10 @@ npm run lint -- --fix
 
 ```bash
 # Type checking is automatic during build
-npm run build
+pnpm run build
 
 # Or use tsc directly
-npx tsc --noEmit
+pnpm exec tsc --noEmit
 ```
 
 **Best Practices**:
@@ -94,13 +94,13 @@ npx tsc --noEmit
 
 ```bash
 # Run all tests
-npm test
+pnpm test
 
 # Run with coverage
-npm run test:coverage
+pnpm run test:coverage
 
 # Run in watch mode
-npm run test:watch
+pnpm run test:watch
 ```
 
 **Coverage Requirements**:
@@ -119,13 +119,13 @@ npm run test:watch
 
 ```bash
 # Build first
-npm run build
+pnpm run build
 
 # Run E2E tests
-npm run test:e2e
+pnpm run test:e2e
 
 # Run with UI
-npm run test:e2e:ui
+pnpm run test:e2e:ui
 ```
 
 ### CodeQL
@@ -480,13 +480,13 @@ the validation logic into a separate function for better testability."
 
 ```bash
 # Build and analyze
-npm run build
+pnpm run build
 
 # Run Lighthouse
 lhci autorun
 
 # Check bundle size
-npm run build
+pnpm run build
 # Look for "First Load JS" in the output
 ```
 
@@ -500,7 +500,7 @@ npm run build
 2. **Validate user input**: All inputs should be validated
 3. **Sanitize output**: Prevent XSS attacks
 4. **Use HTTPS**: Always
-5. **Keep dependencies updated**: Regular `npm audit`
+5. **Keep dependencies updated**: Regular `pnpm audit`
 6. **Follow OWASP guidelines**: Common vulnerabilities
 
 ### Environment Variables
@@ -538,13 +538,13 @@ Be cautious with:
 
 ```bash
 # Check for vulnerabilities
-npm audit
+pnpm audit
 
 # Fix vulnerabilities
-npm audit fix
+pnpm audit fix
 
 # Update dependencies
-npm update
+pnpm update
 ```
 
 ---
@@ -582,16 +582,16 @@ npm update
 
 ```bash
 # Development
-npm run dev              # Start dev server
-npm run lint            # Run ESLint
-npm test                # Run unit tests
-npm run test:e2e        # Run E2E tests
-npm run build           # Build for production
+pnpm run dev              # Start dev server
+pnpm run lint            # Run ESLint
+pnpm test                # Run unit tests
+pnpm run test:e2e        # Run E2E tests
+pnpm run build           # Build for production
 
 # Analysis
-npm run test:coverage   # Test coverage report
-npm audit               # Security vulnerabilities
-npm outdated            # Check outdated packages
+pnpm run test:coverage   # Test coverage report
+pnpm audit               # Security vulnerabilities
+pnpm outdated           # Check outdated packages
 ```
 
 ### External Resources

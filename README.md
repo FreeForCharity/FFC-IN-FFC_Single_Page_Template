@@ -82,7 +82,7 @@ If you're using Claude Code (or another coding agent), paste the prompt below in
 You are converting this Free For Charity template into a site for a specific
 501(c)(3) nonprofit. Read TEMPLATE_CUSTOMIZATION.md first — it maps every
 config field to where it surfaces. Then make the changes below as a single
-focused commit per logical step. After each step run `npm run check:drift`
+focused commit per logical step. After each step run `pnpm run check:drift`
 and report any new warnings.
 
 ## CHARITY INFORMATION
@@ -179,19 +179,19 @@ hand or use the same address for both.
 
 ## VERIFICATION (run in order, fix any failure before proceeding)
 
-1. npm install
-2. npm run format
-3. npm run lint
-4. npm run check:drift ← MUST be 0 errors; ideally fewer warnings than before
-5. npm test
-6. npm run build
-7. npm run test:e2e
+1. pnpm install
+2. pnpm run format
+3. pnpm run lint
+4. pnpm run check:drift ← MUST be 0 errors; ideally fewer warnings than before
+5. pnpm test
+6. pnpm run build
+7. pnpm run test:e2e
 
 Open a PR titled `chore: initial customization for [CHARITY NAME]`. In the
 body include:
 
 - A checklist of every file you touched (drives reviewer focus)
-- Output of `npm run check:drift` (proves no new errors)
+- Output of `pnpm run check:drift` (proves no new errors)
 - Confirmation that legal pages were reviewed by counsel
 - The custom domain (or "github.io fallback only" if no domain yet)
 
@@ -354,13 +354,13 @@ Content such as FAQs, Team Members, and Testimonials is stored as JSON files in 
 1. Install dependencies
 
 ```bash
-npm install
+pnpm install
 ```
 
 2. Run the dev server
 
 ```bash
-npm run dev
+pnpm run dev
 ```
 
 Visit http://localhost:3000
@@ -373,15 +373,15 @@ This project includes automated tests to ensure quality and consistency.
 
 ```bash
 # Build the site first
-npm run build
+pnpm run build
 
 # Install Playwright browsers (first time only)
-npx playwright install chromium
+pnpm exec playwright install chromium
 
 # Run tests
-npm test              # Headless mode
-npm run test:headed   # With browser visible
-npm run test:ui       # Interactive UI mode
+pnpm test              # Headless mode
+pnpm run test:headed   # With browser visible
+pnpm run test:ui       # Interactive UI mode
 ```
 
 ### Current Test Coverage
@@ -403,7 +403,7 @@ npm run test:ui       # Interactive UI mode
 **Test Configuration** (`playwright.config.ts`)
 
 - Uses system Chromium browser to avoid network download issues
-- Runs against built static site (`npm run preview`)
+- Runs against built static site (`pnpm run preview`)
 - Retries failed tests 2x in CI, 0x locally
 - Collects traces on first retry for debugging
 
@@ -505,14 +505,14 @@ per repository:
 > setup and an advanced workflow conflict, and GitHub will refuse to enable
 > default setup while the workflow exists. Use default setup only.
 
-**npm audit**
+**pnpm audit**
 
 - All dependencies are checked for security vulnerabilities
-- Run `npm audit` locally to check for known security issues
+- Run `pnpm audit` locally to check for known security issues
 - ⚠️ **Known Issues**: As of December 2025, there are 4 low severity vulnerabilities
   - Low: tmp package vulnerabilities affecting Lighthouse CI dev dependency only
   - Impact: Limited to development environment, does not affect production site
-  - Fix available via `npm audit fix --force` (may involve breaking changes)
+  - Fix available via `pnpm audit fix --force` (may involve breaking changes)
   - These are being monitored and will be addressed through regular Dependabot updates
   - See [TECHNICAL_DEBT.md](./TECHNICAL_DEBT.md) for tracking and prioritization
   - See [SECURITY.md](./SECURITY.md) for detailed information and mitigation steps
@@ -527,7 +527,7 @@ The project uses separate workflows for better separation of concerns:
 
 - ✅ Runs on all pull requests and pushes
 - ✅ Node.js 24 setup
-- ✅ Dependency installation (`npm ci`)
+- ✅ Dependency installation (`pnpm install --frozen-lockfile`)
 - ✅ Code formatting check (Prettier)
 - ✅ Linting (ESLint)
 - ✅ Unit tests (Jest)
@@ -541,7 +541,7 @@ The project uses separate workflows for better separation of concerns:
 - ✅ Runs only after CI workflow completes successfully
 - ✅ Ensures all tests pass before deployment
 - ✅ Node.js 24 setup
-- ✅ Dependency installation (`npm ci`)
+- ✅ Dependency installation (`pnpm install --frozen-lockfile`)
 - ✅ Next.js build with GitHub Pages basePath
 - ✅ Static site artifact upload
 - ✅ Deployment to GitHub Pages
@@ -599,7 +599,7 @@ The following enhancements could further improve the test suite:
 - **Increased Test Coverage**: Target 25-50% coverage for critical components
 - **TypeScript Strict Mode**: Enable additional strict flags
 - **Import Organization**: Add eslint-plugin-import for import sorting
-- **npm audit**: Add automated npm audit checks to CI with failure threshold
+- **pnpm audit**: Add automated pnpm audit checks to CI with failure threshold
 
 #### Build Quality Gates
 
@@ -711,7 +711,7 @@ Both platforms provide identical workflows:
 
 3. **Configure Build Settings**
    - Framework preset: Select "Next.js (Static HTML Export)"
-   - Build command: `npm run build`
+   - Build command: `pnpm run build`
    - Build output directory: `out`
    - Environment variables: Leave `NEXT_PUBLIC_BASE_PATH` unset
      - GitHub Pages needs `/FFC_Single_Page_Template` for subdirectory routing
@@ -743,7 +743,7 @@ If you prefer Vercel:
 3. Import this repository
 4. Configure:
    - Framework Preset: Next.js
-   - Build Command: `npm run build`
+   - Build Command: `pnpm run build`
    - Output Directory: `out`
    - Leave `NEXT_PUBLIC_BASE_PATH` unset
 5. Deploy
@@ -856,8 +856,8 @@ The site is configured for static export and deployed to GitHub Pages:
 **Local preview of production build:**
 
 ```bash
-npm run build    # Build static site
-npm run preview  # Preview at http://localhost:3000
+pnpm run build    # Build static site
+pnpm run preview  # Preview at http://localhost:3000
 ```
 
 **Note:** The build process uses `output: "export"` in `next.config.ts` for static site generation compatible with GitHub Pages.

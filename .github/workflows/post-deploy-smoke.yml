@@ -30,6 +30,9 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v6
 
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v6
+
       - name: Setup Node
         # Ahead of the scope resolver, not just ahead of Playwright. The
         # resolver is a node script, so the toolchain it runs on is declared
@@ -525,7 +528,7 @@ jobs:
           npm init -y >/dev/null
           npm install playwright@latest >/dev/null
           # Install the browser binaries + OS deps for chromium.
-          npx playwright install --with-deps chromium
+          pnpm exec playwright install --with-deps chromium
 
       - name: Visual check + screenshot + compliance assertions
         id: visual
@@ -840,12 +843,12 @@ jobs:
             echo "::notice::No tests/smoke/*.spec.* in repo — skipping repo-local smoke specs"
             exit 0
           fi
-          npm ci
-          npx playwright install --with-deps chromium
+          pnpm install --frozen-lockfile
+          pnpm exec playwright install --with-deps chromium
           if [ -f playwright.smoke.config.ts ]; then
-            npx playwright test --config playwright.smoke.config.ts --reporter=list
+            pnpm exec playwright test --config playwright.smoke.config.ts --reporter=list
           else
-            npx playwright test tests/smoke --reporter=list
+            pnpm exec playwright test tests/smoke --reporter=list
           fi
 
       - name: Upload screenshot + summary artifact

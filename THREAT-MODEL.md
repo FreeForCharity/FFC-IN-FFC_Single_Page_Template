@@ -127,9 +127,9 @@ The Free For Charity website is a static Next.js application deployed to GitHub 
 
 **Mitigations**:
 
-- ✅ npm audit runs in CI/CD
+- ✅ pnpm audit runs in CI/CD
 - ✅ Dependabot alerts enabled
-- ✅ Lock file committed (package-lock.json)
+- ✅ Lock file committed (pnpm-lock.yaml)
 - ✅ Limited dependencies (minimal attack surface)
 - ⚠️ Manual review of dependency updates
 - ⚠️ No automated dependency update merging

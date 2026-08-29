@@ -62,10 +62,10 @@ taskkill /PID <PID> /F
 **Option 2**: Use a different port
 
 ```bash
-PORT=3001 npm run dev
+PORT=3001 pnpm run dev
 ```
 
-### Issue: npm install Fails
+### Issue: pnpm install Fails
 
 **Symptoms**:
 
@@ -91,20 +91,20 @@ export PATH=~/.npm-global/bin:$PATH
 npm cache clean --force
 
 # Try again
-npm install
+pnpm install
 
 # Or use a different registry
-npm install --registry=https://registry.npmjs.org/
+pnpm install --registry=https://registry.npmjs.org/
 ```
 
 **Dependency conflicts**:
 
 ```bash
-# Delete node_modules and package-lock.json
-rm -rf node_modules package-lock.json
+# Delete node_modules and pnpm-lock.yaml
+rm -rf node_modules pnpm-lock.yaml
 
 # Clean install
-npm install
+pnpm install
 ```
 
 ### Issue: TypeScript Errors in IDE but Build Succeeds
@@ -112,7 +112,7 @@ npm install
 **Symptoms**:
 
 - VS Code shows TypeScript errors
-- `npm run build` succeeds
+- `pnpm run build` succeeds
 - Types appear incorrect
 
 **Solutions**:
@@ -130,7 +130,7 @@ npm install
 3. **Rebuild TypeScript types**:
    ```bash
    rm -rf node_modules/.cache
-   npm run build
+   pnpm run build
    ```
 
 ---
@@ -207,10 +207,10 @@ Error: Cannot find module '@/components/Header'
 
    ```bash
    # For GitHub Pages
-   NEXT_PUBLIC_BASE_PATH=/FFC_Single_Page_Template npm run build
+   NEXT_PUBLIC_BASE_PATH=/FFC_Single_Page_Template pnpm run build
 
    # For custom domain
-   npm run build
+   pnpm run build
    ```
 
 ### Issue: Out of Memory During Build
@@ -226,7 +226,7 @@ FATAL ERROR: Reached heap limit Allocation failed - JavaScript heap out of memor
 1. **Increase Node.js memory**:
 
    ```bash
-   NODE_OPTIONS="--max-old-space-size=4096" npm run build
+   NODE_OPTIONS="--max-old-space-size=4096" pnpm run build
    ```
 
 2. **Add to package.json**:
@@ -282,7 +282,7 @@ SyntaxError: Cannot use import statement outside a module
 
 **Symptoms**:
 
-- All tests pass with `npm test`
+- All tests pass with `pnpm test`
 - GitHub Actions shows test failures
 - Different behavior in CI vs local
 
@@ -347,9 +347,9 @@ Error: Test timeout of 30000ms exceeded
 3. **Check if server is running**:
    ```bash
    # Make sure build was successful
-   npm run build
+   pnpm run build
    # Then run tests
-   npm run test:e2e
+   pnpm run test:e2e
    ```
 
 ---
@@ -371,17 +371,17 @@ Error: Test timeout of 30000ms exceeded
 ```bash
 # Check build logs in Actions tab
 # Fix reported errors locally first
-npm run lint
-npm test
-npm run build
+pnpm run lint
+pnpm test
+pnpm run build
 ```
 
 #### Test Failure
 
 ```bash
 # Run tests locally
-npm test
-npm run test:e2e
+pnpm test
+pnpm run test:e2e
 
 # Fix failing tests
 # Commit and push
@@ -430,7 +430,7 @@ npm run test:e2e
 
 **Symptoms**:
 
-- `npm run build && npm run preview` works fine
+- `pnpm run build && pnpm run preview` works fine
 - Production site shows broken images
 - 404 errors for images in console
 
@@ -447,7 +447,7 @@ npm run test:e2e
 2. **Verify images in public directory**:
 
    ```bash
-   npm run build
+   pnpm run build
    ls -la out/_next/static/media/
    ```
 
@@ -540,7 +540,7 @@ if (typeof window !== 'undefined') {
 1. **Check build output**:
 
    ```bash
-   npm run build
+   pnpm run build
    ls -la out/_next/static/css/
    ```
 
@@ -594,10 +594,10 @@ touch src/components/MyComponent/index.tsx
 
 ```bash
 # Unit test
-npm test -- __tests__/components/Header.test.tsx
+pnpm test -- __tests__/components/Header.test.tsx
 
 # E2E test
-npm run test:e2e -- tests/logo.spec.ts
+pnpm run test:e2e -- tests/logo.spec.ts
 ```
 
 ### How do I update dependencies?
@@ -614,7 +614,7 @@ npm update
 
 # Major version updates (careful!)
 npx npm-check-updates -u
-npm install
+pnpm install
 ```
 
 ### How do I add environment variables?
@@ -634,13 +634,13 @@ npm install
 
 ```bash
 # Run test in watch mode
-npm run test:watch
+pnpm run test:watch
 
 # Run with verbose output
-npm test -- --verbose
+pnpm test -- --verbose
 
 # Run specific test
-npm test -- -t "test name"
+pnpm test -- -t "test name"
 
 # Debug in VS Code
 # Add breakpoint and run Debug Jest Tests
@@ -650,16 +650,16 @@ npm test -- -t "test name"
 
 ```bash
 # Check for vulnerabilities
-npm audit
+pnpm audit
 
 # Fix automatically
-npm audit fix
+pnpm audit fix
 
 # Force fix (may break things)
-npm audit fix --force
+pnpm audit fix --force
 
 # View details
-npm audit --json
+pnpm audit --json
 ```
 
 ### How do I improve Lighthouse scores?
