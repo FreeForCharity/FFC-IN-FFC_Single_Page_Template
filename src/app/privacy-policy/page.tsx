@@ -322,8 +322,8 @@ export default function PrivacyPolicy() {
             <li className="text-[14px] text-[#666] leading-[24px] font-[500]">
               <strong>Consent:</strong> Analytics and marketing cookies are off until you opt in
               through the cookie consent banner. You can withdraw consent at any time via the Cookie
-              Preferences link in the footer; this site then stops those scripts and removes the
-              tracking cookies it set.
+              Preferences link in the footer; this site then removes the tracking cookies it set and
+              stops loading those scripts from your next page view.
             </li>
             <li className="text-[14px] text-[#666] leading-[24px] font-[500]">
               <strong>Legitimate interests:</strong> Operating, securing, and improving this website
