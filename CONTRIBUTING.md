@@ -170,8 +170,8 @@ This approach helps you:
 
 Start by exploring the live Free For Charity website:
 
-- **Production Site:** [https://ffcworkingsite1.org](https://ffcworkingsite1.org)
-- **GitHub Pages:** [https://freeforcharity.github.io/FFC_Single_Page_Template/](https://freeforcharity.github.io/FFC_Single_Page_Template/)
+- **Production Site:** [https://freeforcharity.github.io/FFC-IN-FFC_Single_Page_Template/](https://freeforcharity.github.io/FFC-IN-FFC_Single_Page_Template/) (GitHub Pages default URL — no custom domain)
+- **GitHub Pages:** [https://freeforcharity.github.io/FFC-IN-FFC_Single_Page_Template/](https://freeforcharity.github.io/FFC-IN-FFC_Single_Page_Template/)
 
 #### Step 2: Comprehensive Evaluation
 
@@ -272,7 +272,7 @@ After creating your review issue:
 
 You can create a new reviewer onboarding issue directly using this link:
 
-[**Create Reviewer Onboarding Issue**](https://github.com/FreeForCharity/FFC_Single_Page_Template/issues/new?assignees=&labels=documentation%2Creview%2Conboarding&template=reviewer-onboarding.md)
+[**Create Reviewer Onboarding Issue**](https://github.com/FreeForCharity/FFC-IN-FFC_Single_Page_Template/issues/new?assignees=&labels=documentation%2Creview%2Conboarding&template=reviewer-onboarding.md)
 
 ### Tips for a Great Review
 
@@ -333,9 +333,9 @@ Starting your contribution journey with a fresh review:
 
 ### Ready to Review?
 
-1. Visit [https://ffcworkingsite1.org](https://ffcworkingsite1.org)
+1. Visit [https://freeforcharity.github.io/FFC-IN-FFC_Single_Page_Template/](https://freeforcharity.github.io/FFC-IN-FFC_Single_Page_Template/)
 2. Explore thoroughly and take notes
-3. [Create your review issue](https://github.com/FreeForCharity/FFC_Single_Page_Template/issues/new?assignees=&labels=documentation%2Creview%2Conboarding&template=reviewer-onboarding.md)
+3. [Create your review issue](https://github.com/FreeForCharity/FFC-IN-FFC_Single_Page_Template/issues/new?assignees=&labels=documentation%2Creview%2Conboarding&template=reviewer-onboarding.md)
 4. Report individual issues you discover
 5. Engage with the team on your findings
 
@@ -362,14 +362,14 @@ Starting your contribution journey with a fresh review:
 2. **Clone your fork**:
 
    ```bash
-   git clone https://github.com/YOUR_USERNAME/FFC_Single_Page_Template.git
-   cd FFC_Single_Page_Template
+   git clone https://github.com/YOUR_USERNAME/FFC-IN-FFC_Single_Page_Template.git
+   cd FFC-IN-FFC_Single_Page_Template
    ```
 
 3. **Add upstream remote**:
 
    ```bash
-   git remote add upstream https://github.com/FreeForCharity/FFC_Single_Page_Template.git
+   git remote add upstream https://github.com/FreeForCharity/FFC-IN-FFC_Single_Page_Template.git
    ```
 
 4. **Install dependencies**:
@@ -754,7 +754,7 @@ docs: update contributing guidelines
 
 ### GitHub Issues
 
-- Report bugs and request features through [GitHub Issues](https://github.com/FreeForCharity/FFC_Single_Page_Template/issues)
+- Report bugs and request features through [GitHub Issues](https://github.com/FreeForCharity/FFC-IN-FFC_Single_Page_Template/issues)
 - Search existing issues before creating a new one
 - Provide clear, detailed information
 - Use issue templates when available
