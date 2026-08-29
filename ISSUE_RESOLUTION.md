@@ -651,11 +651,11 @@ pnpm test -t "test name"
 # Check for vulnerabilities
 pnpm audit
 
-# Fix automatically
-pnpm audit fix
+# Fix automatically — writes overrides to package.json (no --force mode)
+pnpm audit --fix
 
-# Force fix (may break things)
-pnpm audit fix --force
+# Review the added overrides, then apply them
+pnpm install
 
 # View details
 pnpm audit --json

@@ -541,7 +541,7 @@ Be cautious with:
 pnpm audit
 
 # Fix vulnerabilities
-pnpm audit fix
+pnpm audit --fix
 
 # Update dependencies
 pnpm update

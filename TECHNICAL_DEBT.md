@@ -151,7 +151,7 @@ The project has **4 low severity vulnerabilities** identified by pnpm audit:
 
 **Available Fixes:**
 
-- `pnpm audit fix --force` - May introduce breaking changes to Lighthouse CI
+- `pnpm audit --fix` - May introduce breaking changes to Lighthouse CI
 - Wait for Lighthouse CI to update their dependencies
 
 **Current Decision:** Monitor via Dependabot, low priority to fix manually
@@ -190,11 +190,11 @@ pnpm audit
 # View details
 pnpm audit --json
 
-# Attempt automatic fix (use with caution)
-pnpm audit fix
+# Attempt automatic fix — writes overrides to package.json (use with caution)
+pnpm audit --fix
 
-# Fix including breaking changes (test thoroughly first!)
-pnpm audit fix --force
+# Review the added overrides, then apply them
+pnpm install
 ```
 
 **Response Protocol:**

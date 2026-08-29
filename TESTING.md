@@ -640,7 +640,7 @@ pnpm audit
 **Known Issues**:
 
 - Check for any security vulnerabilities and address them promptly
-- Use `pnpm audit fix` to automatically fix vulnerabilities when possible
+- Use `pnpm audit --fix` to automatically fix vulnerabilities when possible
 
 ## What to Verify
 

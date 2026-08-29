@@ -432,7 +432,7 @@ The project currently has **4 low severity vulnerabilities** identified by pnpm 
   - Affects: @lhci/cli (Lighthouse CI - dev dependency only)
   - Vulnerability: Arbitrary temporary file/directory write via symbolic link (GHSA-52f5-9888-hmc6)
   - Impact: Limited to development environment, does not affect production site
-  - Fix available via `pnpm audit fix --force` (may involve breaking changes to Lighthouse CI)
+  - Fix available via `pnpm audit --fix` (may involve breaking changes to Lighthouse CI)
 
 **Good News**: The previously reported critical Next.js RCE vulnerability (GHSA-9qr9-h5gf-34mp) has been resolved. The project is now using next@16.0.7, which includes the security fix.
 
@@ -452,11 +452,12 @@ pnpm audit
 # View detailed vulnerability information
 pnpm audit --json
 
-# Automatically fix vulnerabilities (use with caution)
-pnpm audit fix
+# Automatically add overrides for vulnerable versions (use with caution;
+# pnpm has no --force mode — --fix writes overrides to package.json)
+pnpm audit --fix
 
-# Fix including breaking changes (⚠️ WARNING: Test thoroughly in development first!)
-pnpm audit fix --force
+# Review the added overrides, then apply them
+pnpm install
 ```
 
 **Important**: Always test security updates thoroughly before deploying to production:
