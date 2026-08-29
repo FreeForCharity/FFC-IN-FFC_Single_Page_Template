@@ -112,7 +112,7 @@ The FFC Single Page Template was created as a standardized, reusable foundation 
 
 **Current Stats**:
 
-- 112 component files
+- 23 component files
 - Well-organized in `/src/components/`
 - Each component has single responsibility
 
@@ -391,7 +391,7 @@ docs: update README with new deployment instructions
 
 **Challenge**: Images and assets don't load on GitHub Pages deployment
 
-**Root Cause**: GitHub Pages serves the site at `/FFC_Single_Page_Template/` instead of `/`
+**Root Cause**: GitHub Pages serves the site at `/FFC-IN-FFC_Single_Page_Template/` instead of `/`
 
 **Solution**:
 

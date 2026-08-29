@@ -11,6 +11,9 @@
  * 3. Maintain a single source of truth for test expectations
  */
 
+import { analyticsConfig } from '../src/lib/analytics.config'
+import { siteConfig } from '../src/lib/site.config'
+
 export const testConfig = {
   /**
    * Mission Video Configuration
@@ -18,6 +21,7 @@ export const testConfig = {
    */
   missionVideo: {
     ariaLabel: 'Free For Charity mission video',
+    playLabel: 'Play the Free For Charity mission video',
     title: "Learn about Free For Charity's mission to help nonprofits reduce costs",
   },
 
@@ -44,6 +48,9 @@ export const testConfig = {
     facebookLinkText: 'View all events on Facebook',
     facebookUrl: 'https://www.facebook.com/freeforcharity',
     descriptionText: 'volunteer opportunities',
+    // Sourced from siteConfig so the expected iframe src always matches what the
+    // Events component renders (single source of truth).
+    widgetUrl: siteConfig.integrations.sociableKitEventsWidgetUrl,
   },
 
   /**
@@ -64,7 +71,7 @@ export const testConfig = {
       ariaLabel: 'LinkedIn',
     },
     github: {
-      url: 'github.com/FreeForCharity/FFC_Single_Page_Template',
+      url: 'github.com/FreeForCharity/FFC-IN-FFC_Single_Page_Template',
       ariaLabel: 'GitHub',
     },
   },
@@ -76,8 +83,14 @@ export const testConfig = {
   copyright: {
     text: 'All Rights Are Reserved by Free For Charity a US 501c3 Non Profit',
     searchText: 'All Rights Are Reserved',
-    linkUrl: 'https://freeforcharity.org',
-    linkText: 'https://freeforcharity.org',
+    // The permanent "Supported by" attribution (FFC footer standard) — sourced
+    // from siteConfig.supportedBy, which is required and always rendered.
+    supportedByUrl: siteConfig.supportedBy.url,
+    supportedByText: siteConfig.supportedBy.name,
+    // Sourced from siteConfig so the parent-org link expectations track the
+    // footer (which now shows the org name, not the raw URL, as link text).
+    linkUrl: siteConfig.parentOrg?.url ?? '',
+    linkText: siteConfig.parentOrg?.name ?? siteConfig.name,
   },
 
   /**
@@ -100,9 +113,12 @@ export const testConfig = {
   /**
    * Google Tag Manager Configuration
    * Used in: tests/google-tag-manager.spec.ts
+   *
+   * Sourced from the same src/lib/analytics.config.ts the component reads, so
+   * the expected ID always matches what the build embedded.
    */
   googleTagManager: {
-    id: 'GTM-TQ5H8HPR',
+    id: analyticsConfig.gtmId,
   },
 
   /**

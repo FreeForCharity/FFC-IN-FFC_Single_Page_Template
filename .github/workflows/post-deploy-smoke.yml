@@ -1,0 +1,1016 @@
+name: Post-Deploy Smoke Test
+
+on:
+  workflow_run:
+    workflows: ['Deploy to GitHub Pages']
+    types: [completed]
+    branches: [main]
+  # Daily uptime pass: same deep checks between deploys, so platform-level
+  # regressions (DNS, certs, CDN, zone security) surface within a day
+  # instead of on the next deploy. Supersedes the separate uptime.yml.
+  schedule:
+    - cron: '17 5 * * *'
+  workflow_dispatch:
+    inputs:
+      url:
+        description: 'URL to test (defaults to public/CNAME)'
+        type: string
+        default: ''
+
+permissions:
+  contents: read
+  issues: write
+  pages: read
+
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    if: ${{ github.event.workflow_run.conclusion == 'success' || github.event_name == 'workflow_dispatch' || github.event_name == 'schedule' }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Setup Node
+        # Ahead of the scope resolver, not just ahead of Playwright. The
+        # resolver is a node script, so the toolchain it runs on is declared
+        # here rather than inherited from whatever the runner image happens
+        # to ship. Unconditional for the same reason: it must be in place
+        # before the first step that needs it, which now runs before the
+        # skip decision.
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Resolve donation scope (one contract, both engine paths consume it)
+        # The donation posture is declared in two places (the
+        # SMOKE_DONATION_SCOPE repo variable and the committed
+        # .github/smoke.config.json) and consumed in two places (the
+        # Playwright compliance script and the standing-issue shell step).
+        # It is resolved HERE, once. Neither consumer reads the config file
+        # or the raw variable, because two implementations of one contract
+        # drift: they disagreed on when the file is validated, on whether a
+        # `null` config is empty or invalid, and on whether a
+        # variable-sourced value is trimmed. Refs FFC-Cloudflare-Automation#893.
+        id: scope
+        env:
+          SMOKE_DONATION_SCOPE: ${{ vars.SMOKE_DONATION_SCOPE }}
+        run: |
+          set -euo pipefail
+          cat > /tmp/resolve-donation-scope.js <<'RESOLVE_JS'
+          const fs = require('fs');
+          const VALID = ['charity', 'ffc-interim', 'none'];
+          const CONFIG_PATH = '.github/smoke.config.json';
+          const norm = (v) => String(v ?? '').trim().toLowerCase();
+          // Workflow commands are newline-delimited and percent-escaped, so a
+          // value carrying %, CR or LF can close the annotation early and have
+          // the rest parsed as further commands — a committed donationScope
+          // could emit ::stop-commands:: and silence the run's annotations.
+          // Escape anything interpolated into a ::error::/::warning:: line.
+          const esc = (v) => String(v ?? '').replace(/%/g, '%25').replace(/\r/g, '%0D').replace(/\n/g, '%0A');
+
+          // The committed file is validated whenever it exists — including
+          // when the variable overrides it. A config that cannot be honoured
+          // is a defect in the repo whether or not today's run reads it.
+          let fileScope = '';
+          if (fs.existsSync(CONFIG_PATH)) {
+            let parsed;
+            try {
+              parsed = JSON.parse(fs.readFileSync(CONFIG_PATH, 'utf8'));
+            } catch (e) {
+              console.error(`::error::${CONFIG_PATH} exists but is not valid JSON: ${esc(e instanceof Error ? e.message : String(e))}`);
+              process.exit(1);
+            }
+            // Wrong TYPE is not bad syntax: null, [], "str" and 42 all parse.
+            // Reporting those as a syntax error sends the maintainer looking
+            // for a missing brace in a file that has none.
+            if (parsed === null || typeof parsed !== 'object' || Array.isArray(parsed)) {
+              const got = parsed === null ? 'null' : Array.isArray(parsed) ? 'array' : typeof parsed;
+              console.error(`::error::${CONFIG_PATH} must contain a JSON object (got ${got})`);
+              process.exit(1);
+            }
+            fileScope = norm(parsed.donationScope);
+            if (fileScope && !VALID.includes(fileScope)) {
+              console.error(`::error::${CONFIG_PATH} donationScope "${esc(parsed.donationScope)}" is not one of ${VALID.join('|')}`);
+              process.exit(1);
+            }
+          }
+
+          // An unrecognised repo variable is a typo, not a declaration: warn
+          // and fall through to the committed file rather than letting it
+          // silently mask a valid one.
+          const rawVar = process.env.SMOKE_DONATION_SCOPE;
+          const varScope = norm(rawVar);
+          if (varScope && !VALID.includes(varScope)) {
+            // Name the outcome, not the intention: with no usable declaration
+            // in the file there is nothing to fall back TO, and a maintainer
+            // told otherwise goes looking for a file that isn't there.
+            const outcome = fileScope
+              ? `falling back to ${CONFIG_PATH} ("${esc(fileScope)}")`
+              : `scope is undeclared (no usable donationScope in ${CONFIG_PATH})`;
+            console.log(`::warning::SMOKE_DONATION_SCOPE "${esc(rawVar)}" is not one of ${VALID.join('|')} — ignoring it; ${outcome}`);
+          }
+          const effectiveVar = VALID.includes(varScope) ? varScope : '';
+
+          const scope = effectiveVar || fileScope;
+          const source = effectiveVar ? 'variable' : fileScope ? 'file' : 'undeclared';
+          console.log(`Donation scope: ${scope || '(undeclared)'} (source: ${source})`);
+          if (process.env.GITHUB_OUTPUT) {
+            fs.appendFileSync(process.env.GITHUB_OUTPUT, `scope=${scope}\nsource=${source}\n`);
+          }
+          RESOLVE_JS
+          node /tmp/resolve-donation-scope.js
+
+      - name: Determine smoke target from Pages config (ground truth)
+        id: url
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          echo "skip=false" >> "$GITHUB_OUTPUT"
+          echo "drift=false" >> "$GITHUB_OUTPUT"
+
+          # The Pages CONFIG is what GitHub actually serves; public/CNAME is
+          # only the build artifact's claim. Resolving from the API catches
+          # repos whose file and binding have drifted apart.
+          pages_cname=$(gh api "repos/${GITHUB_REPOSITORY}/pages" --jq '.cname // ""' 2>/dev/null || echo "")
+          pages_url=$(gh api "repos/${GITHUB_REPOSITORY}/pages" --jq '.html_url // ""' 2>/dev/null || echo "")
+          file_cname=""
+          [ -f public/CNAME ] && file_cname=$(tr -d '[:space:]' < public/CNAME)
+
+          if [ -n "${{ inputs.url }}" ]; then
+            mode="apex"; target="${{ inputs.url }}"
+          elif [ -n "$pages_cname" ]; then
+            # Custom domain bound -> full apex/custom-domain verification.
+            mode="apex"; target="https://${pages_cname}/"
+            if [ "$file_cname" != "$pages_cname" ]; then
+              echo "drift=true" >> "$GITHUB_OUTPUT"
+              echo "file_cname=${file_cname:-<missing>}" >> "$GITHUB_OUTPUT"
+            fi
+          elif [ -n "$pages_url" ]; then
+            # Pages enabled, no custom domain -> pre-cutover deployment smoke
+            # against the default location (reduced check set).
+            mode="default"; target="$pages_url"
+          else
+            echo "::notice::GitHub Pages is not enabled on this repo — skipping smoke neutrally"
+            echo "mode=skip" >> "$GITHUB_OUTPUT"
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          # Force https://
+          target="${target/http:\/\//https://}"
+          if [[ ! "$target" =~ ^https:// ]]; then
+            target="https://${target}"
+          fi
+          echo "mode=$mode" >> "$GITHUB_OUTPUT"
+          echo "pages_cname=$pages_cname" >> "$GITHUB_OUTPUT"
+          echo "url=$target" >> "$GITHUB_OUTPUT"
+          echo "Smoke target: $target (mode: $mode)"
+
+      - name: Assert public/CNAME matches the Pages custom domain
+        # The Next build keys basePath/asset URLs off public/CNAME, so a file
+        # that disagrees with the actual Pages binding means the site was
+        # built for the WRONG host (broken assets/links at the real domain).
+        if: steps.url.outputs.mode == 'apex' && steps.url.outputs.drift == 'true'
+        run: |
+          echo "::error::public/CNAME (${{ steps.url.outputs.file_cname }}) does not match the Pages custom domain (${{ steps.url.outputs.pages_cname }})."
+          echo "::error::Fix public/CNAME to match the Pages binding (or clear the binding) — the current build targets the wrong host."
+          exit 1
+
+      - name: Probe live URL over HTTPS (cert-aware retry)
+        id: probe
+        if: steps.url.outputs.skip != 'true'
+        env:
+          URL: ${{ steps.url.outputs.url }}
+        run: |
+          set -uo pipefail
+          # HTTPS is required. No fallback to HTTP — real users in Chrome
+          # cannot reach an HTTP-only site if HSTS is set on the parent
+          # domain, and a missing GH Pages cert is a deployment failure.
+          #
+          # But: after a fresh cname (cutover, custom-domain change, or
+          # https_enforced toggle), Let's Encrypt provisioning takes 5-15
+          # min and HTTPS returns 000 (TLS handshake fail) during that
+          # window. Retry every 30s for up to 20 min before declaring a
+          # real deployment failure.
+          #
+          # The retry lives in $RUNNER_TEMP so the www probe below runs this
+          # exact loop rather than a second copy of it. A hand-rolled second
+          # loop flakes on the failure mode where www resolves correctly and
+          # only TLS fails, which is the one this file most needs to report.
+          cat > "$RUNNER_TEMP/probe-https.sh" <<'PROBE_LIB'
+          PROBE_HEADERS="${RUNNER_TEMP}/probe-headers.txt"
+
+          # curl exit codes meaning the TLS handshake itself failed — the shape
+          # a Pages certificate that is still being issued takes.
+          probe_is_tls_failure() {
+            case "$1" in
+              35 | 51 | 58 | 59 | 60 | 77 | 83) return 0 ;;
+              *) return 1 ;;
+            esac
+          }
+
+          # probe_https <url> <budget_seconds> [retry_on: all|tls]
+          #   Retries every 30s until HTTP 200 (after redirects) or the budget
+          #   runs out.
+          #     all — wait through any non-200. During a cutover both DNS
+          #           propagation and cert issuance are legitimately slow.
+          #     tls — stop early on a settled answer (a 5xx, or a name that
+          #           does not resolve). Twenty minutes will not change either,
+          #           and the daily schedule re-probes anyway.
+          #   Sets PROBE_STATUS, PROBE_CURL_RC, PROBE_ATTEMPTS,
+          #   PROBE_URL_EFFECTIVE; last response headers land in $PROBE_HEADERS.
+          probe_https() {
+            url="$1"
+            budget="$2"
+            retry_on="${3:-all}"
+            deadline=$(( $(date +%s) + budget ))
+            PROBE_ATTEMPTS=0
+            while :; do
+              PROBE_ATTEMPTS=$(( PROBE_ATTEMPTS + 1 ))
+              # Truncate explicitly. curl -D does this anyway, but both probes
+              # share this file, and a stale apex cf-ray surviving into the www
+              # probe would read as "mode C, proxied" on a TLS failure that
+              # never returned a header. Not worth depending on curl for.
+              : > "$PROBE_HEADERS"
+              probe_out=$(curl -sI --max-time 15 -L "$url" -D "$PROBE_HEADERS" -o /dev/null -w '%{http_code} %{url_effective}' 2>/dev/null)
+              PROBE_CURL_RC=$?
+              PROBE_STATUS="${probe_out%% *}"
+              PROBE_URL_EFFECTIVE="${probe_out##* }"
+              [ -n "$PROBE_STATUS" ] || PROBE_STATUS="000"
+              if [ "$PROBE_STATUS" = "200" ]; then
+                echo "Attempt $PROBE_ATTEMPTS: HTTP 200 (cert provisioned, reachable) — $url"
+                return 0
+              fi
+              if [ "$retry_on" = "tls" ] && ! probe_is_tls_failure "$PROBE_CURL_RC"; then
+                echo "Attempt $PROBE_ATTEMPTS: HTTP $PROBE_STATUS (curl exit $PROBE_CURL_RC) — settled answer, not retrying"
+                return 1
+              fi
+              if [ "$(date +%s)" -ge "$deadline" ]; then
+                echo "Attempt $PROBE_ATTEMPTS: HTTP $PROBE_STATUS (curl exit $PROBE_CURL_RC) — retry budget exhausted"
+                return 1
+              fi
+              echo "Attempt $PROBE_ATTEMPTS: HTTP $PROBE_STATUS (curl exit $PROBE_CURL_RC) — waiting 30s (cert may still be provisioning)"
+              sleep 30
+            done
+          }
+          PROBE_LIB
+          # shellcheck source=/dev/null
+          . "$RUNNER_TEMP/probe-https.sh"
+
+          probe_https "$URL" 1200 all || true
+          status="$PROBE_STATUS"
+          attempt="$PROBE_ATTEMPTS"
+
+          echo "status=$status" >> "$GITHUB_OUTPUT"
+          echo "attempts=$attempt" >> "$GITHUB_OUTPUT"
+
+          if [ "$status" != "200" ]; then
+            echo "::error::HTTPS probe failed after $attempt attempts (~20 min): $URL returned HTTP $status"
+            echo "::error::Likely causes: cert provisioning stalled, DNS misconfigured, or apex not pointing at GH Pages."
+            echo "::error::Check Pages settings (Settings -> Pages -> Custom domain) and Cloudflare A/AAAA + www CNAME."
+            exit 1
+          fi
+          # Save body for next step (curl-based content checks)
+          curl -s --max-time 30 -L "$URL" > /tmp/page.html
+          echo "Body length: $(wc -c < /tmp/page.html) bytes"
+
+      - name: Probe www over HTTPS (a redirect to the apex is a pass)
+        # Until now "www" appeared in this file exactly once, inside an
+        # ::error:: hint string — the engine told you to check www when
+        # something else failed and never probed it. A fleet sweep found 13 of
+        # 55 live sites broken on www while every smoke run was green.
+        #
+        # This is an HTTPS probe and deliberately not a DNS assertion: a www
+        # CNAME can point at GitHub Pages correctly and still fail TLS, because
+        # Pages issues a certificate only for the host named in public/CNAME.
+        # A DNS-level check passes that site while real visitors get a
+        # handshake error.
+        id: www
+        if: steps.url.outputs.mode == 'apex' && steps.url.outputs.skip != 'true'
+        env:
+          PAGES_CNAME: ${{ steps.url.outputs.pages_cname }}
+          REQUIRE_WWW: ${{ vars.SMOKE_REQUIRE_WWW }}
+        run: |
+          set -uo pipefail
+
+          # One-line verdict for the run summary, so the www result is visible
+          # without opening the log. Falls back to /dev/null so this script can
+          # be run outside Actions.
+          verdict() { echo "verdict=$1" >> "${GITHUB_OUTPUT:-/dev/null}"; }
+
+          # Defaults ON, matching the other SMOKE_* variables. A site whose www
+          # is known-broken opts itself out with SMOKE_REQUIRE_WWW=false until
+          # its DNS is fixed, instead of the fleet turning the check off.
+          case "$(printf '%s' "${REQUIRE_WWW:-true}" | tr '[:upper:]' '[:lower:]')" in
+            false | 0 | no | off)
+              echo "::notice::SMOKE_REQUIRE_WWW is off — www probe skipped for this repo"
+              verdict "skipped (SMOKE_REQUIRE_WWW off)"
+              exit 0
+              ;;
+          esac
+
+          # Ground truth is the Pages config resolved above, never re-derived.
+          if [ -z "$PAGES_CNAME" ]; then
+            echo "::notice::No Pages custom domain bound (manual URL dispatch) — no apex to derive www from; skipping"
+            verdict "skipped (no Pages custom domain)"
+            exit 0
+          fi
+          # `mode` is "apex" for ANY custom domain — it means "a domain is
+          # bound", not "that domain is a registrable apex". Every other step
+          # only ever probes the bound host, so the distinction never mattered
+          # before; this step is the first to DERIVE a new hostname from it,
+          # and a subdomain binding makes it derive one nobody intends.
+          #
+          # The general rule is "skip unless the cname is its registrable
+          # apex", but deciding that needs the Public Suffix List — a label
+          # count says lifelessonslearned.us.org is a subdomain when it is
+          # not. `staging.` is the shape the fleet actually has (10 repos as
+          # of 2026-08-05), so it is matched by name rather than guessed at
+          # structurally. Add sibling prefixes here if others appear.
+          case "$PAGES_CNAME" in
+            www.*)
+              echo "::notice::Pages custom domain is '$PAGES_CNAME' — www is the canonical host and was probed above; skipping"
+              verdict "skipped (www is the canonical host)"
+              exit 0
+              ;;
+            staging.*)
+              echo "::notice::Pages custom domain is '$PAGES_CNAME' — a pre-cutover staging host has no www of its own; skipping"
+              verdict "skipped (staging host)"
+              exit 0
+              ;;
+          esac
+
+          apex="$PAGES_CNAME"
+          www_host="www.${apex}"
+          www_url="https://${www_host}/"
+          echo "Probing $www_url (apex: https://${apex}/)"
+
+          # shellcheck source=/dev/null
+          . "$RUNNER_TEMP/probe-https.sh"
+
+          # Modes A and C settle in one attempt. Mode B does not, and cannot:
+          # a certificate that will never exist and one still being issued are
+          # the same TLS failure from out here. So the patience is only worth
+          # paying where issuance is actually plausible — just after a deploy
+          # or a manual cutover run. On the daily pass there is nothing to wait
+          # for, and a permanently-broken site would otherwise burn the whole
+          # budget every single day. One retry there, to ride out a transient
+          # handshake blip without turning a 5-minute stall into a daily cost.
+          if [ "${GITHUB_EVENT_NAME:-}" = "schedule" ]; then
+            www_budget=30
+          else
+            www_budget=300
+          fi
+          probe_https "$www_url" "$www_budget" tls || true
+
+          effective_host=$(printf '%s' "$PROBE_URL_EFFECTIVE" | sed -E 's#^[a-z]+://##; s#[:/].*$##')
+
+          case "$PROBE_STATUS" in
+            2??)
+              # -L already followed any redirect, so "3xx landing on the apex"
+              # arrives here as a 2xx whose effective host is the apex.
+              if [ "$effective_host" = "$apex" ]; then
+                echo "✓ www redirects to the apex and serves HTTP $PROBE_STATUS ($www_url -> $PROBE_URL_EFFECTIVE)"
+                verdict "OK — redirects to the apex"
+                exit 0
+              fi
+              if [ "$effective_host" = "$www_host" ]; then
+                echo "✓ www serves HTTP $PROBE_STATUS directly ($PROBE_URL_EFFECTIVE)"
+                verdict "OK — serves directly"
+                exit 0
+              fi
+              echo "::error::www is reachable but lands off-site: $www_url -> $PROBE_URL_EFFECTIVE"
+              echo "::error::Remediation: a visitor typing www reaches '${effective_host}', not '${apex}'. Point the www record at this site, or remove the off-site redirect."
+              verdict "FAILED — lands off-site at ${effective_host}"
+              exit 1
+              ;;
+          esac
+
+          # Classify the failure, because the three modes have three different
+          # fixes and a status code alone does not tell them apart. DNS is
+          # checked directly rather than inferred from curl's exit code, which
+          # varies with whatever resolver sits in front of the runner.
+          resolved=$(getent hosts "$www_host" 2>/dev/null | head -1 || true)
+
+          echo "::error::www is not reachable over HTTPS: $www_url (HTTP $PROBE_STATUS, curl exit $PROBE_CURL_RC, $PROBE_ATTEMPTS attempt(s))"
+
+          case "$PROBE_STATUS" in
+            5??)
+              # Any 5xx fails. The fleet shows both 526 and 500 for the same
+              # proxied-www defect, so a rule keyed on 526 misses half of them.
+              if grep -qiE '^(cf-ray:|server: *cloudflare)' "$PROBE_HEADERS" 2>/dev/null; then
+                echo "::error::Mode C — www is proxied by Cloudflare (cf-ray header present) and Cloudflare answered $PROBE_STATUS."
+                echo "::error::Remediation: set the www record to DNS-only (grey cloud) so it reaches GitHub Pages directly."
+                verdict "FAILED — mode C, proxied by Cloudflare (HTTP $PROBE_STATUS)"
+              else
+                echo "::error::Mode C — www answered $PROBE_STATUS from ${resolved:-an unidentified host}."
+                echo "::error::Remediation: whatever serves www is failing. Point it at GitHub Pages, or fix that origin."
+                verdict "FAILED — mode C, origin error (HTTP $PROBE_STATUS)"
+              fi
+              ;;
+            *)
+              if [ -z "$resolved" ]; then
+                echo "::error::Mode A — no www record: '$www_host' does not resolve."
+                echo "::error::Remediation: create a CNAME 'www' -> the Pages host, DNS-only (not proxied)."
+                verdict "FAILED — mode A, no www DNS record"
+              elif probe_is_tls_failure "$PROBE_CURL_RC"; then
+                echo "::error::Mode B — '$www_host' resolves (${resolved}) but the TLS handshake failed."
+                echo "::error::GitHub Pages issues a certificate only for the host in public/CNAME, so a correct www CNAME still has no certificate of its own."
+                echo "::error::Remediation: redirect www to the apex at the DNS/CDN layer, or bind www as the Pages custom domain and wait 5-15 min for the certificate."
+                verdict "FAILED — mode B, no certificate for www"
+              else
+                echo "::error::'$www_host' resolves (${resolved}) but the connection failed before any HTTP response (curl exit $PROBE_CURL_RC)."
+                echo "::error::Remediation: check that the www record points at GitHub Pages and that nothing in front of it is dropping the connection."
+                verdict "FAILED — connection error (curl exit $PROBE_CURL_RC)"
+              fi
+              ;;
+          esac
+          exit 1
+
+      - name: Assert no FFC-template-default content
+        # Template repos (FFC-IN-*Template*) legitimately serve the template
+        # default content on their working sites - the assertion is for
+        # charity sites that failed to rebrand, not for the source templates.
+        # Apex mode only: pre-cutover scaffolds legitimately show the template.
+        if: steps.url.outputs.mode == 'apex' && !contains(github.repository, 'Template')
+        env:
+          # Block the FFC charity-mission template's distinctive title.
+          # This is the exact regression the user flagged: staging.<domain> was
+          # serving the unmodified template instead of the per-charity migration.
+          FORBIDDEN_TITLE_FRAGMENT: 'Free For Charity | Reduce Costs, Increase Impact'
+          FORBIDDEN_BODY_FRAGMENT: 'Reduce Costs, Increase Impact'
+        run: |
+          set -euo pipefail
+          title=$(grep -ohE '<title>[^<]+</title>' /tmp/page.html | head -1 | sed -E 's/<\/?title>//g' || echo "")
+          echo "Page title: $title"
+          if echo "$title" | grep -qF "$FORBIDDEN_TITLE_FRAGMENT"; then
+            echo "::error::Live URL is serving the FFC charity-mission template default title."
+            echo "::error::Expected charity-specific content; got template default."
+            echo "::error::Title: $title"
+            exit 1
+          fi
+          # Defensive body check: the template tagline shouldn't appear in the body
+          if grep -qF "$FORBIDDEN_BODY_FRAGMENT" /tmp/page.html; then
+            echo "::warning::FFC template tagline 'Reduce Costs, Increase Impact' appears in body — manual review advised"
+          fi
+          echo "✓ Template-default content NOT present"
+
+      - name: Assert per-repo expected title (if configured)
+        if: steps.url.outputs.mode == 'apex'
+        env:
+          EXPECTED_TITLE_FRAGMENT: ${{ vars.SMOKE_EXPECTED_TITLE }}
+        run: |
+          set -euo pipefail
+          if [ -z "$EXPECTED_TITLE_FRAGMENT" ]; then
+            echo "::notice::SMOKE_EXPECTED_TITLE repo variable not set — skipping per-repo title assertion"
+            exit 0
+          fi
+          title=$(grep -ohE '<title>[^<]+</title>' /tmp/page.html | head -1 | sed -E 's/<\/?title>//g' || echo "")
+          if ! echo "$title" | grep -qF "$EXPECTED_TITLE_FRAGMENT"; then
+            echo "::error::Expected title to contain '$EXPECTED_TITLE_FRAGMENT'; got '$title'"
+            exit 1
+          fi
+          echo "✓ Title contains expected fragment: $EXPECTED_TITLE_FRAGMENT"
+
+      - name: Sitemap routes 200-check (every URL in sitemap.xml must HTTPS-resolve)
+        # Apex mode only: sitemaps emit apex URLs; on the default Pages URL the
+        # basePath-prefixed rewrite would false-negative.
+        if: steps.url.outputs.mode == 'apex'
+        env:
+          URL: ${{ steps.url.outputs.url }}
+        run: |
+          set -euo pipefail
+          base="${URL%/}"
+          sitemap_url="${base}/sitemap.xml"
+          sitemap=$(curl -s --max-time 30 -L "$sitemap_url" || true)
+          if ! echo "$sitemap" | grep -q "<loc>"; then
+            echo "::notice::No sitemap.xml found at $sitemap_url — skipping per-route check"
+            exit 0
+          fi
+          # Extract each <loc>, normalize to base host
+          mapfile -t locs < <(echo "$sitemap" | grep -oE "<loc>[^<]+</loc>" | sed -E 's/<\/?loc>//g')
+          host=$(echo "$base" | sed -E 's#^https?://([^/]+).*#\1#')
+          fail=0
+          checked=0
+          for loc in "${locs[@]}"; do
+            # Replace whatever host the sitemap emitted with our actual host
+            path=$(echo "$loc" | sed -E 's#^https?://[^/]+##')
+            [ -z "$path" ] && path="/"
+            url="https://${host}${path}"
+            code=$(curl -sI --max-time 15 -L "$url" -o /dev/null -w "%{http_code}" 2>&1 || echo "000")
+            if [ "$code" != "200" ]; then
+              # Try toggling trailing slash (some sitemaps drift from served form)
+              if [[ "$path" == */ ]]; then alt="${path%/}"; else alt="${path}/"; fi
+              code2=$(curl -sI --max-time 15 -L "https://${host}${alt}" -o /dev/null -w "%{http_code}" 2>&1 || echo "000")
+              if [ "$code2" = "200" ]; then
+                echo "::warning::Sitemap drift: $path emits $code but $alt is $code2"
+              else
+                echo "::error::Sitemap route $path returns $code (alt $alt → $code2)"
+                fail=$((fail + 1))
+              fi
+            fi
+            checked=$((checked + 1))
+          done
+          echo "Checked $checked routes; $fail failed"
+          if [ "$fail" -gt 0 ]; then exit 1; fi
+
+      - name: Install Playwright (chromium only)
+        if: steps.url.outputs.skip != 'true'
+        run: |
+          # Install the npm package in an isolated dir so we don'\''t touch
+          # the repo'\''s own package.json (the FFC-EX repos use Next.js,
+          # not Playwright as a runtime dep).
+          mkdir -p /tmp/pw
+          cd /tmp/pw
+          npm init -y >/dev/null
+          npm install playwright@latest >/dev/null
+          # Install the browser binaries + OS deps for chromium.
+          npx playwright install --with-deps chromium
+
+      - name: Visual check + screenshot + compliance assertions
+        id: visual
+        if: steps.url.outputs.skip != 'true'
+        env:
+          URL: ${{ steps.url.outputs.url }}
+          # Repo variables (Settings -> Secrets and variables -> Actions -> Variables).
+          # Set SMOKE_PLACEHOLDER=true on placeholder/under-construction repos to
+          # skip ALL compliance assertions (footer + policy links + cookie consent).
+          # Real charity sites should leave it unset; the smoke enforces compliance.
+          SMOKE_PLACEHOLDER: ${{ vars.SMOKE_PLACEHOLDER }}
+          # Override: comma-separated list of href substrings the footer must contain.
+          # Default if unset: "/privacy-policy,/tos"
+          SMOKE_REQUIRED_FOOTER_LINKS: ${{ vars.SMOKE_REQUIRED_FOOTER_LINKS }}
+          # Override: set to "false" to skip the cookie-consent check even on real sites
+          # (e.g., site uses NO cookies / NO analytics).
+          SMOKE_REQUIRE_COOKIE_CONSENT: ${{ vars.SMOKE_REQUIRE_COOKIE_CONSENT }}
+          # Donations are a first-class feature of every charity site.
+          # SMOKE_DONATION_SCOPE declares the site's donation posture:
+          #   charity     - charity-specific Zeffy campaign expected (default for live sites)
+          #   ffc-interim - temporarily using a Free For Charity campaign; smoke stays
+          #                 green but a standing donation-interim issue is kept open
+          #                 until replaced with the charity's own campaign
+          #   none        - site intentionally has no donations (suppresses the
+          #                 no-donation-capability failure)
+          # Preferred declaration: commit .github/smoke.config.json with
+          # {"donationScope": "none"} — repo-visible and PR-reviewable (e.g.
+          # for-profit FFC-EX sites like towing companies). The variable, when
+          # set, still overrides the committed file.
+          # Already resolved, validated and normalized by the `scope` step —
+          # this script must not re-read the file or the raw variable.
+          SMOKE_DONATION_SCOPE: ${{ steps.scope.outputs.scope }}
+          # Legacy (v3.2): require at least one Zeffy iframe embed specifically.
+          SMOKE_REQUIRE_DONATION_EMBED: ${{ vars.SMOKE_REQUIRE_DONATION_EMBED }}
+          # 'true' on template repos: their sites ARE the template default.
+          SMOKE_ALLOW_TEMPLATE_DEFAULT: ${{ (contains(github.repository, 'Template') || steps.url.outputs.mode == 'default') && 'true' || 'false' }}
+          # default mode = pre-cutover deployment verification: page loads,
+          # not a GH 404, non-trivial body. Compliance is an apex concern.
+          SMOKE_MODE: ${{ steps.url.outputs.mode }}
+        working-directory: /tmp/pw
+        run: |
+          mkdir -p $GITHUB_WORKSPACE/artifacts
+          cat > /tmp/pw/visual.js <<'JS'
+          const { chromium } = require('playwright');
+          (async () => {
+            const url = process.env.URL;
+            const placeholder = String(process.env.SMOKE_PLACEHOLDER || '').toLowerCase() === 'true'
+              || String(process.env.SMOKE_MODE || '') === 'default';
+            // Each comma-separated entry may list '|'-separated alternatives
+            // (the footer standard moved /tos -> /terms-of-service; accept both).
+            const requiredLinks = (process.env.SMOKE_REQUIRED_FOOTER_LINKS || '/privacy-policy,/terms-of-service|/tos')
+              .split(',').map(s => s.trim()).filter(Boolean);
+            const requireCookieConsent = String(process.env.SMOKE_REQUIRE_COOKIE_CONSENT || 'true').toLowerCase() !== 'false';
+
+            const browser = await chromium.launch();
+            const ctx = await browser.newContext({
+              viewport: { width: 1366, height: 900 },
+              userAgent: 'FFC-Smoke/1.0 (Playwright; +gh-actions)',
+              ignoreHTTPSErrors: false,
+            });
+            const page = await ctx.newPage();
+            page.setDefaultTimeout(45000);
+            let resp = null;
+            try {
+              // 'load', not 'networkidle': pages with live payment/analytics
+              // widgets (Stripe, Google Pay, Amplitude) beacon continuously and
+              // never reach network silence (found on freedomrisingusa.org).
+              resp = await page.goto(url, { waitUntil: 'load' });
+              await page.waitForTimeout(1500); // let client-side UI (cookie banner) mount
+            } catch (e) {
+              console.error('navigation error:', e.message);
+            }
+            const status = resp ? resp.status() : 0;
+            const title = await page.title().catch(() => '');
+            const bodyText = await page.evaluate(() => document.body && document.body.innerText || '').catch(() => '');
+
+            // ----- Compliance probes (DOM inspection) -----
+            // 1) Footer present: any <footer> or [role="contentinfo"] with non-trivial text.
+            const footer = await page.evaluate(() => {
+              const el = document.querySelector('footer, [role="contentinfo"]');
+              if (!el) return null;
+              return {
+                tag: el.tagName.toLowerCase(),
+                text: (el.innerText || '').slice(0, 4000),
+                hrefs: Array.from(el.querySelectorAll('a[href]')).map(a => a.getAttribute('href') || ''),
+              };
+            }).catch(() => null);
+
+            // 2) Cookie-consent UI visible on first load. Multiple selectors because
+            //    different libraries use different markup. We treat a visible banner OR
+            //    a fixed-position element whose text mentions cookies as a hit.
+            const cookieConsent = await page.evaluate(() => {
+              const selectors = [
+                '[id*="cookie" i]', '[class*="cookie-consent" i]', '[class*="CookieConsent" i]',
+                '[aria-label*="cookie" i]', '[role="dialog"]',
+                '#cookie-banner', '#cookieConsent', '.cookie-banner', '.cc-window',
+              ];
+              for (const sel of selectors) {
+                const el = document.querySelector(sel);
+                if (!el) continue;
+                const rect = el.getBoundingClientRect();
+                if (rect.width < 50 || rect.height < 30) continue;
+                const txt = (el.innerText || '').toLowerCase();
+                if (txt.includes('cookie') || txt.includes('consent') || txt.includes('privacy')) {
+                  return { selector: sel, text: txt.slice(0, 400) };
+                }
+              }
+              return null;
+            }).catch(() => null);
+
+            // Donation surfaces across providers. Zeffy is FFC's PREFERRED
+            // provider (0% fees; runs on Stripe under the hood — hence the
+            // stripe/googlepay/amplitude beacons and the waitUntil note above).
+            // Other providers (PayPal etc.) count as working-but-non-preferred:
+            // real charity money flows through them, so they are never treated
+            // as "no donations", but a standing migration issue tracks the move
+            // to Zeffy.
+            const PROVIDERS = [
+              { name: 'zeffy', hosts: ['zeffy.com'] },
+              { name: 'paypal', hosts: ['paypal.com', 'paypalobjects.com'] },
+              { name: 'gofundme', hosts: ['gofundme.com'] },
+              { name: 'givebutter', hosts: ['givebutter.com'] },
+              { name: 'donorbox', hosts: ['donorbox.org'] },
+              { name: 'venmo', hosts: ['venmo.com'] },
+            ];
+            const donationSurfaces = await page.evaluate((providers) => {
+              const out = [];
+              const provOf = (u) => {
+                for (const p of providers) if (p.hosts.some(h => (u || '').includes(h))) return p.name;
+                return null;
+              };
+              for (const f of document.querySelectorAll('iframe[src]')) {
+                const p = provOf(f.getAttribute('src'));
+                if (p) out.push({ provider: p, kind: 'embed', url: f.getAttribute('src') });
+              }
+              for (const a of document.querySelectorAll('a[href]')) {
+                const p = provOf(a.getAttribute('href'));
+                if (p) out.push({ provider: p, kind: 'link', url: a.getAttribute('href'), text: (a.innerText || '').slice(0, 60) });
+              }
+              for (const fm of document.querySelectorAll('form[action]')) {
+                const p = provOf(fm.getAttribute('action'));
+                if (p) out.push({ provider: p, kind: 'form', url: fm.getAttribute('action') });
+              }
+              return out;
+            }, PROVIDERS).catch(() => []);
+            // Donation surfaces often live on subpages (/membership, /donate)
+            // rather than the homepage (first case: MCHS's PayPal membership
+            // page). When the homepage shows nothing, sweep the sitemap routes'
+            // served HTML (bounded) for provider hosts — presence anywhere on
+            // the site counts.
+            const sitewideProviders = new Set(donationSurfaces.map(s => s.provider));
+            if (donationSurfaces.length === 0) {
+              try {
+                const base = url.replace(/\/$/, '');
+                let routes = [];
+                try {
+                  const sm = await (await fetch(base + '/sitemap.xml')).text();
+                  routes = [...sm.matchAll(/<loc>([^<]+)<\/loc>/g)]
+                    .map(m => new URL(m[1]).pathname).slice(0, 40);
+                } catch { /* no sitemap */ }
+                if (routes.length === 0) routes = ['/donate/', '/donations/', '/membership/', '/support/', '/give/'];
+                for (const path of routes) {
+                  try {
+                    const html = await (await fetch(base + path)).text();
+                    for (const p of PROVIDERS) {
+                      if (p.hosts.some(h => html.includes(h))) {
+                        sitewideProviders.add(p.name);
+                        donationSurfaces.push({ provider: p.name, kind: 'page', url: base + path });
+                      }
+                    }
+                  } catch { /* route fetch failed; sitemap check covers that */ }
+                  if (sitewideProviders.size > 0) break;
+                }
+              } catch (e) { console.log('site-wide donation sweep skipped:', e.message); }
+            }
+            const zeffySurfaces = donationSurfaces.filter(s => s.provider === 'zeffy');
+            const otherProviders = [...new Set(donationSurfaces.filter(s => s.provider !== 'zeffy').map(s => s.provider))];
+            const donationEmbeds = zeffySurfaces.filter(s => s.kind === 'embed').map(s => s.url);
+
+            // Known-bad markers that a 200 HTTP check would miss.
+            const allowTemplateDefault = String(process.env.SMOKE_ALLOW_TEMPLATE_DEFAULT || '').toLowerCase() === 'true';
+            const failureMarkers = [
+              "There isn't a GitHub Pages site here", // GH Pages "site not found" page
+              "Site not found",
+              "404 Not Found",
+              "This page could not be found",
+              "Free For Charity | Reduce Costs, Increase Impact", // FFC template default
+              "Reduce Costs, Increase Impact",
+              "Apache",                                // unlikely in body, kept off
+            ].filter(m => m !== "Apache")
+              .filter(m => !(allowTemplateDefault && m.includes('Reduce Costs, Increase Impact')));
+            const matches = failureMarkers.filter(m => bodyText.includes(m) || title.includes(m));
+
+            const artifactsDir = process.env.GITHUB_WORKSPACE + '/artifacts';
+            await page.screenshot({ path: artifactsDir + '/live-fullpage.png', fullPage: true });
+            await page.screenshot({ path: artifactsDir + '/live-viewport.png', fullPage: false });
+
+            // Evaluate compliance failures (unless placeholder mode).
+            const complianceFailures = [];
+            if (!placeholder) {
+              if (!footer) {
+                complianceFailures.push('No <footer> or [role="contentinfo"] element found in rendered page');
+              } else {
+                // Check each required policy link is present in the footer.
+                const missing = requiredLinks.filter(needed =>
+                  !needed.split('|').some(alt => footer.hrefs.some(h => h.includes(alt)))
+                );
+                if (missing.length > 0) {
+                  complianceFailures.push(`Footer missing required policy links: ${missing.join(', ')}`);
+                }
+              }
+              if (requireCookieConsent && !cookieConsent) {
+                complianceFailures.push('No cookie-consent UI visible on first load (required because site likely uses analytics/cookies; set SMOKE_REQUIRE_COOKIE_CONSENT=false to skip)');
+              }
+            } else {
+              console.log('Placeholder mode (SMOKE_PLACEHOLDER=true) — skipping compliance assertions.');
+            }
+
+            // Donation assertions — first-class: a charity site must never
+            // silently lose its donation capability.
+            const donationScope = String(process.env.SMOKE_DONATION_SCOPE || '');
+            const requireDonation = String(process.env.SMOKE_REQUIRE_DONATION_EMBED || '').toLowerCase() === 'true';
+            const donationChecks = [];
+            if (requireDonation && donationEmbeds.length === 0) {
+              complianceFailures.push('SMOKE_REQUIRE_DONATION_EMBED=true but no Zeffy iframe found on the page');
+            }
+            // Tri-state donation posture:
+            //   no surfaces at all           -> HARD FAILURE (unless scope 'none')
+            //   non-Zeffy provider(s) only   -> PASS + standing donation-migration issue
+            //   Zeffy present                -> PASS (charity or ffc-interim per scope)
+            const isApex = String(process.env.SMOKE_MODE || '') !== 'default';
+            if (isApex && !placeholder && donationSurfaces.length === 0 && donationScope !== 'none') {
+              complianceFailures.push('No donation capability detected (no Zeffy, PayPal, or other donation provider found). Wire a Zeffy campaign, or declare {"donationScope": "none"} in .github/smoke.config.json (or set SMOKE_DONATION_SCOPE=none) only if this site intentionally takes no donations.');
+            }
+            // Every surface must be reachable, whatever the provider.
+            for (const s of donationSurfaces) {
+              if (s.kind === 'page') { donationChecks.push({ ...s, status: 200 }); continue; }
+              try {
+                const r = await fetch(s.url.startsWith('http') ? s.url : 'https:' + s.url, { method: 'GET', redirect: 'follow' });
+                donationChecks.push({ ...s, status: r.status });
+                if (r.status >= 400) {
+                  complianceFailures.push(`${s.provider} donation ${s.kind} unreachable (${r.status}): ${s.url}`);
+                }
+              } catch (e) {
+                donationChecks.push({ ...s, status: 0 });
+                complianceFailures.push(`${s.provider} donation ${s.kind} fetch failed: ${s.url} (${e.message})`);
+              }
+            }
+            const donationInterim = donationScope === 'ffc-interim' && zeffySurfaces.length > 0;
+            // Working-but-non-preferred: real donations flow via PayPal etc.,
+            // no Zeffy yet -> tracked for migration, never failed.
+            const nonpreferredOnly = zeffySurfaces.length === 0 && otherProviders.length > 0 && donationScope !== 'none';
+            require('fs').writeFileSync(process.env.GITHUB_WORKSPACE + '/artifacts/donation-status.json',
+              JSON.stringify({ scope: donationScope || 'undeclared', interim: donationInterim, nonpreferredOnly, providers: otherProviders, surfaces: donationChecks }, null, 2));
+
+            const summary = {
+              url, status, title,
+              bodyLength: bodyText.length,
+              failureMarkers: matches,
+              placeholder,
+              footer: footer ? { tag: footer.tag, hrefCount: footer.hrefs.length, hrefs: footer.hrefs } : null,
+              cookieConsent: cookieConsent ? { selector: cookieConsent.selector, textSnippet: cookieConsent.text } : null,
+              donations: { scope: donationScope || 'undeclared', surfaces: donationChecks },
+              complianceFailures,
+            };
+            require('fs').writeFileSync(artifactsDir + '/visual-summary.json', JSON.stringify(summary, null, 2));
+            console.log(JSON.stringify(summary, null, 2));
+
+            await browser.close();
+
+            if (status !== 200) {
+              console.error(`::error::Visual: page status ${status} (expected 200)`);
+              process.exit(1);
+            }
+            if (matches.length > 0) {
+              console.error(`::error::Visual: failure markers found in rendered page: ${matches.join(' | ')}`);
+              process.exit(1);
+            }
+            if (bodyText.trim().length < 50) {
+              console.error(`::error::Visual: body text is only ${bodyText.length} chars — likely blank page`);
+              process.exit(1);
+            }
+            if (complianceFailures.length > 0) {
+              for (const f of complianceFailures) {
+                console.error(`::error::Compliance: ${f}`);
+              }
+              process.exit(1);
+            }
+            console.log('Visual + compliance checks passed.');
+          })();
+          JS
+          # Run from /tmp/pw so `require('playwright')` resolves to the
+          # isolated install we just did. Pass GITHUB_WORKSPACE so the
+          # script writes screenshots back to the repo workspace where
+          # upload-artifact looks for them.
+          GITHUB_WORKSPACE="$GITHUB_WORKSPACE" node /tmp/pw/visual.js
+
+      - name: Run repo-local smoke specs (if present)
+        # Depth hook: a repo can ship its own Playwright smoke suite in
+        # tests/smoke/ (optionally with playwright.smoke.config.ts reading
+        # SMOKE_BASE_URL) and the engine runs it against the live URL.
+        # Adopted from the FFC-EX-mitchellnchistory.org pattern. Apex mode
+        # only: repo suites assert canonical-URL invariants.
+        if: steps.url.outputs.mode == 'apex'
+        env:
+          SMOKE_BASE_URL: ${{ steps.url.outputs.url }}
+          SMOKE_URL: ${{ steps.url.outputs.url }}
+          PLAYWRIGHT_BASE_URL: ${{ steps.url.outputs.url }}
+        run: |
+          set -euo pipefail
+          if ! ls tests/smoke/*.spec.* >/dev/null 2>&1; then
+            echo "::notice::No tests/smoke/*.spec.* in repo — skipping repo-local smoke specs"
+            exit 0
+          fi
+          npm ci
+          npx playwright install --with-deps chromium
+          if [ -f playwright.smoke.config.ts ]; then
+            npx playwright test --config playwright.smoke.config.ts --reporter=list
+          else
+            npx playwright test tests/smoke --reporter=list
+          fi
+
+      - name: Upload screenshot + summary artifact
+        if: always() && steps.url.outputs.skip != 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: smoke-visual-${{ github.run_number }}
+          path: artifacts/
+          if-no-files-found: warn
+
+      - name: Smoke summary
+        if: always()
+        env:
+          URL: ${{ steps.url.outputs.url }}
+          STATUS: ${{ steps.probe.outputs.status }}
+          ATTEMPTS: ${{ steps.probe.outputs.attempts }}
+          WWW_VERDICT: ${{ steps.www.outputs.verdict }}
+        run: |
+          {
+            echo "## Post-Deploy Smoke Test"
+            echo ""
+            echo "- **URL:** $URL"
+            echo "- **HTTPS status:** ${STATUS:-n/a} (probed in ${ATTEMPTS:-n/a} attempt(s))"
+            echo "- **www:** ${WWW_VERDICT:-not probed}"
+            echo "- **Trigger:** ${{ github.event_name }} (schedule = daily uptime pass)"
+            echo "- **Mode:** ${{ steps.url.outputs.mode }} (apex = custom-domain verification; default = pre-cutover deployment check)"
+            echo "- **Job result:** ${{ job.status }}"
+            echo "- **Screenshots:** see \`smoke-visual-${{ github.run_number }}\` artifact"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upsert / auto-close high-priority smoke-failure issue
+        # Failure -> ensure ONE open issue labeled smoke-failure + "priority: high"
+        # (daily triage keys on these labels org-wide). Success -> auto-close it.
+        if: always() && !cancelled() && steps.url.outputs.skip != 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RESULT: ${{ job.status }}
+          URL: ${{ steps.url.outputs.url }}
+          SMOKE_MODE: ${{ steps.url.outputs.mode }}
+        run: |
+          set -euo pipefail
+          REPO="${GITHUB_REPOSITORY}"
+          RUN_URL="${GITHUB_SERVER_URL}/${REPO}/actions/runs/${GITHUB_RUN_ID}"
+          existing=$(gh api "repos/${REPO}/issues?state=open&labels=smoke-failure&per_page=1" --jq '.[0].number // empty' || echo "")
+
+          if [ "$RESULT" = "success" ]; then
+            if [ -n "$existing" ]; then
+              gh api "repos/${REPO}/issues/${existing}/comments" --method POST \
+                -f body="✅ Smoke recovered in run [${GITHUB_RUN_NUMBER}](${RUN_URL}) (${GITHUB_EVENT_NAME}). Auto-closing." >/dev/null
+              gh api -X PATCH "repos/${REPO}/issues/${existing}" -f state=closed >/dev/null
+              echo "Closed recovered smoke-failure issue #${existing}"
+            else
+              echo "Smoke green; no open smoke-failure issue."
+            fi
+            exit 0
+          fi
+
+          # Ensure triage labels exist (idempotent; POST 422s if present)
+          gh api "repos/${REPO}/labels" --method POST -f name="smoke-failure" \
+            -f color="d73a4a" -f description="Post-deploy smoke test is failing" >/dev/null 2>&1 || true
+          gh api "repos/${REPO}/labels" --method POST -f name="priority: high" \
+            -f color="b60205" -f description="High priority — surfaced to daily triage" >/dev/null 2>&1 || true
+
+          if [ -n "$existing" ]; then
+            gh api "repos/${REPO}/issues/${existing}/comments" --method POST \
+              -f body="🔴 Still failing: run [${GITHUB_RUN_NUMBER}](${RUN_URL}) (${GITHUB_EVENT_NAME})" >/dev/null
+            echo "Commented on existing smoke-failure issue #${existing}"
+          else
+            body=$(printf '%s\n' \
+              "The Post-Deploy Smoke Test is failing on this repo." \
+              "" \
+              "- **Failing run:** ${RUN_URL} (trigger: ${GITHUB_EVENT_NAME}; mode: ${SMOKE_MODE:-apex} — apex = custom-domain verification, default = pre-cutover deployment check)" \
+              "- **Target:** ${URL:-could not be determined (no public/CNAME?)}" \
+              "- **Triage:** check the failed step in the run. Screenshot/summary artifact: smoke-visual-${GITHUB_RUN_NUMBER} on the run." \
+              "" \
+              "This issue is auto-managed: subsequent failing runs comment here instead of opening duplicates, and the first green run auto-closes it.")
+            gh api "repos/${REPO}/issues" --method POST \
+              -f title="Post-deploy smoke FAILING: ${URL:-site URL undetermined}" \
+              -f body="$body" \
+              -f "labels[]=smoke-failure" -f "labels[]=priority: high" >/dev/null
+            echo "Opened new smoke-failure issue"
+          fi
+
+      - name: Maintain standing donation posture issues
+        # Two auto-managed standing issues, distinct states:
+        #   donation-interim   - site uses an FFC Zeffy campaign until the
+        #                        charity gets its own (SMOKE_DONATION_SCOPE=ffc-interim)
+        #   donation-migration - site takes donations via a non-preferred
+        #                        provider (PayPal etc.) and has no Zeffy yet
+        # Both keep the smoke green while staying visible in every scan;
+        # each auto-closes when its condition clears.
+        if: always() && !cancelled() && steps.url.outputs.skip != 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          # Already resolved, validated and normalized by the `scope` step —
+          # this step must not re-read the file or the raw variable.
+          SCOPE: ${{ steps.scope.outputs.scope }}
+        run: |
+          set -euo pipefail
+          REPO="${GITHUB_REPOSITORY}"
+
+          # --- donation-migration (auto-detected, provider-based) ---
+          nonpref="false"; providers=""
+          if [ -f artifacts/donation-status.json ]; then
+            nonpref=$(python3 -c "import json; d=json.load(open('artifacts/donation-status.json')); print(str(d.get('nonpreferredOnly', False)).lower())" 2>/dev/null || echo "false")
+            providers=$(python3 -c "import json; d=json.load(open('artifacts/donation-status.json')); print(', '.join(d.get('providers', [])))" 2>/dev/null || echo "")
+          fi
+          mig=$(gh api "repos/${REPO}/issues?state=open&labels=donation-migration&per_page=1" --jq '.[0].number // empty' || echo "")
+          if [ "$nonpref" = "true" ]; then
+            if [ -z "$mig" ]; then
+              gh api "repos/${REPO}/labels" --method POST -f name="donation-migration" \
+                -f color="d4c5f9" -f description="Donations work via a non-preferred provider; migrate to Zeffy" >/dev/null 2>&1 || true
+              body=$(printf '%s\n' \
+                "This site takes donations/payments through a non-preferred provider (${providers:-unknown}) and has no Zeffy surface yet." \
+                "" \
+                "That is a WORKING state (real charity money flows through it) - the smoke stays green - but Zeffy is FFC's preferred provider (0% fees), so this stays visible until migrated:" \
+                "1. Create the charity's own Zeffy campaign/form (or migrate the existing flows)." \
+                "2. Add the Zeffy embed/links to the site (keep or retire the old provider per the charity's wishes)." \
+                "" \
+                "Auto-managed: this issue closes itself on the first run that detects a Zeffy surface.")
+              gh api "repos/${REPO}/issues" --method POST \
+                -f title="Donations via non-preferred provider (${providers:-unknown}) — migrate to Zeffy" \
+                -f body="$body" \
+                -f "labels[]=donation-migration" -f "labels[]=priority: high" >/dev/null
+              echo "Opened donation-migration issue (providers: ${providers})"
+            else
+              echo "donation-migration issue #${mig} remains open (still ${providers:-non-preferred} only)"
+            fi
+          elif [ -n "$mig" ]; then
+            gh api "repos/${REPO}/issues/${mig}/comments" --method POST \
+              -f body="✅ A Zeffy surface is now detected (or scope changed) — migration complete. Auto-closing." >/dev/null
+            gh api -X PATCH "repos/${REPO}/issues/${mig}" -f state=closed >/dev/null
+            echo "Closed donation-migration issue #${mig}"
+          fi
+
+          # --- donation-interim (scope-declared) ---
+          existing=$(gh api "repos/${REPO}/issues?state=open&labels=donation-interim&per_page=1" --jq '.[0].number // empty' || echo "")
+          scope="${SCOPE:-}"
+
+          if [ "$scope" = "ffc-interim" ]; then
+            if [ -z "$existing" ]; then
+              gh api "repos/${REPO}/labels" --method POST -f name="donation-interim" \
+                -f color="fbca04" -f description="Using an FFC Zeffy campaign until a charity-specific one replaces it" >/dev/null 2>&1 || true
+              body=$(printf '%s\n' \
+                "This site currently collects donations through a **Free For Charity** Zeffy campaign rather than a charity-specific one." \
+                "" \
+                "That is the intended interim state — donations keep working — but it must stay visible until replaced:" \
+                "1. Create the charity's own Zeffy campaign/form." \
+                "2. Swap the embed/button URLs in the site." \
+                "3. Declare the scope as charity — set donationScope in the committed .github/smoke.config.json (preferred) or the SMOKE_DONATION_SCOPE repo variable." \
+                "" \
+                "This issue is auto-managed by the smoke engine: it stays open while the declared donation scope is ffc-interim and auto-closes once the scope changes.")
+              gh api "repos/${REPO}/issues" --method POST \
+                -f title="Donations run on an FFC campaign — replace with a charity-specific Zeffy campaign" \
+                -f body="$body" \
+                -f "labels[]=donation-interim" -f "labels[]=priority: high" >/dev/null
+              echo "Opened standing donation-interim issue"
+            else
+              echo "Standing donation-interim issue #${existing} remains open (scope still ffc-interim)"
+            fi
+          else
+            if [ -n "$existing" ]; then
+              gh api "repos/${REPO}/issues/${existing}/comments" --method POST \
+                -f body="✅ The declared donation scope is no longer ffc-interim — charity-specific donations in place. Auto-closing." >/dev/null
+              gh api -X PATCH "repos/${REPO}/issues/${existing}" -f state=closed >/dev/null
+              echo "Closed donation-interim issue #${existing}"
+            fi
+          fi

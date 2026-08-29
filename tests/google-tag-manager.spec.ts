@@ -17,7 +17,14 @@ test.describe('Google Tag Manager Integration', () => {
   test('should initialize dataLayer on page load', async ({ page }) => {
     await page.goto('/')
 
-    // Check if dataLayer exists and is initialized
+    // GTM loads via next/script (lazyOnload), so dataLayer appears after the
+    // load event — wait for it rather than reading immediately (avoids a race).
+    await page.waitForFunction(
+      () => typeof window.dataLayer !== 'undefined' && Array.isArray(window.dataLayer),
+      null,
+      { timeout: 15000 }
+    )
+
     const hasDataLayer = await page.evaluate(() => {
       return typeof window.dataLayer !== 'undefined' && Array.isArray(window.dataLayer)
     })
@@ -28,12 +35,13 @@ test.describe('Google Tag Manager Integration', () => {
   test('should load GTM script with correct ID', async ({ page }) => {
     await page.goto('/')
 
-    // Check for GTM script element
-    const gtmScript = await page.locator('script[id="gtm-script"]').count()
-    expect(gtmScript).toBeGreaterThan(0)
+    // The GTM snippet is injected by next/script (lazyOnload) after load, so
+    // wait for it to attach instead of counting immediately (avoids a race).
+    const gtmScript = page.locator('script[id="gtm-script"]')
+    await expect(gtmScript.first()).toBeAttached({ timeout: 15000 })
 
     // Verify script contains GTM initialization code
-    const scriptContent = await page.locator('script[id="gtm-script"]').innerHTML()
+    const scriptContent = await gtmScript.first().innerHTML()
     expect(scriptContent).toContain('googletagmanager.com/gtm.js')
     expect(scriptContent).toContain('dataLayer')
   })
@@ -51,6 +59,11 @@ test.describe('Google Tag Manager Integration', () => {
   test('should push events to dataLayer', async ({ page }) => {
     await page.goto('/')
 
+    // dataLayer is initialized by the lazyOnload GTM snippet — wait for it.
+    await page.waitForFunction(() => typeof window.dataLayer !== 'undefined', null, {
+      timeout: 15000,
+    })
+
     // Verify we can push events to dataLayer
     const canPushToDataLayer = await page.evaluate(() => {
       if (typeof window.dataLayer === 'undefined') return false
@@ -66,9 +79,16 @@ test.describe('Google Tag Manager Integration', () => {
   test('should load GTM script after page interaction', async ({ page }) => {
     await page.goto('/')
 
-    // Verify GTM script exists on the page
-    // Note: Next.js Script component with lazyOnload strategy
-    // defers script loading until after page is interactive
+    // Next.js Script (lazyOnload) defers the GTM snippet + dataLayer until
+    // after the page is interactive — wait for both before asserting.
+    await page.waitForFunction(
+      () =>
+        document.querySelector('script[id="gtm-script"]') !== null &&
+        typeof window.dataLayer !== 'undefined',
+      null,
+      { timeout: 15000 }
+    )
+
     const gtmScript = await page.evaluate(() => {
       const script = document.querySelector('script[id="gtm-script"]')
       return script !== null
@@ -117,14 +137,13 @@ test.describe('Google Tag Manager Configuration', () => {
 
     await page.goto('/')
 
-    // GTM script should always be present with the configured ID
-    const gtmScript = await page.locator('script[id="gtm-script"]').count()
-
-    // Script should be present
-    expect(gtmScript).toBeGreaterThan(0)
+    // GTM snippet is injected by next/script (lazyOnload) after load — wait for
+    // it to attach rather than counting immediately (avoids a race).
+    const gtmScript = page.locator('script[id="gtm-script"]')
+    await expect(gtmScript.first()).toBeAttached({ timeout: 15000 })
 
     // Verify the script contains the correct GTM ID
-    const scriptContent = await page.locator('script[id="gtm-script"]').innerHTML()
+    const scriptContent = await gtmScript.first().innerHTML()
     expect(scriptContent).toContain(testConfig.googleTagManager.id)
   })
 })

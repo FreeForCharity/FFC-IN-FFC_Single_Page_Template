@@ -1,6 +1,7 @@
 'use client'
 
 import React, { useState, useEffect, useRef, useCallback } from 'react'
+import { siteConfig } from '@/lib/site.config'
 
 interface ApplicationFormButtonProps {
   text?: string
@@ -18,9 +19,10 @@ const ApplicationFormButton: React.FC<ApplicationFormButtonProps> = ({
   const modalRef = useRef<HTMLDivElement>(null)
   const previousFocusRef = useRef<HTMLElement | null>(null)
 
-  // Microsoft Form URL - using actual form from issue description
+  // Microsoft Form URL. Defaults to the configured form in siteConfig; callers
+  // can override per-instance via the `formUrl` prop.
   // Format: https://forms.office.com/r/{formId}
-  const microsoftFormUrl = formUrl || 'https://forms.office.com/r/vePxGq6JqG'
+  const microsoftFormUrl = formUrl || siteConfig.integrations.microsoftFormUrl
 
   const openPopup = useCallback(() => {
     setIsOpen(true)
@@ -93,8 +95,7 @@ const ApplicationFormButton: React.FC<ApplicationFormButtonProps> = ({
           text-black font-[400] text-[25px] px-[28px] py-[16px] 
           hover:bg-[#2A6682] hover:text-white transition-all duration-300
           ${className}
-        `}
-        id="lato-font"
+         lato-font`}
       >
         {text}
       </button>

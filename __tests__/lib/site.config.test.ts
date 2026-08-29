@@ -1,5 +1,18 @@
 import { siteConfig, siteUrl, twitterSite, cardDescription } from '../../src/lib/site.config'
 
+describe('supportedBy (FFC footer standard)', () => {
+  // The permanent "Supported by" attribution is required on every FFC-supported
+  // charity site. These assertions guard against a fork (or refactor) removing
+  // or repointing it — the values are intentionally FFC's, forever.
+  it('is present and points at Free For Charity', () => {
+    expect(siteConfig.supportedBy).toEqual({
+      name: 'Free For Charity',
+      url: 'https://freeforcharity.org',
+      hubUrl: 'https://freeforcharity.org/hub/',
+    })
+  })
+})
+
 describe('siteUrl', () => {
   it('returns the base URL for "/"', () => {
     expect(siteUrl('/')).toBe(`${siteConfig.url}/`)

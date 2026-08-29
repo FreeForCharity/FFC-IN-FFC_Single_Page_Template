@@ -1,11 +1,14 @@
 'use client'
 
-import React, { useState, useEffect, useMemo } from 'react'
+import React, { useState, useEffect } from 'react'
 import Link from 'next/link'
+import Image from 'next/image'
 import { FiMenu } from 'react-icons/fi'
 import { LiaSearchSolid } from 'react-icons/lia'
 import { RxCross2 } from 'react-icons/rx'
-import { motion, AnimatePresence } from 'framer-motion'
+import { assetPath } from '@/lib/assetPath'
+import { siteConfig } from '@/lib/site.config'
+import { configuredTeam } from '@/data/team'
 
 interface MenuItem {
   label: string
@@ -14,30 +17,40 @@ interface MenuItem {
 
 const SCROLL_OFFSET = 100
 
+// Full set of in-page nav targets. The rendered menu (built inside the
+// component) drops entries whose section can self-hide, but the scroll-spy
+// watches the full set — getElementById harmlessly skips any section a fork has
+// hidden. Kept at module scope so its identity is stable across renders (the
+// scroll-spy effect depends on it).
+const ALL_MENU_ITEMS: MenuItem[] = [
+  { label: 'Home', path: '/#hero' },
+  { label: 'Mission', path: '/#mission' },
+  { label: 'Programs', path: '/#programs' },
+  { label: 'Volunteer', path: '/#volunteer' },
+  { label: 'Donate', path: '/#donate' },
+  { label: 'FAQ', path: '/#faq' },
+  { label: 'Team', path: '/#team' },
+]
+const SCROLL_SPY_SECTIONS = ALL_MENU_ITEMS.map((item) => item.path.replace('/#', '')).filter(
+  (section) => section !== 'hero'
+)
+
 const Header: React.FC = () => {
   const [isScrolled, setIsScrolled] = useState(false)
   const [isSearchOpen, setIsSearchOpen] = useState(false)
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const [activeSection, setActiveSection] = useState<string>('')
 
-  const menuItems: MenuItem[] = useMemo(
-    () => [
-      { label: 'Home', path: '/#hero' },
-      { label: 'Mission', path: '/#mission' },
-      { label: 'Programs', path: '/#programs' },
-      { label: 'Volunteer', path: '/#volunteer' },
-      { label: 'Donate', path: '/#donate' },
-      { label: 'FAQ', path: '/#faq' },
-      { label: 'Team', path: '/#team' },
-    ],
-    []
-  )
-
-  const sections = useMemo(
-    () =>
-      menuItems.map((item) => item.path.replace('/#', '')).filter((section) => section !== 'hero'),
-    [menuItems]
-  )
+  // Drop nav entries whose section self-hides so we never link to a missing
+  // #anchor (Programs -> sections.showPrograms; Team -> configuredTeam, i.e. at
+  // least one member with a populated name — matches the Team section's guard).
+  // Built directly each render so it reflects the current config; the scroll-spy
+  // uses the stable module-level SCROLL_SPY_SECTIONS instead.
+  const menuItems: MenuItem[] = ALL_MENU_ITEMS.filter((item) => {
+    if (item.path === '/#programs') return siteConfig.sections.showPrograms
+    if (item.path === '/#team') return configuredTeam.length > 0
+    return true
+  })
 
   useEffect(() => {
     const handleScroll = () => setIsScrolled(window.scrollY > 50)
@@ -50,7 +63,7 @@ const Header: React.FC = () => {
     const handleScrollSpy = () => {
       const scrollPosition = window.scrollY + SCROLL_OFFSET
 
-      for (const sectionId of sections) {
+      for (const sectionId of SCROLL_SPY_SECTIONS) {
         const element = document.getElementById(sectionId)
         if (element) {
           const offsetTop = element.offsetTop
@@ -69,7 +82,7 @@ const Header: React.FC = () => {
 
     window.addEventListener('scroll', handleScrollSpy)
     return () => window.removeEventListener('scroll', handleScrollSpy)
-  }, [sections])
+  }, [])
 
   const handleSearchToggle = () => setIsSearchOpen(!isSearchOpen)
   const handleLinkClick = () => {
@@ -97,10 +110,15 @@ const Header: React.FC = () => {
               className={`transition-all duration-300 ${isScrolled ? 'w-[110px]' : 'w-[150px]'}`}
             >
               <Link href="/" onClick={handleLinkClick} className="block">
-                <img
-                  src="https://freeforcharity.org/wp-content/uploads/2024/04/Screenshot_145.png"
-                  alt="Free For Charity"
-                  className={`transition-all duration-300 ${isScrolled ? 'h-7' : 'h-11'}`}
+                <Image
+                  src={assetPath('/Images/logo.webp')}
+                  alt={siteConfig.name}
+                  width={686}
+                  height={234}
+                  priority
+                  className={`w-auto max-w-none object-contain transition-all duration-300 ${
+                    isScrolled ? 'h-7' : 'h-11'
+                  }`}
                 />
               </Link>
             </div>
@@ -109,7 +127,10 @@ const Header: React.FC = () => {
             {!isSearchOpen ? (
               <div className="flex items-center justify-end sm:pl-[50px] md:pl-[70px] w-full">
                 {/* Desktop Menu */}
-                <nav className="hidden lg:block transition-all duration-300">
+                <nav
+                  aria-label="Primary navigation"
+                  className="hidden lg:block transition-all duration-300"
+                >
                   <ul className="flex items-center space-x-[1px] font-navbar font-[600]">
                     {menuItems.map((item, index) => (
                       <li key={index} className="relative py-6">
@@ -145,6 +166,8 @@ const Header: React.FC = () => {
                   onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
                   className="lg:hidden p-2 text-gray-600 hover:text-blue-600"
                   aria-label={isMobileMenuOpen ? 'Close menu' : 'Open menu'}
+                  aria-expanded={isMobileMenuOpen}
+                  aria-controls="mobile-menu"
                 >
                   {isMobileMenuOpen ? (
                     <RxCross2 className="h-6 w-6" />
@@ -176,42 +199,38 @@ const Header: React.FC = () => {
         </div>
       </div>
 
-      {/* Mobile Menu */}
-      <AnimatePresence>
-        {isMobileMenuOpen && (
-          <motion.div
-            initial={{ height: 0, opacity: 0 }}
-            animate={{ height: 'auto', opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }}
-            transition={{ duration: 0.3, ease: 'easeInOut' }}
-            className={`lg:hidden absolute left-0 w-full overflow-hidden z-40 ${
-              isScrolled ? 'top-[53px]' : 'top-[77px]'
-            }`}
+      {/* Mobile Menu — mounted only when open (so its links aren't focusable
+          while collapsed) and animated in with a CSS entrance. */}
+      {isMobileMenuOpen && (
+        <div
+          id="mobile-menu"
+          className={`lg:hidden absolute left-0 w-full overflow-hidden z-40 animate-menuExpand ${
+            isScrolled ? 'top-[53px]' : 'top-[77px]'
+          }`}
+        >
+          <div
+            className={`max-w-[700px] mx-auto px-6 py-4 bg-white border-t-[3px] border-[#2EA3F2] shadow-[0_2px_5px_rgba(0,0,0,0.1)] max-h-[80vh] overflow-auto`}
           >
-            <div
-              className={`max-w-[700px] mx-auto px-6 py-4 bg-white border-t-[3px] border-[#2EA3F2] shadow-[0_2px_5px_rgba(0,0,0,0.1)] max-h-[80vh] overflow-auto`}
-            >
-              <ul className="space-y-2">
-                {menuItems.map((item, index) => (
-                  <li key={index}>
-                    <Link
-                      href={item.path}
-                      onClick={handleLinkClick}
-                      className={`block px-4 py-2 rounded-lg text-sm font-[600] ${
-                        isActive(item.path)
-                          ? 'bg-blue-50 text-blue-600'
-                          : 'text-gray-700 hover:bg-gray-100'
-                      }`}
-                    >
-                      {item.label}
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+            <ul className="space-y-2">
+              {menuItems.map((item, index) => (
+                <li key={index}>
+                  <Link
+                    href={item.path}
+                    onClick={handleLinkClick}
+                    className={`block px-4 py-2 rounded-lg text-sm font-[600] ${
+                      isActive(item.path)
+                        ? 'bg-blue-50 text-blue-600'
+                        : 'text-gray-700 hover:bg-gray-100'
+                    }`}
+                  >
+                    {item.label}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </div>
+      )}
     </header>
   )
 }

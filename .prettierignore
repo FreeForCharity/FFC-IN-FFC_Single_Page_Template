@@ -29,3 +29,4 @@ playwright-report
 # Other
 .DS_Store
 *.pem
+DEPENDABOT.md

@@ -1,5 +1,4 @@
 import type { NextConfig } from 'next'
-import withBundleAnalyzer from '@next/bundle-analyzer'
 
 const nextConfig: NextConfig = {
   output: 'export',
@@ -9,10 +8,6 @@ const nextConfig: NextConfig = {
     unoptimized: true,
     // Use remotePatterns instead of deprecated domains
     remotePatterns: [
-      {
-        protocol: 'https',
-        hostname: 'ffcworkingsite1.org',
-      },
       {
         protocol: 'https',
         hostname: 'staging.freeforcharity.org',
@@ -32,11 +27,14 @@ const nextConfig: NextConfig = {
   assetPrefix: process.env.NEXT_PUBLIC_BASE_PATH || '',
 }
 
-// Wrap with @next/bundle-analyzer when ANALYZE=true. The wrapper is a no-op
-// otherwise, so default builds and production output are unchanged. Run with
-// `npm run analyze` to generate the HTML report under .next/analyze/.
-const bundleAnalyzer = withBundleAnalyzer({
-  enabled: process.env.ANALYZE === 'true',
-})
-
-export default bundleAnalyzer(nextConfig)
+// Wrap with @next/bundle-analyzer when ANALYZE=true (`npm run analyze`).
+// The dynamic import means @next/bundle-analyzer is only resolved when
+// actually requested — a production install that omits devDependencies
+// (`npm ci --omit=dev` etc.) still loads this config file without
+// ERR_MODULE_NOT_FOUND because the import only runs when ANALYZE is set,
+// and ANALYZE is never set during a production build.
+export default (async () => {
+  if (process.env.ANALYZE !== 'true') return nextConfig
+  const { default: bundleAnalyzer } = await import('@next/bundle-analyzer')
+  return bundleAnalyzer({ enabled: true })(nextConfig)
+})()

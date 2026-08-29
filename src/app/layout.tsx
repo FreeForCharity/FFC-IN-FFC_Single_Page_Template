@@ -6,21 +6,17 @@ import CookieConsent from './../components/cookie-consent'
 import GoogleTagManager, { GoogleTagManagerNoScript } from './../components/google-tag-manager'
 import { siteConfig, siteUrl, twitterSite, cardDescription } from '@/lib/site.config'
 import { assetPath } from '@/lib/assetPath'
-import {
-  openSans,
-  lato,
-  raleway,
-  faustina,
-  cantataOne,
-  faunaOne,
-  montserrat,
-  cinzel,
-} from '@/lib/fonts'
+import { openSans, lato, faustina } from '@/lib/fonts'
+import { AT_POLYFILL_JS } from '@/lib/at-polyfill'
+import { OG_IMAGE } from '@/lib/page-metadata'
 
 const defaultTitle = `${siteConfig.name} | ${siteConfig.tagline}`
 
 export const metadata: Metadata = {
-  metadataBase: new URL(siteConfig.url),
+  // siteUrl('/') = origin + NEXT_PUBLIC_BASE_PATH + '/', so canonicals and
+  // OG URLs resolve under the GitHub Pages subpath on default-URL deploys
+  // (and to the bare origin when a custom domain sets no basePath).
+  metadataBase: new URL(siteUrl('/')),
   title: {
     default: defaultTitle,
     template: `%s | ${siteConfig.name}`,
@@ -47,21 +43,14 @@ export const metadata: Metadata = {
     siteName: siteConfig.name,
     title: defaultTitle,
     description: cardDescription(),
-    images: [
-      {
-        url: assetPath('/web-app-manifest-512x512.png'),
-        width: 512,
-        height: 512,
-        alt: siteConfig.name,
-      },
-    ],
+    images: [OG_IMAGE],
   },
   twitter: {
     card: 'summary_large_image',
     site: twitterSite(),
     title: defaultTitle,
     description: cardDescription(),
-    images: [assetPath('/web-app-manifest-512x512.png')],
+    images: [OG_IMAGE.url],
   },
   icons: {
     icon: [
@@ -81,6 +70,10 @@ export default function RootLayout({
   return (
     <html lang="en">
       <head>
+        {/* .at() polyfill for pre-ES2022 browsers — must run before any other
+            script. Source + rationale live in src/lib/at-polyfill.ts, and
+            __tests__/lib/at-polyfill.test.ts asserts its semantics. */}
+        <script dangerouslySetInnerHTML={{ __html: AT_POLYFILL_JS }} />
         {/* Baseline CSP for hosts that cannot serve _headers (GitHub Pages).
             Note: frame-ancestors, sandbox, and report-uri are IGNORED by the
             browser when delivered via <meta http-equiv> per the CSP spec.
@@ -92,19 +85,26 @@ export default function RootLayout({
             third-party origins must be added to BOTH. */}
         <meta
           httpEquiv="Content-Security-Policy"
-          content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.googletagmanager.com https://www.google-analytics.com https://*.google-analytics.com https://www.clarity.ms https://*.clarity.ms https://widgets.guidestar.org https://connect.facebook.net https://www.zeffy.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data: blob: https:; font-src 'self' data: https://fonts.gstatic.com; connect-src 'self' https://www.google-analytics.com https://*.google-analytics.com https://stats.g.doubleclick.net https://www.googletagmanager.com https://www.clarity.ms https://*.clarity.ms; frame-src https://www.googletagmanager.com https://www.zeffy.com https://widgets.guidestar.org https://www.facebook.com https://forms.office.com https://forms.microsoft.com https://www.youtube.com https://www.youtube-nocookie.com https://widgets.sociablekit.com; media-src 'self' blob: https:; object-src 'none'; base-uri 'self'; form-action 'self' https://www.zeffy.com https://forms.office.com; upgrade-insecure-requests"
+          content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.googletagmanager.com https://www.google-analytics.com https://*.google-analytics.com https://www.clarity.ms https://*.clarity.ms https://widgets.guidestar.org https://connect.facebook.net https://www.zeffy.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; font-src 'self' data:; connect-src 'self' https://www.google-analytics.com https://*.google-analytics.com https://stats.g.doubleclick.net https://www.googletagmanager.com https://www.clarity.ms https://*.clarity.ms; frame-src https://www.googletagmanager.com https://www.zeffy.com https://widgets.guidestar.org https://www.facebook.com https://forms.office.com https://forms.microsoft.com https://www.youtube.com https://www.youtube-nocookie.com https://widgets.sociablekit.com; media-src 'self' blob: https:; object-src 'none'; base-uri 'self'; form-action 'self' https://www.zeffy.com https://forms.office.com; upgrade-insecure-requests"
         />
         <meta name="referrer" content="strict-origin-when-cross-origin" />
         <meta name="color-scheme" content="light" />
         <meta name="theme-color" content={siteConfig.themeColor} />
 
-        {/* Preconnect to external domains for faster resource loading */}
+        {/* Preconnect to external domains that load on first paint */}
         <link rel="preconnect" href="https://www.googletagmanager.com" />
         <link rel="preconnect" href="https://www.zeffy.com" />
         <link rel="preconnect" href="https://widgets.guidestar.org" />
+        <link rel="preconnect" href="https://widgets.sociablekit.com" />
         <link rel="dns-prefetch" href="https://www.googletagmanager.com" />
         <link rel="dns-prefetch" href="https://www.zeffy.com" />
+        <link rel="dns-prefetch" href="https://widgets.sociablekit.com" />
         <link rel="dns-prefetch" href="https://www.idealist.org" />
+        {/* Analytics endpoints load conditionally through GTM — dns-prefetch
+            only (cheaper than preconnect for resources that may not load). */}
+        <link rel="dns-prefetch" href="https://www.google-analytics.com" />
+        <link rel="dns-prefetch" href="https://www.clarity.ms" />
+        <link rel="dns-prefetch" href="https://connect.facebook.net" />
 
         {/* Preload critical LCP image */}
         <link
@@ -117,17 +117,7 @@ export default function RootLayout({
         <GoogleTagManager />
       </head>
       <body
-        className={[
-          'antialiased',
-          openSans.variable,
-          lato.variable,
-          raleway.variable,
-          faustina.variable,
-          cantataOne.variable,
-          faunaOne.variable,
-          montserrat.variable,
-          cinzel.variable,
-        ].join(' ')}
+        className={['antialiased', openSans.variable, lato.variable, faustina.variable].join(' ')}
         suppressHydrationWarning={true}
       >
         <GoogleTagManagerNoScript />
@@ -138,13 +128,12 @@ export default function RootLayout({
         <a href="#main-content" className="skip-to-content">
           Skip to main content
         </a>
-        {/* <PopupProvider> */}
         <Header />
-        <main id="main-content">{children}</main>
+        <main id="main-content" tabIndex={-1}>
+          {children}
+        </main>
         <Footer />
         <CookieConsent />
-        {/* <PopupsRootClient /> */}
-        {/* </PopupProvider> */}
       </body>
     </html>
   )

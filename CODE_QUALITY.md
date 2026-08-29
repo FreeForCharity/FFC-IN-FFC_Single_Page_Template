@@ -132,7 +132,7 @@ npm run test:e2e:ui
 
 **Purpose**: Security vulnerability scanning
 
-**Configuration**: `.github/workflows/codeql.yml`
+**Configuration**: GitHub code scanning **default setup** (Settings → Security & Analysis). This template intentionally ships **without** a `codeql.yml` advanced workflow, because an advanced workflow and default setup cannot both be enabled.
 
 **Automatic Scanning**:
 
@@ -617,6 +617,6 @@ If you have questions about code quality standards:
 
 ---
 
-**Last Updated**: 2025-12-03  
-**Repository**: FreeForCharity/FFC_Single_Page_Template  
-**Node.js**: 20.x (validated with v20.19.6)
+**Last Updated**: 2026-07-18  
+**Repository**: FreeForCharity/FFC-IN-FFC_Single_Page_Template  
+**Node.js**: 24.x (validated with v24.18.0)

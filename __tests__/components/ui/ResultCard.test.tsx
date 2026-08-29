@@ -1,32 +1,10 @@
 import React from 'react'
 import { render, screen } from '@testing-library/react'
 
-// Reuse the same framer-motion mock pattern as AnimatedNumber.test.tsx —
-// ResultCard renders AnimatedNumber for numeric titles, and that pulls in
-// IntersectionObserver-backed hooks that jsdom doesn't provide.
-jest.mock('framer-motion', () => {
-  return {
-    useReducedMotion: () => true,
-    useInView: () => true,
-    useMotionValue: (initial: number) => ({
-      set: jest.fn(),
-      get: () => initial,
-      on: () => () => undefined,
-    }),
-    useSpring: (mv: { on: (event: string, cb: (latest: number) => void) => () => void }) => mv,
-    motion: new Proxy(
-      {},
-      {
-        get: () => {
-          const Pass = ({ children, ...rest }: React.PropsWithChildren<Record<string, unknown>>) =>
-            React.createElement('span', rest, children)
-          return Pass
-        },
-      }
-    ),
-  }
-})
-
+// ResultCard renders AnimatedNumber for numeric titles. AnimatedNumber now uses
+// native IntersectionObserver + matchMedia, both stubbed in jest.setup.js
+// (matchMedia reports prefers-reduced-motion: reduce), so it renders the static
+// value path here.
 import ResultCard from '../../../src/components/ui/ResultCard'
 
 describe('ResultCard', () => {
@@ -42,9 +20,9 @@ describe('ResultCard', () => {
     expect(screen.getByText('Volunteers')).toBeInTheDocument()
   })
 
-  it('renders the title inside an <h1>', () => {
+  it('renders the title inside an <h3>', () => {
     render(<ResultCard title="50" description="Partners" />)
-    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('50')
+    expect(screen.getByRole('heading', { level: 3 })).toHaveTextContent('50')
   })
 
   it('falls back to plain text for titles that mix digits and letters', () => {

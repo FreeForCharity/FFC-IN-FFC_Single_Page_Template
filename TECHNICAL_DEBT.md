@@ -6,7 +6,7 @@
 
 **Last Updated:** December 2025  
 **Status:** Active Tracking  
-**Repository:** FreeForCharity/FFC_Single_Page_Template
+**Repository:** FreeForCharity/FFC-IN-FFC_Single_Page_Template
 
 ---
 
@@ -104,7 +104,7 @@ The project has **1 React Hooks ESLint warning** remaining after recent refactor
 
 ---
 
-### Category 4: `@next/next/no-img-element` (6 occurrences)
+### Category 4: `@next/next/no-img-element` (2 occurrences)
 
 **Issue:** Using `<img>` tags instead of Next.js `<Image />` component.
 
@@ -112,10 +112,6 @@ The project has **1 React Hooks ESLint warning** remaining after recent refactor
 
 - `src/components/header/index.tsx`
 - `src/components/footer/index.tsx`
-- `src/components/endowment-fund/Hero/index.tsx`
-- `src/components/free-charity-web-hosting/About-FFC-Hosting/index.tsx`
-- `src/components/ui/General-Donation-Card.tsx`
-- `src/components/ui/trainingcard.tsx`
 
 **Why it's acceptable:**
 
@@ -223,7 +219,7 @@ npm audit fix --force
 - **Scope:** GitHub Actions workflow dependencies
 - **Strategy:** Grouped updates for easier review
 
-**Current Dependabot PRs:** Check [Pull Requests tab](https://github.com/FreeForCharity/FFC_Single_Page_Template/pulls)
+**Current Dependabot PRs:** Check [Pull Requests tab](https://github.com/FreeForCharity/FFC-IN-FFC_Single_Page_Template/pulls)
 
 ### Pending Dependency Updates
 

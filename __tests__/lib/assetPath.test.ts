@@ -23,17 +23,17 @@ describe('assetPath utility', () => {
   })
 
   it('should prepend basePath when NEXT_PUBLIC_BASE_PATH is set', () => {
-    process.env.NEXT_PUBLIC_BASE_PATH = '/FFC_Single_Page_Template'
-    expect(assetPath('/logo.png')).toBe('/FFC_Single_Page_Template/logo.png')
+    process.env.NEXT_PUBLIC_BASE_PATH = '/FFC-IN-FFC_Single_Page_Template'
+    expect(assetPath('/logo.png')).toBe('/FFC-IN-FFC_Single_Page_Template/logo.png')
   })
 
   it('should handle paths with subdirectories', () => {
-    process.env.NEXT_PUBLIC_BASE_PATH = '/FFC_Single_Page_Template'
-    expect(assetPath('/images/hero.jpg')).toBe('/FFC_Single_Page_Template/images/hero.jpg')
+    process.env.NEXT_PUBLIC_BASE_PATH = '/FFC-IN-FFC_Single_Page_Template'
+    expect(assetPath('/images/hero.jpg')).toBe('/FFC-IN-FFC_Single_Page_Template/images/hero.jpg')
   })
 
   it('should handle root path', () => {
-    process.env.NEXT_PUBLIC_BASE_PATH = '/FFC_Single_Page_Template'
-    expect(assetPath('/')).toBe('/FFC_Single_Page_Template/')
+    process.env.NEXT_PUBLIC_BASE_PATH = '/FFC-IN-FFC_Single_Page_Template'
+    expect(assetPath('/')).toBe('/FFC-IN-FFC_Single_Page_Template/')
   })
 })

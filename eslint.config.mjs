@@ -33,17 +33,6 @@ const eslintConfig = [
       '@typescript-eslint/no-require-imports': 'off',
     },
   },
-  {
-    // TODO: Address React hooks rule violations and remove this override.
-    // eslint-plugin-react-hooks@7.0.1 (bundled with eslint-config-next@16.0.7)
-    // introduced stricter rules that flag existing patterns in multiple components.
-    // Temporarily downgraded to 'warn' to unblock the upgrade while we refactor.
-    // Affected: cookie-consent, FAQs, Accordian components, and others.
-    rules: {
-      'react-hooks/set-state-in-effect': 'warn',
-      'react-hooks/immutability': 'warn',
-    },
-  },
 ]
 
 export default eslintConfig
