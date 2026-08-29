@@ -20,23 +20,26 @@ Google Tag Manager (GTM) is a tag management system that allows you to manage an
 - ✅ Uses Next.js Script component with `afterInteractive` strategy
 - ✅ Includes noscript fallback for accessibility
 - ✅ Integrates with existing cookie consent system
-- ✅ GTM ID hardcoded directly in component (no environment variable needed)
+- ✅ GTM ID read from `src/lib/analytics.config.ts` (one place for all analytics IDs)
 
 ## Configuration
 
 ### Setting Your GTM ID
 
-The GTM container ID is hardcoded directly in the component file. To update it:
+The GTM container ID lives in `src/lib/analytics.config.ts` alongside the other
+analytics IDs. To update it:
 
-1. Open `src/components/GoogleTagManager/index.tsx`
-2. Update the `GTM_ID` constant with your actual GTM container ID:
+1. Open `src/lib/analytics.config.ts`
+2. Set the `gtmId` field to your actual GTM container ID:
 
-```tsx
-// Google Tag Manager ID - Update this with your actual GTM container ID
-const GTM_ID = 'GTM-XXXXXXX' // Replace with your actual GTM ID
+```ts
+export const analyticsConfig = {
+  gtmId: 'GTM-ABC1234', // your GTM container ID
+  // ...
+}
 ```
 
-Replace `GTM-XXXXXXX` with your actual GTM container ID from Google Tag Manager (e.g., `GTM-ABC1234`).
+Replace the value with your actual GTM container ID from Google Tag Manager (e.g., `GTM-ABC1234`).
 
 ## Usage
 
@@ -209,10 +212,10 @@ Note: Ad blockers may prevent GTM from loading. This is expected behavior and af
 
 To change the GTM container ID:
 
-1. Open `src/components/GoogleTagManager/index.tsx`
-2. Update the `GTM_ID` constant:
-   ```tsx
-   const GTM_ID = 'GTM-NEW1234' // Your new GTM ID
+1. Open `src/lib/analytics.config.ts`
+2. Update the `gtmId` field:
+   ```ts
+   gtmId: 'GTM-NEW1234', // Your new GTM ID
    ```
 3. Commit and push the changes
 4. The changes will be deployed automatically via GitHub Actions

@@ -2,11 +2,12 @@
 
 import { useState, useEffect, useRef, useCallback } from 'react'
 import Link from 'next/link'
+import { analyticsConfig } from '@/lib/analytics.config'
 
-// Environment variables for tracking IDs (replace with actual values)
-const GA_MEASUREMENT_ID = process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID || 'G-XXXXXXXXXX'
-const META_PIXEL_ID = process.env.NEXT_PUBLIC_META_PIXEL_ID || 'XXXXXXXXXXXXXXX'
-const CLARITY_PROJECT_ID = process.env.NEXT_PUBLIC_CLARITY_PROJECT_ID || 'XXXXXXXXXX'
+// Tracking IDs live in src/lib/analytics.config.ts — edit them there.
+const GA_MEASUREMENT_ID = analyticsConfig.gaMeasurementId
+const META_PIXEL_ID = analyticsConfig.metaPixelId
+const CLARITY_PROJECT_ID = analyticsConfig.clarityProjectId
 
 // Define type for GTM dataLayer events
 interface DataLayerEvent {
@@ -505,10 +506,10 @@ export default function CookieConsent() {
               decline non-essential cookies.
             </p>
             <div className="flex items-center gap-4 text-xs text-gray-500">
-              <Link href="/privacy-policy" className="text-blue-600 hover:underline">
+              <Link href="/privacy-policy" className="text-blue-600 underline">
                 Privacy Policy
               </Link>
-              <Link href="/cookie-policy" className="text-blue-600 hover:underline">
+              <Link href="/cookie-policy" className="text-blue-600 underline">
                 Cookie Policy
               </Link>
             </div>

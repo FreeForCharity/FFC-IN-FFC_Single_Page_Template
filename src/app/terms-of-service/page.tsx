@@ -1,15 +1,24 @@
 import type { Metadata } from 'next'
+import BreadcrumbSchema from '@/components/seo/BreadcrumbSchema'
+import { pageMetadata } from '@/lib/page-metadata'
 
-export const metadata: Metadata = {
-  title: 'Terms of Service | Free For Charity',
+const PAGE_NAME = 'Terms of Service'
+const CANONICAL_PATH = '/terms-of-service'
+
+// Bare page name as title (the root layout template appends the brand);
+// per-page OG/Twitter handling is documented in src/lib/page-metadata.ts.
+export const metadata: Metadata = pageMetadata({
+  title: PAGE_NAME,
   description: 'Terms of Service for Free For Charity website',
-}
+  canonical: CANONICAL_PATH,
+})
 
 export default function TermsOfService() {
   return (
     <div className="pt-[130px] pb-[54px]">
+      <BreadcrumbSchema name={PAGE_NAME} path={CANONICAL_PATH} />
       <div className="py-[27px] w-[90%] md:w-[80%] mx-auto">
-        <div id="aria-font">
+        <div className="aria-font">
           {/* Effective Date */}
           <p className="text-[14px] text-[#666] pb-[10px] leading-[24px] font-[500]">
             <em>Effective Date: 11-20-2024</em>
@@ -25,9 +34,9 @@ export default function TermsOfService() {
           {/* Empty spacing removed — use margin if needed */}
 
           {/* Introduction */}
-          <h1 className="text-[30px] text-[#333] pb-[10px] leading-[1em] font-[500]">
+          <h2 className="text-[30px] text-[#333] pb-[10px] leading-[1em] font-[500]">
             Introduction
-          </h1>
+          </h2>
           <p className="text-[14px] text-[#666] pb-[10px] leading-[24px] font-[500]">
             Welcome to Free For Charity! These Terms of Service (“Terms”) govern your access to and
             use of our website, services, and platforms (collectively, “Services”), provided by Free
@@ -37,22 +46,22 @@ export default function TermsOfService() {
           </p>
 
           {/* Eligibility */}
-          <h1 className="text-[30px] text-[#333] pb-[10px] leading-[1em] font-[500]">
+          <h2 className="text-[30px] text-[#333] pb-[10px] leading-[1em] font-[500]">
             Eligibility
-          </h1>
+          </h2>
           <p className="text-[14px] text-[#666] pb-[10px] leading-[24px] font-[500]">
             Our Services are available only to individuals who are at least 18 years old. By using
             our Services, you represent and warrant that you are at least 18 years of age.
           </p>
 
           {/* Use of Services */}
-          <h1 className="text-[30px] text-[#333] pb-[10px] leading-[1em] font-[500]">
+          <h2 className="text-[30px] text-[#333] pb-[10px] leading-[1em] font-[500]">
             Use of Services
-          </h1>
-
-          <h2 className="text-[26px] text-[#333] pb-[10px] leading-[26px] font-[500]">
-            Account Registration
           </h2>
+
+          <h3 className="text-[26px] text-[#333] pb-[10px] leading-[26px] font-[500]">
+            Account Registration
+          </h3>
           <p className="text-[14px] text-[#666] pb-[10px] leading-[24px] font-[500]">
             To access certain features of our Services, you may be required to register for an
             account. You agree to provide accurate, current, and complete information during the
@@ -61,9 +70,9 @@ export default function TermsOfService() {
             actions under your account.
           </p>
 
-          <h2 className="text-[26px] text-[#333] pb-[10px] leading-[26px] font-[500]">
+          <h3 className="text-[26px] text-[#333] pb-[10px] leading-[26px] font-[500]">
             Prohibited Activities
-          </h2>
+          </h3>
           <p className="text-[14px] text-[#666] pb-[10px] leading-[24px] font-[500]">
             You agree not to use our Services for any unlawful purpose or in any way that could
             harm, disable, overburden, or impair the Services. Prohibited activities include, but
@@ -88,7 +97,7 @@ export default function TermsOfService() {
           </ul>
 
           {/* Donations */}
-          <h1 className="text-[30px] text-[#333] pb-[10px] leading-[1em] font-[500]">Donations</h1>
+          <h2 className="text-[30px] text-[#333] pb-[10px] leading-[1em] font-[500]">Donations</h2>
           <p className="text-[14px] text-[#666] pb-[10px] leading-[24px] font-[500]">
             All donations made to Free For Charity are voluntary and non-refundable. By making a
             donation, you agree to our Donation Policy, which is incorporated by reference into
@@ -96,18 +105,18 @@ export default function TermsOfService() {
           </p>
 
           {/* Payments */}
-          <h1 className="text-[30px] text-[#333] pb-[10px] leading-[1em] font-[500]">Payments</h1>
+          <h2 className="text-[30px] text-[#333] pb-[10px] leading-[1em] font-[500]">Payments</h2>
           <p className="text-[14px] text-[#666] pb-[10px] leading-[24px] font-[500]">
             All payments made to Free For Charity are voluntary and non-refundable. No refunds will
             be given due to the nonprofit nature of Free For Charity.
           </p>
 
           {/* Intellectual Property */}
-          <h1 className="text-[30px] text-[#333] pb-[10px] leading-[1em] font-[500]">
+          <h2 className="text-[30px] text-[#333] pb-[10px] leading-[1em] font-[500]">
             Intellectual Property
-          </h1>
+          </h2>
 
-          <h2 className="text-[26px] text-[#333] pb-[10px] leading-[26px] font-[500]">Ownership</h2>
+          <h3 className="text-[26px] text-[#333] pb-[10px] leading-[26px] font-[500]">Ownership</h3>
           <p className="text-[14px] text-[#666] pb-[10px] leading-[24px] font-[500]">
             All content, trademarks, logos, and other intellectual property included in our Services
             are the property of Free For Charity or its licensors. You agree not to use, reproduce,
@@ -115,9 +124,9 @@ export default function TermsOfService() {
             express written consent.
           </p>
 
-          <h2 className="text-[26px] text-[#333] pb-[10px] leading-[26px] font-[500]">
+          <h3 className="text-[26px] text-[#333] pb-[10px] leading-[26px] font-[500]">
             User Content
-          </h2>
+          </h3>
           <p className="text-[14px] text-[#666] pb-[10px] leading-[24px] font-[500]">
             By submitting content to our Services, you grant us a non-exclusive, worldwide,
             royalty-free, and transferable license to use, reproduce, distribute, prepare derivative
@@ -125,16 +134,16 @@ export default function TermsOfService() {
           </p>
 
           {/* Privacy */}
-          <h1 className="text-[30px] text-[#333] pb-[10px] leading-[1em] font-[500]">Privacy</h1>
+          <h2 className="text-[30px] text-[#333] pb-[10px] leading-[1em] font-[500]">Privacy</h2>
           <p className="text-[14px] text-[#666] pb-[10px] leading-[24px] font-[500]">
             Your privacy is important to us. Please review our Privacy Policy, which describes how
             we collect, use, and disclose information about you.
           </p>
 
           {/* Third-Party Links */}
-          <h1 className="text-[30px] text-[#333] pb-[10px] leading-[1em] font-[500]">
+          <h2 className="text-[30px] text-[#333] pb-[10px] leading-[1em] font-[500]">
             Third-Party Links
-          </h1>
+          </h2>
           <p className="text-[14px] text-[#666] pb-[10px] leading-[24px] font-[500]">
             Our Services may contain links to third-party websites or services that are not owned or
             controlled by Free For Charity. We are not responsible for the content, privacy
@@ -144,9 +153,9 @@ export default function TermsOfService() {
           </p>
 
           {/* Disclaimer of Warranties */}
-          <h1 className="text-[30px] text-[#333] pb-[10px] leading-[1em] font-[500]">
+          <h2 className="text-[30px] text-[#333] pb-[10px] leading-[1em] font-[500]">
             Disclaimer of Warranties
-          </h1>
+          </h2>
           <p className="text-[14px] text-[#666] pb-[10px] leading-[24px] font-[500]">
             Our Services are provided on an “as is” and “as available” basis. Free For Charity makes
             no representations or warranties of any kind, express or implied, regarding the use or
@@ -157,9 +166,9 @@ export default function TermsOfService() {
           </p>
 
           {/* Limitation of Liability */}
-          <h1 className="text-[30px] text-[#333] pb-[10px] leading-[1em] font-[500]">
+          <h2 className="text-[30px] text-[#333] pb-[10px] leading-[1em] font-[500]">
             Limitation of Liability
-          </h1>
+          </h2>
           <p className="text-[14px] text-[#666] pb-[10px] leading-[24px] font-[500]">
             To the fullest extent permitted by law, Free For Charity shall not be liable for any
             indirect, incidental, special, consequential, or punitive damages, or any loss of
@@ -184,9 +193,9 @@ export default function TermsOfService() {
           </ul>
 
           {/* Indemnification */}
-          <h1 className="text-[30px] text-[#333] pb-[10px] leading-[1em] font-[500]">
+          <h2 className="text-[30px] text-[#333] pb-[10px] leading-[1em] font-[500]">
             Indemnification
-          </h1>
+          </h2>
           <p className="text-[14px] text-[#666] pb-[10px] leading-[24px] font-[500]">
             You agree to indemnify, defend, and hold harmless Free For Charity, its officers,
             directors, employees, and agents, from and against any and all claims, liabilities,
@@ -196,9 +205,9 @@ export default function TermsOfService() {
           </p>
 
           {/* Governing Law */}
-          <h1 className="text-[30px] text-[#333] pb-[10px] leading-[1em] font-[500]">
+          <h2 className="text-[30px] text-[#333] pb-[10px] leading-[1em] font-[500]">
             Governing Law
-          </h1>
+          </h2>
           <p className="text-[14px] text-[#666] pb-[10px] leading-[24px] font-[500]">
             These Terms shall be governed by and construed in accordance with the laws of the United
             States and the State of North Carolina, without regard to its conflict of law
@@ -206,9 +215,9 @@ export default function TermsOfService() {
           </p>
 
           {/* Changes to Terms */}
-          <h1 className="text-[30px] text-[#333] pb-[10px] leading-[1em] font-[500]">
+          <h2 className="text-[30px] text-[#333] pb-[10px] leading-[1em] font-[500]">
             Changes to Terms
-          </h1>
+          </h2>
           <p className="text-[14px] text-[#666] pb-[10px] leading-[24px] font-[500]">
             We reserve the right to modify these Terms at any time. If we make changes, we will
             provide notice by updating the date at the top of these Terms and posting the modified
@@ -217,9 +226,9 @@ export default function TermsOfService() {
           </p>
 
           {/* Termination */}
-          <h1 className="text-[30px] text-[#333] pb-[10px] leading-[1em] font-[500]">
+          <h2 className="text-[30px] text-[#333] pb-[10px] leading-[1em] font-[500]">
             Termination
-          </h1>
+          </h2>
           <p className="text-[14px] text-[#666] pb-[10px] leading-[24px] font-[500]">
             We may terminate or suspend your access to our Services, without prior notice or
             liability, for any reason, including, without limitation, if you breach these Terms.
@@ -227,7 +236,7 @@ export default function TermsOfService() {
           </p>
 
           {/* Contact Us */}
-          <h1 className="text-[30px] text-[#333] pb-[10px] leading-[1em] font-[500]">Contact Us</h1>
+          <h2 className="text-[30px] text-[#333] pb-[10px] leading-[1em] font-[500]">Contact Us</h2>
           <p className="text-[14px] text-[#666] pb-[10px] leading-[24px] font-[500]">
             If you have any questions about these Terms, please contact us at:
           </p>
@@ -236,7 +245,7 @@ export default function TermsOfService() {
           </p>
           <p className="text-[14px] text-[#666] pb-[10px] leading-[24px] font-[500]">
             Email:{' '}
-            <a href="mailto:clarkemoyer@freeforcharity.org" className="text-[#007bff] underline">
+            <a href="mailto:clarkemoyer@freeforcharity.org" className="text-[#0062CC] underline">
               clarkemoyer@freeforcharity.org
             </a>
           </p>

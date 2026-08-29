@@ -1,16 +1,25 @@
 import React from 'react'
 import type { Metadata } from 'next'
+import BreadcrumbSchema from '@/components/seo/BreadcrumbSchema'
+import { pageMetadata } from '@/lib/page-metadata'
 
-export const metadata: Metadata = {
-  title: 'Free For Charity Donation Policy | Free For Charity',
+const PAGE_NAME = 'Free For Charity Donation Policy'
+const CANONICAL_PATH = '/free-for-charity-donation-policy'
+
+// Bare page name as title (the root layout template appends the brand);
+// per-page OG/Twitter handling is documented in src/lib/page-metadata.ts.
+export const metadata: Metadata = pageMetadata({
+  title: PAGE_NAME,
   description: 'Free For Charity Donation Policy - Learn about our donation policies',
-}
+  canonical: CANONICAL_PATH,
+})
 
 const index = () => {
   return (
     <div className="pt-[140px]">
+      <BreadcrumbSchema name={PAGE_NAME} path={CANONICAL_PATH} />
       <div className="py-[21px] w-[90%] md:w-[80%] mx-auto max-w-[1080px]">
-        <div id="aria-font">
+        <div className="aria-font">
           <h1 className="text-[30px] text-[#333] pb-[10px] leading-[30px] font-[500]">
             Free For Charity Donation Policy
           </h1>
@@ -23,9 +32,9 @@ const index = () => {
             <em>Effective Date: 11-20-2024</em>
           </p>
 
-          <h1 className="text-[30px] text-[#333] pb-[10px] leading-[30px] font-[500]">
+          <h2 className="text-[30px] text-[#333] pb-[10px] leading-[30px] font-[500]">
             Introduction
-          </h1>
+          </h2>
 
           <p className="text-[14px] text-[#666] pb-[10px] leading-[24px] font-[500]">
             Free For Charity, a US 501(c)(3) non-profit organization, is dedicated to improving our
@@ -35,9 +44,9 @@ const index = () => {
             compliance with applicable laws and regulations.
           </p>
 
-          <h1 className="text-[30px] text-[#333] pb-[10px] leading-[30px] font-[500]">
+          <h2 className="text-[30px] text-[#333] pb-[10px] leading-[30px] font-[500]">
             Scope and Purpose
-          </h1>
+          </h2>
 
           <p className="text-[14px] text-[#666] pb-[10px] leading-[24px] font-[500]">
             The purpose of this policy is to provide clarity and guidance on the types of donations
@@ -49,17 +58,17 @@ const index = () => {
             for our supported nonprofits.
           </p>
 
-          <h1 className="text-[30px] text-[#333] pb-[10px] leading-[30px] font-[500]">
+          <h2 className="text-[30px] text-[#333] pb-[10px] leading-[30px] font-[500]">
             Types of Acceptable Donations
-          </h1>
+          </h2>
 
           <p className="text-[14px] text-[#666] pb-[10px] leading-[24px] font-[500]">
             Free For Charity accepts a wide range of donations, subject to the following criteria:
           </p>
 
-          <h2 className="text-[26px] text-[#333] pb-[10px] leading-[26px] font-[500]">
+          <h3 className="text-[26px] text-[#333] pb-[10px] leading-[26px] font-[500]">
             1. Cash Donations
-          </h2>
+          </h3>
 
           <p className="text-[14px] text-[#666] pb-[10px] leading-[24px] font-[500]">
             Cash donations, including checks and electronic transfers, are accepted and encouraged.
@@ -68,9 +77,9 @@ const index = () => {
             us to respond quickly to emerging needs.
           </p>
 
-          <h2 className="text-[26px] text-[#333] pb-[10px] leading-[26px] font-[500]">
+          <h3 className="text-[26px] text-[#333] pb-[10px] leading-[26px] font-[500]">
             2. Securities
-          </h2>
+          </h3>
 
           <p className="text-[14px] text-[#666] pb-[10px] leading-[24px] font-[500]">
             Free For Charity accepts publicly traded securities and other forms of marketable
@@ -81,9 +90,9 @@ const index = () => {
             donating securities.
           </p>
 
-          <h2 className="text-[26px] text-[#333] pb-[10px] leading-[26px] font-[500]">
+          <h3 className="text-[26px] text-[#333] pb-[10px] leading-[26px] font-[500]">
             3. Real Estate
-          </h2>
+          </h3>
 
           <p className="text-[14px] text-[#666] pb-[10px] leading-[24px] font-[500]">
             Donations of real estate will be considered on a case-by-case basis. The organization
@@ -94,9 +103,9 @@ const index = () => {
             aligns with our mission and does not pose undue financial or legal risks.
           </p>
 
-          <h2 className="text-[26px] text-[#333] pb-[10px] leading-[26px] font-[500]">
+          <h3 className="text-[26px] text-[#333] pb-[10px] leading-[26px] font-[500]">
             4. Personal Property
-          </h2>
+          </h3>
 
           <p className="text-[14px] text-[#666] pb-[10px] leading-[24px] font-[500]">
             Tangible personal property, such as art, antiques, and vehicles, may be accepted if
@@ -106,9 +115,9 @@ const index = () => {
             our fundraising efforts and provide unique opportunities for donor engagement.
           </p>
 
-          <h2 className="text-[26px] text-[#333] pb-[10px] leading-[26px] font-[500]">
+          <h3 className="text-[26px] text-[#333] pb-[10px] leading-[26px] font-[500]">
             5. In-Kind Contributions
-          </h2>
+          </h3>
 
           <p className="text-[14px] text-[#666] pb-[10px] leading-[24px] font-[500]">
             In-kind contributions, including goods and services, are accepted if they fulfill the
@@ -119,9 +128,9 @@ const index = () => {
             services, and event sponsorships.
           </p>
 
-          <h1 className="text-[30px] text-[#333] pb-[10px] leading-[30px] font-[500]">
+          <h2 className="text-[30px] text-[#333] pb-[10px] leading-[30px] font-[500]">
             Donor Responsibilities
-          </h1>
+          </h2>
 
           <p className="text-[14px] text-[#666] pb-[10px] leading-[24px] font-[500]">
             Donors are responsible for ensuring that their contributions comply with all applicable
@@ -132,18 +141,18 @@ const index = () => {
             acknowledgment and reporting.
           </p>
 
-          <h1 className="text-[30px] text-[#333] pb-[10px] leading-[30px] font-[500]">
+          <h2 className="text-[30px] text-[#333] pb-[10px] leading-[30px] font-[500]">
             Evaluation and Acceptance of Donations
-          </h1>
+          </h2>
 
           <p className="text-[14px] text-[#666] pb-[10px] leading-[24px] font-[500]">
             All donations are subject to a review process to ensure they align with Free For
             Charity’s mission and values. The evaluation process includes:
           </p>
 
-          <h2 className="text-[26px] text-[#333] pb-[10px] leading-[26px] font-[500]">
+          <h3 className="text-[26px] text-[#333] pb-[10px] leading-[26px] font-[500]">
             1. Initial Review
-          </h2>
+          </h3>
 
           <p className="text-[14px] text-[#666] pb-[10px] leading-[24px] font-[500]">
             The Executive Director or designated staff member will conduct an initial review of the
@@ -152,9 +161,9 @@ const index = () => {
             acceptance criteria and aligns with our strategic goals.
           </p>
 
-          <h2 className="text-[26px] text-[#333] pb-[10px] leading-[26px] font-[500]">
+          <h3 className="text-[26px] text-[#333] pb-[10px] leading-[26px] font-[500]">
             2. Due Diligence
-          </h2>
+          </h3>
 
           <p className="text-[14px] text-[#666] pb-[10px] leading-[24px] font-[500]">
             For donations of real estate, securities, and personal property, Free For Charity will
@@ -164,9 +173,9 @@ const index = () => {
             donation and can make informed decisions in the best interest of our mission.
           </p>
 
-          <h2 className="text-[26px] text-[#333] pb-[10px] leading-[26px] font-[500]">
+          <h3 className="text-[26px] text-[#333] pb-[10px] leading-[26px] font-[500]">
             3. Board Approval
-          </h2>
+          </h3>
 
           <p className="text-[14px] text-[#666] pb-[10px] leading-[24px] font-[500]">
             Donations that require significant resources to manage or present potential risks will
@@ -176,18 +185,18 @@ const index = () => {
             consideration.
           </p>
 
-          <h1 className="text-[30px] text-[#333] pb-[10px] leading-[30px] font-[500]">
+          <h2 className="text-[30px] text-[#333] pb-[10px] leading-[30px] font-[500]">
             Donor Acknowledgment and Recognition
-          </h1>
+          </h2>
 
           <p className="text-[14px] text-[#666] pb-[10px] leading-[24px] font-[500]">
             Free For Charity is committed to recognizing and appreciating the generosity of our
             donors. Upon receipt of a donation, donors will receive:
           </p>
 
-          <h2 className="text-[26px] text-[#333] pb-[10px] leading-[26px] font-[500]">
+          <h3 className="text-[26px] text-[#333] pb-[10px] leading-[26px] font-[500]">
             1. Acknowledgment Letter or Email
-          </h2>
+          </h3>
 
           <p className="text-[14px] text-[#666] pb-[10px] leading-[24px] font-[500]">
             An acknowledgment letter will be sent to the donor, confirming the receipt of the
@@ -195,9 +204,9 @@ const index = () => {
             an official record of the donation and expresses our gratitude for the donor’s support.
           </p>
 
-          <h2 className="text-[26px] text-[#333] pb-[10px] leading-[26px] font-[500]">
+          <h3 className="text-[26px] text-[#333] pb-[10px] leading-[26px] font-[500]">
             2. Public Recognition
-          </h2>
+          </h3>
 
           <p className="text-[14px] text-[#666] pb-[10px] leading-[24px] font-[500]">
             With the donor’s consent, Free For Charity will recognize significant contributions
@@ -207,9 +216,9 @@ const index = () => {
             to our cause.
           </p>
 
-          <h1 className="text-[30px] text-[#333] pb-[10px] leading-[30px] font-[500]">
+          <h2 className="text-[30px] text-[#333] pb-[10px] leading-[30px] font-[500]">
             Confidentiality and Privacy
-          </h1>
+          </h2>
 
           <p className="text-[14px] text-[#666] pb-[10px] leading-[24px] font-[500]">
             Free For Charity respects the privacy and confidentiality of our donors. Personal
@@ -227,9 +236,9 @@ const index = () => {
             <li>Ensuring transparency in how donor information is used and protected</li>
           </ul>
 
-          <h1 className="text-[30px] text-[#333] pb-[10px] leading-[30px] font-[500]">
+          <h2 className="text-[30px] text-[#333] pb-[10px] leading-[30px] font-[500]">
             Conflict of Interest
-          </h1>
+          </h2>
 
           <p className="text-[14px] text-[#666] pb-[10px] leading-[24px] font-[500]">
             Free For Charity is committed to maintaining the highest ethical standards. All
@@ -239,9 +248,9 @@ const index = () => {
             best interest of the organization and our beneficiaries.
           </p>
 
-          <h1 className="text-[30px] text-[#333] pb-[10px] leading-[30px] font-[500]">
+          <h2 className="text-[30px] text-[#333] pb-[10px] leading-[30px] font-[500]">
             Policy Review and Updates
-          </h1>
+          </h2>
 
           <p className="text-[14px] text-[#666] pb-[10px] leading-[24px] font-[500]">
             This donation policy will be reviewed as needed by the Board of Directors to ensure it
@@ -250,9 +259,9 @@ const index = () => {
             evolving legal requirements and best practices in the non-profit sector.
           </p>
 
-          <h1 className="text-[30px] text-[#333] pb-[10px] leading-[30px] font-[500]">
+          <h2 className="text-[30px] text-[#333] pb-[10px] leading-[30px] font-[500]">
             Conclusion
-          </h1>
+          </h2>
 
           <p className="text-[14px] text-[#666] pb-[10px] leading-[24px] font-[500]">
             Free For Charity deeply values the support of our donors and is committed to ensuring

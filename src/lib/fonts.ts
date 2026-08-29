@@ -1,15 +1,13 @@
-import {
-  Open_Sans,
-  Lato,
-  Raleway,
-  Faustina,
-  Cantata_One,
-  Fauna_One,
-  Montserrat,
-  Cinzel,
-} from 'next/font/google'
+import { Open_Sans, Lato, Faustina } from 'next/font/google'
 
-// Configure fonts with proper subsets and display strategy
+// Only the three font families actually used by the template are loaded:
+//   - Open Sans  -> .aria-font / #header
+//   - Lato       -> .lato-font (and Tailwind --font-sans)
+//   - Faustina   -> body default / .faustina-font (and --font-serif-display)
+// Earlier the template loaded eight families; the others (Raleway, Cantata
+// One, Fauna One, Montserrat, Cinzel) were only referenced by components that
+// have since been removed, so loading them just cost bytes and main-thread
+// work. Add a family back here (and a matching CSS rule) if you start using it.
 export const openSans = Open_Sans({
   subsets: ['latin'],
   display: 'swap',
@@ -24,44 +22,9 @@ export const lato = Lato({
   weight: ['400', '700'],
 })
 
-export const raleway = Raleway({
-  subsets: ['latin'],
-  display: 'swap',
-  variable: '--font-raleway',
-  weight: ['400', '500', '600', '700'],
-})
-
 export const faustina = Faustina({
   subsets: ['latin'],
   display: 'swap',
   variable: '--font-faustina',
-  weight: ['400', '500', '600', '700'],
-})
-
-export const cantataOne = Cantata_One({
-  subsets: ['latin'],
-  display: 'swap',
-  variable: '--font-cantata-one',
-  weight: '400',
-})
-
-export const faunaOne = Fauna_One({
-  subsets: ['latin'],
-  display: 'swap',
-  variable: '--font-fauna-one',
-  weight: '400',
-})
-
-export const montserrat = Montserrat({
-  subsets: ['latin'],
-  display: 'swap',
-  variable: '--font-montserrat',
-  weight: ['400', '500', '600', '700'],
-})
-
-export const cinzel = Cinzel({
-  subsets: ['latin'],
-  display: 'swap',
-  variable: '--font-cinzel',
   weight: ['400', '500', '600', '700'],
 })

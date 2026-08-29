@@ -27,10 +27,23 @@ const BASELINE_ALLOWLIST = new Set<string>([
 test.describe('axe-core homepage guardrail', () => {
   test('homepage has no new serious or critical violations', async ({ page }) => {
     await page.goto('/')
-    await page.waitForLoadState('networkidle')
+    // Don't wait for 'networkidle': the homepage embeds always-on third-party
+    // resources (GTM, Zeffy, SociableKit, Google Maps) that keep the network
+    // busy, so networkidle never settles and the test times out. Instead wait
+    // for the DOM and for the footer — the last major landmark — to render,
+    // which means the page has hydrated and is ready for an a11y scan.
+    await page.waitForLoadState('domcontentloaded')
+    await page.locator('footer').waitFor({ state: 'visible' })
 
     const results = await new AxeBuilder({ page })
       .include('body')
+      // Exclude third-party embed iframes (Zeffy donation form, SociableKit,
+      // Google Maps, Microsoft Forms, GTM). axe descends into iframes, but
+      // their internal markup is owned by those vendors — e.g. Zeffy's own
+      // form ships `focusable-no-name` / `nested-interactive` violations we
+      // can't fix. This guardrail exists to catch regressions in OUR markup,
+      // so scope it to the top document.
+      .exclude('iframe')
       .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'])
       .analyze()
 
@@ -50,4 +63,31 @@ test.describe('axe-core homepage guardrail', () => {
 
     expect(blocking).toEqual([])
   })
+})
+
+/**
+ * Heading-order guard: axe rates skipped heading levels as "moderate" impact,
+ * so the serious/critical guardrail above never gates them, and Lighthouse's
+ * category score may not dip below the CI threshold for a lone heading skip.
+ * This spec pins the rule explicitly on every static page so a reintroduced
+ * h2→h4 jump (fixed once in cookie-policy) fails with a pointer to the node.
+ */
+const STATIC_PAGES = ['/', '/cookie-policy', '/privacy-policy', '/terms-of-service']
+
+test.describe('heading order on static pages', () => {
+  for (const path of STATIC_PAGES) {
+    test(`headings descend sequentially on ${path}`, async ({ page }) => {
+      await page.goto(path)
+      await page.waitForLoadState('domcontentloaded')
+      await page.locator('footer').waitFor({ state: 'visible' })
+
+      const results = await new AxeBuilder({ page })
+        .include('body')
+        .exclude('iframe')
+        .withRules(['heading-order'])
+        .analyze()
+
+      expect(results.violations).toEqual([])
+    })
+  }
 })

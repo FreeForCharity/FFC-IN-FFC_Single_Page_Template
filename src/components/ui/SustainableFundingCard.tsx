@@ -23,16 +23,10 @@ export const SustainableFundingCard: React.FC<SustainableFundingCardProps> = ({
 
       {/* Content Section */}
       <div className="p-4 text-center">
-        <h3
-          className="text-[24px] lg:text-[28px] font-[400] text-[#000000] leading-[100%] mb-3"
-          id="lato-font"
-        >
+        <h3 className="text-[24px] lg:text-[28px] font-[400] text-[#000000] leading-[100%] mb-3 lato-font">
           {title}
         </h3>
-        <p
-          className="text-[16px] sm:text-[18px] font-[400] text-[#000000] leading-[140%]"
-          id="lato-font"
-        >
+        <p className="text-[16px] sm:text-[18px] font-[400] text-[#000000] leading-[140%] lato-font">
           {text}
         </p>
       </div>

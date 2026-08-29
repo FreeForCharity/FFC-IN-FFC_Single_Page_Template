@@ -51,7 +51,7 @@ Quick reference checklist for setting up a new repository from the FFC Single Pa
 - [ ] Enable Dependency graph ✅
 - [ ] Enable Dependabot alerts ✅
 - [ ] Enable Dependabot security updates ✅
-- [ ] Enable Code scanning (CodeQL) - auto-configured by workflow
+- [ ] Enable Code scanning (CodeQL) - use **default setup** (do NOT add a `codeql.yml` advanced workflow; it conflicts with default setup)
 - [ ] Enable Secret scanning (if available)
 
 ---
@@ -65,8 +65,7 @@ Create ruleset named "Protect Main":
 - [ ] Require pull request before merging ✅
 - [ ] Require status checks to pass:
   - [ ] Test and Build (CI workflow)
-  - [ ] Analyze (javascript-typescript)
-  - [ ] Analyze (actions)
+  - [ ] CodeQL (code scanning default setup; appears after first scan)
 - [ ] Require branches to be up to date ✅
 - [ ] Require signed commits ✅
 - [ ] Block force pushes ✅
@@ -113,9 +112,10 @@ You don't have to edit either workflow when you rename the repo.
 - [ ] Run `npm run check:drift` after editing — the placeholder-URL
       and CSP-sync rules will flag anything still pointing at
       `ffcworkingsite1.org` or out of sync
-- [ ] Update the EIN, mailing addresses, phone number, and GuideStar
-      profile link still hardcoded in `src/components/footer/index.tsx`
-      (these are not in siteConfig yet)
+- [ ] Set the EIN, mailing addresses, phone number, and GuideStar
+      profile links in `src/lib/site.config.ts` — `ein`, `phone`,
+      `addresses`, and `guidestar.profileUrl` / `guidestar.directProfileUrl`.
+      The footer reads these from siteConfig; no footer code edit needed.
 
 ### Contact Information
 
@@ -133,14 +133,15 @@ You don't have to edit either workflow when you rename the repo.
       and `public/web-app-manifest-512x512.png` with the charity's
       branded assets (KEEP the filenames so layout.tsx and manifest.ts
       pick them up automatically)
-- [ ] Replace the header logo: `src/components/header/index.tsx`
-      currently hardcodes an external `https://freeforcharity.org/...`
-      WordPress URL. Self-host a logo under `public/Images/` and use
-      `assetPath('/Images/your-logo.png')` instead.
+- [ ] Replace the header logo: `src/components/header/index.tsx` uses
+      `assetPath('/Images/logo.webp')`. Swap `public/Images/logo.webp`
+      for your charity's logo (keep the filename, or update the path in
+      the header).
 - [ ] Replace the OG / Twitter card image — `layout.tsx` references
-      `/web-app-manifest-512x512.png` (a square 512×512). For proper
-      social cards, drop a 1200×630 image at the same filename or
-      update both layout.tsx references to point at a new asset.
+      `/Images/og-image.png` (1200×630 landscape). Drop your own
+      1200×630 image at `public/Images/og-image.png` (keep the
+      filename). The square `web-app-manifest-512x512.png` stays as the
+      PWA / app icon and JSON-LD logo.
 - [ ] Replace branded images and SVGs under `public/Images/` and
       `public/Svgs/`
 - [ ] Update color scheme in `src/app/globals.css`
@@ -148,8 +149,7 @@ You don't have to edit either workflow when you rename the repo.
 
 ### Content Data
 
-- [ ] Update team members in `src/data/team/`
-- [ ] Update team photos in `/public/team/`
+- [ ] Update team members in `src/data/team/` (name, role, optional LinkedIn — no photos; cards use initials monograms)
 - [ ] Update FAQs in `src/data/faqs/`
 - [ ] Update testimonials in `src/data/testimonials/`
 
@@ -314,6 +314,6 @@ check:drift` will fail if any are missing
 
 ---
 
-**Last Updated**: 2025-12-19  
+**Last Updated**: 2026-07-18  
 **Template Version**: 0.3.0  
-**Compatible with**: Next.js 16.0.7, Node.js 20.x
+**Compatible with**: Next.js 16.0.7, Node.js 24.x

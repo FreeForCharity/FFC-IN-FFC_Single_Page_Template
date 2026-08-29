@@ -27,7 +27,7 @@ Based on the provided screenshots and GitHub API data, here's what happened when
 - **Workflow:** CI - Build and Test
 - **Steps Executed:**
   - Checkout repository
-  - Setup Node.js 20
+  - Setup Node.js 24
   - Install dependencies (`npm ci`)
   - Check formatting (`npm run format:check`)
   - Run linting (`npm run lint`)

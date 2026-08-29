@@ -24,7 +24,7 @@ test.describe('Events Section', () => {
     await expect(eventsSection).toBeVisible()
 
     // Verify section heading is present
-    const heading = eventsSection.locator('h1')
+    const heading = eventsSection.locator('h2')
     await expect(heading).toBeVisible()
     await expect(heading).toContainText(testConfig.events.heading)
   })
@@ -39,11 +39,8 @@ test.describe('Events Section', () => {
     )
     await expect(eventsIframe).toBeVisible()
 
-    // Verify iframe has correct src
-    await expect(eventsIframe).toHaveAttribute(
-      'src',
-      'https://widgets.sociablekit.com/facebook-page-events/iframe/25631700'
-    )
+    // Verify iframe has correct src (sourced from siteConfig via test.config)
+    await expect(eventsIframe).toHaveAttribute('src', testConfig.events.widgetUrl)
 
     // Verify iframe has sandbox attribute for security
     const sandboxAttr = await eventsIframe.getAttribute('sandbox')
@@ -184,7 +181,7 @@ test.describe('Events Section', () => {
     await expect(eventsIframe).toBeVisible()
 
     // Verify heading is visible on mobile
-    const heading = eventsSection.locator('h1')
+    const heading = eventsSection.locator('h2')
     await expect(heading).toBeVisible()
   })
 })

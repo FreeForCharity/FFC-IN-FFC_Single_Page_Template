@@ -3,17 +3,17 @@ import Image from 'next/image'
 import OrangeFaqItem from '@/components/ui/OrangeFaqItem'
 import ApplicationFormButton from '@/components/ui/ApplicationFormButton'
 import { assetPath } from '@/lib/assetPath'
+import { siteConfig } from '@/lib/site.config'
 
 const index = () => {
+  if (!siteConfig.sections.showPrograms) return null
+
   return (
     <div id="programs" className="py-[52px]">
       <div className="w-[90%] lg:px-[20px] mx-auto">
-        <h1
-          className="font-[400] text-[40px] lg:text-[48px]  tracking-[0] text-center mx-auto mb-[50px]"
-          id="faustina-font"
-        >
+        <h2 className="font-[400] text-[40px] lg:text-[48px]  tracking-[0] text-center mx-auto mb-[50px] faustina-font">
           Our Programs
-        </h1>
+        </h2>
 
         <div className="lg:pl-[50px]">
           <div className="mb-[40px]  flex items-center gap-[20px]">
@@ -27,11 +27,9 @@ const index = () => {
                 ></Image>
               </div>
             </div>
-            <h1 className="text-[36px] font-[400] " id="lato-font">
-              FFC Domains
-            </h1>
+            <h3 className="text-[36px] font-[400]  lato-font">FFC Domains</h3>
           </div>
-          <p className="text-[25px] font-[400] " id="lato-font">
+          <p className="text-[25px] font-[400]  lato-font">
             Provides free .org domain names, Microsoft 365 with Outlook email, & Microsoft Teams to
             501c3 charities.
           </p>
@@ -88,11 +86,9 @@ const index = () => {
                 ></Image>
               </div>
             </div>
-            <h1 className="text-[36px] font-[400]  " id="lato-font">
-              FFC Hosting
-            </h1>
+            <h3 className="text-[36px] font-[400]   lato-font">FFC Hosting</h3>
           </div>
-          <p className="text-[25px] font-[400]  " id="lato-font">
+          <p className="text-[25px] font-[400]   lato-font">
             Free static site hosting for nonprofit organizations using Microsoft GitHub Pages, with
             websites built using GitHub Copilot AI:
           </p>
@@ -159,11 +155,9 @@ const index = () => {
                 ></Image>
               </div>
             </div>
-            <h1 className="text-[36px] font-[400]  " id="lato-font">
-              FFC Consulting
-            </h1>
+            <h3 className="text-[36px] font-[400]   lato-font">FFC Consulting</h3>
           </div>
-          <p className="text-[25px] font-[400]  " id="lato-font">
+          <p className="text-[25px] font-[400]   lato-font">
             FFC Consulting is about helping charities get the most out of their digital
             infrastructure including from other charities for charities like ours or from partners.
             We introduce charities to each major service that supports the charity mission of our
@@ -211,9 +205,9 @@ const index = () => {
         </div>
 
         <div className="lg:w-[90%] mx-auto text-center pb-[54px] pt-[20px]">
-          <h1 className="text-[36px] font-[400] pt-[22px] pb-[30px]" id="lato-font">
+          <h3 className="text-[36px] font-[400] pt-[22px] pb-[30px] lato-font">
             Ready to Get Started Now?
-          </h1>
+          </h3>
 
           <div className="flex items-center justify-center">
             <ApplicationFormButton />

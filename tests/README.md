@@ -41,6 +41,7 @@ export const testConfig = {
   // Update each section with your content
   missionVideo: {
     ariaLabel: 'Your organization mission video',
+    playLabel: 'Play your organization mission video',
     title: 'Your mission video title',
   },
 
@@ -56,7 +57,10 @@ The configuration file is organized by sections. Here's what each section contro
 
 #### Mission Video (mission-video.spec.ts)
 
-- `missionVideo.ariaLabel`: Accessibility label for mission video
+- `missionVideo.ariaLabel`: Accessibility label for the mounted video element
+- `missionVideo.playLabel`: Accessible name of the click-to-play facade button
+  (must match the button's `aria-label` in
+  `src/components/home-page/Mission/MissionVideo.tsx`)
 - `missionVideo.title`: Video title attribute
 
 #### Application Form (application-form.spec.ts)
@@ -120,7 +124,7 @@ The configuration file is organized by sections. Here's what each section contro
 
 These tests use values from `test.config.ts`:
 
-- **`mission-video.spec.ts`** - Mission video presence and configuration
+- **`mission-video.spec.ts`** - Mission video click-to-play facade and activated player
 - **`application-form.spec.ts`** - Application form modal functionality
 - **`events.spec.ts`** - Events section rendering and links
 - **`social-links.spec.ts`** - Social media link validation
@@ -210,6 +214,7 @@ Here's a complete example of customizing the tests for a new organization:
 export const testConfig = {
   missionVideo: {
     ariaLabel: 'Acme Charity mission video',
+    playLabel: 'Play the Acme Charity mission video',
     title: "Learn about Acme Charity's mission to help communities",
   },
 

@@ -1,15 +1,24 @@
 import type { Metadata } from 'next'
+import BreadcrumbSchema from '@/components/seo/BreadcrumbSchema'
+import { pageMetadata } from '@/lib/page-metadata'
 
-export const metadata: Metadata = {
-  title: 'Privacy Policy | Free For Charity',
+const PAGE_NAME = 'Privacy Policy'
+const CANONICAL_PATH = '/privacy-policy'
+
+// Bare page name as title (the root layout template appends the brand);
+// per-page OG/Twitter handling is documented in src/lib/page-metadata.ts.
+export const metadata: Metadata = pageMetadata({
+  title: PAGE_NAME,
   description: 'Privacy Policy for Free For Charity website',
-}
+  canonical: CANONICAL_PATH,
+})
 
 export default function PrivacyPolicy() {
   return (
     <div className="pt-[140px] pb-[54px]">
+      <BreadcrumbSchema name={PAGE_NAME} path={CANONICAL_PATH} />
       <div className="py-[27px] w-[90%] md:w-[80%] mx-auto">
-        <div id="aria-font">
+        <div className="aria-font">
           <p className="text-[14px] text-[#666] pb-[10px] leading-[24px] font-[500]"></p>
           <h1 className="text-[30px] text-[#333] pb-[10px] leading-[1em] font-[500]">
             <strong>Privacy Policy</strong>
@@ -19,13 +28,9 @@ export default function PrivacyPolicy() {
           </p>
 
           {/* Section 1 */}
-          <ol className="list-decimal list-inside pb-[1em]">
-            <li>
-              <h2 className="text-[26px] leading-[26px] font-[700] text-[#333] mb-[10px]">
-                <strong>Introduction</strong>
-              </h2>
-            </li>
-          </ol>
+          <h2 className="text-[26px] leading-[26px] font-[700] text-[#333] mb-[10px]">
+            <strong>1. Introduction</strong>
+          </h2>
           <p className="text-[14px] text-[#666] pb-[10px] leading-[24px] font-[500]">
             At Free for Charity, accessible from https://freeforcharity.org, your privacy is one of
             our primary concerns. This Privacy Policy document contains types of information we
@@ -34,25 +39,17 @@ export default function PrivacyPolicy() {
           </p>
 
           {/* Section 2 */}
-          <ol className="list-decimal list-inside pb-[1em]" start={2}>
-            <li>
-              <h2 className="text-[26px] leading-[26px] font-[700] text-[#333] mb-[10px]">
-                <strong>Who We Are</strong>
-              </h2>
-            </li>
-          </ol>
+          <h2 className="text-[26px] leading-[26px] font-[700] text-[#333] mb-[10px]">
+            <strong>2. Who We Are</strong>
+          </h2>
           <p className="text-[14px] text-[#666] pb-[10px] leading-[24px] font-[500]">
             Our website address is: https://freeforcharity.org
           </p>
 
           {/* Section 3 */}
-          <ol className="list-decimal list-inside pb-[1em]" start={3}>
-            <li>
-              <h2 className="text-[26px] leading-[26px] font-[700] text-[#333] mb-[10px]">
-                <strong>Information We Collect</strong>
-              </h2>
-            </li>
-          </ol>
+          <h2 className="text-[26px] leading-[26px] font-[700] text-[#333] mb-[10px]">
+            <strong>3. Information We Collect</strong>
+          </h2>
 
           <p className="text-[14px] text-[#666] pb-[10px] leading-[24px] font-[500]">
             <strong>3.1. Comments</strong>
@@ -162,7 +159,7 @@ export default function PrivacyPolicy() {
                 href="https://privacy.microsoft.com/"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-[#007bff] underline"
+                className="text-[#0062CC] underline"
               >
                 https://privacy.microsoft.com/
               </a>
@@ -192,13 +189,9 @@ export default function PrivacyPolicy() {
           </ul>
 
           {/* Section 4 */}
-          <ol className="list-decimal list-inside pb-[1em]" start={4}>
-            <li>
-              <h2 className="text-[26px] leading-[26px] font-[700] text-[#333] mb-[10px]">
-                <strong>How We Use Your Information</strong>
-              </h2>
-            </li>
-          </ol>
+          <h2 className="text-[26px] leading-[26px] font-[700] text-[#333] mb-[10px]">
+            <strong>4. How We Use Your Information</strong>
+          </h2>
           <p className="text-[14px] text-[#666] pb-[10px] leading-[24px] font-[500]">
             We use the collected information for various purposes:
           </p>
@@ -226,13 +219,9 @@ export default function PrivacyPolicy() {
           </ul>
 
           {/* Section 5 */}
-          <ol className="list-decimal list-inside pb-[1em]" start={5}>
-            <li>
-              <h2 className="text-[26px] leading-[26px] font-[700] text-[#333] mb-[10px]">
-                <strong>Who We Share Your Data With</strong>
-              </h2>
-            </li>
-          </ol>
+          <h2 className="text-[26px] leading-[26px] font-[700] text-[#333] mb-[10px]">
+            <strong>5. Who We Share Your Data With</strong>
+          </h2>
           <p className="text-[14px] text-[#666] pb-[10px] leading-[24px] font-[500]">
             We respect your privacy and do not sell, trade, or rent your personal identification
             information to others. However:
@@ -254,13 +243,9 @@ export default function PrivacyPolicy() {
           </ul>
 
           {/* Section 6 */}
-          <ol className="list-decimal list-inside pb-[1em]" start={6}>
-            <li>
-              <h2 className="text-[26px] leading-[26px] font-[700] text-[#333] mb-[10px]">
-                <strong>Data Retention</strong>
-              </h2>
-            </li>
-          </ol>
+          <h2 className="text-[26px] leading-[26px] font-[700] text-[#333] mb-[10px]">
+            <strong>6. Data Retention</strong>
+          </h2>
 
           <p className="text-[14px] text-[#666] pb-[10px] leading-[24px] font-[500]">
             <strong>6.1. Comments</strong>
@@ -289,13 +274,9 @@ export default function PrivacyPolicy() {
           </ul>
 
           {/* Section 7 */}
-          <ol className="list-decimal list-inside pb-[1em]" start={7}>
-            <li>
-              <h2 className="text-[26px] leading-[26px] font-[700] text-[#333] mb-[10px]">
-                <strong>Your Rights Over Your Data</strong>
-              </h2>
-            </li>
-          </ol>
+          <h2 className="text-[26px] leading-[26px] font-[700] text-[#333] mb-[10px]">
+            <strong>7. Your Rights Over Your Data</strong>
+          </h2>
           <p className="text-[14px] text-[#666] pb-[10px] leading-[24px] font-[500]">
             You have the following data protection rights:
           </p>
@@ -326,13 +307,9 @@ export default function PrivacyPolicy() {
           </p>
 
           {/* Section 8 */}
-          <ol className="list-decimal list-inside pb-[1em]" start={8}>
-            <li>
-              <h2 className="text-[26px] leading-[26px] font-[700] text-[#333] mb-[10px]">
-                <strong>Security Measures</strong>
-              </h2>
-            </li>
-          </ol>
+          <h2 className="text-[26px] leading-[26px] font-[700] text-[#333] mb-[10px]">
+            <strong>8. Security Measures</strong>
+          </h2>
           <p className="text-[14px] text-[#666] pb-[10px] leading-[24px] font-[500]">
             We implement a variety of security measures to maintain the safety of your personal
             information:
@@ -358,13 +335,9 @@ export default function PrivacyPolicy() {
           </p>
 
           {/* Section 9 */}
-          <ol className="list-decimal list-inside pb-[1em]" start={9}>
-            <li>
-              <h2 className="text-[26px] leading-[26px] font-[700] text-[#333] mb-[10px]">
-                <strong>Third-Party Links</strong>
-              </h2>
-            </li>
-          </ol>
+          <h2 className="text-[26px] leading-[26px] font-[700] text-[#333] mb-[10px]">
+            <strong>9. Third-Party Links</strong>
+          </h2>
           <p className="text-[14px] text-[#666] pb-[10px] leading-[24px] font-[500]">
             Our website may contain links to external sites that are not operated by us. We have no
             control over and assume no responsibility for the content, privacy policies, or
@@ -373,13 +346,9 @@ export default function PrivacyPolicy() {
           </p>
 
           {/* Section 10 */}
-          <ol className="list-decimal list-inside pb-[1em]" start={10}>
-            <li>
-              <h2 className="text-[26px] leading-[26px] font-[700] text-[#333] mb-[10px]">
-                <strong>Children’s Privacy</strong>
-              </h2>
-            </li>
-          </ol>
+          <h2 className="text-[26px] leading-[26px] font-[700] text-[#333] mb-[10px]">
+            <strong>10. Children’s Privacy</strong>
+          </h2>
           <p className="text-[14px] text-[#666] pb-[10px] leading-[24px] font-[500]">
             Protecting the privacy of young children is especially important:
           </p>
@@ -396,13 +365,9 @@ export default function PrivacyPolicy() {
           </ul>
 
           {/* Section 11 */}
-          <ol className="list-decimal list-inside pb-[1em]" start={11}>
-            <li>
-              <h2 className="text-[26px] leading-[26px] font-[700] text-[#333] mb-[10px]">
-                <strong>International Data Transfers</strong>
-              </h2>
-            </li>
-          </ol>
+          <h2 className="text-[26px] leading-[26px] font-[700] text-[#333] mb-[10px]">
+            <strong>11. International Data Transfers</strong>
+          </h2>
           <p className="text-[14px] text-[#666] pb-[10px] leading-[24px] font-[500]">
             Your information may be transferred to—and maintained on—computers located outside of
             your state, province, country, or other governmental jurisdiction where data protection
@@ -420,13 +385,9 @@ export default function PrivacyPolicy() {
           </ul>
 
           {/* Section 12 */}
-          <ol className="list-decimal list-inside pb-[1em]" start={12}>
-            <li>
-              <h2 className="text-[26px] leading-[26px] font-[700] text-[#333] mb-[10px]">
-                <strong>Changes to This Privacy Policy</strong>
-              </h2>
-            </li>
-          </ol>
+          <h2 className="text-[26px] leading-[26px] font-[700] text-[#333] mb-[10px]">
+            <strong>12. Changes to This Privacy Policy</strong>
+          </h2>
           <p className="text-[14px] text-[#666] pb-[10px] leading-[24px] font-[500]">
             We may update our Privacy Policy from time to time:
           </p>
@@ -443,20 +404,16 @@ export default function PrivacyPolicy() {
           </ul>
 
           {/* Section 13 */}
-          <ol className="list-decimal list-inside pb-[1em]" start={13}>
-            <li>
-              <h2 className="text-[26px] leading-[26px] font-[700] text-[#333] mb-[10px]">
-                <strong>Contact Us</strong>
-              </h2>
-            </li>
-          </ol>
+          <h2 className="text-[26px] leading-[26px] font-[700] text-[#333] mb-[10px]">
+            <strong>13. Contact Us</strong>
+          </h2>
           <p className="text-[14px] text-[#666] pb-[10px] leading-[24px] font-[500]">
             If you have any questions about this Privacy Policy, please contact us:
           </p>
           <ul className="list-inside list-disc space-y-[4px] pb-[1em]">
             <li className="text-[14px] text-[#666] leading-[24px] font-[500]">
               <strong>Email:</strong>{' '}
-              <a href="mailto:clarkemoyer@freeforcharity.org" className="text-[#007bff] underline">
+              <a href="mailto:clarkemoyer@freeforcharity.org" className="text-[#0062CC] underline">
                 clarkemoyer@freeforcharity.org
               </a>{' '}
               520-222-8104
@@ -464,13 +421,9 @@ export default function PrivacyPolicy() {
           </ul>
 
           {/* Section 14 */}
-          <ol className="list-decimal list-inside pb-[1em]" start={14}>
-            <li>
-              <h2 className="text-[26px] leading-[26px] font-[700] text-[#333] mb-[10px]">
-                <strong>Additional Information</strong>
-              </h2>
-            </li>
-          </ol>
+          <h2 className="text-[26px] leading-[26px] font-[700] text-[#333] mb-[10px]">
+            <strong>14. Additional Information</strong>
+          </h2>
 
           <p className="text-[14px] text-[#666] pb-[10px] leading-[24px] font-[500]">
             <strong>14.1. Data Protection Officer</strong>
@@ -482,7 +435,7 @@ export default function PrivacyPolicy() {
           <ul className="list-inside list-disc space-y-[4px] pb-[1em]">
             <li className="text-[14px] text-[#666] leading-[24px] font-[500]">
               <strong>Contact DPO:</strong> Clarke Moyer{' '}
-              <a href="mailto:clarkemoyer@freeforcharity.org" className="text-[#007bff] underline">
+              <a href="mailto:clarkemoyer@freeforcharity.org" className="text-[#0062CC] underline">
                 clarkemoyer@freeforcharity.org
               </a>{' '}
               520-222-8104

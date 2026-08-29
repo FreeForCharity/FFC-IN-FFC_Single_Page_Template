@@ -340,7 +340,7 @@ npm run test:ui       # Interactive Playwright UI
 Tests run automatically in GitHub Actions with the following configuration:
 
 - **Trigger**: Every push to main branch
-- **Environment**: Ubuntu latest with Node.js 20
+- **Environment**: Ubuntu latest with Node.js 24
 - **Browser Setup**: `npx playwright install --with-deps chromium`
 - **Build**: Built with `NEXT_PUBLIC_BASE_PATH=/FFC_Single_Page_Template`
 - **Retry Logic**: Failed tests retry 2 times
@@ -411,11 +411,11 @@ Tests run automatically in GitHub Actions with the following workflows:
   6. Post results comment on PR (if applicable)
 - Runs independently after deployment
 - Provides performance metrics without blocking deployment
-- Warning thresholds (not hard failures):
-  - Performance: ≥60%
-  - Accessibility: ≥80%
-  - Best Practices: ≥80%
-  - SEO: ≥90%
+- Thresholds (from `lighthouserc.json`, the single source of truth):
+  - Performance: ≥90% (warn — does not fail CI)
+  - Accessibility: ≥98% (**error** — fails the workflow)
+  - Best Practices: ≥96% (warn — does not fail CI)
+  - SEO: ≥98% (**error** — fails the workflow)
 
 ### Result Reporting
 
@@ -612,7 +612,7 @@ GitHub Dependabot provides automated dependency management and security updates 
 
 **Status**: ✅ Enabled
 
-**Location**: `.github/workflows/codeql.yml`
+**Location**: GitHub code scanning **default setup** (Settings → Security & Analysis). No `codeql.yml` workflow file — an advanced workflow and default setup cannot both be enabled.
 
 **Scans**:
 
@@ -623,7 +623,7 @@ GitHub Dependabot provides automated dependency management and security updates 
 
 - On push to main branch
 - On pull requests to main
-- Weekly on Mondays at 11:17 PM
+- On a weekly cadence (timing is GitHub-managed under default setup)
 
 **View Results**:
 
@@ -723,8 +723,8 @@ FFC_Single_Page_Template/
 ├── .github/workflows/
 │   ├── ci.yml                     # CI pipeline with linting, testing
 │   ├── deploy.yml                 # Deployment pipeline to GitHub Pages
-│   ├── codeql.yml                 # Security scanning
 │   └── lighthouse.yml             # Performance monitoring
+│   # CodeQL runs via GitHub code scanning default setup (no workflow file)
 ├── public/                         # Static assets
 ├── src/data/
 │   ├── faqs/
