@@ -343,7 +343,7 @@ ANALYZE=true pnpm build
 
 1. Install: `@next/bundle-analyzer`
 2. Update `next.config.ts` to use bundle analyzer
-3. Add npm script: `"analyze": "ANALYZE=true pnpm run build"`
+3. Add package.json script: `"analyze": "ANALYZE=true pnpm run build"`
 4. Document usage in README.md
 5. Optional: Add bundle size CI check
 

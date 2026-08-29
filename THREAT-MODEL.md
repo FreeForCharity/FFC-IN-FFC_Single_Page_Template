@@ -147,7 +147,7 @@ The Free For Charity website is a static Next.js application deployed to GitHub 
 **Mitigations**:
 
 - ✅ All dependencies from public npm registry
-- ✅ Package-lock.json ensures consistent versions
+- ✅ pnpm-lock.yaml ensures consistent versions
 
 **Residual Risk**: Low
 

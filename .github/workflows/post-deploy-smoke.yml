@@ -528,7 +528,7 @@ jobs:
           npm init -y >/dev/null
           npm install playwright@latest >/dev/null
           # Install the browser binaries + OS deps for chromium.
-          pnpm exec playwright install --with-deps chromium
+          npx --no-install playwright install --with-deps chromium
 
       - name: Visual check + screenshot + compliance assertions
         id: visual

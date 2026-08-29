@@ -186,7 +186,7 @@ Lighthouse CI automatically tests mobile and desktop performance:
 
 ```bash
 pnpm run build
-npx lhci autorun
+pnpm exec lhci autorun
 ```
 
 **Key Metrics**:

@@ -87,8 +87,8 @@ export PATH=~/.npm-global/bin:$PATH
 **Network timeouts**:
 
 ```bash
-# Clear npm cache
-npm cache clean --force
+# Prune the pnpm store
+pnpm store prune
 
 # Try again
 pnpm install

@@ -512,7 +512,7 @@ Valid reasons to ignore or delay updates:
 
 ### Related Tools
 
-- [pnpm audit](https://docs.npmjs.com/cli/v10/commands/npm-audit)
+- [pnpm audit](https://pnpm.io/cli/audit)
 - [CodeQL](https://codeql.github.com/)
 - [Snyk](https://snyk.io/)
 
