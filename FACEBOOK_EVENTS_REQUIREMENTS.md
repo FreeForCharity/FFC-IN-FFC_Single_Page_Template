@@ -1,5 +1,7 @@
 # Facebook Events Integration Requirements
 
+> ⚠️ **Superseded.** This document describes the original Facebook-only approach. The current implementation aggregates events from Google Calendar, Microsoft 365, and Facebook in a single section. See **[EVENTS_SETUP.md](./EVENTS_SETUP.md)** for the up-to-date setup guide. This file is kept for historical context only.
+
 **Last Updated:** December 9, 2024
 
 This document outlines the technical and functional requirements for integrating Free For Charity's Facebook events into a new Events section on the homepage.

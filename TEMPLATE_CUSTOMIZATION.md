@@ -33,7 +33,7 @@ charity's name, URL, contact email, social links, etc.
 | `guidestar`                   | Footer GuideStar/Candid seal links (`guidestar.profileUrl`, `guidestar.directProfileUrl`)                                                                                                                              |
 | `supportedBy`                 | Permanent "Supported by Free For Charity" bottom-bar attribution and "Supported Charity Login" hub link. Part of the FFC footer standard: required, always rendered — do **not** change or remove it when customizing. |
 | `parentOrg`                   | Footer "a project of" parent-org clause (omit for a standalone charity)                                                                                                                                                |
-| `integrations`                | Zeffy donation embed, Idealist profile, SociableKit events widget, Microsoft Forms URL                                                                                                                                 |
+| `integrations`                | Zeffy donation embed, Idealist profile, Events Facebook page URL, Microsoft Forms URL                                                                                                                                  |
 
 ### Things `siteConfig` does NOT drive
 

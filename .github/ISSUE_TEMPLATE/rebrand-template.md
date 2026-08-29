@@ -454,7 +454,7 @@ Copy this into a comment on the issue, filling in the values from above:
 
 IDENTITY & CONFIG
 1. Set every field in src/lib/site.config.ts (name, tagline, description, shortDescription, url, contactEmail, keywords, themeColor, social, parentOrg, guidestar, foundingDate) and the GTM container in src/lib/analytics.config.ts — this is the single source of truth. `pnpm run check:rebrand` lists exactly which FFC defaults remain.
-2. Replace all instances of "ffcworkingsite1.org" with "[your-domain.org]" and update public/CNAME (or delete it for github.io-only).
+2. Replace the template default URL (freeforcharity.github.io/FFC-IN-FFC_Single_Page_Template) with your own site URL, and add public/CNAME with your domain (or skip CNAME for a github.io-only deployment).
 3. Update public/.well-known/security.txt AND public/security.txt: Contact = [security email], Canonical/Policy/Acknowledgments = new URL, Expires >= 12 months out.
 4. Update CODEOWNERS to: @[username1], @[username2], @[username3]; set NEXT_PUBLIC_BASE_PATH in deploy.yml/lighthouse.yml (empty for custom domain, /[repo] for github.io).
 

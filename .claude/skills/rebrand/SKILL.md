@@ -127,12 +127,14 @@ Keep brand-neutral, reusable UI primitives (cards, buttons) even if unused.
 ### 6b. Full docs & metadata cleanup — the whole repo, not just `src/`
 
 The rebrand is not done when the app is clean; a fork also inherits a pile of
-Markdown and config that still names the template's placeholder domain
-(`ffcworkingsite1.org`) and, in functional metadata, points at the template repo.
+Markdown and config that still names the template's own deployment URL
+(`freeforcharity.github.io/FFC-IN-FFC_Single_Page_Template` — the template
+ships no custom domain; older forks may instead carry the retired placeholder
+`ffcworkingsite1.org`) and, in functional metadata, points at the template repo.
 Do a **repo-wide** sweep:
 
 ```
-grep -rniE 'ffcworkingsite1\.org|46-?2471893|520[-. ]?222[-. ]?8104' . \
+grep -rniE 'FFC-IN-FFC_Single_Page_Template|ffcworkingsite1\.org|46-?2471893|520[-. ]?222[-. ]?8104' . \
   --exclude-dir=node_modules --exclude-dir=.git --exclude-dir=out
 ```
 

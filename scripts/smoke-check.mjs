@@ -196,12 +196,30 @@ async function smoke() {
       if (Array.isArray(manifest.icons)) {
         for (const icon of manifest.icons) {
           if (!icon?.src) continue
-          const iconUrl = icon.src.startsWith('http')
-            ? icon.src
-            : icon.src.startsWith('/')
-              ? icon.src
-              : `/${icon.src}`
-          const iconPath = iconUrl.startsWith('http') ? iconUrl.replace(BASE, '') : iconUrl
+          // Resolve the src the way a browser resolves manifest members:
+          // against the manifest's own URL. On a subpath deploy the manifest
+          // advertises origin-absolute srcs like /<repo>/android-chrome-*.png;
+          // naively re-prefixing those with a BASE that already carries the
+          // subpath doubled the path and 404'd a healthy deploy. The #319
+          // case — a custom-domain deploy advertising /repo/... — still
+          // resolves to a real 404 under this rule and stays caught.
+          // A malformed src must fail its own check line, not crash the run.
+          let abs
+          try {
+            abs = new URL(icon.src, `${BASE}${manifestPath}`).toString()
+          } catch {
+            record(`manifest icon ${icon.src} resolves`, false, 'src is not a resolvable URL')
+            continue
+          }
+          if (!abs.startsWith(`${BASE}/`) && abs !== BASE) {
+            record(
+              `manifest icon ${icon.src} resolves`,
+              false,
+              `resolves outside the deployment base: ${abs}`
+            )
+            continue
+          }
+          const iconPath = abs.slice(BASE.length)
           const r = await fetchWithRetry(iconPath).catch(() => null)
           const ok = r && r.status === 200
           record(`manifest icon ${icon.src} resolves`, ok, r ? `HTTP ${r.status}` : 'fetch failed')

@@ -124,7 +124,12 @@ export type SiteConfig = {
     showEndowment: boolean
     /** FFC's own three-program (Domains/Hosting/Consulting) marketing block. */
     showPrograms: boolean
-    /** SociableKit Facebook-events embed (also self-hides when the URL is empty). */
+    /**
+     * Unified events section (Google Calendar / Microsoft 365 / Facebook).
+     * Also self-hides when no event sources are configured and the committed
+     * snapshot (src/data/events.generated.json) is empty — see
+     * src/lib/events/visibility.ts.
+     */
     showEvents: boolean
   }
   /**
@@ -137,8 +142,14 @@ export type SiteConfig = {
     zeffyDonationUrl: string
     /** Idealist volunteer-opportunities profile URL. */
     idealistUrl: string
-    /** SociableKit Facebook-events widget iframe URL. */
-    sociableKitEventsWidgetUrl: string
+    /**
+     * Public Facebook page URL used by the Events section ("View all events
+     * on Facebook" link and the empty-state follow button). This is public
+     * identity, not a secret — the calendar-source endpoints/tokens stay in
+     * EVENTS_* environment variables (see EVENTS_SETUP.md). Empty string
+     * hides those links.
+     */
+    eventsFacebookPageUrl: string
     /** Microsoft Forms application-form URL (https://forms.office.com/r/<id>). */
     microsoftFormUrl: string
   }
@@ -151,7 +162,11 @@ export const siteConfig: SiteConfig = {
     'Free For Charity connects students, professionals, and businesses with nonprofits to reduce costs and increase revenues—putting more resources back into their missions.',
   shortDescription:
     'Connecting students, professionals, and businesses with nonprofits to reduce costs and increase revenues.',
-  url: 'https://ffcworkingsite1.org',
+  // Bare origin only (drift-check enforced). The template deploys to the
+  // GitHub Pages default URL; the /FFC-IN-FFC_Single_Page_Template subpath
+  // comes from NEXT_PUBLIC_BASE_PATH, which siteUrl() folds in at build time.
+  // A fork with a custom domain sets its own origin here (and no basePath).
+  url: 'https://freeforcharity.github.io',
   twitterHandle: '@freeforcharity',
   contactEmail: 'security@freeforcharity.org',
   keywords: [
@@ -169,7 +184,7 @@ export const siteConfig: SiteConfig = {
     { label: 'Facebook', href: 'https://www.facebook.com/freeforcharity' },
     { label: 'X (Twitter)', href: 'https://x.com/freeforcharity1' },
     { label: 'LinkedIn', href: 'https://www.linkedin.com/company/freeforcharity/' },
-    { label: 'GitHub', href: 'https://github.com/FreeForCharity/FFC_Single_Page_Template' },
+    { label: 'GitHub', href: 'https://github.com/FreeForCharity/FFC-IN-FFC_Single_Page_Template' },
   ],
   ein: '46-2471893',
   foundingDate: '2014',
@@ -214,8 +229,7 @@ export const siteConfig: SiteConfig = {
     zeffyDonationUrl: 'https://www.zeffy.com/embed/donation-form/free-for-charity-endowment-fund',
     idealistUrl:
       'https://www.idealist.org/en/nonprofit/356bfc8e2ae64f83beea4a4e677e99d7-free-for-charity-state-college#opportunities',
-    sociableKitEventsWidgetUrl:
-      'https://widgets.sociablekit.com/facebook-page-events/iframe/25631700',
+    eventsFacebookPageUrl: 'https://www.facebook.com/freeforcharity',
     microsoftFormUrl: 'https://forms.office.com/r/vePxGq6JqG',
   },
 }
@@ -233,7 +247,10 @@ export function siteUrl(path = '/'): string {
       `siteUrl: path must be a same-origin absolute path starting with a single "/" (got: ${JSON.stringify(path)})`
     )
   }
-  const base = siteConfig.url.replace(/\/$/, '')
+  // Fold in the GitHub Pages subpath (empty on custom-domain deploys) so
+  // canonical/OG/sitemap URLs stay correct on the default *.github.io URL.
+  const basePath = process.env.NEXT_PUBLIC_BASE_PATH || ''
+  const base = siteConfig.url.replace(/\/$/, '') + basePath
   return `${base}${path}`
 }
 

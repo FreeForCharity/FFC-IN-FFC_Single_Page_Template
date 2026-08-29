@@ -283,7 +283,7 @@ If you discover a security vulnerability in this repository:
 
 1. **Do NOT open a public issue** - this could put the live site at risk
 2. **Report privately** using one of these methods:
-   - **Preferred**: Use GitHub's [Security Advisories feature](https://github.com/FreeForCharity/FFC_Single_Page_Template/security/advisories/new)
+   - **Preferred**: Use GitHub's [Security Advisories feature](https://github.com/FreeForCharity/FFC-IN-FFC_Single_Page_Template/security/advisories/new)
    - **Alternative**: Email clarkemoyer@freeforcharity.org with subject line "Security Vulnerability Report"
 3. Include as much detail as possible:
    - Description of the vulnerability

@@ -43,7 +43,7 @@ Based on the provided screenshots and GitHub API data, here's what happened when
 - **Status:** ✅ Completed successfully
 - **Workflow:** Deploy to GitHub Pages
 - **Trigger:** `workflow_run` (after CI completed)
-- **Environment Variable:** `NEXT_PUBLIC_BASE_PATH=/FFC_Single_Page_Template`
+- **Environment Variable:** `NEXT_PUBLIC_BASE_PATH=/FFC-IN-FFC_Single_Page_Template`
 - **Steps Executed:**
   - Build with Next.js for GitHub Pages
   - Deploy to GitHub Pages environment

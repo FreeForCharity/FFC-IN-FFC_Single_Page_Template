@@ -10,6 +10,7 @@ import type { IconType } from 'react-icons'
 
 import { siteConfig } from '@/lib/site.config'
 import { assetPath } from '@/lib/assetPath'
+import { eventsSectionVisible } from '@/lib/events/visibility'
 import { configuredTeam } from '@/data/team'
 
 // Maps a social link's label (as defined in siteConfig.social) to an icon.
@@ -30,7 +31,9 @@ const Footer: React.FC = () => {
   const socialLinks = siteConfig.social.filter((s) => s.href)
   // Trim so whitespace-only config behaves like empty (link/clause self-hides).
   const taxStatusLabel = siteConfig.taxStatusLabel.trim()
-  const eventsWidgetUrl = siteConfig.integrations.sociableKitEventsWidgetUrl.trim()
+  // Same predicate the Events section uses to self-hide, so the quick-link
+  // never points at a missing #events anchor.
+  const showEventsLink = eventsSectionVisible()
   return (
     <footer className="bg-black text-white">
       <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 py-12 px-4 md:px-6 lg:px-8">
@@ -84,13 +87,11 @@ const Footer: React.FC = () => {
                 { name: 'Home', href: '/#hero' },
                 { name: 'Mission', href: '/#mission' },
                 // Programs / Events self-hide (sections.showPrograms /
-                // showEvents + widget URL); drop the dead quick-link too.
+                // eventsSectionVisible); drop the dead quick-link too.
                 ...(siteConfig.sections.showPrograms
                   ? [{ name: 'Programs', href: '/#programs' }]
                   : []),
-                ...(siteConfig.sections.showEvents && eventsWidgetUrl
-                  ? [{ name: 'Events', href: '/#events' }]
-                  : []),
+                ...(showEventsLink ? [{ name: 'Events', href: '/#events' }] : []),
                 { name: 'Donate', href: '/#donate' },
                 { name: 'Volunteer', href: '/#volunteer' },
                 { name: 'FAQ', href: '/#faq' },
@@ -164,6 +165,18 @@ const Footer: React.FC = () => {
                     </Link>
                   </li>
                 ))}
+                <li>
+                  {/* Persistent consent re-entry point (withdrawing consent must
+                      stay as easy as giving it): reopens the preferences modal
+                      the cookie-consent banner registers on window. */}
+                  <button
+                    type="button"
+                    onClick={() => window.openCookiePreferences?.()}
+                    className="hover:text-[#F58C23] hover:tracking-widest transition-all text-[16px] font-[500]"
+                  >
+                    Cookie Preferences
+                  </button>
+                </li>
               </ul>
             </nav>
           </div>

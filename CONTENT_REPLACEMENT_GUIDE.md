@@ -154,15 +154,15 @@ Encourage people to volunteer with your charity.
 
 Display upcoming events for your charity.
 
-| Section | Variable                   | Current Free For Charity Content                                                         | Your Content                                                              |
-| ------- | -------------------------- | ---------------------------------------------------------------------------------------- | ------------------------------------------------------------------------- |
-| Events  | Section Heading            | "Upcoming Events"                                                                        |                                                                           |
-| Events  | Description Text           | "Join us for upcoming volunteer opportunities, training sessions, and community events." | _(Brief description of your events)_                                      |
-| Events  | Facebook Events Widget URL | "https://widgets.sociablekit.com/facebook-page-events/iframe/25631700"                   | _(Your SociableKit Facebook events widget URL, or leave blank to remove)_ |
-| Events  | Facebook Page Link Text    | "View all events on Facebook"                                                            |                                                                           |
-| Events  | Facebook Page Link URL     | "https://www.facebook.com/freeforcharity"                                                | _(Link to your Facebook page)_                                            |
+| Section | Variable                | Current Free For Charity Content                                                                | Your Content                                                     |
+| ------- | ----------------------- | ----------------------------------------------------------------------------------------------- | ---------------------------------------------------------------- |
+| Events  | Section Heading         | "Upcoming Events"                                                                               |                                                                  |
+| Events  | Description Text        | "Join us for upcoming volunteer opportunities, training sessions, and community events."        | _(Brief description of your events)_                             |
+| Events  | Calendar sources        | _(none committed — set the `EVENTS_*` GitHub Secrets per [EVENTS_SETUP.md](./EVENTS_SETUP.md))_ | _(Your Google/Microsoft ICS feeds and/or Facebook page + token)_ |
+| Events  | Facebook Page Link Text | "View all events on Facebook"                                                                   |                                                                  |
+| Events  | Facebook Page Link URL  | "https://www.facebook.com/freeforcharity"                                                       | _(Link to your Facebook page)_                                   |
 
-_Note: If you don't use Facebook events, you can replace this section with a custom event list or calendar._
+_Note: The section self-hides when no calendar sources are configured and the committed snapshot is empty; set `siteConfig.sections.showEvents = false` to turn it off outright. The Facebook page link comes from `siteConfig.integrations.eventsFacebookPageUrl`._
 
 ---
 
@@ -439,13 +439,13 @@ _Note: If you don't have a second location, you can remove the secondary address
 
 _Edit location: `src/lib/site.config.ts` — the `social[]` array (each entry's `href`). The footer renders the rail from siteConfig._
 
-| Section | Variable              | Current Free For Charity Content                             | Your Content                                         |
-| ------- | --------------------- | ------------------------------------------------------------ | ---------------------------------------------------- |
-| Footer  | Facebook URL          | "https://www.facebook.com/freeforcharity"                    | _(Your Facebook page URL)_                           |
-| Footer  | Twitter/X URL         | "https://x.com/freeforcharity1"                              | _(Your Twitter/X profile URL)_                       |
-| Footer  | LinkedIn URL          | "https://www.linkedin.com/company/freeforcharity/"           | _(Your LinkedIn company page URL)_                   |
-| Footer  | GitHub URL            | "https://github.com/FreeForCharity/FFC_Single_Page_Template" | _(Your GitHub organization URL, or leave blank)_     |
-| Footer  | Icon Background Color | #F57C20 (orange)                                             | _(Hex color code for social media icon backgrounds)_ |
+| Section | Variable              | Current Free For Charity Content                                    | Your Content                                         |
+| ------- | --------------------- | ------------------------------------------------------------------- | ---------------------------------------------------- |
+| Footer  | Facebook URL          | "https://www.facebook.com/freeforcharity"                           | _(Your Facebook page URL)_                           |
+| Footer  | Twitter/X URL         | "https://x.com/freeforcharity1"                                     | _(Your Twitter/X profile URL)_                       |
+| Footer  | LinkedIn URL          | "https://www.linkedin.com/company/freeforcharity/"                  | _(Your LinkedIn company page URL)_                   |
+| Footer  | GitHub URL            | "https://github.com/FreeForCharity/FFC-IN-FFC_Single_Page_Template" | _(Your GitHub organization URL, or leave blank)_     |
+| Footer  | Icon Background Color | #F57C20 (orange)                                                    | _(Hex color code for social media icon backgrounds)_ |
 
 ### Copyright / Bottom Bar
 

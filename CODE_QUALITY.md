@@ -618,5 +618,5 @@ If you have questions about code quality standards:
 ---
 
 **Last Updated**: 2026-07-18  
-**Repository**: FreeForCharity/FFC_Single_Page_Template  
+**Repository**: FreeForCharity/FFC-IN-FFC_Single_Page_Template  
 **Node.js**: 24.x (validated with v24.18.0)

@@ -111,7 +111,7 @@ You don't have to edit either workflow when you rename the repo.
       manifest, sitemap, robots, security headers)
 - [ ] Run `pnpm run check:drift` after editing — the placeholder-URL
       and CSP-sync rules will flag anything still pointing at
-      `ffcworkingsite1.org` or out of sync
+      the template's default URL or out of sync
 - [ ] Set the EIN, mailing addresses, phone number, and GuideStar
       profile links in `src/lib/site.config.ts` — `ein`, `phone`,
       `addresses`, and `guidestar.profileUrl` / `guidestar.directProfileUrl`.
@@ -308,8 +308,8 @@ check:drift` will fail if any are missing
 ## Need Help?
 
 - 📖 **Complete Guide**: [TEMPLATE_USAGE.md](./TEMPLATE_USAGE.md)
-- 🐛 **Report Issues**: [GitHub Issues](https://github.com/FreeForCharity/FFC_Single_Page_Template/issues)
-- 💬 **Ask Questions**: [GitHub Discussions](https://github.com/FreeForCharity/FFC_Single_Page_Template/discussions)
+- 🐛 **Report Issues**: [GitHub Issues](https://github.com/FreeForCharity/FFC-IN-FFC_Single_Page_Template/issues)
+- 💬 **Ask Questions**: [GitHub Discussions](https://github.com/FreeForCharity/FFC-IN-FFC_Single_Page_Template/discussions)
 - 📚 **Documentation**: Review all `.md` files in repository root
 
 ---
