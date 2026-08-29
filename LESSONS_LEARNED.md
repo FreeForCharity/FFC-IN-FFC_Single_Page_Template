@@ -112,7 +112,7 @@ The FFC Single Page Template was created as a standardized, reusable foundation 
 
 **Current Stats**:
 
-- 112 component files
+- 23 component files
 - Well-organized in `/src/components/`
 - Each component has single responsibility
 

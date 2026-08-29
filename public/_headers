@@ -1,6 +1,20 @@
-# Security and caching headers for Cloudflare Pages / Netlify-compatible hosts.
-# GitHub Pages does NOT read this file; CSP meta tag in <head> covers that case.
-# Keep in sync with the meta http-equiv tag in src/app/layout.tsx.
+# INERT ON FFC DEPLOYS — kept only for forward-compatibility. Read this first.
+#
+# This is a Cloudflare Pages / Netlify *build* feature. FFC sites are a GitHub
+# Pages origin behind the Cloudflare *proxy*, and neither of those reads this
+# file, so NOTHING below is served today. Measured on the wire, not assumed:
+# FreeForCharity/FFC-Cloudflare-Automation#884.
+#
+# What is actually served: the CSP meta http-equiv tag in src/app/layout.tsx —
+# and only CSP. The other five headers here (HSTS, X-Frame-Options,
+# X-Content-Type-Options, Referrer-Policy, Permissions-Policy) cannot be set
+# from a static export at all; <meta http-equiv> is ignored for them. They need
+# a response-header rule on the Cloudflare zone. Fleet posture is tracked in
+# FFC-Cloudflare-Automation#894.
+#
+# So: do not count this file as security coverage, and do not treat editing it
+# as remediating a header gap. Keep its CSP in sync with the layout.tsx meta
+# tag so a future move to Cloudflare Pages inherits a correct policy.
 #
 # CSP rationale:
 # - 'unsafe-inline' on script/style is required for Next.js inline runtime
@@ -28,7 +42,7 @@
   Cross-Origin-Opener-Policy: same-origin-allow-popups
   Cross-Origin-Resource-Policy: cross-origin
   X-DNS-Prefetch-Control: on
-  Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.googletagmanager.com https://www.google-analytics.com https://*.google-analytics.com https://www.clarity.ms https://*.clarity.ms https://widgets.guidestar.org https://connect.facebook.net https://www.zeffy.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; img-src 'self' data: blob: https:; font-src 'self' data: https://fonts.gstatic.com; connect-src 'self' https://www.google-analytics.com https://*.google-analytics.com https://stats.g.doubleclick.net https://www.googletagmanager.com https://www.clarity.ms https://*.clarity.ms; frame-src https://www.googletagmanager.com https://www.zeffy.com https://widgets.guidestar.org https://www.facebook.com https://forms.office.com https://forms.microsoft.com https://www.youtube.com https://www.youtube-nocookie.com; media-src 'self' blob: https:; object-src 'none'; base-uri 'self'; form-action 'self' https://www.zeffy.com https://forms.office.com; frame-ancestors 'self'; upgrade-insecure-requests
+  Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.googletagmanager.com https://www.google-analytics.com https://*.google-analytics.com https://www.clarity.ms https://*.clarity.ms https://widgets.guidestar.org https://connect.facebook.net https://www.zeffy.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; font-src 'self' data:; connect-src 'self' https://www.google-analytics.com https://*.google-analytics.com https://stats.g.doubleclick.net https://www.googletagmanager.com https://www.clarity.ms https://*.clarity.ms; frame-src https://www.googletagmanager.com https://www.zeffy.com https://widgets.guidestar.org https://www.facebook.com https://forms.office.com https://forms.microsoft.com https://www.youtube.com https://www.youtube-nocookie.com; media-src 'self' blob: https:; object-src 'none'; base-uri 'self'; form-action 'self' https://www.zeffy.com https://forms.office.com; frame-ancestors 'self'; upgrade-insecure-requests
 
 # Long-cache fingerprinted Next.js assets.
 /_next/static/*

@@ -347,7 +347,7 @@ Starting your contribution journey with a fresh review:
 
 ### Prerequisites
 
-- **Node.js**: Version 20.x (validated with v20.19.6)
+- **Node.js**: Version 24.x (validated with v24.18.0)
 - **npm**: Package manager (comes with Node.js)
 - **Git**: Version control
 - **Code Editor**: We recommend VS Code with the following extensions:

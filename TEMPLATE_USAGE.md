@@ -92,7 +92,7 @@ Quick checklist of major content areas:
 git clone https://github.com/YOUR-ORG/YOUR-REPO-NAME.git
 cd YOUR-REPO-NAME
 
-# Verify Node.js version (requires 20.x)
+# Verify Node.js version (requires 24.x)
 node --version
 
 # Install dependencies
@@ -224,7 +224,7 @@ The deploy workflow creates a `github-pages` environment automatically. You can 
 
 ### Workflows Overview
 
-This template includes four GitHub Actions workflows:
+The primary GitHub Actions workflows are described below (CI, Deploy, Lighthouse). The repo also ships additional maintenance/security workflows — e.g. `drift-check`, `scorecard`, `security-audit`, `security-txt-expiry`, `phantom-revert-guard`, and `uptime`. CodeQL security scanning is **not** a committed workflow — it runs via GitHub code scanning default setup — but is listed below alongside the workflows for completeness:
 
 1. **CI - Build and Test** (`.github/workflows/ci.yml`)
    - Runs on: All pull requests and pushes to main
@@ -236,10 +236,12 @@ This template includes four GitHub Actions workflows:
    - Purpose: Deploys built site to GitHub Pages
    - What it does: Builds site with basePath, deploys to `gh-pages` branch
 
-3. **CodeQL Security Scanning** (`.github/workflows/codeql.yml`)
-   - Runs on: Push to main, PRs to main, weekly schedule
+3. **CodeQL Security Scanning** (GitHub code scanning **default setup** — no workflow file)
+   - Runs on: Push to main, PRs to main, weekly schedule (managed by GitHub)
    - Purpose: Scans code for security vulnerabilities
    - What it does: Analyzes JavaScript/TypeScript and GitHub Actions
+   - Note: This template ships **without** a `codeql.yml` advanced workflow on
+     purpose, so clones can use default setup without a standard/advanced conflict
 
 4. **Lighthouse CI** (`.github/workflows/lighthouse.yml`)
    - Runs on: After deployment, PRs to main
@@ -335,8 +337,7 @@ Create a ruleset named **"Protect Main"** with these settings:
 3. ✅ **Require status checks to pass**
    - Select these status checks as required:
      - `Test and Build` (from CI workflow)
-     - `Analyze (javascript-typescript)` (from CodeQL)
-     - `Analyze (actions)` (from CodeQL)
+     - `CodeQL` (from code scanning default setup — appears after the first scan runs)
    - ✅ Enable **"Require branches to be up to date before merging"**
    - This ensures tests run on latest code before merge
 
@@ -398,10 +399,13 @@ gpg --armor --export YOUR_KEY_ID
    - Click **"Enable"** if not already enabled
    - Works immediately when vulnerabilities are detected
 
-4. ✅ **Code scanning (CodeQL)**
-   - Should be automatically enabled by the workflow
-   - Verify it's listed under "Code scanning alerts"
-   - If not, the workflow will set it up on first run
+4. ✅ **Code scanning (CodeQL — default setup)**
+   - Settings → Security & Analysis → Code scanning → **Set up → Default**
+   - Use GitHub's **default setup** (no `codeql.yml` workflow needed)
+   - Do **not** add an advanced CodeQL workflow file — a `codeql.yml`
+     advanced workflow and default setup cannot both be enabled and will
+     conflict. This template intentionally ships **without** one.
+   - Verify scans appear under "Code scanning alerts" after the first run
 
 **Recommended:**
 
@@ -637,14 +641,13 @@ grep -r "46-2471893" . --exclude-dir=node_modules --exclude-dir=.git
 grep -r "ffcworkingsite1.org" . --exclude-dir=node_modules --exclude-dir=.git
 ```
 
-**Social media links**: Update in `src/components/footer/index.tsx`
+**Social media links**: Update `siteConfig.social` in `src/lib/site.config.ts`
 
 ### 2. Update Contact Information
 
 Files to update:
 
-- `src/components/footer/index.tsx` - Footer contact info
-- `src/components/contact-us/` - Contact section
+- `src/lib/site.config.ts` - Footer contact info (`contactEmail`, `phone`, `addresses`, `ein`, `guidestar`) and `social` links
 - `SECURITY.md` - Security contact
 - `CODE_OF_CONDUCT.md` - Conduct reporting contact
 - `SUPPORT.md` - Support contact
@@ -665,8 +668,8 @@ Files to update:
 
 **Team members**: Edit `src/data/team/`
 
-- Add/remove team member files
-- Update photos in `/public/team/`
+- Add/remove team member files (`name`, `role`, optional `linkedinUrl`)
+- No photos needed — cards render an initials monogram automatically
 
 **FAQs**: Edit `src/data/faqs/`
 
@@ -934,8 +937,7 @@ Based on the information in issue #[number], update all instances of:
 These cannot be automated by AI and require manual work:
 
 - Logo files (`/public/logo.svg`, `/public/favicon.ico`) - Must upload new files
-- Team member photos (`/public/team/`) - Must upload new images
-- Team member data (`src/data/team/*.json`) - Can be updated by Copilot with provided information
+- Team member data (`src/data/team/*.json`) - Can be updated by Copilot with provided information (no photos — cards use initials monograms)
 - FAQs (`src/data/faqs/*.json`) - Can be updated by Copilot with provided Q&A content
 - Testimonials (`src/data/testimonials/*.json`) - Can be updated by Copilot with provided testimonial text
 
@@ -967,6 +969,6 @@ These cannot be automated by AI and require manual work:
 
 ---
 
-**Last Updated**: 2025-12-19  
+**Last Updated**: 2026-07-18  
 **Template Version**: 0.3.0  
-**Compatible with**: Next.js 16.0.7, Node.js 20.x
+**Compatible with**: Next.js 16.0.7, Node.js 24.x

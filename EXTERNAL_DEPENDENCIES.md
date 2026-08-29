@@ -27,7 +27,7 @@ These are services we directly integrate into our application code.
 #### 1. Google Tag Manager (GTM)
 
 - **Purpose:** Tag management system for analytics and marketing pixels
-- **GTM ID:** `GTM-TQ5H8HPR`
+- **GTM ID:** `GTM-TQ5H8HPR` (configured in `src/lib/analytics.config.ts`)
 - **Implementation:** `src/components/google-tag-manager/index.tsx`
 - **Load Strategy:** `lazyOnload` for better performance
 - **Data Collected:** Page views, user interactions, custom events
@@ -77,6 +77,8 @@ These are services we directly integrate into our application code.
 - **Setup guide:** [`EVENTS_SETUP.md`](./EVENTS_SETUP.md)
 - **Status:** Active
 
+**Getting your own widget URL:** Create a free account at https://www.sociablekit.com, add a "Facebook Page Events" widget for your charity's Facebook Page, and copy the iframe URL it generates. Set it in `siteConfig.integrations.sociableKitEventsWidgetUrl` in `src/lib/site.config.ts` (the `widgets.sociablekit.com` domain is already allow-listed in the CSP).
+
 ### Forms & User Input
 
 #### 6. Microsoft Forms
@@ -100,7 +102,9 @@ These are services we directly integrate into our application code.
 - **Domain:** `www.zeffy.com`
 - **Preconnect:** Configured in `src/app/layout.tsx`
 - **Data Collected:** Donation transaction data
-- **Privacy Policy:** https://www.zeffy.com/privacy
+- **Privacy Policy:** https://support.zeffy.com/legal-data-privacy-security
+
+**Getting your own donation URL:** Sign up free at https://www.zeffy.com, create a donation form for your charity, then copy its embed/iframe URL. Set it in `siteConfig.integrations.zeffyDonationUrl` in `src/lib/site.config.ts` (the `www.zeffy.com` domain is already allow-listed in the CSP).
 
 ### Transparency & Validation
 
@@ -113,6 +117,8 @@ These are services we directly integrate into our application code.
 - **Data Collected:** Minimal (widget display only)
 - **Privacy Policy:** https://www.guidestar.org/privacy
 
+**Getting your own profile links:** Claim or look up your nonprofit's profile at https://www.guidestar.org (now Candid). Copy the public profile URL into `siteConfig.guidestar.profileUrl` and the shared-seal URL into `siteConfig.guidestar.directProfileUrl` in `src/lib/site.config.ts`. These are ordinary outbound links (to `www.guidestar.org`), so no CSP change is needed. The CSP already allow-lists the `widgets.guidestar.org` origin separately — that only matters if you later embed an interactive GuideStar/Candid widget rather than the static seal.
+
 ### External Volunteer Platforms
 
 #### 9. Idealist.org
@@ -122,6 +128,8 @@ These are services we directly integrate into our application code.
 - **URL:** `https://www.idealist.org/en/nonprofit/356bfc8e2ae64f83beea4a4e677e99d7-free-for-charity-state-college#opportunities`
 - **Data Collected:** None (external link only)
 - **Privacy Policy:** https://www.idealist.org/en/privacy
+
+**Getting your own profile URL:** Create your nonprofit's profile at https://www.idealist.org, then copy your volunteer-opportunities URL. Set it in `siteConfig.integrations.idealistUrl` in `src/lib/site.config.ts`.
 
 ## Transitive Dependencies
 

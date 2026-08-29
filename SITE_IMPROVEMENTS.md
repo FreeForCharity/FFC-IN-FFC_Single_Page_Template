@@ -4,10 +4,10 @@
 
 **Scope:** This document covers improvements that enhance the **user experience**. For backend/technical improvements (ESLint warnings, security, React internals), see [TECHNICAL_DEBT.md](./TECHNICAL_DEBT.md).
 
-**Last Updated:** December 2025  
+**Last Updated:** July 2026  
 **Status:** Phase 5 Complete - All Critical Gaps Closed  
 **Repository:** FreeForCharity/FFC_Single_Page_Template  
-**Node.js:** 20.x (validated with v20.19.6)
+**Node.js:** 24.x (validated with v24.18.0)
 
 ---
 
@@ -57,7 +57,7 @@ This analysis compares FFC_Single_Page_Template against three sister repositorie
 
 ### Key Findings
 
-**FFC_Single_Page_Template** is a feature-rich, single-page Next.js application with 112 component files and extensive content sections, plus 7 policy pages.
+**FFC_Single_Page_Template** is a single-page Next.js application with 23 component files (after removing unused scaffolding) covering the homepage sections, plus 7 policy pages.
 
 **Note:** As of Phase 5 completion, most critical gaps have been addressed. The items listed below were the original gaps identified, many of which have now been implemented. However, compared to sister sites, some differences remain:
 
@@ -80,7 +80,7 @@ This analysis compares FFC_Single_Page_Template against three sister repositorie
 | ------------------- | ------------------------ | ------------------ | ------------ | -------- |
 | **Next.js Version** | 16.0.7                   | 15.5.2             | 16.0.3       | 15.4.6   |
 | **React Version**   | 19.1.0                   | 19.1.0             | 19.2.0       | 19.1.0   |
-| **Node.js Target**  | 20.x                     | 20.x               | 20.x         | 20.x     |
+| **Node.js Target**  | 24.x                     | 20.x               | 20.x         | 20.x     |
 | **Package Manager** | npm                      | npm                | pnpm         | npm      |
 | **Static Export**   | ✅                       | ✅                 | ✅           | ✅       |
 | **TypeScript**      | ✅                       | ✅                 | ✅           | ✅       |
@@ -88,13 +88,13 @@ This analysis compares FFC_Single_Page_Template against three sister repositorie
 
 ### Dependency Comparison
 
-| Library/Tool         | FFC_Single_Page_Template | freeforcharity-web | ffcadmin.org | KCCF-web |
-| -------------------- | ------------------------ | ------------------ | ------------ | -------- |
-| **framer-motion**    | ✅ 12.23.24              | ✅ 12.23.24        | ❌           | ❌       |
-| **lucide-react**     | ✅ 0.469.0               | ✅ 0.469.0         | ❌           | ❌       |
-| **react-icons**      | ✅ 5.5.0                 | ✅ 5.5.0           | ❌           | ❌       |
-| **swiper**           | ✅ 12.0.3                | ✅ 12.0.3          | ❌           | ❌       |
-| **@playwright/test** | ✅ 1.56.0                | ✅ 1.56.0          | ❌           | ❌       |
+| Library/Tool         | FFC_Single_Page_Template     | freeforcharity-web | ffcadmin.org | KCCF-web |
+| -------------------- | ---------------------------- | ------------------ | ------------ | -------- |
+| **framer-motion**    | ✅ 12.23.24                  | ✅ 12.23.24        | ❌           | ❌       |
+| **lucide-react**     | ❌ removed (use react-icons) | ✅ 0.469.0         | ❌           | ❌       |
+| **react-icons**      | ✅ 5.5.0                     | ✅ 5.5.0           | ❌           | ❌       |
+| **swiper**           | ✅ 12.0.3                    | ✅ 12.0.3          | ❌           | ❌       |
+| **@playwright/test** | ✅ 1.56.0                    | ✅ 1.56.0          | ❌           | ❌       |
 
 **Observation:** FFC_Single_Page_Template and freeforcharity-web are nearly identical in their dependency stacks, suggesting they share similar feature sets.
 
@@ -1028,7 +1028,7 @@ module.exports = {
 
 #### Implementation Notes
 
-- Significant CSS work required (all 83 components)
+- Significant CSS work required (all 23 components)
 - Should use Tailwind dark mode utilities
 - Test thoroughly for contrast and readability
 - Consider progressive rollout (opt-in first)
@@ -1641,7 +1641,7 @@ docker run -v $(pwd):/app -p 3000:3000 kccf-web npm run dev
 #### Technical Requirements
 
 1. Create `Dockerfile`:
-   - Base image: node:20-alpine
+   - Base image: node:24-alpine
    - Multi-stage build (dependencies, build, production)
    - Non-root user
    - Optimized layer caching
@@ -2592,6 +2592,6 @@ The FFC_Single_Page_Template is now a **best-in-class Next.js template** with en
 ---
 
 **Document Version:** 2.0 (Phase 5 Complete)  
-**Last Updated:** 2025-12-03  
+**Last Updated:** 2026-07-18  
 **Author:** GitHub Copilot  
 **Status:** Implementation Complete

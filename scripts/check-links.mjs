@@ -1,39 +1,58 @@
-#!/usr/bin/env node
-/**
- * Link checker that serves ./out the way GitHub Pages does and points
- * linkinator at it.
- *
- * Why: linkinator's built-in file server does not map a clean URL like
- * `/privacy-policy` to `privacy-policy.html` — it only resolves exact files
- * or `<dir>/index.html`. Our static export (Next.js `output: 'export'` with
- * the default no-trailing-slash scheme) emits `privacy-policy.html`, and
- * GitHub Pages serves `/privacy-policy` from it via .html fallback. Pointing
- * linkinator at the raw directory therefore produced false 404s for every
- * policy route. Serving through this small GitHub-Pages-equivalent handler
- * resolves them correctly while still surfacing genuinely broken links.
- *
- * The linkinator skip list / retry config still comes from
- * `.linkinatorrc.json` via the CLI `--config` flag.
- */
+// Link checker that mirrors how GitHub Pages serves the static export.
+//
+// Why this exists: `next build` (output: 'export') emits clean-URL pages as
+// `out/<route>.html`, while internal links use extensionless clean URLs
+// (e.g. `href="/privacy-policy"`). Next also emits a sibling directory
+// `out/<route>/` containing RSC prefetch payloads (`__next.*.txt`) with no
+// `index.html`. Running linkinator directly against the `./out` *filesystem*
+// resolves `/privacy-policy` to that index-less directory and reports a false
+// 404 — even though GitHub Pages serves `privacy-policy.html` for that path.
+//
+// To check links the way the deployed site actually behaves, we serve `out/`
+// over HTTP with GitHub-Pages-style resolution (try the path, then `.html`,
+// then `/index.html`) and point linkinator at the URL. Real missing routes
+// still return 404, so genuine broken links are still caught.
+
 import { createServer } from 'node:http'
 import { spawn } from 'node:child_process'
 import { readFile, stat } from 'node:fs/promises'
-import { join, normalize, extname } from 'node:path'
+import { readFileSync, writeFileSync, mkdtempSync } from 'node:fs'
+import { tmpdir } from 'node:os'
+import { join, normalize, extname, resolve, sep } from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { dirname, resolve } from 'node:path'
 
-const __dirname = dirname(fileURLToPath(import.meta.url))
-const ROOT = resolve(__dirname, '..', 'out')
-const PORT = Number(process.env.LINK_CHECK_PORT || 3100)
+const ROOT = fileURLToPath(new URL('../out', import.meta.url))
 
-const MIME = {
+// The site's canonical origin (siteConfig.url). Absolute self-URLs baked into
+// the build — og:image, twitter:image, JSON-LD logo, rel=canonical — point at
+// this PRODUCTION origin. Below we rewrite that origin to the local preview
+// server so the checker validates THIS build's own assets instead of whatever
+// is currently deployed. Without this, any brand-new asset (e.g. a fresh OG
+// image) 404s in the link check until it ships — a false failure.
+function canonicalOrigin() {
+  try {
+    const cfg = readFileSync(
+      fileURLToPath(new URL('../src/lib/site.config.ts', import.meta.url)),
+      'utf8'
+    )
+    const m = cfg.match(/url:\s*['"]([^'"]+)['"]/)
+    return m ? new URL(m[1]).origin : null
+  } catch {
+    return null
+  }
+}
+
+function escapeRegExp(s) {
+  return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+}
+
+const CONTENT_TYPES = {
   '.html': 'text/html; charset=utf-8',
-  '.css': 'text/css',
-  '.js': 'text/javascript',
-  '.mjs': 'text/javascript',
-  '.json': 'application/json',
-  '.txt': 'text/plain; charset=utf-8',
-  '.xml': 'application/xml',
+  '.js': 'text/javascript; charset=utf-8',
+  '.mjs': 'text/javascript; charset=utf-8',
+  '.css': 'text/css; charset=utf-8',
+  '.json': 'application/json; charset=utf-8',
+  '.webmanifest': 'application/manifest+json; charset=utf-8',
   '.svg': 'image/svg+xml',
   '.png': 'image/png',
   '.jpg': 'image/jpeg',
@@ -41,75 +60,107 @@ const MIME = {
   '.webp': 'image/webp',
   '.gif': 'image/gif',
   '.ico': 'image/x-icon',
+  '.txt': 'text/plain; charset=utf-8',
+  '.xml': 'application/xml; charset=utf-8',
+  '.mp4': 'video/mp4',
+  '.webm': 'video/webm',
   '.woff': 'font/woff',
   '.woff2': 'font/woff2',
-  '.webmanifest': 'application/manifest+json',
 }
 
-// Resolve a request path to a file on disk, mirroring how `serve` and
-// GitHub Pages answer a static export with the no-trailing-slash scheme:
-//   /foo       -> out/foo  | out/foo.html | out/foo/index.html
-//   /foo/      -> out/foo/index.html | out/foo.html
-//   /foo.html  -> out/foo.html
-// The trailing-slash → `.html` fallback matters because linkinator probes the
-// slashed variant of clean links even when the page only links no-slash.
-function resolveCandidates(urlPath) {
-  const raw = urlPath.split('?')[0].split('#')[0]
-  // decodeURIComponent throws on malformed percent-encoding (e.g. a stray
-  // `%`). Fall back to the raw path so the server can answer 404 rather
-  // than crash the whole check.
-  let clean
+async function resolveFile(urlPath) {
+  // Strip query/hash and decode. decodeURIComponent throws on malformed
+  // escapes (e.g. a bare `%`), so guard it rather than crash the handler.
+  let decoded
   try {
-    clean = decodeURIComponent(raw)
+    decoded = decodeURIComponent(urlPath.split('?')[0].split('#')[0])
   } catch {
-    clean = raw
+    return null
   }
-  // Block path traversal: normalize and strip any leading "../" segments.
-  const safe = normalize(clean).replace(/^(\.\.(\/|\\|$))+/, '')
-  const hadTrailingSlash = clean.endsWith('/')
-  const rel = safe.replace(/^\/+/, '').replace(/\/+$/, '')
-  if (rel === '') return [join(ROOT, 'index.html')]
-  if (hadTrailingSlash) {
-    return [join(ROOT, rel, 'index.html'), join(ROOT, `${rel}.html`)]
+
+  // Drop leading slashes so the request always resolves *relative* to ROOT
+  // (an absolute-looking path like `/etc/passwd` must not escape it), and a
+  // trailing slash is irrelevant — `/privacy-policy` and `/privacy-policy/`
+  // resolve identically, just as GitHub Pages and the `serve` preview treat
+  // them.
+  const rel = normalize(decoded.replace(/^[/\\]+/, '').replace(/\/+$/, ''))
+  const base = resolve(ROOT, rel)
+  // Defense in depth: never serve anything resolved outside ROOT.
+  if (base !== ROOT && !base.startsWith(ROOT + sep)) return null
+
+  // Resolution order mirrors GitHub Pages for `output: 'export'`:
+  // exact file, then `<path>.html` (clean URL), then `<path>/index.html`.
+  const candidates =
+    rel === '' || rel === '.'
+      ? [join(ROOT, 'index.html')]
+      : [base, `${base}.html`, join(base, 'index.html')]
+
+  for (const candidate of candidates) {
+    try {
+      const info = await stat(candidate)
+      if (info.isFile()) return candidate
+    } catch {
+      // try next candidate
+    }
   }
-  return [join(ROOT, rel), join(ROOT, `${rel}.html`), join(ROOT, rel, 'index.html')]
+  return null
 }
 
 const server = createServer(async (req, res) => {
-  for (const candidate of resolveCandidates(req.url || '/')) {
-    if (!candidate.startsWith(ROOT)) continue
-    try {
-      const s = await stat(candidate)
-      if (!s.isFile()) continue
-      const body = await readFile(candidate)
-      res.writeHead(200, { 'Content-Type': MIME[extname(candidate)] || 'application/octet-stream' })
-      res.end(body)
-      return
-    } catch {
-      /* try next candidate */
-    }
+  const file = await resolveFile(req.url || '/')
+  if (!file) {
+    res.statusCode = 404
+    res.end('Not found')
+    return
   }
-  res.writeHead(404, { 'Content-Type': 'text/plain' })
-  res.end('Not found')
+  try {
+    const body = await readFile(file)
+    res.statusCode = 200
+    res.setHeader('Content-Type', CONTENT_TYPES[extname(file)] || 'application/octet-stream')
+    res.end(body)
+  } catch {
+    res.statusCode = 500
+    res.end('Server error')
+  }
 })
 
-server.listen(PORT, () => {
-  const child = spawn(
-    'npx',
-    [
-      'linkinator',
-      `http://localhost:${PORT}`,
-      '--recurse',
-      '--config',
-      resolve(__dirname, '..', '.linkinatorrc.json'),
-    ],
-    { stdio: 'inherit' }
+function shutdown(code) {
+  server.close(() => process.exit(code))
+  // Safety net: don't hang the job if a socket lingers.
+  setTimeout(() => process.exit(code), 2000).unref()
+}
+
+// Listen on an ephemeral port to avoid collisions in CI.
+server.listen(0, '127.0.0.1', () => {
+  const { port } = server.address()
+  const target = `http://127.0.0.1:${port}`
+
+  // Extend the committed config with a URL rewrite mapping the site's
+  // canonical origin to this local server. We go through a generated config
+  // file (rather than linkinator's --url-rewrite-* CLI flags, which are broken
+  // by a casing bug in v7.6.1) because the config-file keys are honored.
+  const baseConfig = JSON.parse(
+    readFileSync(fileURLToPath(new URL('../.linkinatorrc.json', import.meta.url)), 'utf8')
   )
-  child.on('exit', (code) => {
-    server.close(() => process.exit(code ?? 0))
+  const origin = canonicalOrigin()
+  if (origin) {
+    baseConfig.urlRewriteSearch = `^${escapeRegExp(origin)}`
+    baseConfig.urlRewriteReplace = target
+  }
+  const runtimeConfigPath = join(mkdtempSync(join(tmpdir(), 'linkinator-')), 'config.json')
+  writeFileSync(runtimeConfigPath, JSON.stringify(baseConfig))
+
+  const args = [target, '--recurse', '--config', runtimeConfigPath]
+  // Spawn linkinator from PATH — npm puts node_modules/.bin on PATH for
+  // scripts, so `npm run check-links` resolves it cross-platform. shell:true
+  // on Windows lets the `linkinator.cmd` shim resolve.
+  const child = spawn('linkinator', args, {
+    stdio: 'inherit',
+    shell: process.platform === 'win32',
   })
+  child.on('exit', (code) => shutdown(code ?? 1))
   child.on('error', (err) => {
-    console.error(`[check-links] failed to launch linkinator: ${err.message}`)
-    server.close(() => process.exit(1))
+    console.error('Failed to run linkinator:', err)
+    shutdown(1)
   })
 })

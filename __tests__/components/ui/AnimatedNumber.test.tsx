@@ -1,33 +1,9 @@
 import React from 'react'
 import { render, screen } from '@testing-library/react'
 
-// framer-motion uses IntersectionObserver (via useInView) and DOM measurements
-// that jsdom doesn't provide. Mock the specific hooks the component imports
-// so the static (reduced-motion) render path is exercised end-to-end.
-jest.mock('framer-motion', () => {
-  return {
-    useReducedMotion: () => true,
-    useInView: () => true,
-    useMotionValue: (initial: number) => ({
-      set: jest.fn(),
-      get: () => initial,
-      on: () => () => undefined,
-    }),
-    useSpring: (mv: { on: (event: string, cb: (latest: number) => void) => () => void }) => mv,
-    motion: new Proxy(
-      {},
-      {
-        get: () => {
-          // Return a passthrough component for any motion.<tag> lookup.
-          const Pass = ({ children, ...rest }: React.PropsWithChildren<Record<string, unknown>>) =>
-            React.createElement('span', rest, children)
-          return Pass
-        },
-      }
-    ),
-  }
-})
-
+// AnimatedNumber now uses native IntersectionObserver + matchMedia (stubbed in
+// jest.setup.js, which reports prefers-reduced-motion: reduce). Under that
+// setting the component renders its static value path, exercised below.
 import AnimatedNumber from '../../../src/components/ui/AnimatedNumber'
 
 describe('AnimatedNumber', () => {

@@ -23,11 +23,11 @@ This guide identifies all the content you need to provide to replace the Free Fo
 
 ### Logo in Top Left Corner
 
-| Section           | Variable              | Current Free For Charity Content                                                                              | Your Content                                                                                                      |
-| ----------------- | --------------------- | ------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
-| Header Navigation | Logo Image            | `https://freeforcharity.org/wp-content/uploads/2024/04/Screenshot_145.png` (Free For Charity horizontal logo) | _(URL or file path to your charity's horizontal logo, recommended size: 150px wide × 44px tall for best display)_ |
-| Header Navigation | Logo Alt Text         | "Free For Charity"                                                                                            | _(Your charity name for accessibility)_                                                                           |
-| Header Navigation | Logo Link Destination | "/" (homepage)                                                                                                | _(Usually "/" for homepage)_                                                                                      |
+| Section           | Variable              | Current Free For Charity Content                                                                           | Your Content                                                                                                                                                                                               |
+| ----------------- | --------------------- | ---------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Header Navigation | Logo Image            | `assetPath('/Images/logo.webp')` (Free For Charity horizontal logo, served from `public/Images/logo.webp`) | _(Replace `public/Images/logo.webp` with your charity's horizontal logo, recommended size: 150px wide × 44px tall for best display. Keep the `assetPath()` wrapper so it works on GitHub Pages subpaths.)_ |
+| Header Navigation | Logo Alt Text         | "Free For Charity"                                                                                         | _(Your charity name for accessibility)_                                                                                                                                                                    |
+| Header Navigation | Logo Link Destination | "/" (homepage)                                                                                             | _(Usually "/" for homepage)_                                                                                                                                                                               |
 
 ### Navigation Menu Items
 
@@ -330,15 +330,22 @@ Introduce your charity's leadership team or key staff members.
 
 ### Team Members
 
-| #   | Photo                  | Name              | Title                                              | LinkedIn URL                                            | Your Photo                                        | Your Name | Your Title | Your LinkedIn |
-| --- | ---------------------- | ----------------- | -------------------------------------------------- | ------------------------------------------------------- | ------------------------------------------------- | --------- | ---------- | ------------- |
-| 1   | `/Images/member1.webp` | "Clarke Moyer"    | "Free For Charity Founder/ President of the Board" | "https://www.linkedin.com/in/clarkemoyer/"              | _(Photo file, recommended: 400px × 400px square)_ |           |            |               |
-| 2   | `/Images/member2.webp` | "Chris Rae"       | "Free For Charity Vice President"                  | "https://www.linkedin.com/in/christopher-rae-540493a5/" |                                                   |           |            |               |
-| 3   | `/Images/member3.webp` | "Tyler Carlotto"  | "Free For Charity Secretary"                       | "https://www.linkedin.com/in/tylercarlotto/"            |                                                   |           |            |               |
-| 4   | `/Images/member4.webp` | "Brennan Darling" | "Free For Charity Treasurer"                       | "https://www.linkedin.com/in/brennon-darling-80953038/" |                                                   |           |            |               |
-| 5   | `/Images/member5.webp` | "Rebecca Cook"    | "Free For Charity Member at Large"                 | "https://www.linkedin.com/in/rebecca-cook-a91599265/"   |                                                   |           |            |               |
+Each member is a JSON file in `src/data/team/` with just three fields: `name`,
+`role`, and an optional `linkedinUrl`. **There are no photos** — every card
+renders an initials monogram (first + last initial) on your brand color, so you
+never have to source, size, or host portrait images. When `linkedinUrl` is set,
+the whole card links to that profile in a new tab; omit it and the card is not a
+link.
 
-_Note: Add more team members or use fewer by adding rows or removing entries. LinkedIn URLs are optional._
+| #   | Name              | Role                                               | LinkedIn URL (optional)                                 | Your Name | Your Role | Your LinkedIn |
+| --- | ----------------- | -------------------------------------------------- | ------------------------------------------------------- | --------- | --------- | ------------- |
+| 1   | "Clarke Moyer"    | "Free For Charity Founder/ President of the Board" | "https://www.linkedin.com/in/clarkemoyer/"              |           |           |               |
+| 2   | "Chris Rae"       | "Free For Charity Vice President"                  | "https://www.linkedin.com/in/christopher-rae-540493a5/" |           |           |               |
+| 3   | "Tyler Carlotto"  | "Free For Charity Secretary"                       | "https://www.linkedin.com/in/tylercarlotto/"            |           |           |               |
+| 4   | "Brennan Darling" | "Free For Charity Treasurer"                       | "https://www.linkedin.com/in/brennon-darling-80953038/" |           |           |               |
+| 5   | "Rebecca Cook"    | "Free For Charity Member at Large"                 | "https://www.linkedin.com/in/rebecca-cook-a91599265/"   |           |           |               |
+
+_Note: Add more team members or use fewer by adding/removing JSON files in `src/data/team/` (and their import in `src/data/team.ts`). A LinkedIn URL, when present, must be an `https://` link on `linkedin.com` (or a subdomain such as `www.` / `uk.`) — any other host (or a non-`https://` scheme) is ignored and the card simply renders without a link._
 
 ---
 
@@ -348,15 +355,15 @@ The footer appears at the bottom of every page and contains important links and 
 
 ### Column 1 - Endorsements
 
-| Section | Variable                     | Current Free For Charity Content                                                | Your Content                                                        |
-| ------- | ---------------------------- | ------------------------------------------------------------------------------- | ------------------------------------------------------------------- |
-| Footer  | Column 1 Heading             | "Endorsements"                                                                  | _(You might use "Certifications", "Verified By", or similar)_       |
-| Footer  | Endorsement Image 1          | `/Svgs/footerImage.svg` (GuideStar Platinum Seal)                               | _(Logo/seal image from your endorsing organizations)_               |
-| Footer  | Endorsement Image 1 Alt Text | "GuideStar Platinum Seal of Transparency"                                       |                                                                     |
-| Footer  | Endorsement Image 1 Link     | "https://www.guidestar.org/profile/46-2471893"                                  | _(Link to your profile page)_                                       |
-| Footer  | Direct Profile Link Text     | "Direct GuideStar Profile Link"                                                 | _(Or your equivalent verification link)_                            |
-| Footer  | Direct Profile Link URL      | "https://www.guidestar.org/profile/shared/bbbe173a-87b9-4af9-a8a2-cae255a95742" |                                                                     |
-| Footer  | EIN Display Text             | "Free For Charity EIN: 46-2471893"                                              | _(Your charity's EIN number, e.g., "Your Charity EIN: XX-XXXXXXX")_ |
+| Section | Variable                     | Current Free For Charity Content                                                                                                               | Your Content                                                        |
+| ------- | ---------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------- |
+| Footer  | Column 1 Heading             | "Endorsements"                                                                                                                                 | _(You might use "Certifications", "Verified By", or similar)_       |
+| Footer  | Endorsement Image 1          | `/Svgs/footerImage.svg` (GuideStar Platinum Seal) — asset/markup in `src/components/footer/index.tsx`                                          | _(Logo/seal image from your endorsing organizations)_               |
+| Footer  | Endorsement Image 1 Alt Text | "GuideStar Platinum Seal of Transparency" — in `src/components/footer/index.tsx`                                                               |                                                                     |
+| Footer  | Endorsement Image 1 Link     | "https://www.guidestar.org/profile/46-2471893" — set `guidestar.profileUrl` in `src/lib/site.config.ts`                                        | _(Link to your profile page)_                                       |
+| Footer  | Direct Profile Link Text     | "Direct GuideStar Profile Link"                                                                                                                | _(Or your equivalent verification link)_                            |
+| Footer  | Direct Profile Link URL      | "https://www.guidestar.org/profile/shared/bbbe173a-87b9-4af9-a8a2-cae255a95742" — set `guidestar.directProfileUrl` in `src/lib/site.config.ts` |                                                                     |
+| Footer  | EIN Display Text             | "Free For Charity EIN: 46-2471893" — set `ein` in `src/lib/site.config.ts`                                                                     | _(Your charity's EIN number, e.g., "Your Charity EIN: XX-XXXXXXX")_ |
 
 ### Column 2 - Quick Links
 
@@ -406,27 +413,31 @@ _Note: These policy pages will need to be created with your charity's specific p
 
 ### Column 3 - Contact Information
 
+_Edit location: `src/lib/site.config.ts` — `contactEmail`, `phone.display` / `phone.tel`, and the `addresses[]` entries (`label`, `lines`, `mapUrl`). The footer renders these from siteConfig._
+
 | Section | Variable                           | Current Free For Charity Content                                                                    | Your Content                                         |
 | ------- | ---------------------------------- | --------------------------------------------------------------------------------------------------- | ---------------------------------------------------- |
 | Footer  | Column 3 Heading                   | "Contact Us"                                                                                        |                                                      |
 | Footer  | Email Label                        | "E-mail"                                                                                            |                                                      |
-| Footer  | Email Address                      | "clarkemoyer@freeforcharity.org"                                                                    | _(Your charity's contact email)_                     |
+| Footer  | Email Address (`contactEmail`)     | "clarkemoyer@freeforcharity.org"                                                                    | _(Your charity's contact email)_                     |
 | Footer  | Phone Label                        | "Call Us Today"                                                                                     |                                                      |
-| Footer  | Phone Number                       | "(520) 222-8104"                                                                                    | _(Your charity's phone number)_                      |
-| Footer  | Phone Number (dialable format)     | "5202228104"                                                                                        | _(Numbers only, no spaces or dashes)_                |
+| Footer  | Phone Number (`phone.display`)     | "(520) 222-8104"                                                                                    | _(Your charity's phone number)_                      |
+| Footer  | Phone Number (`phone.tel`)         | "5202228104"                                                                                        | _(Numbers only, no spaces or dashes)_                |
 | Footer  | Main Address Label                 | "Main Address"                                                                                      |                                                      |
 | Footer  | Main Address Line 1                | "4030 Wake Forrest Road"                                                                            |                                                      |
-| Footer  | Main Address Line 2                | "Suite 349 Raleigh North"                                                                           |                                                      |
-| Footer  | Main Address Line 3                | "Carolina 27609"                                                                                    |                                                      |
+| Footer  | Main Address Line 2                | "Suite 349"                                                                                         |                                                      |
+| Footer  | Main Address Line 3                | "Raleigh, NC 27609"                                                                                 |                                                      |
 | Footer  | Main Address Google Maps Link      | "https://www.google.com/maps/search/?api=1&query=4030+Wake+Forrest+Road+Suite+349+Raleigh+NC+27609" | _(Format: Google Maps search URL with your address)_ |
 | Footer  | Secondary Address Label            | "PA Office Address"                                                                                 | _(Optional second location)_                         |
-| Footer  | Secondary Address Line 1           | "301 Science Park Road Suite"                                                                       |                                                      |
-| Footer  | Secondary Address Line 2           | "119 State College PA 16803"                                                                        |                                                      |
+| Footer  | Secondary Address Line 1           | "301 Science Park Road, Suite 119"                                                                  |                                                      |
+| Footer  | Secondary Address Line 2           | "State College, PA 16803"                                                                           |                                                      |
 | Footer  | Secondary Address Google Maps Link | "https://www.google.com/maps/place/Free+For+Charity/@40.7768455,-77.8963305,17z/..."                |                                                      |
 
 _Note: If you don't have a second location, you can remove the secondary address section._
 
 ### Social Media Links
+
+_Edit location: `src/lib/site.config.ts` — the `social[]` array (each entry's `href`). The footer renders the rail from siteConfig._
 
 | Section | Variable              | Current Free For Charity Content                             | Your Content                                         |
 | ------- | --------------------- | ------------------------------------------------------------ | ---------------------------------------------------- |
@@ -495,7 +506,7 @@ When implementing these changes:
 - **Programs section**: Edit `src/components/home-page/our-programs/index.tsx`
 - **FAQ section**: Edit `src/components/home-page/frequently-asked-questions/index.tsx`
 - **Team section**: Edit `src/components/home-page/the-free-for-charity-team/index.tsx`
-- **Footer**: Edit `src/components/footer/index.tsx`
+- **Footer**: The footer's per-charity values (EIN, phone, addresses, GuideStar links, social, email) come from `src/lib/site.config.ts`. Edit `src/components/footer/index.tsx` only for structural/markup changes (e.g. the endorsement seal image).
 - **Metadata**: Edit `src/app/layout.tsx`
 - **Navigation menu**: Edit `src/components/header/index.tsx`
 

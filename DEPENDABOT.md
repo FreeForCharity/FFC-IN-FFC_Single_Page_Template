@@ -337,9 +337,8 @@ Change the `interval` in `dependabot.yml`:
 
 ```yaml
 schedule:
-  interval: "daily"    # Check every day
-  interval: "weekly"   # Check every week (current)
-  interval: "monthly"  # Check every month
+  # Choose one: 'daily', 'weekly' (current), or 'monthly'
+  interval: 'weekly'
 ```
 
 ### Change Update Day/Time
@@ -538,7 +537,7 @@ For issues or questions about Dependabot:
 ---
 
 **Configuration Version**: 1.0  
-**Last Updated**: 2025-12-03  
+**Last Updated**: 2026-07-18  
 **Repository**: FreeForCharity/FFC_Single_Page_Template  
-**Node.js**: 20.x (validated with v20.19.6)  
+**Node.js**: 24.x (validated with v24.18.0)  
 **Maintained By**: FreeForCharity Team

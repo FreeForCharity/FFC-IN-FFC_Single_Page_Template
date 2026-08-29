@@ -37,15 +37,30 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v6
         with:
-          node-version: '20'
+          node-version: '24'
           cache: 'npm'
 
       - name: Setup Pages
-        uses: actions/configure-pages@v5
-        with:
-          # Automatically inject basePath in your Next.js configuration file and disable
-          # server side image optimization (https://nextjs.org/docs/api-reference/next/image#unoptimized).
-          static_site_generator: next
+        uses: actions/configure-pages@v6
+        # `static_site_generator: next` is deliberately NOT set. It only understands
+        # next.config.js/.mjs; this repo uses next.config.ts, so the action logged
+        # "Using default blank configuration" and WROTE ITS OWN next.config.js
+        # containing only {output, basePath, images.unoptimized}. Next prefers .js
+        # over .ts, so every deploy built with this repo's real config discarded:
+        # images.remotePatterns and the bundle-analyzer wrapper are simply gone from
+        # the config Next actually reads.
+        #
+        # Measured, not inferred: two consecutive deploys of Footer_Only_Template
+        # differing ONLY by this input flipped /privacy-policy/ from 404 to 200 and
+        # /privacy-policy.html from 200 to 404 — the shape its trailingSlash setting
+        # specifies.
+        #
+        # The basePath the action injects is NOT wrong — it derives from the Pages API
+        # and so honours a custom domain (this repo serves ffcworkingsite1.org with
+        # unprefixed assets while the input was still set). It agrees with the
+        # CNAME-aware value the step below computes. Removing the input is safe
+        # precisely because that step already produces the same answer.
+        # See FFC-Cloudflare-Automation#880.
 
       - name: Restore Next.js cache
         uses: actions/cache@v5
@@ -89,9 +104,14 @@ jobs:
           NEXT_PUBLIC_BASE_PATH: ${{ steps.basepath.outputs.value }}
 
       - name: Upload artifact for Pages
-        uses: actions/upload-pages-artifact@v4
+        uses: actions/upload-pages-artifact@v5
         with:
           path: ./out
+          # Keep dot-entries (.well-known/, .nojekyll) in the Pages artifact.
+          # upload-pages-artifact@v5 defaults include-hidden-files to false,
+          # which drops public/.well-known/security.txt and 404s the canonical
+          # RFC 9116 path. See FFC-Cloudflare-Automation#788.
+          include-hidden-files: true
 
   deploy:
     name: Deploy to GitHub Pages
@@ -104,7 +124,7 @@ jobs:
     steps:
       - name: Deploy to GitHub Pages
         id: deployment
-        uses: actions/deploy-pages@v4
+        uses: actions/deploy-pages@v5
 
       - name: Checkout (for smoke-check script)
         uses: actions/checkout@v6
@@ -112,7 +132,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v6
         with:
-          node-version: '20'
+          node-version: '24'
 
       - name: Post-deploy smoke check
         env:

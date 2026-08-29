@@ -1,13 +1,22 @@
 import type { Metadata } from 'next'
+import BreadcrumbSchema from '@/components/seo/BreadcrumbSchema'
+import { pageMetadata } from '@/lib/page-metadata'
 
-export const metadata: Metadata = {
-  title: 'Donation Policy | Free For Charity',
+const PAGE_NAME = 'Donation Policy'
+const CANONICAL_PATH = '/donation-policy'
+
+// Bare page name as title (the root layout template appends the brand);
+// per-page OG/Twitter handling is documented in src/lib/page-metadata.ts.
+export const metadata: Metadata = pageMetadata({
+  title: PAGE_NAME,
   description: 'Donation Policy for Free For Charity website',
-}
+  canonical: CANONICAL_PATH,
+})
 
 export default function DonationPolicy() {
   return (
     <div className="ffc-container py-16">
+      <BreadcrumbSchema name={PAGE_NAME} path={CANONICAL_PATH} />
       <div className="max-w-4xl mx-auto">
         <h1 className="font-[var(--font-faustina)] text-[48px] leading-[60px] mb-8">
           Donation Policy
@@ -70,10 +79,7 @@ export default function DonationPolicy() {
           <p>For questions about donations or this policy, please contact us at:</p>
           <p>
             Email:{' '}
-            <a
-              href="mailto:clarkemoyer@freeforcharity.org"
-              className="text-primary hover:underline"
-            >
+            <a href="mailto:clarkemoyer@freeforcharity.org" className="text-primary underline">
               clarkemoyer@freeforcharity.org
             </a>
             <br />

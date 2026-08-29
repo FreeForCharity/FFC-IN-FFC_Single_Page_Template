@@ -22,9 +22,9 @@ test.describe('prefers-reduced-motion', () => {
     // Scroll Results-2023 into view so AnimatedNumber's useInView fires.
     await page.locator('#results').scrollIntoViewIfNeeded()
 
-    // Find the four stat-card headings (the first <h1> under #results is
-    // the section title "Results - 2023"; the four numeric ones come next).
-    const statHeadings = page.locator('#results h1').filter({ hasText: /^\d/ })
+    // Find the four stat-card headings (the section title under #results is an <h2>;
+    // the four numeric stat cards are <h3>.
+    const statHeadings = page.locator('#results h3').filter({ hasText: /^\d/ })
     await expect(statHeadings).toHaveCount(4)
 
     // Poll until two consecutive reads match. Under reduced-motion the
@@ -35,7 +35,7 @@ test.describe('prefers-reduced-motion', () => {
     // loop would never converge inside the allotted window.
     const settled = await page.evaluate(async () => {
       const reads = (): string[] =>
-        Array.from(document.querySelectorAll('#results h1'))
+        Array.from(document.querySelectorAll('#results h3'))
           .map((el) => (el.textContent ?? '').trim())
           .filter((t) => /^\d+$/.test(t))
 

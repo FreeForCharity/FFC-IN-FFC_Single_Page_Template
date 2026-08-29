@@ -29,11 +29,11 @@ This document provides solutions to common issues, troubleshooting steps, and fr
 # Check your Node.js version
 node --version
 
-# Should be 20.x or higher
-# Install Node 20 if needed
+# Should be 24.x or higher
+# Install Node 24 if needed
 # Using nvm (recommended):
-nvm install 20
-nvm use 20
+nvm install 24
+nvm use 24
 
 # Or download from nodejs.org
 ```
@@ -699,8 +699,8 @@ If your issue isn't covered here:
 
 ---
 
-**Last Updated**: 2025-12-03  
+**Last Updated**: 2026-07-18  
 **Repository**: FreeForCharity/FFC_Single_Page_Template  
-**Node.js**: 20.x (validated with v20.19.6)
+**Node.js**: 24.x (validated with v24.18.0)
 
 _This document is continuously updated. If you solve an issue not listed here, please contribute by adding it!_

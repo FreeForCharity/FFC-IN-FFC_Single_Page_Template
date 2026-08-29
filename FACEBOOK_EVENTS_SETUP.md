@@ -22,7 +22,7 @@ Before starting implementation, ensure you have:
 - [x] Read and understood `FACEBOOK_EVENTS_REQUIREMENTS.md`
 - [x] Confirmed Free For Charity Facebook page URL: `https://www.facebook.com/freeforcharity`
 - [x] Verified Facebook page has upcoming events posted
-- [x] Development environment set up (Node.js 20.x, npm)
+- [x] Development environment set up (Node.js 24.x, npm)
 - [x] Access to repository: `FreeForCharity/FFC_Single_Page_Template`
 - [x] Reviewed existing cookie consent implementation in `src/components/cookie-consent/index.tsx`
 
@@ -767,7 +767,7 @@ Create `src/components/home-page/Events/EventCard.tsx`:
 
 ```typescript
 import React from 'react'
-import { Calendar, MapPin, Clock } from 'lucide-react'
+import { FiCalendar, FiMapPin, FiClock } from 'react-icons/fi'
 
 interface EventCardProps {
   id: string
@@ -823,12 +823,12 @@ const EventCard: React.FC<EventCardProps> = ({
 
       <div className="space-y-2 mb-4">
         <div className="flex items-center text-gray-600">
-          <Calendar className="w-5 h-5 mr-2 text-orange-500" />
+          <FiCalendar className="w-5 h-5 mr-2 text-orange-500" />
           <span id="lato-font">{formatDate(startTime)}</span>
         </div>
 
         <div className="flex items-center text-gray-600">
-          <Clock className="w-5 h-5 mr-2 text-orange-500" />
+          <FiClock className="w-5 h-5 mr-2 text-orange-500" />
           <span id="lato-font">
             {formatTime(startTime)}
             {endTime && ` - ${formatTime(endTime)}`}
@@ -837,7 +837,7 @@ const EventCard: React.FC<EventCardProps> = ({
 
         {place && (
           <div className="flex items-center text-gray-600">
-            <MapPin className="w-5 h-5 mr-2 text-orange-500" />
+            <FiMapPin className="w-5 h-5 mr-2 text-orange-500" />
             <span id="lato-font">
               {place.name}
               {place.location && `, ${place.location.city}, ${place.location.state}`}
