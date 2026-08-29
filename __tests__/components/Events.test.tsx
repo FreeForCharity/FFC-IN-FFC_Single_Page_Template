@@ -97,7 +97,8 @@ describe('Events component', () => {
     const buttons = screen.getAllByRole('button', { name: /add to calendar/i })
     expect(buttons).toHaveLength(3)
     for (const button of buttons) {
-      expect(button).toHaveAttribute('aria-haspopup', 'menu')
+      // Disclosure pattern: the toggle advertises expansion state, not an ARIA menu.
+      expect(button).toHaveAttribute('aria-expanded', 'false')
       expect(button).toHaveAttribute('aria-controls')
     }
   })

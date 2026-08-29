@@ -53,7 +53,6 @@ export default function AddToCalendarMenu({ event }: Props) {
       <button
         ref={buttonRef}
         type="button"
-        aria-haspopup="menu"
         aria-expanded={open}
         aria-controls={menuId}
         onClick={() => setOpen((v) => !v)}
@@ -65,15 +64,17 @@ export default function AddToCalendarMenu({ event }: Props) {
         </span>
       </button>
       {open && (
+        // Disclosure pattern, not an ARIA menu: these are plain links, and
+        // role="menu" promises arrow-key/roving-focus behavior this list
+        // does not implement. Tab order + Escape (with focus restore) is the
+        // correct contract for a list of links behind a toggle button.
         <ul
           id={menuId}
-          role="menu"
           aria-label={`Add "${event.title}" to your calendar`}
           className="absolute z-10 mt-2 left-0 sm:left-auto sm:right-0 w-56 max-w-[calc(100vw-2rem)] rounded-md border border-gray-200 bg-white shadow-lg py-1 text-sm"
         >
-          <li role="none">
+          <li>
             <a
-              role="menuitem"
               href={googleCalendarUrl(event)}
               target="_blank"
               rel="noopener noreferrer"
@@ -82,9 +83,8 @@ export default function AddToCalendarMenu({ event }: Props) {
               Google Calendar
             </a>
           </li>
-          <li role="none">
+          <li>
             <a
-              role="menuitem"
               href={office365Url(event)}
               target="_blank"
               rel="noopener noreferrer"
@@ -93,9 +93,8 @@ export default function AddToCalendarMenu({ event }: Props) {
               Outlook 365
             </a>
           </li>
-          <li role="none">
+          <li>
             <a
-              role="menuitem"
               href={outlookLiveUrl(event)}
               target="_blank"
               rel="noopener noreferrer"
@@ -104,9 +103,8 @@ export default function AddToCalendarMenu({ event }: Props) {
               Outlook.com
             </a>
           </li>
-          <li role="none">
+          <li>
             <a
-              role="menuitem"
               href={icsHref}
               download={`${safeSlug}.ics`}
               className="block px-4 py-2 hover:bg-gray-50 focus:outline-none focus-visible:bg-gray-100"

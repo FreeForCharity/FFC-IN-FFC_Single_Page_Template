@@ -547,7 +547,8 @@ async function main() {
 
   if (configuredSources.length === 0) {
     // Deterministic: removing/renaming all secrets should clear the
-    // snapshot so the site shows the empty state. Only rewrite if the
+    // snapshot (the section then self-hides on the next build, per the
+    // visibility predicate). Only rewrite if the
     // current snapshot actually has events (to avoid pointless commit
     // churn on every scheduled run for a template that ships with no
     // sources configured).
@@ -557,7 +558,7 @@ async function main() {
       return
     }
     const empty = { updatedAt: new Date().toISOString(), events: [] }
-    await writeFile(SNAPSHOT_PATH, `${JSON.stringify(empty, null, 2)}\n`, 'utf8')
+    await atomicWrite(SNAPSHOT_PATH, `${JSON.stringify(empty, null, 2)}\n`)
     console.log('[events] No sources configured; wrote empty snapshot.')
     return
   }
