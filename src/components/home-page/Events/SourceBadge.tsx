@@ -13,8 +13,7 @@ const SOURCE_STYLES: Record<EventSource, string> = {
 export default function SourceBadge({ source }: { source: EventSource }) {
   return (
     <span
-      className={`inline-flex items-center gap-1 rounded-full border px-2.5 py-0.5 text-xs font-semibold ${SOURCE_STYLES[source]}`}
-      id="lato-font"
+      className={`inline-flex items-center gap-1 rounded-full border px-2.5 py-0.5 text-xs font-semibold lato-font ${SOURCE_STYLES[source]}`}
     >
       {SOURCE_LABELS[source]}
     </span>

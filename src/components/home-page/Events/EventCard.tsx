@@ -59,12 +59,8 @@ export default function EventCard({ event }: Props) {
           className="flex flex-col items-center justify-center min-w-[64px] rounded-lg bg-[#2B627B] text-white py-2 px-1 self-start"
           aria-hidden="true"
         >
-          <span className="text-xs font-semibold tracking-wide" id="lato-font">
-            {month}
-          </span>
-          <span className="text-2xl font-bold leading-none" id="lato-font">
-            {day}
-          </span>
+          <span className="text-xs font-semibold tracking-wide lato-font">{month}</span>
+          <span className="text-2xl font-bold leading-none lato-font">{day}</span>
         </div>
 
         <div className="flex-1 min-w-0">
@@ -78,7 +74,7 @@ export default function EventCard({ event }: Props) {
             {event.title}
           </h3>
 
-          <ul className="space-y-1 text-sm text-gray-600 mb-3" id="lato-font">
+          <ul className="space-y-1 text-sm text-gray-600 mb-3 lato-font">
             <li className="flex items-start gap-2">
               <FiCalendar
                 className="w-4 h-4 mt-0.5 text-[#2B627B] flex-shrink-0"
@@ -110,11 +106,7 @@ export default function EventCard({ event }: Props) {
             )}
           </ul>
 
-          {description && (
-            <p className="text-sm text-gray-700 mb-4" id="lato-font">
-              {description}
-            </p>
-          )}
+          {description && <p className="text-sm text-gray-700 mb-4 lato-font">{description}</p>}
         </div>
       </div>
 
@@ -125,8 +117,7 @@ export default function EventCard({ event }: Props) {
             target="_blank"
             rel="noopener noreferrer"
             aria-label={`View "${event.title}" on ${sourceLabel} (opens in new tab)`}
-            className="inline-flex items-center justify-center rounded-md bg-[#2B627B] px-4 py-2 text-sm font-[500] text-white hover:bg-[#1f4a5d] transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[#2B627B]"
-            id="lato-font"
+            className="inline-flex items-center justify-center rounded-md bg-[#2B627B] px-4 py-2 text-sm font-[500] text-white hover:bg-[#1f4a5d] transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[#2B627B] lato-font"
           >
             View on {sourceLabel}
           </a>

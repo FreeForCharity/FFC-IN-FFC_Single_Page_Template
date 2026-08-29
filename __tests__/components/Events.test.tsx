@@ -53,6 +53,19 @@ jest.mock(
 import Events from '../../src/components/home-page/Events'
 
 describe('Events component', () => {
+  // The visibility predicate is client-safe and reads only the derived
+  // booleans next.config.ts inlines; the snapshot mock above is invisible
+  // to it, so mark the snapshot as populated the same way a real build
+  // with a non-empty committed snapshot would.
+  const originalHasEvents = process.env.EVENTS_SNAPSHOT_HAS_EVENTS
+  beforeEach(() => {
+    process.env.EVENTS_SNAPSHOT_HAS_EVENTS = 'true'
+  })
+  afterAll(() => {
+    if (originalHasEvents === undefined) delete process.env.EVENTS_SNAPSHOT_HAS_EVENTS
+    else process.env.EVENTS_SNAPSHOT_HAS_EVENTS = originalHasEvents
+  })
+
   it('renders the section heading and intro', () => {
     render(<Events />)
     // h2 because the page-level h1 lives in the Hero section.

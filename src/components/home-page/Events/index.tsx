@@ -12,6 +12,7 @@ import EmptyState from './EmptyState'
 function eventJsonLd(event: UnifiedEvent) {
   const url = safeHttpUrl(event.url)
   const image = safeHttpsImageUrl(event.imageUrl)
+  const online = event.location === 'Online event'
   return {
     '@context': 'https://schema.org',
     '@type': 'Event',
@@ -19,12 +20,16 @@ function eventJsonLd(event: UnifiedEvent) {
     description: event.description,
     startDate: event.startUtc,
     endDate: event.endUtc,
-    eventAttendanceMode:
-      event.location === 'Online event'
-        ? 'https://schema.org/OnlineEventAttendanceMode'
-        : 'https://schema.org/OfflineEventAttendanceMode',
+    eventAttendanceMode: online
+      ? 'https://schema.org/OnlineEventAttendanceMode'
+      : 'https://schema.org/OfflineEventAttendanceMode',
     eventStatus: 'https://schema.org/EventScheduled',
-    ...(event.location && { location: { '@type': 'Place', name: event.location } }),
+    // An online event must not advertise a physical Place named "Online
+    // event"; schema.org models it as a VirtualLocation carrying the join
+    // URL (omitted entirely when the event has no safe URL).
+    ...(online
+      ? url && { location: { '@type': 'VirtualLocation', url } }
+      : event.location && { location: { '@type': 'Place', name: event.location } }),
     ...(url && { url }),
     ...(image && { image }),
   }
@@ -47,17 +52,11 @@ const Events = () => {
   return (
     <section id="events" className="py-[52px]" aria-label="Upcoming Events">
       <div className="w-[90%] mx-auto max-w-[1280px]">
-        <h2
-          id="faustina-font"
-          className="font-[400] text-[40px] lg:text-[48px] leading-[100%] tracking-[0] text-center mx-auto mb-[20px]"
-        >
+        <h2 className="font-[400] text-[40px] lg:text-[48px] leading-[100%] tracking-[0] text-center mx-auto mb-[20px] faustina-font">
           Upcoming Events
         </h2>
 
-        <p
-          className="text-center mx-auto mb-[50px] max-w-3xl text-[18px] lg:text-[20px] font-[400] text-gray-700"
-          id="lato-font"
-        >
+        <p className="text-center mx-auto mb-[50px] max-w-3xl text-[18px] lg:text-[20px] font-[400] text-gray-700 lato-font">
           Join us for upcoming volunteer opportunities, training sessions, and community events
           aggregated from our Google Calendar, Microsoft 365 calendar, and Facebook page.
         </p>
@@ -66,10 +65,7 @@ const Events = () => {
           <div className="space-y-12">
             {buckets.map((bucket) => (
               <div key={bucket.monthKey}>
-                <h3
-                  className="mb-6 border-b border-gray-200 pb-2 text-2xl font-semibold text-[#2B627B]"
-                  id="lato-font"
-                >
+                <h3 className="mb-6 border-b border-gray-200 pb-2 text-2xl font-semibold text-[#2B627B] lato-font">
                   {bucket.monthLabel}
                 </h3>
                 <ul
@@ -103,7 +99,7 @@ const Events = () => {
           />
         )}
 
-        <p className="text-center mt-10 text-sm text-gray-500" id="lato-font">
+        <p className="text-center mt-10 text-sm text-gray-500 lato-font">
           {updatedAt ? (
             <>
               Events last refreshed{' '}
