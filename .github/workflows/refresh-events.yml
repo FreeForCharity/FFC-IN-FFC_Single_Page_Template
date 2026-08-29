@@ -49,6 +49,10 @@ jobs:
           EVENTS_MICROSOFT_ICS_URL: ${{ secrets.EVENTS_MICROSOFT_ICS_URL }}
           EVENTS_FACEBOOK_PAGE_ID: ${{ secrets.EVENTS_FACEBOOK_PAGE_ID }}
           EVENTS_FACEBOOK_ACCESS_TOKEN: ${{ secrets.EVENTS_FACEBOOK_ACCESS_TOKEN }}
+          # Unlike prebuild (which must never break the site build), a crashed
+          # scheduled refresh must turn the run red — exit 0 here would make it
+          # indistinguishable from a quiet no-change run.
+          EVENTS_FAIL_ON_ERROR: '1'
         run: node scripts/fetch-events.mjs
 
       - name: Open or update the refresh pull request

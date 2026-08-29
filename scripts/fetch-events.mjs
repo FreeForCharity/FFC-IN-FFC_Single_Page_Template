@@ -618,6 +618,11 @@ main().catch((err) => {
     process.env.EVENTS_FACEBOOK_ACCESS_TOKEN,
   ]
   console.error(`[events] Unexpected failure: ${scrubSecrets(err.message ?? String(err), secrets)}`)
-  // Do not break the build; the existing snapshot stays in place.
-  process.exit(0)
+  // Two callers, two contracts. As `prebuild`, an unexpected crash must not
+  // break the site build — the committed snapshot stays in place and the
+  // build proceeds. In the scheduled refresh workflow, exit 0 would make a
+  // crashed refresh indistinguishable from a quiet one: no PR opens, the
+  // run stays green, and the outage is invisible. The workflow sets
+  // EVENTS_FAIL_ON_ERROR=1 so the crash turns the run red instead.
+  process.exit(process.env.EVENTS_FAIL_ON_ERROR === '1' ? 1 : 0)
 })
