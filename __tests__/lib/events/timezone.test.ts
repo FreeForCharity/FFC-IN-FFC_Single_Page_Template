@@ -45,3 +45,11 @@ describe('wallTimeToUtc', () => {
     expect(new Date(ms).toISOString()).toBe('2026-06-15T00:00:00.000Z')
   })
 })
+
+describe('wallTimeToUtc with an untrusted TZID', () => {
+  it('falls back to the floating (UTC wall-clock) instant instead of throwing', () => {
+    const floating = Date.UTC(2026, 9, 1, 17, 0, 0)
+    expect(() => wallTimeToUtc(2026, 10, 1, 17, 0, 0, 'Not/AZone')).not.toThrow()
+    expect(wallTimeToUtc(2026, 10, 1, 17, 0, 0, 'Not/AZone')).toBe(floating)
+  })
+})

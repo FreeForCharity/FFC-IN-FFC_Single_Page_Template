@@ -97,12 +97,18 @@ function wallTimeToUtc(y, mo, d, h, mi, s, timeZone) {
   if (!timeZone) {
     return Date.UTC(y, mo - 1, d, h, mi, s)
   }
-  // Two passes to settle ambiguous DST instants.
-  let guess = Date.UTC(y, mo - 1, d, h, mi, s)
-  let offset = tzOffsetMinutes(guess, timeZone)
-  let utc = guess - offset * 60000
-  offset = tzOffsetMinutes(utc, timeZone)
-  return guess - offset * 60000
+  // Two passes to settle ambiguous DST instants. TZID values are untrusted
+  // upstream data; an unknown zone makes Intl throw, which must degrade to a
+  // floating time rather than aborting the whole source's parse.
+  const guess = Date.UTC(y, mo - 1, d, h, mi, s)
+  try {
+    let offset = tzOffsetMinutes(guess, timeZone)
+    const utc = guess - offset * 60000
+    offset = tzOffsetMinutes(utc, timeZone)
+    return guess - offset * 60000
+  } catch {
+    return guess
+  }
 }
 
 function parseIcsDate(prop) {
@@ -555,6 +561,15 @@ async function main() {
     const existing = await readExistingSnapshot()
     if (existing.events.length === 0) {
       console.log('[events] No sources configured; snapshot already empty.')
+      return
+    }
+    // Only the scheduled refresh workflow may clear a populated snapshot
+    // (EVENTS_REFRESH_CONTEXT=1). Every other caller - above all `prebuild`
+    // in CI/deploy, which runs without the EVENTS_* secrets - must leave the
+    // committed snapshot untouched, or a secret-less production build would
+    // wipe the events the refresh PRs delivered.
+    if (process.env.EVENTS_REFRESH_CONTEXT !== '1') {
+      console.log('[events] No sources configured here; leaving committed snapshot untouched.')
       return
     }
     const empty = { updatedAt: new Date().toISOString(), events: [] }

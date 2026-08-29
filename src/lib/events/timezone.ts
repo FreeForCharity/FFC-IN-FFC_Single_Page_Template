@@ -46,8 +46,15 @@ export function wallTimeToUtc(
 ): number {
   const guess = Date.UTC(year, month - 1, day, hour, minute, second)
   if (!timeZone) return guess
-  let offset = tzOffsetMinutes(guess, timeZone)
-  const firstPass = guess - offset * 60_000
-  offset = tzOffsetMinutes(firstPass, timeZone)
-  return guess - offset * 60_000
+  // TZID values arrive from untrusted upstream feeds; an unknown zone makes
+  // Intl throw a RangeError, which must degrade to a floating time for the
+  // one datetime rather than aborting the whole source's parse.
+  try {
+    let offset = tzOffsetMinutes(guess, timeZone)
+    const firstPass = guess - offset * 60_000
+    offset = tzOffsetMinutes(firstPass, timeZone)
+    return guess - offset * 60_000
+  } catch {
+    return guess
+  }
 }
