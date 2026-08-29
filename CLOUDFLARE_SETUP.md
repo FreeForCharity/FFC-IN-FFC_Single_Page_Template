@@ -1,32 +1,68 @@
 # Cloudflare Configuration for GitHub Pages
 
-This guide provides step-by-step instructions for configuring Cloudflare for your GitHub Pages site to optimize caching and performance. **All features listed are available on Cloudflare's Free plan.**
+This guide explains how to use Cloudflare **alongside** a GitHub Pages site. **All features listed are available on Cloudflare's Free plan.**
+
+> [!NOTE]
+> **This whole guide is optional.** This template deploys and is tested on the
+> GitHub Pages default URL
+> (`https://freeforcharity.github.io/FFC-IN-FFC_Single_Page_Template/`), which
+> needs no Cloudflare configuration at all. Everything below applies only if
+> your fork adds a **custom domain** (e.g., `your-domain.org`) and you want
+> Cloudflare as its DNS provider.
+
+> [!WARNING]
+> **Do NOT proxy your GitHub Pages records (keep the cloud grey / "DNS only").**
+>
+> GitHub Pages issues and **auto-renews** the HTTPS certificate for your custom
+> domain through Let's Encrypt. That renewal only works while your domain's
+> **public** DNS resolves to GitHub's servers so GitHub's certificate
+> validation can reach the site.
+>
+> If you switch the records to **Proxied** (the orange cloud), the public DNS
+> resolves to Cloudflare's IPs instead. GitHub can no longer validate the
+> domain, marks it "misconfigured," disables **Enforce HTTPS**, and **stops
+> renewing the certificate**. The site keeps working until the existing
+> certificate expires (~90 days), then HTTPS breaks — a silent, delayed
+> failure that is painful to diagnose.
+>
+> **For GitHub Pages, the correct and only supported configuration is DNS-only
+> (grey cloud).** In that mode Cloudflare serves as your DNS provider and
+> nothing more — the CDN, caching, edge security headers, and TLS features
+> below **do not apply**, because Cloudflare never sees the HTTP traffic.
+>
+> If you need Cloudflare's edge features (caching rules, security headers,
+> minification), the supported path is to **move hosting to Cloudflare Pages**,
+> not to proxy GitHub Pages. See
+> [If you need edge features: Cloudflare Pages](#if-you-need-edge-features-cloudflare-pages).
 
 ## Table of Contents
 
 1. [Prerequisites](#prerequisites)
-2. [Basic Setup](#basic-setup)
-3. [Cache Configuration](#cache-configuration)
-4. [Performance Optimizations](#performance-optimizations)
-5. [Security Settings](#security-settings)
-6. [SSL/TLS Configuration](#ssltls-configuration)
+2. [Basic Setup (DNS-only)](#basic-setup-dns-only)
+3. [HTTPS on GitHub Pages](#https-on-github-pages)
+4. [Security Headers on GitHub Pages](#security-headers-on-github-pages)
+5. [Caching and Performance on GitHub Pages](#caching-and-performance-on-github-pages)
+6. [If you need edge features: Cloudflare Pages](#if-you-need-edge-features-cloudflare-pages)
 7. [Testing Your Configuration](#testing-your-configuration)
+8. [Troubleshooting](#troubleshooting)
 
 ---
 
 ## Prerequisites
 
-- A Cloudflare account (free plan is sufficient)
-- Your custom domain configured to use Cloudflare DNS
-- GitHub Pages site deployed and accessible
+- A Cloudflare account (free plan is sufficient) used **for DNS**
+- A custom domain for your fork (this template itself uses none), delegated to
+  Cloudflare nameservers
+- GitHub Pages site deployed, with the custom domain configured and **Enforce
+  HTTPS** enabled
 
 ---
 
-## Basic Setup
+## Basic Setup (DNS-only)
 
 ### 1. Add Your Domain to Cloudflare
 
-1. Log in to [Cloudflare Dashboard](https://dash.cloudflare.com/)
+1. Log in to the [Cloudflare Dashboard](https://dash.cloudflare.com/)
 2. Click **"Add a Site"**
 3. Enter your domain name (e.g., `your-domain.org`)
 4. Select the **Free** plan
@@ -37,29 +73,16 @@ This guide provides step-by-step instructions for configuring Cloudflare for you
 1. Keep your existing DNS records that point to GitHub Pages:
 
    ```
-   Type: A
-   Name: @
-   Content: 185.199.108.153
-
-   Type: A
-   Name: @
-   Content: 185.199.109.153
-
-   Type: A
-   Name: @
-   Content: 185.199.110.153
-
-   Type: A
-   Name: @
-   Content: 185.199.111.153
-
-   Type: CNAME
-   Name: www
-   Content: yourusername.github.io
+   Type: A      Name: @    Content: 185.199.108.153
+   Type: A      Name: @    Content: 185.199.109.153
+   Type: A      Name: @    Content: 185.199.110.153
+   Type: A      Name: @    Content: 185.199.111.153
+   Type: CNAME  Name: www  Content: yourusername.github.io
    ```
 
-2. Set **Proxy status** to **Proxied** (orange cloud icon) for all GitHub Pages records
-   - This enables Cloudflare's CDN and caching
+2. Set **Proxy status** to **DNS only** (grey cloud icon) for **all** of these
+   records. **Do not enable the orange cloud** — see the warning at the top of
+   this guide.
 
 ### 3. Update Nameservers
 
@@ -68,226 +91,194 @@ This guide provides step-by-step instructions for configuring Cloudflare for you
 3. Update nameservers to point to Cloudflare
 4. Wait 24-48 hours for DNS propagation
 
----
+### 4. (Recommended) Add a CAA record
 
-## Cache Configuration
+Restrict which certificate authorities may issue certificates for your domain.
+GitHub Pages uses Let's Encrypt:
 
-### Page Rules for Asset Caching (Free Plan: 3 Rules)
+```
+Type: CAA   Name: @   Flags: 0   Tag: issue   Value: letsencrypt.org
+```
 
-Cloudflare Free plan includes **3 Page Rules**. Use them wisely for maximum performance impact.
-
-#### Page Rule 1: Cache Static Assets (Highest Priority)
-
-**URL Pattern:** `*your-domain.org/_next/static/*`
-
-**Settings:**
-
-- **Cache Level:** Cache Everything
-- **Edge Cache TTL:** 1 month (2678400 seconds)
-- **Browser Cache TTL:** 1 year (31536000 seconds)
-
-**Why:** Next.js static assets have content hashes and are immutable
-
-#### Page Rule 2: Cache Images and Media
-
-**URL Pattern:** `*your-domain.org/Images/*` OR `*your-domain.org/Svgs/*`
-
-**Settings:**
-
-- **Cache Level:** Cache Everything
-- **Edge Cache TTL:** 1 month (2678400 seconds)
-- **Browser Cache TTL:** 1 year (31536000 seconds)
-
-**Why:** Images are immutable and should be cached aggressively
-
-#### Page Rule 3: HTML Pages with Revalidation
-
-**URL Pattern:** `*your-domain.org/*.html`
-
-**Settings:**
-
-- **Cache Level:** Cache Everything
-- **Edge Cache TTL:** 1 hour (3600 seconds)
-- **Browser Cache TTL:** 1 hour (3600 seconds)
-
-**Why:** HTML pages may update with new deployments, so use shorter cache times
-
-### How to Add Page Rules
-
-1. Go to **Dashboard → [Your Domain] → Rules → Page Rules**
-2. Click **"Create Page Rule"**
-3. Enter the URL pattern
-4. Click **"+ Add a Setting"** for each setting above
-5. Set priority (drag rules to reorder):
-   - Rule 1 (Static Assets) - Priority 1
-   - Rule 2 (Images) - Priority 2
-   - Rule 3 (HTML) - Priority 3
-6. Click **"Save and Deploy"**
+If you use CAA records at all, at least one must allow `letsencrypt.org`, or
+GitHub cannot obtain the certificate.
 
 ---
 
-## Performance Optimizations
+## HTTPS on GitHub Pages
 
-### Auto Minify (Free)
+With DNS-only records, **GitHub manages TLS end-to-end** — you do not configure
+any SSL/TLS settings in Cloudflare (those settings only take effect for proxied
+traffic, which you are intentionally not using).
 
-Automatically minifies CSS, JS, and HTML to reduce file sizes.
+1. In your repository: **Settings → Pages**
+2. Confirm the custom domain shows a green check ("DNS check successful")
+3. Enable **Enforce HTTPS**
 
-**To Enable:**
-
-1. Go to **Speed → Optimization**
-2. Under **Auto Minify**, enable:
-   - ☑️ JavaScript
-   - ☑️ CSS
-   - ☑️ HTML
-
-### Brotli Compression (Free)
-
-Enables Brotli compression for faster content delivery (better than Gzip).
-
-**To Enable:**
-
-1. Go to **Speed → Optimization**
-2. Toggle **Brotli** to **On**
-
-### Early Hints (Free)
-
-Sends early hints to browsers to preload resources before the full page response.
-
-**To Enable:**
-
-1. Go to **Speed → Optimization**
-2. Toggle **Early Hints** to **On**
-
-### Rocket Loader (Optional - Use with Caution)
-
-Defers JavaScript loading to improve page load time. **Note:** May cause issues with complex JavaScript applications.
-
-**To Enable (if needed):**
-
-1. Go to **Speed → Optimization**
-2. Toggle **Rocket Loader** to **On**
-3. Test thoroughly - disable if it breaks site functionality
-
-### HTTP/3 (Free)
-
-Enables HTTP/3 for faster connections using QUIC protocol.
-
-**To Enable:**
-
-1. Go to **Network**
-2. Toggle **HTTP/3 (with QUIC)** to **On**
-
-### 0-RTT Connection Resumption (Free)
-
-Improves connection speed for returning visitors.
-
-**To Enable:**
-
-1. Go to **Network**
-2. Toggle **0-RTT Connection Resumption** to **On**
+GitHub provisions a Let's Encrypt certificate automatically and renews it before
+expiry. If the domain ever shows "unavailable / misconfigured," the first thing
+to check is that the records are **DNS-only**, not proxied.
 
 ---
 
-## Security Settings
+## Security Headers on GitHub Pages
 
-### Always Use HTTPS (Free)
+**GitHub Pages cannot serve custom HTTP response headers.** It ignores the
+`public/_headers` file (that file is a Cloudflare Pages / Netlify convention,
+shipped in this template for forks that deploy to those hosts). And because a
+DNS-only setup keeps Cloudflare out of the request path, Cloudflare cannot
+inject headers either. So on a GitHub-Pages-hosted site, the following HTTP
+headers are simply **not delivered**:
 
-Redirects all HTTP traffic to HTTPS.
+- `Strict-Transport-Security` (HSTS)
+- `X-Content-Type-Options: nosniff`
+- `X-Frame-Options` / CSP `frame-ancestors` (clickjacking defense)
+- `Permissions-Policy`
+- Cross-origin isolation (COOP / COEP / CORP)
 
-**To Enable:**
+### What the template does instead
 
-1. Go to **SSL/TLS → Edge Certificates**
-2. Toggle **Always Use HTTPS** to **On**
+Two protections are delivered from **inside the HTML** and work on GitHub Pages:
 
-### Automatic HTTPS Rewrites (Free)
+- **Content-Security-Policy** via `<meta http-equiv>` in `src/app/layout.tsx`.
+  Note the spec limits: a `<meta>` CSP **cannot** carry `frame-ancestors`,
+  `sandbox`, or `report-uri`, and only governs content that appears after it in
+  the document.
+- **Referrer-Policy** via `<meta name="referrer">` — equivalent to the header
+  for browser behavior.
 
-Automatically rewrites insecure HTTP links to HTTPS.
+### Accepted-risk posture
 
-**To Enable:**
+For a static site with no login and no user-generated content, the missing
+headers are **defense-in-depth against attack surfaces this site class does not
+have** (there is no authenticated, state-changing UI to clickjack; assets are
+developer-committed with correct content types). This is a documented, accepted
+risk — see `THREAT-MODEL.md`. If a compliance requirement or a security-scanner
+grade (e.g. [securityheaders.com](https://securityheaders.com/)) makes full
+headers mandatory, the fix is to move hosting to Cloudflare Pages (below), not
+to proxy GitHub Pages.
 
-1. Go to **SSL/TLS → Edge Certificates**
-2. Toggle **Automatic HTTPS Rewrites** to **On**
+### security.txt note
 
-### Security Headers (via Transform Rules - Free)
-
-Add security headers to improve site security (Free plan includes 10 Transform Rules).
-
-**To Add Security Headers:**
-
-1. Go to **Rules → Transform Rules → Modify Response Header**
-2. Click **"Create rule"**
-3. Configure:
-   - **Rule name:** "Security Headers"
-   - **When incoming requests match:** All incoming requests
-   - **Then...** Add multiple "Set static" header actions:
-     - `X-Content-Type-Options`: `nosniff`
-     - `X-Frame-Options`: `SAMEORIGIN`
-     - `X-XSS-Protection`: `1; mode=block`
-     - `Referrer-Policy`: `strict-origin-when-cross-origin`
-     - `Permissions-Policy`: `geolocation=(), microphone=(), camera=()`
+`/.well-known/security.txt` (the canonical RFC 9116 path) **is served** on this
+template's Pages deploy: the deploy workflow uploads the artifact with
+`include-hidden-files: true`, because `actions/upload-pages-artifact` defaults
+to dropping dot-prefixed entries, which would 404 the path. Keep that setting if
+you customize the workflow. The template also ships a root **`/security.txt`**
+fallback, which many scanners and researchers check. Both paths work on
+Cloudflare Pages as well.
 
 ---
 
-## SSL/TLS Configuration
+## Caching and Performance on GitHub Pages
 
-### SSL/TLS Encryption Mode (Free)
+On a DNS-only setup, **caching and performance are handled by GitHub's own CDN
+(Fastly)**, not Cloudflare. The template already ships good cache behavior:
 
-**Recommended Setting:** Full (strict)
+- Fingerprinted Next.js assets under `/_next/static/*` are immutable and
+  long-cached.
+- `public/_headers` documents the intended `Cache-Control` values for hosts
+  that honor it (Cloudflare Pages / Netlify).
 
-**To Configure:**
+Cloudflare Page Rules, Auto Minify, Brotli, Early Hints, Rocket Loader, HTTP/3,
+and 0-RTT are **edge features that require proxied traffic** and therefore have
+**no effect** in a DNS-only GitHub Pages setup. Do not enable proxying to get
+them — it breaks HTTPS (see the top warning). Use Cloudflare Pages if you want
+them.
 
-1. Go to **SSL/TLS → Overview**
-2. Select **Full (strict)** encryption mode
-   - This ensures end-to-end encryption between Cloudflare and GitHub Pages
-   - GitHub Pages provides a valid SSL certificate
+---
 
-### Minimum TLS Version (Free)
+## If you need edge features: Cloudflare Pages
 
-**Recommended Setting:** TLS 1.2 or higher
+If you want Cloudflare's CDN, caching rules, edge security headers, and
+minification, the supported approach is to **host the site on Cloudflare Pages**
+instead of GitHub Pages. Cloudflare then owns the full request path **and** the
+TLS lifecycle (no GitHub certificate dance), and this template's
+`public/_headers` file is honored **natively** — every header listed in
+[Security Headers](#security-headers-on-github-pages) is served automatically,
+with no Transform Rules to maintain.
 
-**To Configure:**
+High level:
 
-1. Go to **SSL/TLS → Edge Certificates**
-2. Set **Minimum TLS Version** to **TLS 1.2** or **TLS 1.3**
+1. Create a Cloudflare Pages project connected to this GitHub repository.
+2. Build command `npm run build`, output directory `out` (matches the static
+   export in `next.config.ts`).
+3. Point the custom domain at the Pages project (proxied is correct **here** —
+   Cloudflare is the host, so there is no GitHub certificate to break).
+4. `public/_headers` deploys as-is; verify headers with
+   [securityheaders.com](https://securityheaders.com/).
+
+Everything below — Page Rules, Transform-Rule headers, Auto Minify, Brotli,
+SSL/TLS modes — applies **only** to a proxied Cloudflare-hosted deployment, not
+to GitHub Pages.
+
+<details>
+<summary>Reference: Cloudflare edge settings (Cloudflare Pages / proxied only)</summary>
+
+### Security Headers (Transform Rules)
+
+On Cloudflare Pages, `public/_headers` already sets these, so Transform Rules
+are usually unnecessary. If you prefer rules: **Rules → Transform Rules →
+Modify Response Header → Set static** for each of
+`Strict-Transport-Security`, `X-Content-Type-Options: nosniff`,
+`X-Frame-Options: SAMEORIGIN`, `Referrer-Policy: strict-origin-when-cross-origin`,
+and `Permissions-Policy`.
+
+### Caching (Page Rules)
+
+- `*/_next/static/*` → Cache Everything, Edge TTL 1 month, Browser TTL 1 year
+  (immutable, content-hashed).
+- `*/Images/*`, `*/Svgs/*` → Cache Everything, long TTLs.
+- `*/*.html` → Cache Everything, short TTL (updates on deploy).
+
+### Performance toggles
+
+Auto Minify (JS/CSS/HTML), Brotli, Early Hints, HTTP/3 (with QUIC), and 0-RTT
+under **Speed → Optimization** / **Network**. Rocket Loader is optional and can
+break JS-heavy pages — test before leaving it on.
+
+### SSL/TLS
+
+**SSL/TLS → Overview → Full (strict)**, and set **Minimum TLS Version** to
+1.2 or higher under **Edge Certificates**. Enable **Always Use HTTPS**.
+
+</details>
 
 ---
 
 ## Testing Your Configuration
 
-### 1. Test Cache Headers
-
-Use browser DevTools or online tools:
+### 1. Verify DNS is NOT proxied
 
 ```bash
-# Test static asset caching
-curl -I https://your-domain.org/_next/static/chunks/[hash].js
-
-# Look for:
-# cache-control: public, max-age=31536000, immutable
-# cf-cache-status: HIT (on subsequent requests)
+# Should return GitHub Pages IPs (185.199.108-111.153), NOT Cloudflare IPs.
+dig +short your-domain.org
 ```
 
-### 2. Test Performance
+If you see Cloudflare IPs (e.g. `104.x` / `172.67.x`), the record is proxied —
+switch it back to DNS-only.
 
-1. **Google PageSpeed Insights:** https://pagespeed.web.dev/
-   - Run test for your domain
-   - Verify cache recommendations are resolved
+### 2. Verify HTTPS and certificate issuer
 
-2. **WebPageTest:** https://www.webpagetest.org/
-   - Test from multiple locations
-   - Check waterfall chart for cached resources
+```bash
+curl -sI https://your-domain.org/ | grep -i '^HTTP'
+# Expect: HTTP/2 200
+```
 
-### 3. Verify Security Headers
+In **Settings → Pages**, confirm the certificate is issued and **Enforce
+HTTPS** is on.
 
-Use [Security Headers](https://securityheaders.com/) to test:
+### 3. Verify security posture
 
 ```
 https://securityheaders.com/?q=https://your-domain.org
 ```
 
-### 4. Test SSL Configuration
+Expect the meta CSP to be detected and the HTTP-header items to be flagged —
+that is the documented, accepted state for a GitHub-Pages-hosted site (see
+[Accepted-risk posture](#accepted-risk-posture)).
 
-Use [SSL Labs](https://www.ssllabs.com/ssltest/) to test:
+### 4. Test SSL configuration
 
 ```
 https://www.ssllabs.com/ssltest/analyze.html?d=your-domain.org
@@ -297,67 +288,55 @@ https://www.ssllabs.com/ssltest/analyze.html?d=your-domain.org
 
 ## Troubleshooting
 
-### Issue: Changes Not Visible After Deployment
+### Issue: HTTPS broke / certificate error a few weeks after enabling Cloudflare
 
-**Solution:** Purge Cloudflare cache
+**Almost always caused by proxying (orange cloud) a GitHub Pages record.** GitHub
+stopped renewing the certificate because it can no longer validate the domain.
 
-1. Go to **Caching → Configuration**
-2. Click **"Purge Everything"** or **"Custom Purge"** for specific files
-3. Wait a few minutes for cache to clear globally
+**Fix:**
 
-### Issue: Site Not Loading or SSL Errors
+1. Set the GitHub Pages records back to **DNS only** (grey cloud).
+2. In **Settings → Pages**, remove and re-enter the custom domain to force
+   re-validation, then re-enable **Enforce HTTPS** once the green check appears.
+3. Wait for GitHub to re-issue the certificate (usually minutes to an hour).
 
-**Solution:** Check SSL/TLS settings
+### Issue: Custom domain shows "unavailable" / "misconfigured" in GitHub
 
-1. Ensure SSL/TLS mode is set to **Full (strict)**
-2. Verify GitHub Pages has a valid SSL certificate
-3. Check that DNS records are proxied (orange cloud)
+1. Confirm records are **DNS only**, not proxied.
+2. Confirm the A records are GitHub's four `185.199.10x.153` addresses (and the
+   `www` CNAME points to `yourusername.github.io`).
+3. Confirm your fork's `public/CNAME` file matches the custom domain. (This
+   template ships no `public/CNAME` — add one when you configure a custom
+   domain, or set the domain in the repository's Pages settings.)
 
-### Issue: Page Rules Not Working
+### Issue: Expecting security headers but scanners show none
 
-**Solution:** Check rule priority and URL patterns
-
-1. Ensure URL pattern matches your actual URLs
-2. Verify wildcard (`*`) placement is correct
-3. Check rule priority order (most specific rules first)
-
----
-
-## Summary of Cloudflare Free Plan Features Used
-
-| Feature               | Setting                           | Impact                                               |
-| --------------------- | --------------------------------- | ---------------------------------------------------- |
-| Page Rules (3)        | Cache static assets, images, HTML | **High** - Reduces bandwidth and improves load times |
-| Auto Minify           | JS, CSS, HTML                     | **Medium** - Reduces file sizes by 10-30%            |
-| Brotli                | Enabled                           | **Medium** - Better compression than Gzip            |
-| HTTP/3                | Enabled                           | **Medium** - Faster connections                      |
-| Security Headers      | Transform Rules                   | **High** - Improves security posture                 |
-| Always Use HTTPS      | Enabled                           | **High** - SEO and security                          |
-| SSL/TLS Full (strict) | Enabled                           | **High** - End-to-end encryption                     |
+Expected on GitHub Pages — see
+[Security Headers on GitHub Pages](#security-headers-on-github-pages). Move to
+Cloudflare Pages if HTTP headers are required.
 
 ---
 
-## Expected Performance Improvements
+## Summary
 
-After configuring Cloudflare:
-
-- **LCP (Largest Contentful Paint):** 15-30% improvement due to CDN caching and compression
-- **FCP (First Contentful Paint):** 10-20% improvement from edge caching
-- **TTFB (Time to First Byte):** 30-50% improvement from CDN proximity
-- **Cache Hit Ratio:** 70-90% for static assets after initial deployment
-- **Bandwidth Savings:** 40-60% due to caching and compression
+| Deployment                                             | HTTPS                          | Edge caching / headers           | `public/_headers` honored    |
+| ------------------------------------------------------ | ------------------------------ | -------------------------------- | ---------------------------- |
+| **GitHub Pages, default URL** (this template)          | GitHub-managed                 | ❌ (no Cloudflare involved)      | ❌ (GitHub Pages ignores it) |
+| **GitHub Pages + Cloudflare DNS-only** (custom domain) | GitHub-managed (Let's Encrypt) | ❌ none (Cloudflare not in path) | ❌ (GitHub Pages ignores it) |
+| **Cloudflare Pages** (proxied)                         | Cloudflare-managed             | ✅ full                          | ✅ natively                  |
+| ⛔ GitHub Pages + Cloudflare **proxied**               | **breaks on cert renewal**     | —                                | —                            |
 
 ---
 
 ## Additional Resources
 
 - [Cloudflare Documentation](https://developers.cloudflare.com/)
-- [Cloudflare Community](https://community.cloudflare.com/)
-- [GitHub Pages Custom Domain Setup](https://docs.github.com/en/pages/configuring-a-custom-domain-for-your-github-pages-site)
-- [Next.js Deployment with Cloudflare](https://nextjs.org/docs/pages/building-your-application/deploying)
+- [GitHub Pages: Managing a custom domain / HTTPS](https://docs.github.com/en/pages/configuring-a-custom-domain-for-your-github-pages-site)
+- [Cloudflare Pages Documentation](https://developers.cloudflare.com/pages/)
+- [Next.js Static Exports](https://nextjs.org/docs/app/guides/static-exports)
 
 ---
 
-**Last Updated:** 2025-12-05
+**Last Updated:** 2026-08-29
 
 For questions or issues, contact Free For Charity at hello@freeforcharity.org
