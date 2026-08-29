@@ -90,6 +90,10 @@ async function checkSiteConfig() {
   const defaults = [
     ['Charity name still "Free For Charity"', 'Free For Charity'],
     ['Domain still ffcworkingsite1.org', 'ffcworkingsite1.org'],
+    // The template ships no custom domain; its siteConfig.url is the bare
+    // GitHub Pages origin. A fork that keeps it is serving the template's
+    // identity, not its own.
+    ['Site URL still the template default (freeforcharity.github.io)', 'freeforcharity.github.io'],
     ['EIN (tax ID) still 46-2471893', '46-2471893'],
     ['Phone still (520) 222-8104', '5202228104'],
     ['Contact email still security@freeforcharity.org', 'security@freeforcharity.org'],
@@ -156,6 +160,14 @@ async function checkDeployment() {
       'Deployment',
       'security.txt Canonical/Policy URLs still point at ffcworkingsite1.org',
       withUrl.join(', ')
+    )
+  }
+  const withTemplateUrl = filesWith('freeforcharity.github.io/FFC-IN-FFC_Single_Page_Template')
+  if (withTemplateUrl.length) {
+    flag(
+      'Deployment',
+      'security.txt Canonical/Policy URLs still point at the template default URL',
+      withTemplateUrl.join(', ')
     )
   }
 }

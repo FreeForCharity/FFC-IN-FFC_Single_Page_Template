@@ -170,7 +170,7 @@ This approach helps you:
 
 Start by exploring the live Free For Charity website:
 
-- **Production Site:** [https://ffcworkingsite1.org](https://ffcworkingsite1.org)
+- **Production Site:** [https://freeforcharity.github.io/FFC-IN-FFC_Single_Page_Template/](https://freeforcharity.github.io/FFC-IN-FFC_Single_Page_Template/) (GitHub Pages default URL — no custom domain)
 - **GitHub Pages:** [https://freeforcharity.github.io/FFC_Single_Page_Template/](https://freeforcharity.github.io/FFC_Single_Page_Template/)
 
 #### Step 2: Comprehensive Evaluation
@@ -333,7 +333,7 @@ Starting your contribution journey with a fresh review:
 
 ### Ready to Review?
 
-1. Visit [https://ffcworkingsite1.org](https://ffcworkingsite1.org)
+1. Visit [https://freeforcharity.github.io/FFC-IN-FFC_Single_Page_Template/](https://freeforcharity.github.io/FFC-IN-FFC_Single_Page_Template/)
 2. Explore thoroughly and take notes
 3. [Create your review issue](https://github.com/FreeForCharity/FFC_Single_Page_Template/issues/new?assignees=&labels=documentation%2Creview%2Conboarding&template=reviewer-onboarding.md)
 4. Report individual issues you discover

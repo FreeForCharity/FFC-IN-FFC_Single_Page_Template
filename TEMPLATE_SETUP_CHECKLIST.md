@@ -111,7 +111,7 @@ You don't have to edit either workflow when you rename the repo.
       manifest, sitemap, robots, security headers)
 - [ ] Run `npm run check:drift` after editing — the placeholder-URL
       and CSP-sync rules will flag anything still pointing at
-      `ffcworkingsite1.org` or out of sync
+      the template's default URL or out of sync
 - [ ] Set the EIN, mailing addresses, phone number, and GuideStar
       profile links in `src/lib/site.config.ts` — `ein`, `phone`,
       `addresses`, and `guidestar.profileUrl` / `guidestar.directProfileUrl`.

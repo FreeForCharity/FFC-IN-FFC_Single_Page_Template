@@ -13,7 +13,10 @@ import { OG_IMAGE } from '@/lib/page-metadata'
 const defaultTitle = `${siteConfig.name} | ${siteConfig.tagline}`
 
 export const metadata: Metadata = {
-  metadataBase: new URL(siteConfig.url),
+  // siteUrl('/') = origin + NEXT_PUBLIC_BASE_PATH + '/', so canonicals and
+  // OG URLs resolve under the GitHub Pages subpath on default-URL deploys
+  // (and to the bare origin when a custom domain sets no basePath).
+  metadataBase: new URL(siteUrl('/')),
   title: {
     default: defaultTitle,
     template: `%s | ${siteConfig.name}`,

@@ -488,8 +488,8 @@ The template includes a FUNDING.yml file for GitHub Sponsors button:
 ```yaml
 github: FreeForCharity
 custom:
-  - 'https://ffcworkingsite1.org'
-  - 'https://ffcworkingsite1.org/#donate'
+  - 'https://freeforcharity.github.io/FFC-IN-FFC_Single_Page_Template'
+  - 'https://freeforcharity.github.io/FFC-IN-FFC_Single_Page_Template/#donate'
 ```
 
 **To customize**:
@@ -635,10 +635,10 @@ grep -r "Free For Charity" . --exclude-dir=node_modules --exclude-dir=.git
 grep -r "46-2471893" . --exclude-dir=node_modules --exclude-dir=.git
 ```
 
-**Domain**: "ffcworkingsite1.org" → "yourwebsite.org"
+**Domain**: the template default URL (freeforcharity.github.io/FFC-IN-FFC_Single_Page_Template) → "yourwebsite.org"
 
 ```bash
-grep -r "ffcworkingsite1.org" . --exclude-dir=node_modules --exclude-dir=.git
+grep -r "FFC-IN-FFC_Single_Page_Template" . --exclude-dir=node_modules --exclude-dir=.git
 ```
 
 **Social media links**: Update `siteConfig.social` in `src/lib/site.config.ts`
@@ -914,7 +914,7 @@ After completing the "Rebrand Template To A New Brand" issue with all required i
 
 - Organization name replacement: "Free For Charity" → Your charity name
 - EIN replacement: "46-2471893" → Your EIN
-- Domain replacement: "ffcworkingsite1.org" → Your domain
+- Domain replacement: template default URL → Your domain
 - Contact email updates: Multiple files with contact information
 - Social media links: Footer and other components
 - CODEOWNERS updates: GitHub usernames
@@ -926,7 +926,7 @@ After completing the "Rebrand Template To A New Brand" issue with all required i
 Based on the information in issue #[number], update all instances of:
 - "Free For Charity" to "[New Org Name]"
 - "46-2471893" to "[New EIN]"
-- "ffcworkingsite1.org" to "[new-domain.org]"
+- the template default URL to "[new-domain.org]"
 - Update CODEOWNERS with @[username1], @[username2]
 - Update NEXT_PUBLIC_BASE_PATH in both workflow files to /[new-repo-name]
 - Update all social media links in footer components

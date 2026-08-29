@@ -10,7 +10,7 @@ If you have general questions about using this template or Free For Charity's se
 
 - **Email**: clarkemoyer@freeforcharity.org
 - **Phone**: 520-222-8104 (text preferred)
-- **Website**: [freeforcharity.org](https://ffcworkingsite1.org)
+- **Website**: [freeforcharity.org](https://freeforcharity.org)
 
 ### For Technical Issues
 
@@ -62,11 +62,11 @@ Free For Charity offers various services to nonprofits:
 - **Microsoft 365 Grants**: Assistance with Microsoft nonprofit programs
 - **Consulting Services**: Technical guidance and support
 
-**To apply for services**: Visit our [website](https://ffcworkingsite1.org) and click "Apply for Services" or contact us directly.
+**To apply for services**: Visit our [website](https://freeforcharity.org) and click "Apply for Services" or contact us directly.
 
 ## 🔗 Additional Resources
 
-- **Organization Website**: [ffcworkingsite1.org](https://ffcworkingsite1.org)
+- **Organization Website**: [freeforcharity.org](https://freeforcharity.org)
 - **GitHub Organization**: [@FreeForCharity](https://github.com/FreeForCharity)
 - **EIN**: 46-2471893 (501(c)(3) nonprofit)
 

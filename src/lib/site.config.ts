@@ -151,7 +151,11 @@ export const siteConfig: SiteConfig = {
     'Free For Charity connects students, professionals, and businesses with nonprofits to reduce costs and increase revenues—putting more resources back into their missions.',
   shortDescription:
     'Connecting students, professionals, and businesses with nonprofits to reduce costs and increase revenues.',
-  url: 'https://ffcworkingsite1.org',
+  // Bare origin only (drift-check enforced). The template deploys to the
+  // GitHub Pages default URL; the /FFC-IN-FFC_Single_Page_Template subpath
+  // comes from NEXT_PUBLIC_BASE_PATH, which siteUrl() folds in at build time.
+  // A fork with a custom domain sets its own origin here (and no basePath).
+  url: 'https://freeforcharity.github.io',
   twitterHandle: '@freeforcharity',
   contactEmail: 'security@freeforcharity.org',
   keywords: [
@@ -233,7 +237,10 @@ export function siteUrl(path = '/'): string {
       `siteUrl: path must be a same-origin absolute path starting with a single "/" (got: ${JSON.stringify(path)})`
     )
   }
-  const base = siteConfig.url.replace(/\/$/, '')
+  // Fold in the GitHub Pages subpath (empty on custom-domain deploys) so
+  // canonical/OG/sitemap URLs stay correct on the default *.github.io URL.
+  const basePath = process.env.NEXT_PUBLIC_BASE_PATH || ''
+  const base = siteConfig.url.replace(/\/$/, '') + basePath
   return `${base}${path}`
 }
 

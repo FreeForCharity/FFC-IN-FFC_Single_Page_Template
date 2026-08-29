@@ -37,7 +37,7 @@ If you're using this template, we'd love to hear from you! Add your organization
 
 ## Adopters List
 
-### [Free For Charity](https://ffcworkingsite1.org)
+### [Free For Charity](https://freeforcharity.github.io/FFC-IN-FFC_Single_Page_Template/)
 
 - **Type**: 501(c)(3) Nonprofit Organization
 - **Location**: Tucson, Arizona, USA

@@ -423,7 +423,8 @@ npm run test:e2e
    ```bash
    # Should be in public/CNAME
    cat public/CNAME
-   # Should contain: ffcworkingsite1.org
+   # Should contain your custom domain, e.g. your-domain.org
+   # (the template itself ships no CNAME — it deploys to the default URL)
    ```
 
 ### Issue: Images Load Locally but Not in Production

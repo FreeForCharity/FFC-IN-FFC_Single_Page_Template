@@ -56,7 +56,7 @@ jobs:
         # specifies.
         #
         # The basePath the action injects is NOT wrong — it derives from the Pages API
-        # and so honours a custom domain (this repo serves ffcworkingsite1.org with
+        # and so honours a custom domain (measured while this repo still served a custom domain with
         # unprefixed assets while the input was still set). It agrees with the
         # CNAME-aware value the step below computes. Removing the input is safe
         # precisely because that step already produces the same answer.
@@ -81,7 +81,7 @@ jobs:
         # Custom-domain deploys serve from the origin root (no subpath), so
         # NEXT_PUBLIC_BASE_PATH must be empty. Subpath-only deploys (no
         # CNAME) need /<repo-name>. Empirically the live site at
-        # ffcworkingsite1.org/manifest.webmanifest referenced
+        # the then-custom-domain's /manifest.webmanifest referenced
         # /FFC_Single_Page_Template/android-chrome-*.png because the build
         # always set the subpath, but those paths 404 on the custom domain.
         # This step picks the right value based on whether public/CNAME
