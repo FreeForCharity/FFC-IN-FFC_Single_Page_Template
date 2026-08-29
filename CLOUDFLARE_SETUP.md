@@ -160,10 +160,13 @@ to proxy GitHub Pages.
 
 ### security.txt note
 
-GitHub Pages does not serve dot-prefixed directories, so
-`/.well-known/security.txt` returns 404 on a Pages deploy. The template also
-ships a root **`/security.txt`** fallback, which most scanners and researchers
-check. On Cloudflare Pages the `.well-known` path works normally.
+`/.well-known/security.txt` (the canonical RFC 9116 path) **is served** on this
+template's Pages deploy: the deploy workflow uploads the artifact with
+`include-hidden-files: true`, because `actions/upload-pages-artifact` defaults
+to dropping dot-prefixed entries, which would 404 the path. Keep that setting if
+you customize the workflow. The template also ships a root **`/security.txt`**
+fallback, which many scanners and researchers check. Both paths work on
+Cloudflare Pages as well.
 
 ---
 
