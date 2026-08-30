@@ -202,6 +202,14 @@ export default function CookieConsent() {
         })
       }
 
+      // The direct GA4 tag loads regardless of the choice (Consent Mode
+      // gates its storage, not its loading) — but only AFTER the consent
+      // update above, so a stored denial is already in the dataLayer when
+      // the GA queue replays. Loading first would let a returning visitor
+      // outside the EEA/UK/CH who declined get one cookie-based hit under
+      // the granted-by-default bootstrap before their denial applied.
+      loadGoogleAnalytics()
+
       // Non-Google scripts do not speak Consent Mode, so they stay gated
       // on an explicit grant — everywhere, not just in the EEA/UK/CH.
       if (prefs.analytics) {
@@ -211,7 +219,7 @@ export default function CookieConsent() {
         loadMetaPixel()
       }
     },
-    [deleteAnalyticsCookies, loadMetaPixel, loadMicrosoftClarity]
+    [deleteAnalyticsCookies, loadGoogleAnalytics, loadMetaPixel, loadMicrosoftClarity]
   )
 
   // Helper to load preferences from localStorage and update state
@@ -266,15 +274,6 @@ export default function CookieConsent() {
     setShowPreferences(false)
   }, [savedPreferencesBackup])
 
-  // The Google tags load on EVERY pageview — including a first visit where
-  // the banner is still showing — because Consent Mode gates their cookie
-  // use, not their loading. GTM loads unconditionally from the root layout;
-  // the direct GA4 loader runs here (it is inert until a real measurement
-  // ID replaces the placeholder in src/lib/analytics.config.ts).
-  useEffect(() => {
-    loadGoogleAnalytics()
-  }, [loadGoogleAnalytics])
-
   // Initialize state from localStorage on mount - this is the correct pattern for hydration
   useEffect(() => {
     // Expose method to window for reopening preferences from other components
@@ -284,15 +283,30 @@ export default function CookieConsent() {
       loadPreferencesFromLocalStorage(false)
     }
 
-    // Check if user has already made a choice with error handling
+    // Check if user has already made a choice with error handling.
+    // ORDER MATTERS: a stored choice is restored and applied FIRST (its
+    // gtag consent update lands in the dataLayer inside applyConsent,
+    // which then loads GA itself), and only THEN is the GA4 loader called
+    // directly — that call is for the no-stored-choice case and is an
+    // idempotent no-op when applyConsent already ran. Loading GA before
+    // the restore would let a returning visitor outside the EEA/UK/CH who
+    // declined get one cookie-based hit under the granted-by-default
+    // bootstrap before their stored denial applied.
     // eslint-disable-next-line react-hooks/set-state-in-effect
     loadPreferencesFromLocalStorage(true)
+
+    // The Google tags load on EVERY pageview — including a first visit
+    // where the banner is still showing — because Consent Mode gates their
+    // cookie use, not their loading. GTM loads unconditionally from the
+    // root layout; the direct GA4 loader is inert until a real measurement
+    // ID replaces the placeholder in src/lib/analytics.config.ts.
+    loadGoogleAnalytics()
 
     // Cleanup function to remove the window method
     return () => {
       delete window.openCookiePreferences
     }
-  }, [loadPreferencesFromLocalStorage])
+  }, [loadPreferencesFromLocalStorage, loadGoogleAnalytics])
 
   // Focus management for modal
   useEffect(() => {
