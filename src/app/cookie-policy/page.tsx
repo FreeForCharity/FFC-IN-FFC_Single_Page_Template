@@ -15,7 +15,7 @@ export const metadata: Metadata = pageMetadata({
 })
 
 // Update this date when the policy changes
-const LAST_UPDATED = 'August 29, 2026'
+const LAST_UPDATED = 'August 30, 2026'
 
 export default function CookiePolicy() {
   return (
@@ -54,10 +54,12 @@ export default function CookiePolicy() {
               Remember your cookie consent preferences
             </li>
             <li className="text-[14px] text-[#666] leading-[24px] font-[500]">
-              Understand how you use our website (with your consent)
+              Understand how you use our website (subject to your region&apos;s default and your
+              cookie choices — see &quot;When we ask permission first&quot; in Section 3.3)
             </li>
             <li className="text-[14px] text-[#666] leading-[24px] font-[500]">
-              Analyze website traffic and user behavior (with your consent)
+              Analyze website traffic and user behavior (subject to the same regional model and your
+              choices)
             </li>
             <li className="text-[14px] text-[#666] leading-[24px] font-[500]">
               Improve our website and user experience
@@ -203,13 +205,37 @@ export default function CookiePolicy() {
 
           {/* 3.3 Analytics Cookies */}
           <p className="text-[14px] text-[#666] pb-[10px] leading-[24px] font-[500] mt-[1em]">
-            <strong>3.3 Analytics Cookies (Requires Consent)</strong>
+            <strong>3.3 Analytics Cookies</strong>
           </p>
           <p className="text-[14px] text-[#666] pb-[10px] leading-[24px] font-[500]">
             These cookies help us understand how visitors interact with our website by collecting
             and reporting information anonymously. We use this information to improve our website
             and user experience.
           </p>
+          <div className="bg-blue-50 border-l-4 border-blue-400 p-4 mb-4">
+            <p className="text-sm text-[#333] mb-2">
+              <strong>When we ask permission first</strong>
+            </p>
+            <p className="text-sm text-[#666] mb-2">
+              We use Google Consent Mode. Which default applies to you is determined by Google from
+              your IP address at the time of your visit (IP geolocation is approximate). If you are
+              in the European Economic Area, the United Kingdom, or Switzerland, Google&apos;s tags
+              set <strong>no cookies and collect no identifiers</strong> until you accept. They
+              still count your visit in an aggregate, cookie-free way so we know how many people
+              used the site — that measurement cannot be tied back to you or to your next visit.
+            </p>
+            <p className="text-sm text-[#666] mb-2">
+              Everywhere else, including the United States, Google Analytics cookies are set from
+              your first pageview. You can turn them off at any time using the Cookie Preferences
+              link in our footer, and we will delete the cookies listed below when you do.
+            </p>
+            <p className="text-sm text-[#666]">
+              <strong>Microsoft Clarity is different.</strong> It records how visitors move through
+              pages, so it runs <strong>only if you explicitly accept</strong> analytics cookies —
+              everywhere in the world, not just in Europe. Declining, or simply not answering the
+              banner, keeps it off.
+            </p>
+          </div>
 
           {/* Google Analytics */}
           <div className="bg-gray-50 p-4 rounded-lg mb-4">
@@ -448,12 +474,14 @@ export default function CookiePolicy() {
             <strong>5. Do Not Track and Global Privacy Control</strong>
           </h2>
           <p className="text-[14px] text-[#666] pb-[10px] leading-[24px] font-[500]">
-            This site does not need to react to these browser signals to honor their intent:
-            analytics and marketing cookies are off for every visitor until you opt in through the
-            consent banner, and we do not sell or share personal information as defined by the
-            CCPA/CPRA. Declining consent — or withdrawing it later, which removes the cookies those
-            scripts set on this site and stops them loading from your next page view — keeps you in
-            the untracked state those signals ask for.
+            This site does not read or respond to Do Not Track or Global Privacy Control browser
+            signals programmatically. We do not sell or share personal information as defined by the
+            CCPA/CPRA, so there is nothing for those signals to opt out of on this site. Note that
+            analytics cookies <strong>are</strong> set automatically outside the European Economic
+            Area, the United Kingdom, and Switzerland (see &quot;When we ask permission first&quot;
+            in Section 3.3); any visitor, anywhere, can turn them off at any time via the Cookie
+            Preferences link in the footer, and we delete the cookies we set when you do. Microsoft
+            Clarity and the Meta Pixel stay off everywhere unless you explicitly opt in.
           </p>
 
           {/* Section 6 */}
