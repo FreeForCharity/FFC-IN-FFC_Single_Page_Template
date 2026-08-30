@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import Link from 'next/link'
 import BreadcrumbSchema from '@/components/seo/BreadcrumbSchema'
 import { pageMetadata } from '@/lib/page-metadata'
 
@@ -24,7 +25,7 @@ export default function PrivacyPolicy() {
             <strong>Privacy Policy</strong>
           </h1>
           <p className="text-[14px] text-[#666] pb-[10px] leading-[24px] font-[500]">
-            <em>Effective Date: 08-29-2026</em>
+            <em>Effective Date: 08-30-2026</em>
           </p>
 
           {/* Section 1 */}
@@ -350,10 +351,14 @@ export default function PrivacyPolicy() {
           </p>
           <ul className="list-inside list-disc space-y-[4px] pb-[1em]">
             <li className="text-[14px] text-[#666] leading-[24px] font-[500]">
-              <strong>Consent:</strong> Analytics and marketing cookies are off until you opt in
-              through the cookie consent banner. You can withdraw consent at any time via the Cookie
-              Preferences link in the footer; this site then removes the tracking cookies it set and
-              stops loading those scripts from your next page view.
+              <strong>Consent:</strong> In the EEA, the UK, and Switzerland, Google&apos;s tags set
+              no cookies and read no identifiers until you accept through the cookie consent banner
+              — until then they only count visits in an aggregate, cookie-free way. Session
+              recording (Microsoft Clarity) and marketing (Meta Pixel) scripts load only if you
+              explicitly opt in, everywhere in the world. You can withdraw consent at any time via
+              the Cookie Preferences link in the footer; this site then deletes the tracking cookies
+              it set, Google&apos;s tags return to that cookie-free state, and the opt-in scripts
+              stop loading from your next page view.
             </li>
             <li className="text-[14px] text-[#666] leading-[24px] font-[500]">
               <strong>Legitimate interests:</strong> Operating, securing, and improving this website
@@ -364,6 +369,19 @@ export default function PrivacyPolicy() {
               applicable law.
             </li>
           </ul>
+          <p className="text-[14px] text-[#666] pb-[10px] leading-[24px] font-[500]">
+            <strong>The regional model in plain language.</strong> We use Google Consent Mode.
+            Whether the permissive or the opt-in default applies is determined by Google from your
+            IP address at the time of your visit (IP geolocation is approximate). In the EEA, the
+            UK, and Switzerland, analytics runs cookie-free until you accept. Everywhere else,
+            including the United States, analytics cookies are set from your first pageview — and
+            any visitor can turn them off at any time via the Cookie Preferences link in the footer.
+            See our{' '}
+            <Link href="/cookie-policy" className="text-[#0062CC] underline">
+              Cookie Policy
+            </Link>{' '}
+            for details.
+          </p>
           <p className="text-[14px] text-[#666] pb-[10px] leading-[24px] font-[500]">
             <strong>Your rights.</strong> You have the right to: access the personal data we hold
             about you; have inaccurate data rectified; have your data erased; restrict or object to
@@ -409,11 +427,13 @@ export default function PrivacyPolicy() {
           </p>
           <p className="text-[14px] text-[#666] pb-[10px] leading-[24px] font-[500]">
             <strong>Opt-out preference signals (Global Privacy Control / Do Not Track).</strong>{' '}
-            Tracking on this site is opt-in for every visitor, everywhere: analytics and marketing
-            cookies stay off until you accept them, and declining or withdrawing consent keeps you —
-            or returns you — to that untracked state. Because we also do not sell or share personal
-            information, every visitor already receives at least the protection a Global Privacy
-            Control or Do Not Track signal would request.
+            This site does not read or respond to GPC or DNT browser signals programmatically. We do
+            not sell or share personal information as defined by the CCPA/CPRA, so there is nothing
+            for such a signal to opt out of under California law. Analytics cookies are set
+            automatically outside the EEA, the UK, and Switzerland; any visitor, anywhere, can turn
+            them off at any time via the Cookie Preferences link in the footer, and we delete the
+            cookies we set when you do. Session recording (Microsoft Clarity) and marketing (Meta
+            Pixel) scripts never load unless you explicitly opt in.
           </p>
           <p className="text-[14px] text-[#666] pb-[10px] leading-[24px] font-[500]">
             <strong>Exercising your rights.</strong> Submit a request to{' '}

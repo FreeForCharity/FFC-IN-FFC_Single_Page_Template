@@ -294,6 +294,62 @@ test.describe('Cookie Preferences Modal', () => {
   })
 })
 
+test.describe('Google Consent Mode bootstrap', () => {
+  test('sets the regional consent defaults inline, before any Google tag loads', async ({
+    page,
+  }) => {
+    await page.goto('/')
+
+    // The bootstrap is an inline <head> script, so the two consent defaults
+    // are in the dataLayer synchronously — no waiting on lazyOnload GTM.
+    const defaults = await page.evaluate(() => {
+      const dl = (window as unknown as { dataLayer?: unknown[] }).dataLayer || []
+      return dl
+        .map((entry) => Array.from(entry as ArrayLike<unknown>))
+        .filter((args) => args[0] === 'consent' && args[1] === 'default')
+        .map((args) => args[2] as Record<string, unknown>)
+    })
+
+    expect(defaults).toHaveLength(2)
+
+    // Region-scoped denial first: EEA/UK/CH (32 codes) denied by default,
+    // holding tags briefly for a stored choice.
+    expect(defaults[0].analytics_storage).toBe('denied')
+    expect(defaults[0].ad_storage).toBe('denied')
+    expect(defaults[0].wait_for_update).toBe(500)
+    expect(Array.isArray(defaults[0].region)).toBe(true)
+    expect(defaults[0].region as string[]).toHaveLength(32)
+
+    // Then the unscoped grant for everyone else (region-specific settings
+    // take precedence, so this does not weaken the EEA/UK/CH denial).
+    expect(defaults[1].analytics_storage).toBe('granted')
+    expect(defaults[1].ad_storage).toBe('granted')
+    expect(defaults[1].region).toBeUndefined()
+  })
+
+  test('accepting the banner pushes a gtag consent update', async ({ page, context }) => {
+    await context.clearCookies()
+    await page.goto('/')
+    await page.evaluate(() => localStorage.clear())
+    await page.reload()
+
+    await page.getByRole('button', { name: testConfig.cookieConsent.buttons.acceptAll }).click()
+
+    const updates = await page.evaluate(() => {
+      const dl = (window as unknown as { dataLayer?: unknown[] }).dataLayer || []
+      return dl
+        .map((entry) => Array.from(entry as ArrayLike<unknown>))
+        .filter((args) => args[0] === 'consent' && args[1] === 'update')
+        .map((args) => args[2] as Record<string, unknown>)
+    })
+
+    expect(updates.length).toBeGreaterThanOrEqual(1)
+    const last = updates[updates.length - 1]
+    expect(last.analytics_storage).toBe('granted')
+    expect(last.ad_storage).toBe('granted')
+  })
+})
+
 test.describe('Cookie Consent Accessibility', () => {
   test.beforeEach(async ({ page, context }) => {
     await context.clearCookies()

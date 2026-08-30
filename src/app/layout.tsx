@@ -8,6 +8,7 @@ import { siteConfig, siteUrl, twitterSite, cardDescription } from '@/lib/site.co
 import { assetPath } from '@/lib/assetPath'
 import { openSans, lato, faustina } from '@/lib/fonts'
 import { AT_POLYFILL_JS } from '@/lib/at-polyfill'
+import { CONSENT_MODE_BOOTSTRAP } from '@/lib/consent-mode'
 import { OG_IMAGE } from '@/lib/page-metadata'
 
 const defaultTitle = `${siteConfig.name} | ${siteConfig.tagline}`
@@ -112,6 +113,15 @@ export default function RootLayout({
           fetchPriority="high"
         />
 
+        {/* Google Consent Mode v2 defaults. MUST execute before any Google
+            tag loads, which is why it is an inline <head> script placed
+            above the GoogleTagManager component rather than a next/script:
+            the consent state has to already be in the dataLayer when GTM/GA4
+            initialise. Granted worldwide, denied (cookieless pings) only
+            where Google's EU User Consent Policy requires opt-in — Google
+            picks the default from the visitor's IP address. See
+            src/lib/consent-mode.ts. */}
+        <script dangerouslySetInnerHTML={{ __html: CONSENT_MODE_BOOTSTRAP }} />
         <GoogleTagManager />
       </head>
       <body

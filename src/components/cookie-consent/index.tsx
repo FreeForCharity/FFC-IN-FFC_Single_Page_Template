@@ -2,7 +2,8 @@
 
 import { useState, useEffect, useRef, useCallback } from 'react'
 import Link from 'next/link'
-import { analyticsConfig } from '@/lib/analytics.config'
+import { analyticsConfig, isConfigured } from '@/lib/analytics.config'
+import { updateGoogleConsent } from '@/lib/consent-mode'
 
 // Tracking IDs live in src/lib/analytics.config.ts — edit them there.
 const GA_MEASUREMENT_ID = analyticsConfig.gaMeasurementId
@@ -44,9 +45,16 @@ export default function CookieConsent() {
   const modalRef = useRef<HTMLDivElement>(null)
   const previousFocusRef = useRef<HTMLElement | null>(null)
 
+  // Loads the direct GA4 tag. NOT gated on the analytics toggle: Google's
+  // tags speak Consent Mode, so the bootstrap in src/lib/consent-mode.ts
+  // gates their cookie STORAGE by region while the script itself loads on
+  // every pageview (undecided/declining EEA/UK/CH visitors are measured
+  // via cookieless pings only). With the shipped placeholder measurement
+  // ID this loader is inert — GTM delivers GA4 for fleet sites.
   const loadGoogleAnalytics = useCallback(() => {
     if (
       typeof window !== 'undefined' &&
+      isConfigured(GA_MEASUREMENT_ID) &&
       !document.querySelector('script[src*="googletagmanager.com/gtag"]')
     ) {
       const gaScript = document.createElement('script')
@@ -70,8 +78,14 @@ export default function CookieConsent() {
     }
   }, [])
 
+  // The Meta Pixel does not speak Consent Mode, so it loads ONLY on an
+  // explicit marketing grant — everywhere in the world.
   const loadMetaPixel = useCallback(() => {
-    if (typeof window !== 'undefined' && !document.querySelector('script[src*="fbevents.js"]')) {
+    if (
+      typeof window !== 'undefined' &&
+      isConfigured(META_PIXEL_ID) &&
+      !document.querySelector('script[src*="fbevents.js"]')
+    ) {
       const fbScript = document.createElement('script')
       fbScript.textContent = `
         !function(f,b,e,v,n,t,s)
@@ -98,8 +112,14 @@ export default function CookieConsent() {
     }
   }, [])
 
+  // Microsoft Clarity records sessions and does not speak Consent Mode, so
+  // it loads ONLY on an explicit analytics grant — everywhere in the world.
   const loadMicrosoftClarity = useCallback(() => {
-    if (typeof window !== 'undefined' && !document.querySelector('script[src*="clarity.ms"]')) {
+    if (
+      typeof window !== 'undefined' &&
+      isConfigured(CLARITY_PROJECT_ID) &&
+      !document.querySelector('script[src*="clarity.ms"]')
+    ) {
       const clarityScript = document.createElement('script')
       clarityScript.textContent = `
         (function(c,l,a,r,i,t,y){
@@ -156,6 +176,12 @@ export default function CookieConsent() {
         }
       }
 
+      // Google Consent Mode `update`: runs on every banner interaction AND
+      // every stored-choice restore. This is what gates the Google tags'
+      // cookie storage — the tags themselves load regardless (see
+      // src/lib/consent-mode.ts for the regional default model).
+      updateGoogleConsent(prefs)
+
       // Push consent update to GTM dataLayer
       if (typeof window !== 'undefined') {
         window.dataLayer = window.dataLayer || []
@@ -167,16 +193,16 @@ export default function CookieConsent() {
         })
       }
 
-      // Load scripts based on consent independently
+      // Non-Google scripts do not speak Consent Mode, so they stay gated
+      // on an explicit grant — everywhere, not just in the EEA/UK/CH.
       if (prefs.analytics) {
-        loadGoogleAnalytics()
         loadMicrosoftClarity()
       }
       if (prefs.marketing) {
         loadMetaPixel()
       }
     },
-    [deleteAnalyticsCookies, loadGoogleAnalytics, loadMetaPixel, loadMicrosoftClarity]
+    [deleteAnalyticsCookies, loadMetaPixel, loadMicrosoftClarity]
   )
 
   // Helper to load preferences from localStorage and update state
@@ -230,6 +256,15 @@ export default function CookieConsent() {
     setPreferences(savedPreferencesBackup)
     setShowPreferences(false)
   }, [savedPreferencesBackup])
+
+  // The Google tags load on EVERY pageview — including a first visit where
+  // the banner is still showing — because Consent Mode gates their cookie
+  // use, not their loading. GTM loads unconditionally from the root layout;
+  // the direct GA4 loader runs here (it is inert until a real measurement
+  // ID replaces the placeholder in src/lib/analytics.config.ts).
+  useEffect(() => {
+    loadGoogleAnalytics()
+  }, [loadGoogleAnalytics])
 
   // Initialize state from localStorage on mount - this is the correct pattern for hydration
   useEffect(() => {

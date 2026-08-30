@@ -16,8 +16,9 @@ Google Tag Manager (GTM) is a tag management system that allows you to manage an
 ### Features
 
 - ✅ Standard GTM implementation following Google's guidelines
+- ✅ Consent Mode v2 defaults are set BEFORE GTM loads (inline bootstrap in the root layout — see `src/lib/consent-mode.ts`)
 - ✅ Initializes `dataLayer` before GTM loads
-- ✅ Uses Next.js Script component with `afterInteractive` strategy
+- ✅ Uses Next.js Script component with `lazyOnload` strategy
 - ✅ Includes noscript fallback for accessibility
 - ✅ Integrates with existing cookie consent system
 - ✅ GTM ID read from `src/lib/analytics.config.ts` (one place for all analytics IDs)
@@ -67,11 +68,13 @@ export default function RootLayout({ children }) {
 
 ### 1. Script Injection
 
-The GTM script is loaded using Next.js's `Script` component with the `afterInteractive` strategy, which means:
+The GTM script is loaded using Next.js's `Script` component with the `lazyOnload` strategy, which means:
 
-- The script loads after the page becomes interactive
+- The script loads during browser idle time, after the page becomes interactive
 - It doesn't block the initial page load
 - It's optimal for analytics and marketing tags
+
+The root layout emits the Google Consent Mode v2 bootstrap (`CONSENT_MODE_BOOTSTRAP` from `src/lib/consent-mode.ts`) as an inline `<head>` script placed **before** `<GoogleTagManager />`, so the consent defaults are already in the `dataLayer` by the time GTM initializes.
 
 ### 2. DataLayer Initialization
 
@@ -82,14 +85,15 @@ The GTM script automatically initializes the `window.dataLayer` array with:
 
 This ensures the dataLayer is ready to receive events as soon as the page loads.
 
-### 3. Cookie Consent Integration
+### 3. Cookie Consent Integration (Google Consent Mode v2)
 
-GTM works as a **functional script** and is always active. The existing `CookieConsent` component manages:
+GTM loads on **every pageview**. Consent gates what its Google tags may **store**, not whether they load:
 
-- Analytics scripts (Google Analytics, Microsoft Clarity)
-- Marketing scripts (Meta Pixel)
+- The inline bootstrap in the root layout sets two `gtag('consent', 'default', ...)` calls before GTM loads: a region-scoped **denial** for the EEA, the UK, and Switzerland (with `wait_for_update: 500`), then an unscoped **grant** for everyone else. Google determines which default applies from the visitor's IP address.
+- In denied regions, GA4 (whether delivered by GTM or by the direct loader) sends cookieless pings until the visitor accepts; everywhere else it uses cookies from the first pageview.
+- Every banner interaction AND every stored-choice restore pushes `gtag('consent', 'update', ...)` (via `updateGoogleConsent` in `src/lib/consent-mode.ts`) plus a `consent_update` dataLayer event that GTM triggers can use.
 
-When users accept cookies, the `CookieConsent` component pushes a `consent_update` event to the dataLayer, which GTM can use to conditionally fire tags based on consent status.
+Non-Google scripts do **not** speak Consent Mode, so the `CookieConsent` component keeps them strictly opt-in everywhere: Microsoft Clarity loads only on an explicit analytics grant, and the Meta Pixel only on an explicit marketing grant. Withdrawing consent deletes the third-party cookies those services set.
 
 ### 4. Noscript Fallback
 

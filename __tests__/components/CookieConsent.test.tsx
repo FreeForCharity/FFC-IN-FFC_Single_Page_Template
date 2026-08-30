@@ -100,3 +100,84 @@ describe('CookieConsent component', () => {
     )
   })
 })
+
+describe('CookieConsent Google Consent Mode integration', () => {
+  beforeEach(() => {
+    localStorageMock.clear()
+  })
+
+  afterEach(() => {
+    delete window.gtag
+  })
+
+  it('pushes a gtag consent update when restoring a stored choice on load', async () => {
+    const gtag = jest.fn()
+    window.gtag = gtag
+    localStorageMock.setItem(
+      'cookie-consent',
+      JSON.stringify({ necessary: true, functional: true, analytics: true, marketing: false })
+    )
+
+    render(<CookieConsent />)
+
+    await waitFor(() => {
+      expect(gtag).toHaveBeenCalledWith(
+        'consent',
+        'update',
+        expect.objectContaining({
+          analytics_storage: 'granted',
+          ad_storage: 'denied',
+          security_storage: 'granted',
+        })
+      )
+    })
+  })
+
+  it('pushes a denied gtag consent update when the stored choice declined tracking', async () => {
+    const gtag = jest.fn()
+    window.gtag = gtag
+    localStorageMock.setItem(
+      'cookie-consent',
+      JSON.stringify({ necessary: true, functional: true, analytics: false, marketing: false })
+    )
+
+    render(<CookieConsent />)
+
+    await waitFor(() => {
+      expect(gtag).toHaveBeenCalledWith(
+        'consent',
+        'update',
+        expect.objectContaining({
+          analytics_storage: 'denied',
+          ad_storage: 'denied',
+        })
+      )
+    })
+  })
+
+  it('keeps the direct GA4 loader inert while the measurement ID is the placeholder', async () => {
+    // The template ships the placeholder G-XXXXXXXXXX, so even though the
+    // GA4 loader now runs on every pageview (Consent Mode gates storage,
+    // not loading), no gtag.js script may be injected until a real ID is
+    // configured — GTM delivers GA4 for fleet sites.
+    render(<CookieConsent />)
+
+    await waitFor(() => {
+      expect(screen.queryByText(/cookies/i)).toBeInTheDocument()
+    })
+
+    expect(document.querySelector('script[src*="googletagmanager.com/gtag"]')).toBeNull()
+  })
+
+  it('does not load Clarity or Meta Pixel without an explicit grant', async () => {
+    localStorageMock.setItem(
+      'cookie-consent',
+      JSON.stringify({ necessary: true, functional: true, analytics: false, marketing: false })
+    )
+
+    render(<CookieConsent />)
+
+    expect(document.querySelector('script[src*="clarity.ms"]')).toBeNull()
+    expect(document.querySelector('script[src*="fbevents.js"]')).toBeNull()
+  })
+})
