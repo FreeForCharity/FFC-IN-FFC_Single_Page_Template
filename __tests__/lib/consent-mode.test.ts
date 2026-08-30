@@ -75,9 +75,25 @@ describe('CONSENT_MODE_BOOTSTRAP', () => {
     expect(regionIndex).toBeLessThan(grantIndex)
   })
 
-  it('holds tags with wait_for_update so a stored EEA choice lands first', () => {
+  it('holds tags with wait_for_update on BOTH default calls', () => {
+    // The regional denial always carries wait_for_update; in this template
+    // the unscoped grant carries it too (deliberate deviation from the
+    // freeforcharity reference — GTM here loads from the layout, not
+    // behind the consent component, so a returning non-EEA decliner needs
+    // the same window for their stored choice to land).
     expect(CONSENT_WAIT_FOR_UPDATE_MS).toBe(500)
-    expect(CONSENT_MODE_BOOTSTRAP).toContain(`'wait_for_update': ${CONSENT_WAIT_FOR_UPDATE_MS}`)
+    const occurrences = CONSENT_MODE_BOOTSTRAP.split(
+      `'wait_for_update': ${CONSENT_WAIT_FOR_UPDATE_MS}`
+    ).length
+    expect(occurrences - 1).toBe(2)
+    // …and it appears in both the denial and the grant call specifically.
+    const grantIndex = CONSENT_MODE_BOOTSTRAP.indexOf("'analytics_storage': 'granted'")
+    expect(
+      CONSENT_MODE_BOOTSTRAP.indexOf(`'wait_for_update': ${CONSENT_WAIT_FOR_UPDATE_MS}`)
+    ).toBeLessThan(grantIndex)
+    expect(
+      CONSENT_MODE_BOOTSTRAP.lastIndexOf(`'wait_for_update': ${CONSENT_WAIT_FOR_UPDATE_MS}`)
+    ).toBeGreaterThan(grantIndex)
   })
 
   it('sets url_passthrough and ads_data_redaction', () => {
@@ -134,6 +150,8 @@ describe('isConfigured (placeholder guard)', () => {
     expect(isConfigured('XXXXXXXXXXXXXXX')).toBe(false) // Meta Pixel placeholder
     expect(isConfigured('XXXXXXXXXX')).toBe(false) // Clarity placeholder
     expect(isConfigured('')).toBe(false)
+    expect(isConfigured('   ')).toBe(false) // whitespace-only is unset
+    expect(isConfigured(' G-XXXXXXXXXX ')).toBe(false) // placeholder with stray spaces
   })
 
   it('accepts real-looking IDs', () => {

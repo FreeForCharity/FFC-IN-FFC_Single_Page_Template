@@ -29,10 +29,12 @@ export const analyticsConfig = {
  *
  * The promise above — "leave a value as its placeholder to keep that
  * integration effectively inert" — is enforced by the loaders calling this
- * helper. A value is treated as unset when it is falsy or still ends in a
- * run of placeholder X's (`G-XXXXXXXXXX`, `XXXXXXXXXXXXXXX`, `XXXXXXXXXX`).
- * No real Google/Meta/Clarity ID ends in six or more literal X's.
+ * helper. A value is treated as unset when it is falsy, whitespace-only,
+ * or still ends in a run of placeholder X's (`G-XXXXXXXXXX`,
+ * `XXXXXXXXXXXXXXX`, `XXXXXXXXXX`). No real Google/Meta/Clarity ID ends
+ * in six or more literal X's.
  */
 export function isConfigured(id: string): boolean {
-  return Boolean(id) && !/X{6,}$/.test(id)
+  const trimmed = id ? id.trim() : ''
+  return Boolean(trimmed) && !/X{6,}$/.test(trimmed)
 }

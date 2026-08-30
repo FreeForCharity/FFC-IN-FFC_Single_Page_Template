@@ -132,43 +132,63 @@ export default function CookieConsent() {
     }
   }, [])
 
-  // Deletes each NON-granted category's third-party cookies. Called with no
-  // argument (Decline All) it deletes every category. Per-category deletion
-  // matters under the regional Consent Mode defaults: outside the EEA/UK/CH
-  // the Google tags may have set cookies before the visitor ever touched
-  // the banner, so deletion cannot depend on a previously stored grant.
-  const deleteAnalyticsCookies = useCallback((prefs?: CookiePreferences) => {
-    const deleteAnalytics = !prefs || !prefs.analytics
-    const deleteMarketing = !prefs || !prefs.marketing
+  // A cookie can only be deleted by a request whose domain attribute
+  // MATCHES the one it was set with. GA4 scopes `_ga` to the registrable
+  // domain (e.g. `.example.org`) so it is readable across subdomains — on
+  // `www.example.org`, expiring it with `domain=www.example.org` silently
+  // does nothing and the visitor keeps the identifier they just asked us
+  // to drop. Try every scope the cookie could plausibly hold: host-only,
+  // the exact hostname, and the apex with and without a leading dot.
+  const expireCookies = useCallback((names: string[]) => {
+    const hostname = window.location.hostname
+    const apex = hostname.replace(/^www\./, '')
+    const domains = Array.from(new Set([hostname, `.${hostname}`, apex, `.${apex}`]))
 
-    // Static cookie names per category (analytics: GA + Clarity;
-    // marketing: Meta Pixel)
-    const cookiesToDelete = [
-      ...(deleteAnalytics ? ['_ga', '_gid', '_clck', '_clsk'] : []),
-      ...(deleteMarketing ? ['_fbp', 'fr'] : []),
-    ]
-
-    // Delete static cookies
-    cookiesToDelete.forEach((name) => {
-      // Delete for current domain
-      document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;`
-      // Also try to delete with domain specification
-      document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; domain=${window.location.hostname};`
-    })
-
-    // Dynamically delete all cookies matching _ga_* (e.g., _ga_G-XXXXXXXXXX)
-    if (deleteAnalytics && typeof document !== 'undefined') {
-      document.cookie.split(';').forEach((cookie) => {
-        const cookieName = cookie.split('=')[0].trim()
-        if (cookieName.startsWith('_ga_')) {
-          // Delete for current domain
-          document.cookie = `${cookieName}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;`
-          // Also try to delete with domain specification
-          document.cookie = `${cookieName}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; domain=${window.location.hostname};`
-        }
+    names.forEach((name) => {
+      const expiry = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;`
+      // Host-only (no domain attribute).
+      document.cookie = expiry
+      domains.forEach((domain) => {
+        document.cookie = `${expiry} domain=${domain};`
       })
-    }
+    })
   }, [])
+
+  // Deletes each NON-granted category's third-party cookies (analytics:
+  // GA4 + Clarity; marketing: Meta Pixel). Called with no argument
+  // (Decline All) it deletes every category. Per-category deletion matters
+  // under the regional Consent Mode defaults: outside the EEA/UK/CH the
+  // Google tags may have set cookies before the visitor ever touched the
+  // banner, so deletion cannot depend on a previously stored grant — and
+  // a visitor who keeps analytics but drops marketing must not have their
+  // `_ga` client id wiped on every pageview.
+  const deleteTrackingCookies = useCallback(
+    (prefs?: CookiePreferences) => {
+      const deleteAnalytics = !prefs || !prefs.analytics
+      const deleteMarketing = !prefs || !prefs.marketing
+
+      if (deleteAnalytics) {
+        expireCookies(['_ga', '_gid', '_clck', '_clsk'])
+
+        // Dynamically delete all cookies matching _ga_* (e.g., _ga_G-XXXXXXXXXX)
+        if (typeof document !== 'undefined') {
+          const regex = /(?:^|;\s*)(_ga_[^=;\s]*)/g
+          const cookieStr = document.cookie
+          const found: string[] = []
+          let match: RegExpExecArray | null
+          while ((match = regex.exec(cookieStr)) !== null) {
+            found.push(match[1])
+          }
+          expireCookies(found)
+        }
+      }
+
+      if (deleteMarketing) {
+        expireCookies(['_fbp', 'fr'])
+      }
+    },
+    [expireCookies]
+  )
 
   const applyConsent = useCallback(
     (prefs: CookiePreferences) => {
@@ -182,7 +202,7 @@ export default function CookieConsent() {
       // only on withdrawal of a stored grant, because under the regional
       // Consent Mode defaults cookies can exist before any stored choice.
       if (!prefs.analytics || !prefs.marketing) {
-        deleteAnalyticsCookies(prefs)
+        deleteTrackingCookies(prefs)
       }
 
       // Google Consent Mode `update`: runs on every banner interaction AND
@@ -219,7 +239,7 @@ export default function CookieConsent() {
         loadMetaPixel()
       }
     },
-    [deleteAnalyticsCookies, loadGoogleAnalytics, loadMetaPixel, loadMicrosoftClarity]
+    [deleteTrackingCookies, loadGoogleAnalytics, loadMetaPixel, loadMicrosoftClarity]
   )
 
   // Helper to load preferences from localStorage and update state
@@ -375,7 +395,7 @@ export default function CookieConsent() {
     }
 
     // Delete third-party cookies when consent is withdrawn
-    deleteAnalyticsCookies()
+    deleteTrackingCookies()
 
     applyConsent(onlyNecessary)
     setSavedPreferencesBackup(onlyNecessary)

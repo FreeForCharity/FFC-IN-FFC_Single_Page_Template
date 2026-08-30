@@ -321,9 +321,12 @@ test.describe('Google Consent Mode bootstrap', () => {
     expect(defaults[0].region as string[]).toHaveLength(32)
 
     // Then the unscoped grant for everyone else (region-specific settings
-    // take precedence, so this does not weaken the EEA/UK/CH denial).
+    // take precedence, so this does not weaken the EEA/UK/CH denial). It
+    // also carries wait_for_update: GTM loads from the layout here, so a
+    // returning non-EEA decliner's stored choice needs the same window.
     expect(defaults[1].analytics_storage).toBe('granted')
     expect(defaults[1].ad_storage).toBe('granted')
+    expect(defaults[1].wait_for_update).toBe(500)
     expect(defaults[1].region).toBeUndefined()
   })
 
