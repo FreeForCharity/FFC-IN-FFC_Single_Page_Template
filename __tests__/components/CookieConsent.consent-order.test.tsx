@@ -5,9 +5,11 @@
  * Without this ordering, a returning visitor OUTSIDE the EEA/UK/CH who
  * previously DECLINED analytics would get the granted-by-default bootstrap
  * replayed ahead of their stored denial: GA's config lands in the queue
- * first and one cookie-based hit fires before the update applies
- * (wait_for_update only guards the region-scoped EEA call, not the
- * unscoped grant).
+ * first and a cookie-based hit could fire before the update applies. Both
+ * default calls in this template's bootstrap carry wait_for_update, but
+ * that is a bounded grace window (500ms), not an ordering guarantee — a
+ * slow hydration can outlast it — which is exactly why the
+ * restore-before-load ordering this file locks in still matters.
  *
  * This file mocks a REAL-looking measurement ID so the loader actually
  * injects; the placeholder-inertness behavior is asserted separately in
