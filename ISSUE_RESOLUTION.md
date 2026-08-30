@@ -272,9 +272,9 @@ SyntaxError: Cannot use import statement outside a module
    }
    ```
 
-3. **Verify jest.setup.js is loaded**:
+3. **Verify jest.setup.ts is loaded**:
    ```javascript
-   setupFilesAfterEnv: ['<rootDir>/jest.setup.js']
+   setupFilesAfterEnv: ['<rootDir>/jest.setup.ts']
    ```
 
 ### Issue: Tests Pass Locally but Fail in CI

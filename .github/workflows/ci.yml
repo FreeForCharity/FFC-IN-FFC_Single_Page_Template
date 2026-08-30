@@ -44,6 +44,12 @@ jobs:
       - name: Run linting
         run: pnpm run lint
 
+      - name: Check types
+        # tsc over the whole program, tests included. `next build` does not
+        # cover the test files, so without this gate test-only type breakage
+        # (like losing the jest-dom matcher augmentation) lands silently.
+        run: pnpm run type-check
+
       - name: Run unit tests
         run: pnpm test
         env:

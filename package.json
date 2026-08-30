@@ -26,7 +26,8 @@
     "check:bundle": "node scripts/check-bundle-size.mjs",
     "smoke": "node scripts/smoke-check.mjs",
     "audit:high": "pnpm audit --prod --audit-level high",
-    "prepare": "husky"
+    "prepare": "husky",
+    "type-check": "tsc --noEmit"
   },
   "dependencies": {
     "next": "^16.2.11",
@@ -53,6 +54,7 @@
     "@types/node": "^24",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "axe-core": "^4.13.0",
     "eslint": "^9",
     "eslint-config-next": "16.3.3",
     "eslint-config-prettier": "^10.1.8",
