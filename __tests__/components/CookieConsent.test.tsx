@@ -169,6 +169,26 @@ describe('CookieConsent Google Consent Mode integration', () => {
     expect(document.querySelector('script[src*="googletagmanager.com/gtag"]')).toBeNull()
   })
 
+  it('deletes non-granted categories’ cookies on load, even without a prior stored grant', async () => {
+    // Under the regional Consent Mode defaults, Google tags can set cookies
+    // BEFORE the visitor makes any choice (outside the EEA/UK/CH). Applying
+    // a denying choice must therefore delete per category on every apply,
+    // not only on withdrawal of a previously stored grant.
+    document.cookie = '_ga=stale-regional-default'
+    document.cookie = '_fbp=stale-regional-default'
+    localStorageMock.setItem(
+      'cookie-consent',
+      JSON.stringify({ necessary: true, functional: true, analytics: false, marketing: false })
+    )
+
+    render(<CookieConsent />)
+
+    await waitFor(() => {
+      expect(document.cookie).not.toContain('_ga=')
+      expect(document.cookie).not.toContain('_fbp=')
+    })
+  })
+
   it('does not load Clarity or Meta Pixel without an explicit grant', async () => {
     localStorageMock.setItem(
       'cookie-consent',

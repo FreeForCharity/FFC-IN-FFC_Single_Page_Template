@@ -132,9 +132,21 @@ export default function CookieConsent() {
     }
   }, [])
 
-  const deleteAnalyticsCookies = useCallback(() => {
-    // List of static cookie names to delete
-    const cookiesToDelete = ['_ga', '_gid', '_fbp', 'fr', '_clck', '_clsk']
+  // Deletes each NON-granted category's third-party cookies. Called with no
+  // argument (Decline All) it deletes every category. Per-category deletion
+  // matters under the regional Consent Mode defaults: outside the EEA/UK/CH
+  // the Google tags may have set cookies before the visitor ever touched
+  // the banner, so deletion cannot depend on a previously stored grant.
+  const deleteAnalyticsCookies = useCallback((prefs?: CookiePreferences) => {
+    const deleteAnalytics = !prefs || !prefs.analytics
+    const deleteMarketing = !prefs || !prefs.marketing
+
+    // Static cookie names per category (analytics: GA + Clarity;
+    // marketing: Meta Pixel)
+    const cookiesToDelete = [
+      ...(deleteAnalytics ? ['_ga', '_gid', '_clck', '_clsk'] : []),
+      ...(deleteMarketing ? ['_fbp', 'fr'] : []),
+    ]
 
     // Delete static cookies
     cookiesToDelete.forEach((name) => {
@@ -145,7 +157,7 @@ export default function CookieConsent() {
     })
 
     // Dynamically delete all cookies matching _ga_* (e.g., _ga_G-XXXXXXXXXX)
-    if (typeof document !== 'undefined') {
+    if (deleteAnalytics && typeof document !== 'undefined') {
       document.cookie.split(';').forEach((cookie) => {
         const cookieName = cookie.split('=')[0].trim()
         if (cookieName.startsWith('_ga_')) {
@@ -159,21 +171,18 @@ export default function CookieConsent() {
   }, [])
 
   const applyConsent = useCallback(
-    (prefs: CookiePreferences, previousPrefs?: CookiePreferences) => {
+    (prefs: CookiePreferences) => {
       // Set a cookie to indicate consent status with Secure flag (only on HTTPS)
       const cookieValue = JSON.stringify(prefs)
       const secureFlag =
         typeof window !== 'undefined' && window.location.protocol === 'https:' ? '; Secure' : ''
       document.cookie = `cookie-consent=${encodeURIComponent(cookieValue)}; path=/; max-age=31536000; SameSite=Lax${secureFlag}`
 
-      // Check if consent was withdrawn and delete cookies if needed
-      if (previousPrefs) {
-        if (
-          (previousPrefs.analytics && !prefs.analytics) ||
-          (previousPrefs.marketing && !prefs.marketing)
-        ) {
-          deleteAnalyticsCookies()
-        }
+      // Delete each non-granted category's cookies on EVERY apply — not
+      // only on withdrawal of a stored grant, because under the regional
+      // Consent Mode defaults cookies can exist before any stored choice.
+      if (!prefs.analytics || !prefs.marketing) {
+        deleteAnalyticsCookies(prefs)
       }
 
       // Google Consent Mode `update`: runs on every banner interaction AND
@@ -331,7 +340,7 @@ export default function CookieConsent() {
       // If localStorage is unavailable, continue anyway
       console.warn('Unable to save preferences to localStorage:', e)
     }
-    applyConsent(allAccepted, savedPreferencesBackup)
+    applyConsent(allAccepted)
     setSavedPreferencesBackup(allAccepted)
     setShowBanner(false)
   }
@@ -354,7 +363,7 @@ export default function CookieConsent() {
     // Delete third-party cookies when consent is withdrawn
     deleteAnalyticsCookies()
 
-    applyConsent(onlyNecessary, savedPreferencesBackup)
+    applyConsent(onlyNecessary)
     setSavedPreferencesBackup(onlyNecessary)
     setShowBanner(false)
   }
@@ -366,7 +375,7 @@ export default function CookieConsent() {
       // If localStorage is unavailable, continue anyway
       console.warn('Unable to save preferences to localStorage:', e)
     }
-    applyConsent(preferences, savedPreferencesBackup)
+    applyConsent(preferences)
     setSavedPreferencesBackup(preferences)
     setShowBanner(false)
     setShowPreferences(false)
