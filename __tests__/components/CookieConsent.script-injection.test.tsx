@@ -74,7 +74,6 @@ describe('CookieConsent inline script escaping', () => {
       'cookie-consent',
       JSON.stringify({ necessary: true, functional: true, analytics: true, marketing: true })
     )
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
     const CookieConsent = require('../../src/components/cookie-consent').default
     render(<CookieConsent />)
     await waitFor(() => {
