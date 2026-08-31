@@ -139,7 +139,10 @@ describe('CookieConsent cookie expiry', () => {
     // declining still clears both categories without it.
     render(<CookieConsent />)
 
-    const declineButton = await screen.findByRole('button', { name: /decline all/i })
+    // /^decline/i, not /decline all/i: two forks label this button just
+    // "Decline". It stays unambiguous — the other banner buttons are
+    // "Accept All" and "Customize".
+    const declineButton = await screen.findByRole('button', { name: /^decline/i })
     fireEvent.click(declineButton)
 
     await waitFor(() => {
