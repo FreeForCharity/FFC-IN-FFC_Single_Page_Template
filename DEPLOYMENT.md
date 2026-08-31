@@ -265,7 +265,8 @@ NEXT_PUBLIC_BASE_PATH=
 
 # Optional: Analytics IDs. The Google tag loads on every visit; Google
 # Consent Mode is what gates whether it may use cookies. Meta Pixel and
-# Clarity speak no Consent Mode, so they load only after an explicit opt-in.
+# Clarity do not support Consent Mode, so they load only after an explicit
+# opt-in.
 NEXT_PUBLIC_GA_MEASUREMENT_ID=
 NEXT_PUBLIC_META_PIXEL_ID=
 NEXT_PUBLIC_CLARITY_PROJECT_ID=
