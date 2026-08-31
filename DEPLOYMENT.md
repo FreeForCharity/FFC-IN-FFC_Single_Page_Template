@@ -265,11 +265,10 @@ NEXT_PUBLIC_BASE_PATH=
 
 # Optional: Analytics IDs.
 #
-# Check src/lib/analytics.config.ts first: on most FFC sites the IDs live
-# there and these variables are an override or unused entirely. Which tags
-# load, and whether Google Consent Mode gates their cookie USE rather than
-# their loading, is decided in src/components/cookie-consent/ and differs
-# between forks — read it rather than assuming.
+# These may or may not be read here: analytics wiring differs between FFC
+# sites, and on many of them the IDs are set in code instead. Check how this
+# repo actually wires analytics before relying on these variables, or on any
+# description of when a tag loads and what consent gates.
 NEXT_PUBLIC_GA_MEASUREMENT_ID=
 NEXT_PUBLIC_META_PIXEL_ID=
 NEXT_PUBLIC_CLARITY_PROJECT_ID=
