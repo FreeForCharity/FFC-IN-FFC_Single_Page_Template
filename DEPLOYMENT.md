@@ -263,15 +263,12 @@ For local development, create a `.env.local` file:
 # Optional: Set basePath for testing GitHub Pages locally
 NEXT_PUBLIC_BASE_PATH=
 
-# Optional: Analytics IDs.
-#
-# These may or may not be read here: analytics wiring differs between FFC
-# sites, and on many of them the IDs are set in code instead. Check how this
-# repo actually wires analytics before relying on these variables, or on any
-# description of when a tag loads and what consent gates.
-NEXT_PUBLIC_GA_MEASUREMENT_ID=
-NEXT_PUBLIC_META_PIXEL_ID=
-NEXT_PUBLIC_CLARITY_PROJECT_ID=
+# Analytics IDs are NOT read from the environment in this repo. The GA4,
+# Meta Pixel and Clarity IDs come from src/lib/analytics.config.ts, which
+# reads no environment variable — setting NEXT_PUBLIC_GA_MEASUREMENT_ID,
+# NEXT_PUBLIC_META_PIXEL_ID or NEXT_PUBLIC_CLARITY_PROJECT_ID here has no
+# effect. Edit that file instead. Other FFC sites DO read these variables,
+# so check the wiring before copying this block between repos.
 ```
 
 **Note**: Never commit `.env.local` or any file containing secrets to the repository.
