@@ -112,6 +112,11 @@ describe('CookieConsent consent-before-GA ordering', () => {
     // rather than inheriting whatever an earlier case left behind.
     window.dataLayer = []
     const queue = window.dataLayer as unknown[]
+    // `queue` is a fresh array each test, so `push` is inherited from
+    // Array.prototype and there is no own property to put back: deleting the
+    // override is what restores it. The `finally` is the point — a failing
+    // assertion below would otherwise leave this array instrumented, and the
+    // next thing to push through it would record a phantom event.
     const originalPush = queue.push.bind(queue)
     queue.push = ((...entries: unknown[]) => {
       for (const entry of entries) {
@@ -119,21 +124,25 @@ describe('CookieConsent consent-before-GA ordering', () => {
           events.push('custom-consent-event')
         }
       }
-      return originalPush(...(entries as []))
+      return originalPush(...entries)
     }) as typeof queue.push
 
-    localStorageMock.setItem(
-      'cookie-consent',
-      JSON.stringify({ necessary: true, functional: true, analytics: false, marketing: false })
-    )
+    try {
+      localStorageMock.setItem(
+        'cookie-consent',
+        JSON.stringify({ necessary: true, functional: true, analytics: false, marketing: false })
+      )
 
-    render(<CookieConsent />)
+      render(<CookieConsent />)
 
-    await waitFor(() => {
-      expect(events).toContain('consent-update')
-      expect(events).toContain('custom-consent-event')
-    })
+      await waitFor(() => {
+        expect(events).toContain('consent-update')
+        expect(events).toContain('custom-consent-event')
+      })
 
-    expect(events.indexOf('consent-update')).toBeLessThan(events.indexOf('custom-consent-event'))
+      expect(events.indexOf('consent-update')).toBeLessThan(events.indexOf('custom-consent-event'))
+    } finally {
+      Reflect.deleteProperty(queue, 'push')
+    }
   })
 })
