@@ -237,12 +237,13 @@ After configuring DNS:
 
 These variables are embedded during the build process:
 
-| Variable                         | Purpose                    | Default           | Required |
-| -------------------------------- | -------------------------- | ----------------- | -------- |
-| `NEXT_PUBLIC_BASE_PATH`          | Base path for GitHub Pages | (empty)           | No       |
-| `NEXT_PUBLIC_GA_MEASUREMENT_ID`  | Google Analytics ID        | `G-XXXXXXXXXX`    | No       |
-| `NEXT_PUBLIC_META_PIXEL_ID`      | Meta Pixel ID              | `XXXXXXXXXXXXXXX` | No       |
-| `NEXT_PUBLIC_CLARITY_PROJECT_ID` | Microsoft Clarity ID       | `XXXXXXXXXX`      | No       |
+| Variable                | Purpose                    | Default | Required |
+| ----------------------- | -------------------------- | ------- | -------- |
+| `NEXT_PUBLIC_BASE_PATH` | Base path for GitHub Pages | (empty) | No       |
+
+Analytics IDs are not among them in this repo: the GA4, Meta Pixel and Clarity IDs are set in
+`src/lib/analytics.config.ts`, which reads no environment variable. See the `.env.local` note
+below.
 
 ### Setting Environment Variables in GitHub Actions
 
