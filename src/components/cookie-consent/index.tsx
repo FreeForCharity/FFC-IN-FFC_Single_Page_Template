@@ -216,6 +216,12 @@ export default function CookieConsent() {
       // every stored-choice restore. This is what gates the Google tags'
       // cookie storage — the tags themselves load regardless (see
       // src/lib/consent-mode.ts for the regional default model).
+      //
+      // Queued BEFORE the custom `consent_update` event pushed below: both
+      // writes land in the same dataLayer queue and GTM processes it in order,
+      // so a container trigger keyed on that event would otherwise evaluate
+      // consent state before this choice had been applied. No test covers this
+      // ordering — keep the two in this order by hand.
       updateGoogleConsent(prefs)
 
       // Push consent update to GTM dataLayer
