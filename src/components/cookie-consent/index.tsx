@@ -39,7 +39,7 @@ declare global {
  * because `isConfigured()` only rejects placeholder values — it does not
  * validate shape, so nothing else checks what reaches the script body.
  */
-function scriptString(value: string): string {
+export function scriptString(value: string): string {
   return JSON.stringify(value)
     .replace(/</g, '\\u003c')
     .replace(/\u2028/g, '\\u2028')
