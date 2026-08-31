@@ -29,7 +29,7 @@
  * while asserting nothing at all.
  */
 import React from 'react'
-import { render, waitFor } from '@testing-library/react'
+import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import CookieConsent from '../../src/components/cookie-consent'
 
 const localStorageMock = (() => {
@@ -125,5 +125,29 @@ describe('CookieConsent cookie expiry', () => {
     for (const domain of ['www.example.org', '.www.example.org', 'example.org', '.example.org']) {
       expect(gaWrites.some((w) => w.includes(`domain=${domain};`))).toBe(true)
     }
+  })
+
+  it('expires both categories when the visitor clicks Decline All', async () => {
+    // The other cases drive the RESTORE path (a stored choice replayed on
+    // mount). This one drives the banner button, which is a separate code
+    // path and the one a first-time visitor actually takes.
+    //
+    // It also guards a deliberate removal: `handleDeclineAll` used to call
+    // `deleteTrackingCookies()` itself AND then call `applyConsent`, which
+    // deletes again — duplicate expiry writes for every name, multiplied by
+    // the domain walk. The explicit call is gone; this asserts that
+    // declining still clears both categories without it.
+    render(<CookieConsent />)
+
+    const declineButton = await screen.findByRole('button', { name: /decline all/i })
+    fireEvent.click(declineButton)
+
+    await waitFor(() => {
+      expect(expiriesFor('_ga').length).toBeGreaterThan(0)
+    })
+    for (const name of ['_ga', '_gid', '_clck', '_clsk', '_fbp', 'fr']) {
+      expect(expiriesFor(name).length).toBeGreaterThan(0)
+    }
+    expect(expiriesFor('_ga_G-TEST1234567').length).toBeGreaterThan(0)
   })
 })
