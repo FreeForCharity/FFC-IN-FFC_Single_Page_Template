@@ -99,9 +99,15 @@ describe('CookieConsent consent-before-GA ordering', () => {
     })
   })
   it('queues the Consent Mode update BEFORE the custom consent_update event', async () => {
-    // Both writes land in the same dataLayer queue and GTM processes it in
-    // order, so a container trigger keyed on `consent_update` must not be
-    // able to run before the consent state for this choice is queued.
+    // In production both writes reach the same dataLayer queue and GTM
+    // processes it in order, so a container trigger keyed on `consent_update`
+    // must not be able to run before this choice's consent state is queued.
+    //
+    // What this case asserts is the CALL order that produces that queue
+    // order: window.gtag is a mock here, so the Consent Mode update never
+    // actually reaches dataLayer during the test. That is enough to
+    // discriminate the defect — swapping the two makes this fail — but it is
+    // not a direct assertion about dataLayer contents.
     // This suite's beforeEach does not reset window.dataLayer, so own it here
     // rather than inheriting whatever an earlier case left behind.
     window.dataLayer = []

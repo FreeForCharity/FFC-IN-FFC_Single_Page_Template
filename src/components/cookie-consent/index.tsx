@@ -220,8 +220,8 @@ export default function CookieConsent() {
       // Queued BEFORE the custom `consent_update` event pushed below: both
       // writes land in the same dataLayer queue and GTM processes it in order,
       // so a container trigger keyed on that event would otherwise evaluate
-      // consent state before this choice had been applied. No test covers this
-      // ordering — keep the two in this order by hand.
+      // consent state before this choice had been applied. The ordering case
+      // in this repo's test suite fails if the two are swapped.
       updateGoogleConsent(prefs)
 
       // Push consent update to GTM dataLayer
