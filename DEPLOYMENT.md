@@ -263,7 +263,9 @@ For local development, create a `.env.local` file:
 # Optional: Set basePath for testing GitHub Pages locally
 NEXT_PUBLIC_BASE_PATH=
 
-# Optional: Analytics IDs (only loaded with user consent)
+# Optional: Analytics IDs. The Google tag loads on every visit; Google
+# Consent Mode is what gates whether it may use cookies. Meta Pixel and
+# Clarity speak no Consent Mode, so they load only after an explicit opt-in.
 NEXT_PUBLIC_GA_MEASUREMENT_ID=
 NEXT_PUBLIC_META_PIXEL_ID=
 NEXT_PUBLIC_CLARITY_PROJECT_ID=
