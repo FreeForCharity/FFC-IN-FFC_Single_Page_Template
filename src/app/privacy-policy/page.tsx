@@ -352,7 +352,7 @@ export default function PrivacyPolicy() {
           <ul className="list-inside list-disc space-y-[4px] pb-[1em]">
             <li className="text-[14px] text-[#666] leading-[24px] font-[500]">
               <strong>Consent:</strong> Google&apos;s tags set no analytics or advertising cookies
-              and read no measurement identifiers until you accept through the cookie consent
+              and read no identifiers from your device until you accept through the cookie consent
               banner, wherever in the world you are — until then they only count visits in an
               aggregate, cookie-free way. Session recording (Microsoft Clarity) and marketing (Meta
               Pixel) scripts load only if you explicitly opt in, everywhere in the world. You can
@@ -373,13 +373,16 @@ export default function PrivacyPolicy() {
             <strong>How consent works, in plain language.</strong> We use Google Consent Mode,
             configured to withhold storage from every visitor until they accept — the same standard
             worldwide, not only where the law demands it. Until you accept, Google&apos;s tags set
-            no analytics or advertising cookies and read no measurement identifiers, and analytics
-            counts your visit only in an aggregate, cookie-free way. There is no country in which
-            measurement begins before you choose. To be precise about what does happen: those tags
-            still load and send a cookie-free signal to Google before you decide, which is what lets
-            us count visits without identifying anyone; nothing is stored on your device and nothing
-            follows you to your next visit. You can change your mind at any time via the Cookie
-            Preferences link in the footer. See our{' '}
+            no analytics or advertising cookies and read no identifiers from your device, and
+            analytics counts your visit only in an aggregate, cookie-free way. There is no country
+            in which measurement begins before you choose. To be precise about what does happen:
+            those tags still load and send a cookie-free signal to Google before you decide, which
+            is what lets us count visits without identifying anyone; nothing is stored on your
+            device and nothing follows you to your next visit. One thing does travel: if you arrived
+            from an ad, the click identifier already in your link is carried between pages of this
+            site so the ad can still be credited if you accept — until you do, it is stripped from
+            what the tags send. You can change your mind at any time via the Cookie Preferences link
+            in the footer. See our{' '}
             <Link href="/cookie-policy" className="text-[#0062CC] underline">
               Cookie Policy
             </Link>{' '}

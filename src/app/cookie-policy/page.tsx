@@ -220,7 +220,7 @@ export default function CookiePolicy() {
               We use Google Consent Mode, and we apply the strictest setting to everyone. No matter
               where in the world you are, Google&apos;s tags set{' '}
               <strong>
-                no analytics or advertising cookies and collect no measurement identifiers
+                no analytics or advertising cookies and collect no identifiers from your device
               </strong>{' '}
               until you accept. They still count your visit in an aggregate, cookie-free way so we
               know how many people used the site — that measurement cannot be tied back to you or to

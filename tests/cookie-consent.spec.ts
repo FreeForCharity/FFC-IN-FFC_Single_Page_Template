@@ -298,8 +298,8 @@ test.describe('Google Consent Mode bootstrap', () => {
   test('sets a single global denial inline, before any Google tag loads', async ({ page }) => {
     await page.goto('/')
 
-    // The bootstrap is an inline <head> script, so the two consent defaults
-    // are in the dataLayer synchronously — no waiting on lazyOnload GTM.
+    // The bootstrap is an inline <head> script, so the consent default is
+    // in the dataLayer synchronously — no waiting on lazyOnload GTM.
     const defaults = await page.evaluate(() => {
       const dl = (window as unknown as { dataLayer?: unknown[] }).dataLayer || []
       return dl
