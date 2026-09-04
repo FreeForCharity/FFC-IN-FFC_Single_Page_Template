@@ -11,7 +11,7 @@
  */
 import fs from 'fs'
 import path from 'path'
-import { CONSENT_MODE_BOOTSTRAP, EU_CONSENT_REGIONS } from '../../src/lib/consent-mode'
+import { CONSENT_MODE_BOOTSTRAP } from '../../src/lib/consent-mode'
 
 const layoutSource = fs.readFileSync(path.join(__dirname, '../../src/app/layout.tsx'), 'utf8')
 
@@ -35,11 +35,14 @@ describe('root layout consent-mode bootstrap', () => {
     expect(gtmIndex).toBeLessThan(headCloseIndex)
   })
 
-  it('the emitted bootstrap carries the region-scoped default with all 32 codes', () => {
-    // What the layout injects is the lib constant verbatim; assert the
-    // constant itself carries the full region array on a consent default.
-    expect(EU_CONSENT_REGIONS).toHaveLength(32)
+  it('the emitted bootstrap denies storage globally, with no region carve-out', () => {
+    // What the layout injects is the lib constant verbatim. The ordering
+    // case above only proves the bootstrap runs first; this proves what it
+    // says when it does. Both matter: running a permissive default early is
+    // worse than running it late.
     expect(CONSENT_MODE_BOOTSTRAP).toContain("gtag('consent', 'default'")
-    expect(CONSENT_MODE_BOOTSTRAP).toContain(JSON.stringify([...EU_CONSENT_REGIONS]))
+    expect(CONSENT_MODE_BOOTSTRAP).toContain("'analytics_storage': 'denied'")
+    expect(CONSENT_MODE_BOOTSTRAP).not.toContain("'region'")
+    expect(CONSENT_MODE_BOOTSTRAP).not.toContain("'analytics_storage': 'granted'")
   })
 })
