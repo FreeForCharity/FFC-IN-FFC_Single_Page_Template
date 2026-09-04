@@ -1,7 +1,14 @@
 // Google Consent Mode v2 defaults.
 //
-// Policy: storage is DENIED by default for every visitor, worldwide, until
-// they opt in. There is no regional carve-out and no permissive default.
+// Policy: analytics and advertising storage is DENIED by default for every
+// visitor, worldwide, until they opt in. There is no regional carve-out and
+// no permissive default.
+//
+// "Analytics and advertising" is the scope, not a hedge. functionality_storage
+// and security_storage stay GRANTED below: neither carries measurement, and a
+// site that cannot remember a consent choice cannot honour one. Writing
+// "storage is DENIED" flat is the same over-claim the policy pages had to be
+// corrected for, one layer down.
 //
 // Google's EU User Consent Policy only *requires* opt-in for the EEA, the
 // UK and Switzerland, but applying that treatment selectively would mean
