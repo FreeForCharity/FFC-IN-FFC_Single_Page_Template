@@ -520,8 +520,8 @@ jobs:
       - name: Install Playwright (chromium only)
         if: steps.url.outputs.skip != 'true'
         run: |
-          # Install the npm package in an isolated dir so we don'\''t touch
-          # the repo'\''s own package.json (these sites do not ship
+          # Install the npm package in an isolated dir so we don't touch
+          # the repo's own package.json (these sites do not ship
           # Playwright as a runtime dependency -- it is CI-only).
           mkdir -p /tmp/pw
           cd /tmp/pw
@@ -529,7 +529,11 @@ jobs:
           # Chromium is installed explicitly below. The postinstall still
           # runs; this env var only stops it downloading every browser
           # first, so the step fetches chromium once instead of twice.
-          PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1 npm install playwright@1.62.1 >/dev/null
+          # playwright@1.62.1 is the version this repo's lockfile resolves, so
+          # the smoke run drives the same browser automation the repo's own
+          # tests do. That is a version pin, not a lockfile install: this
+          # isolated tree has no lockfile, so transitive versions can move.
+          PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1 npm install --no-audit --no-fund playwright@1.62.1 >/dev/null
           # Install the browser binaries + OS deps for chromium.
           npx --no-install playwright install --with-deps chromium
 
