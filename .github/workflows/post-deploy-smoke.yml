@@ -526,8 +526,9 @@ jobs:
           mkdir -p /tmp/pw
           cd /tmp/pw
           npm init -y >/dev/null
-          # Chromium is installed explicitly below, so skip the
-          # postinstall that would download every browser first.
+          # Chromium is installed explicitly below. The postinstall still
+          # runs; this env var only stops it downloading every browser
+          # first, so the step fetches chromium once instead of twice.
           PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1 \
             npm install playwright@1.62.1 >/dev/null
           # Install the browser binaries + OS deps for chromium.
