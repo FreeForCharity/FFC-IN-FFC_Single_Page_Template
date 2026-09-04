@@ -24,6 +24,28 @@ declare global {
   }
 }
 
+/**
+ * Serialises a value for embedding inside an inline `<script>` body.
+ *
+ * `JSON.stringify` supplies the surrounding quotes and escapes quotes and
+ * newlines, but it does NOT escape `<` — so a value containing `</script>`
+ * would still close the element early and let the remainder be parsed as
+ * markup. Escaping `<` closes that. U+2028/U+2029 are escaped too: they are
+ * legal inside a JSON string but were illegal in a JS string literal before
+ * ES2019.
+ *
+ * The IDs these wrap are build-time values set by a maintainer, not by a
+ * visitor, so this is defence in depth rather than a live hole. It matters
+ * because `isConfigured()` only rejects placeholder values — it does not
+ * validate shape, so nothing else checks what reaches the script body.
+ */
+export function scriptString(value: string): string {
+  return JSON.stringify(value)
+    .replace(/</g, '\\u003c')
+    .replace(/\u2028/g, '\\u2028')
+    .replace(/\u2029/g, '\\u2029')
+}
+
 interface CookiePreferences {
   necessary: boolean
   functional: boolean
@@ -69,7 +91,7 @@ export default function CookieConsent() {
         window.dataLayer = window.dataLayer || [];
         function gtag(){dataLayer.push(arguments);}
         gtag('js', new Date());
-        gtag('config', '${GA_MEASUREMENT_ID}', {
+        gtag('config', ${scriptString(GA_MEASUREMENT_ID)}, {
           'anonymize_ip': true,
           'cookie_flags': 'SameSite=Lax${secureFlag}'
         });
@@ -96,7 +118,7 @@ export default function CookieConsent() {
         t.src=v;s=b.getElementsByTagName(e)[0];
         s.parentNode.insertBefore(t,s)}(window, document,'script',
         'https://connect.facebook.net/en_US/fbevents.js');
-        fbq('init', '${META_PIXEL_ID}');
+        fbq('init', ${scriptString(META_PIXEL_ID)});
         fbq('track', 'PageView');
       `
       document.head.appendChild(fbScript)
@@ -126,7 +148,7 @@ export default function CookieConsent() {
           c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};
           t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;
           y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
-        })(window, document, "clarity", "script", "${CLARITY_PROJECT_ID}");
+        })(window, document, "clarity", "script", ${scriptString(CLARITY_PROJECT_ID)});
       `
       document.head.appendChild(clarityScript)
     }
@@ -216,6 +238,12 @@ export default function CookieConsent() {
       // every stored-choice restore. This is what gates the Google tags'
       // cookie storage — the tags themselves load regardless (see
       // src/lib/consent-mode.ts for the regional default model).
+      //
+      // Queued BEFORE the custom `consent_update` event pushed below: both
+      // writes land in the same dataLayer queue and GTM processes it in order,
+      // so a container trigger keyed on that event would otherwise evaluate
+      // consent state before this choice had been applied. The ordering case
+      // in this repo's test suite fails if the two are swapped.
       updateGoogleConsent(prefs)
 
       // Push consent update to GTM dataLayer
@@ -400,9 +428,6 @@ export default function CookieConsent() {
       // If localStorage is unavailable, continue anyway
       console.warn('Unable to save preferences to localStorage:', e)
     }
-
-    // Delete third-party cookies when consent is withdrawn
-    deleteTrackingCookies()
 
     applyConsent(onlyNecessary)
     setSavedPreferencesBackup(onlyNecessary)

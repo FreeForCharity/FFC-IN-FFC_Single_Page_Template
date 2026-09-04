@@ -373,10 +373,12 @@ export default function PrivacyPolicy() {
             <strong>The regional model in plain language.</strong> We use Google Consent Mode.
             Whether the permissive or the opt-in default applies is determined by Google from your
             IP address at the time of your visit (IP geolocation is approximate). In the EEA, the
-            UK, and Switzerland, analytics runs cookie-free until you accept. Everywhere else,
-            including the United States, analytics cookies are set from your first pageview — and
-            any visitor can turn them off at any time via the Cookie Preferences link in the footer.
-            See our{' '}
+            UK, and Switzerland, analytics runs cookie-free until you accept. (Switzerland is
+            included because Google&apos;s consent defaults cover it; the data of visitors in
+            Switzerland is protected by Switzerland&apos;s Federal Act on Data Protection (FADP)
+            rather than the GDPR.) Everywhere else, including the United States, analytics cookies
+            are set from your first pageview — and any visitor can turn them off at any time via the
+            Cookie Preferences link in the footer. See our{' '}
             <Link href="/cookie-policy" className="text-[#0062CC] underline">
               Cookie Policy
             </Link>{' '}
