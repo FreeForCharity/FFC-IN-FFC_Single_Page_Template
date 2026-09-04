@@ -54,8 +54,8 @@ export default function CookiePolicy() {
               Remember your cookie consent preferences
             </li>
             <li className="text-[14px] text-[#666] leading-[24px] font-[500]">
-              Understand how you use our website (subject to your region&apos;s default and your
-              cookie choices — see &quot;When we ask permission first&quot; in Section 3.3)
+              Understand how you use our website (only after you accept — see &quot;When we ask
+              permission first&quot; in Section 3.3)
             </li>
             <li className="text-[14px] text-[#666] leading-[24px] font-[500]">
               Analyze website traffic and user behavior (only after you accept — see &quot;When we
@@ -475,12 +475,12 @@ export default function CookiePolicy() {
           <p className="text-[14px] text-[#666] pb-[10px] leading-[24px] font-[500]">
             This site does not read or respond to Do Not Track or Global Privacy Control browser
             signals programmatically. We do not sell or share personal information as defined by the
-            CCPA/CPRA, so there is nothing for those signals to opt out of on this site. Note that
-            analytics cookies <strong>are</strong> set automatically outside the European Economic
-            Area, the United Kingdom, and Switzerland (see &quot;When we ask permission first&quot;
-            in Section 3.3); any visitor, anywhere, can turn them off at any time via the Cookie
-            Preferences link in the footer, and we delete the cookies we set when you do. Microsoft
-            Clarity and the Meta Pixel stay off everywhere unless you explicitly opt in.
+            CCPA/CPRA, so there is nothing for those signals to opt out of on this site. Analytics
+            cookies are <strong>never</strong> set before you accept, anywhere in the world (see
+            &quot;When we ask permission first&quot; in Section 3.3); if you do accept, you can turn
+            them off again at any time via the Cookie Preferences link in the footer, and we delete
+            the cookies we set when you do. Microsoft Clarity and the Meta Pixel stay off everywhere
+            unless you explicitly opt in.
           </p>
 
           {/* Section 6 */}

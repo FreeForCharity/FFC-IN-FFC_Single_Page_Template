@@ -432,11 +432,11 @@ export default function PrivacyPolicy() {
             <strong>Opt-out preference signals (Global Privacy Control / Do Not Track).</strong>{' '}
             This site does not read or respond to GPC or DNT browser signals programmatically. We do
             not sell or share personal information as defined by the CCPA/CPRA, so there is nothing
-            for such a signal to opt out of under California law. Analytics cookies are set
-            automatically outside the EEA, the UK, and Switzerland; any visitor, anywhere, can turn
-            them off at any time via the Cookie Preferences link in the footer, and we delete the
-            cookies we set when you do. Session recording (Microsoft Clarity) and marketing (Meta
-            Pixel) scripts never load unless you explicitly opt in.
+            for such a signal to opt out of under California law. Analytics cookies are never set
+            before you accept, anywhere in the world; if you do accept, you can turn them off again
+            at any time via the Cookie Preferences link in the footer, and we delete the cookies we
+            set when you do. Session recording (Microsoft Clarity) and marketing (Meta Pixel)
+            scripts never load unless you explicitly opt in.
           </p>
           <p className="text-[14px] text-[#666] pb-[10px] leading-[24px] font-[500]">
             <strong>Exercising your rights.</strong> Submit a request to{' '}

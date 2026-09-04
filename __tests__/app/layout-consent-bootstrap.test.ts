@@ -1,7 +1,7 @@
 /**
  * The root layout must emit the Google Consent Mode bootstrap inline in
  * <head> BEFORE the <GoogleTagManager /> component, so the consent
- * defaults (region-scoped denial, then unscoped grant) are already in the
+ * default (a single unscoped denial, applying worldwide) is already in the
  * dataLayer when any Google tag initializes.
  *
  * The layout cannot be rendered under Jest (next/font imports — see the
