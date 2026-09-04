@@ -533,10 +533,12 @@ jobs:
           # way -- playwright depends on playwright-core at the same exact
           # version, and playwright-core has no dependencies of its own.
           #
-          # PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD stops the postinstall fetching
-          # every browser, so the explicit install below is what fetches
-          # chromium -- once, as it would have been either way. The saving
-          # is the firefox and webkit downloads this smoke run never uses.
+          # Chromium is fetched by the explicit install below, and only by
+          # it. Neither playwright nor playwright-core declares an npm
+          # lifecycle script in any version this fleet pins (checked against
+          # the registry tarballs), so this npm install downloads no browser
+          # at all. The env var is therefore a no-op today; it is kept as a
+          # guard in case a future release reintroduces an install script.
           PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1 npm install --no-audit --no-fund playwright@1.62.1 >/dev/null
           # Install the browser binaries + OS deps for chromium.
           npx --no-install playwright install --with-deps chromium
@@ -848,9 +850,12 @@ jobs:
           SMOKE_BASE_URL: ${{ steps.url.outputs.url }}
           SMOKE_URL: ${{ steps.url.outputs.url }}
           PLAYWRIGHT_BASE_URL: ${{ steps.url.outputs.url }}
-          # `pnpm install` below runs @playwright/test's postinstall, which
-          # would fetch firefox and webkit too; only chromium is used, and
-          # the explicit install on the next line fetches it.
+          # `pnpm install` below downloads no browser: @playwright/test
+          # declares no npm lifecycle script, nor do playwright or
+          # playwright-core, and pnpm 10 blocks build scripts by default
+          # regardless. Chromium comes from the explicit install that
+          # follows. This var is a no-op today, kept as a guard in case a
+          # future release reintroduces an install script.
           PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: '1'
         run: |
           set -euo pipefail
