@@ -526,7 +526,10 @@ jobs:
           mkdir -p /tmp/pw
           cd /tmp/pw
           npm init -y >/dev/null
-          npm install playwright@1.62.1 >/dev/null
+          # Chromium is installed explicitly below, so skip the
+          # postinstall that would download every browser first.
+          PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1 \
+            npm install playwright@1.62.1 >/dev/null
           # Install the browser binaries + OS deps for chromium.
           npx --no-install playwright install --with-deps chromium
 
