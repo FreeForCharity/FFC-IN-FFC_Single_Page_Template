@@ -520,13 +520,26 @@ jobs:
       - name: Install Playwright (chromium only)
         if: steps.url.outputs.skip != 'true'
         run: |
-          # Install the npm package in an isolated dir so we don'\''t touch
-          # the repo'\''s own package.json (the FFC-EX repos use Next.js,
-          # not Playwright as a runtime dep).
+          # Install the npm package in an isolated dir so we don't touch
+          # the repo's own package.json (these sites do not ship
+          # Playwright as a runtime dependency -- it is CI-only).
           mkdir -p /tmp/pw
           cd /tmp/pw
           npm init -y >/dev/null
-          npm install playwright@latest >/dev/null
+          # playwright@1.62.1 matches the version this repo's lockfile resolves,
+          # so the smoke run drives the same browser automation the repo's
+          # own tests do. Pinned by version rather than installed from that
+          # lockfile, which costs nothing here: the tree is exact either
+          # way -- playwright depends on playwright-core at the same exact
+          # version, and playwright-core has no dependencies of its own.
+          #
+          # Chromium is fetched by the explicit install below, and only by
+          # it. Neither playwright nor playwright-core declares an npm
+          # lifecycle script in any version this fleet pins (checked against
+          # the registry tarballs), so this npm install downloads no browser
+          # at all. The env var is therefore a no-op today; it is kept as a
+          # guard in case a future release reintroduces an install script.
+          PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1 npm install --no-audit --no-fund playwright@1.62.1 >/dev/null
           # Install the browser binaries + OS deps for chromium.
           npx --no-install playwright install --with-deps chromium
 
@@ -837,6 +850,13 @@ jobs:
           SMOKE_BASE_URL: ${{ steps.url.outputs.url }}
           SMOKE_URL: ${{ steps.url.outputs.url }}
           PLAYWRIGHT_BASE_URL: ${{ steps.url.outputs.url }}
+          # `pnpm install` below downloads no browser: @playwright/test
+          # declares no npm lifecycle script, nor do playwright or
+          # playwright-core, and pnpm 10 blocks build scripts by default
+          # regardless. Chromium comes from the explicit install that
+          # follows. This var is a no-op today, kept as a guard in case a
+          # future release reintroduces an install script.
+          PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: '1'
         run: |
           set -euo pipefail
           if ! ls tests/smoke/*.spec.* >/dev/null 2>&1; then
