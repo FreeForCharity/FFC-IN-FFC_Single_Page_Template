@@ -219,9 +219,12 @@ export default function CookiePolicy() {
             <p className="text-sm text-[#666] mb-2">
               We use Google Consent Mode, and we apply the strictest setting to everyone. No matter
               where in the world you are, Google&apos;s tags set{' '}
-              <strong>no cookies and collect no identifiers</strong> until you accept. They still
-              count your visit in an aggregate, cookie-free way so we know how many people used the
-              site — that measurement cannot be tied back to you or to your next visit.
+              <strong>
+                no analytics or advertising cookies and collect no measurement identifiers
+              </strong>{' '}
+              until you accept. They still count your visit in an aggregate, cookie-free way so we
+              know how many people used the site — that measurement cannot be tied back to you or to
+              your next visit.
             </p>
             <p className="text-sm text-[#666] mb-2">
               There is no country in which analytics cookies are set before you choose. If you do
