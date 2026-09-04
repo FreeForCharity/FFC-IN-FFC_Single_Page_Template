@@ -526,9 +526,11 @@ jobs:
           mkdir -p /tmp/pw
           cd /tmp/pw
           npm init -y >/dev/null
-          # Chromium is installed explicitly below. The postinstall still
-          # runs; this env var only stops it downloading every browser
-          # first, so the step fetches chromium once instead of twice.
+          # Chromium, with its OS deps, is installed explicitly below.
+          # Chromium itself is fetched once either way -- the explicit
+          # install finds an already-downloaded browser and returns
+          # without re-fetching it. What this env var saves is the
+          # firefox and webkit downloads the smoke run never uses.
           # playwright@1.62.1 is the version this repo's lockfile resolves, so
           # the smoke run drives the same browser automation the repo's own
           # tests do. That is a version pin, not a lockfile install: this

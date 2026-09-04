@@ -152,7 +152,7 @@ The Lighthouse CI configuration is in `lighthouserc.json`:
 }
 ```
 
-**Important**: the URLs must match what the export writes. This site leaves `trailingSlash` unset, so each route is written as a flat `out/<route>.html` — audited above as `/cookie-policy.html`. Getting this wrong is not a partial failure: `lhci autorun` aborts the entire run on the first URL that 404s.
+**Important**: the URLs must match what the export writes. This site leaves `trailingSlash` unset, so each route is written as a flat `out/<route>.html` — audited above as `/cookie-policy.html`. The home page is `out/index.html`. Getting this wrong is not a partial failure: `lhci autorun` aborts the entire run on the first URL that 404s.
 
 You can add more pages to audit by adding URLs to the `url` array. To see which pages are generated, check the `out/` directory after running `pnpm run build`.
 
