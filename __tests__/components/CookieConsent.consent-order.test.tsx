@@ -2,14 +2,14 @@
  * Ordering contract: a stored consent choice must be applied (the gtag
  * consent update pushed) BEFORE the direct GA4 script is injected.
  *
- * Without this ordering, a returning visitor OUTSIDE the EEA/UK/CH who
- * previously DECLINED analytics would get the granted-by-default bootstrap
- * replayed ahead of their stored denial: GA's config lands in the queue
- * first and a cookie-based hit could fire before the update applies. Both
- * default calls in this template's bootstrap carry wait_for_update, but
- * that is a bounded grace window (500ms), not an ordering guarantee — a
- * slow hydration can outlast it — which is exactly why the
- * restore-before-load ordering this file locks in still matters.
+ * Without this ordering, a returning visitor who previously GRANTED
+ * analytics would get the deny-by-default bootstrap replayed ahead of their
+ * stored grant: GA's config lands in the queue first and its opening hit
+ * goes out cookieless, before the update applies. The bootstrap's single
+ * default call carries wait_for_update, but that is a bounded grace window
+ * (500ms), not an ordering guarantee — a slow hydration can outlast it —
+ * which is exactly why the restore-before-load ordering this file locks in
+ * still matters.
  *
  * This file mocks a REAL-looking measurement ID so the loader actually
  * injects; the placeholder-inertness behavior is asserted separately in

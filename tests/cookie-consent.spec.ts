@@ -295,13 +295,11 @@ test.describe('Cookie Preferences Modal', () => {
 })
 
 test.describe('Google Consent Mode bootstrap', () => {
-  test('sets the regional consent defaults inline, before any Google tag loads', async ({
-    page,
-  }) => {
+  test('sets a single global denial inline, before any Google tag loads', async ({ page }) => {
     await page.goto('/')
 
-    // The bootstrap is an inline <head> script, so the two consent defaults
-    // are in the dataLayer synchronously — no waiting on lazyOnload GTM.
+    // The bootstrap is an inline <head> script, so the consent default is
+    // in the dataLayer synchronously — no waiting on lazyOnload GTM.
     const defaults = await page.evaluate(() => {
       const dl = (window as unknown as { dataLayer?: unknown[] }).dataLayer || []
       return dl
@@ -310,24 +308,27 @@ test.describe('Google Consent Mode bootstrap', () => {
         .map((args) => args[2] as Record<string, unknown>)
     })
 
-    expect(defaults).toHaveLength(2)
+    // ONE default, applying to everyone. A second call — or a `region` on
+    // this one — would reintroduce a class of visitor measured before they
+    // consented, which is the whole thing this asserts against.
+    expect(defaults).toHaveLength(1)
 
-    // Region-scoped denial first: EEA/UK/CH (32 codes) denied by default,
-    // holding tags briefly for a stored choice.
     expect(defaults[0].analytics_storage).toBe('denied')
     expect(defaults[0].ad_storage).toBe('denied')
+    expect(defaults[0].ad_user_data).toBe('denied')
+    expect(defaults[0].ad_personalization).toBe('denied')
     expect(defaults[0].wait_for_update).toBe(500)
-    expect(Array.isArray(defaults[0].region)).toBe(true)
-    expect(defaults[0].region as string[]).toHaveLength(32)
+    expect(defaults[0].region).toBeUndefined()
 
-    // Then the unscoped grant for everyone else (region-specific settings
-    // take precedence, so this does not weaken the EEA/UK/CH denial). It
-    // also carries wait_for_update: GTM loads from the layout here, so a
-    // returning non-EEA decliner's stored choice needs the same window.
-    expect(defaults[1].analytics_storage).toBe('granted')
-    expect(defaults[1].ad_storage).toBe('granted')
-    expect(defaults[1].wait_for_update).toBe(500)
-    expect(defaults[1].region).toBeUndefined()
+    // functionality/security stay granted: they carry no tracking, and the
+    // banner itself depends on functionality storage to remember a choice.
+    expect(defaults[0].functionality_storage).toBe('granted')
+    expect(defaults[0].security_storage).toBe('granted')
+
+    // Asserted as an absence too — reinstating a permissive default is a
+    // one-line edit that every positive assertion above would still pass.
+    const granted = defaults.filter((d) => d.analytics_storage === 'granted')
+    expect(granted).toHaveLength(0)
   })
 
   test('accepting the banner pushes a gtag consent update', async ({ page, context }) => {

@@ -69,9 +69,9 @@ export default function CookieConsent() {
 
   // Loads the direct GA4 tag. NOT gated on the analytics toggle: Google's
   // tags speak Consent Mode, so the bootstrap in src/lib/consent-mode.ts
-  // gates their cookie STORAGE by region while the script itself loads on
-  // every pageview (undecided/declining EEA/UK/CH visitors are measured
-  // via cookieless pings only). With the shipped placeholder measurement
+  // gates their cookie STORAGE worldwide while the script itself loads on
+  // every pageview (a visitor who has not opted in is measured via
+  // cookieless pings only, in every country). With the shipped placeholder
   // ID this loader is inert — GTM delivers GA4 for fleet sites.
   const loadGoogleAnalytics = useCallback(() => {
     if (
@@ -185,10 +185,11 @@ export default function CookieConsent() {
 
   // Deletes each NON-granted category's third-party cookies (analytics:
   // GA4 + Clarity; marketing: Meta Pixel). Called with no argument
-  // (Decline All) it deletes every category. Per-category deletion matters
-  // under the regional Consent Mode defaults: outside the EEA/UK/CH the
-  // Google tags may have set cookies before the visitor ever touched the
-  // banner, so deletion cannot depend on a previously stored grant — and
+  // (Decline All) it deletes every category. Deletion cannot depend on a
+  // previously stored grant: this site granted storage outside the
+  // EEA/UK/CH until recently, so a returning visitor may still carry a
+  // `_ga` set under that permissive default and have no stored choice
+  // to withdraw — and
   // a visitor who keeps analytics but drops marketing must not have their
   // `_ga` client id wiped on every pageview.
   const deleteTrackingCookies = useCallback(
@@ -228,8 +229,8 @@ export default function CookieConsent() {
       document.cookie = `cookie-consent=${encodeURIComponent(cookieValue)}; path=/; max-age=31536000; SameSite=Lax${secureFlag}`
 
       // Delete each non-granted category's cookies on EVERY apply — not
-      // only on withdrawal of a stored grant, because under the regional
-      // Consent Mode defaults cookies can exist before any stored choice.
+      // only on withdrawal of a stored grant, because cookies set under
+      // this site's earlier permissive default outlive that default.
       if (!prefs.analytics || !prefs.marketing) {
         deleteTrackingCookies(prefs)
       }
@@ -237,7 +238,7 @@ export default function CookieConsent() {
       // Google Consent Mode `update`: runs on every banner interaction AND
       // every stored-choice restore. This is what gates the Google tags'
       // cookie storage — the tags themselves load regardless (see
-      // src/lib/consent-mode.ts for the regional default model).
+      // src/lib/consent-mode.ts for the global denial they start from).
       //
       // Queued BEFORE the custom `consent_update` event pushed below: both
       // writes land in the same dataLayer queue and GTM processes it in order,
@@ -259,14 +260,16 @@ export default function CookieConsent() {
 
       // The direct GA4 tag loads regardless of the choice (Consent Mode
       // gates its storage, not its loading) — but only AFTER the consent
-      // update above, so a stored denial is already in the dataLayer when
-      // the GA queue replays. Loading first would let a returning visitor
-      // outside the EEA/UK/CH who declined get one cookie-based hit under
-      // the granted-by-default bootstrap before their denial applied.
+      // update above, so a stored choice is already in the dataLayer when
+      // the GA queue replays. The bootstrap denies worldwide now, so
+      // loading first no longer risks a cookie-based hit ahead of a stored
+      // denial; it would instead cost a returning GRANTER their opening
+      // hit, sent cookieless before the grant applied.
       loadGoogleAnalytics()
 
       // Non-Google scripts do not speak Consent Mode, so they stay gated
-      // on an explicit grant — everywhere, not just in the EEA/UK/CH.
+      // on an explicit grant — the same standard the bootstrap already
+      // applies to the Google tags.
       if (prefs.analytics) {
         loadMicrosoftClarity()
       }
@@ -343,10 +346,11 @@ export default function CookieConsent() {
     // gtag consent update lands in the dataLayer inside applyConsent,
     // which then loads GA itself), and only THEN is the GA4 loader called
     // directly — that call is for the no-stored-choice case and is an
-    // idempotent no-op when applyConsent already ran. Loading GA before
-    // the restore would let a returning visitor outside the EEA/UK/CH who
-    // declined get one cookie-based hit under the granted-by-default
-    // bootstrap before their stored denial applied.
+    // idempotent no-op when applyConsent already ran. With the bootstrap
+    // denying worldwide, loading GA before the restore no longer risks a
+    // cookie-based hit ahead of a stored denial — it would cost a
+    // returning GRANTER their opening hit, sent cookieless before the
+    // stored grant applied.
     // eslint-disable-next-line react-hooks/set-state-in-effect
     loadPreferencesFromLocalStorage(true)
 
