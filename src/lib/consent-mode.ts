@@ -1,14 +1,22 @@
 // Google Consent Mode v2 defaults.
 //
-// Policy: analytics and advertising storage is DENIED by default for every
-// visitor, worldwide, until they opt in. There is no regional carve-out and
-// no permissive default.
+// Policy: every storage type that carries measurement or personalisation is
+// DENIED by default for every visitor, worldwide, until they opt in. There is
+// no regional carve-out and no permissive default.
 //
-// "Analytics and advertising" is the scope, not a hedge. functionality_storage
-// and security_storage stay GRANTED below: neither carries measurement, and a
-// site that cannot remember a consent choice cannot honour one. Writing
-// "storage is DENIED" flat is the same over-claim the policy pages had to be
-// corrected for, one layer down.
+// Precisely, because the precision is the whole point of this block:
+// analytics_storage, ad_storage, ad_user_data, ad_personalization and
+// personalization_storage all start denied. security_storage is granted and
+// stays granted. functionality_storage is granted BY DEFAULT — a site that
+// cannot remember a consent choice cannot honour one — and thereafter follows
+// the visitor's own functional toggle through updateGoogleConsent, so it is
+// not something that "stays" granted.
+//
+// This summary has been wrong twice, in opposite directions. It first read
+// "storage is DENIED" flat, which over-claimed by ignoring the two granted
+// types; correcting that to "analytics and advertising" under-claimed by
+// dropping personalization_storage, and kept a "stays granted" the update
+// call contradicts. Summarising a list is a claim about every item in it.
 //
 // Google's EU User Consent Policy only *requires* opt-in for the EEA, the
 // UK and Switzerland, but applying that treatment selectively would mean
