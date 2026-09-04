@@ -237,12 +237,13 @@ After configuring DNS:
 
 These variables are embedded during the build process:
 
-| Variable                         | Purpose                    | Default           | Required |
-| -------------------------------- | -------------------------- | ----------------- | -------- |
-| `NEXT_PUBLIC_BASE_PATH`          | Base path for GitHub Pages | (empty)           | No       |
-| `NEXT_PUBLIC_GA_MEASUREMENT_ID`  | Google Analytics ID        | `G-XXXXXXXXXX`    | No       |
-| `NEXT_PUBLIC_META_PIXEL_ID`      | Meta Pixel ID              | `XXXXXXXXXXXXXXX` | No       |
-| `NEXT_PUBLIC_CLARITY_PROJECT_ID` | Microsoft Clarity ID       | `XXXXXXXXXX`      | No       |
+| Variable                | Purpose                    | Default | Required |
+| ----------------------- | -------------------------- | ------- | -------- |
+| `NEXT_PUBLIC_BASE_PATH` | Base path for GitHub Pages | (empty) | No       |
+
+Analytics IDs are not among them in this repo: the GA4, Meta Pixel and Clarity IDs are set in
+`src/lib/analytics.config.ts`, which reads no environment variable. See the `.env.local` note
+below.
 
 ### Setting Environment Variables in GitHub Actions
 
@@ -263,10 +264,12 @@ For local development, create a `.env.local` file:
 # Optional: Set basePath for testing GitHub Pages locally
 NEXT_PUBLIC_BASE_PATH=
 
-# Optional: Analytics IDs (only loaded with user consent)
-NEXT_PUBLIC_GA_MEASUREMENT_ID=
-NEXT_PUBLIC_META_PIXEL_ID=
-NEXT_PUBLIC_CLARITY_PROJECT_ID=
+# Analytics IDs are NOT read from the environment in this repo. The GA4,
+# Meta Pixel and Clarity IDs come from src/lib/analytics.config.ts, which
+# reads no environment variable — setting NEXT_PUBLIC_GA_MEASUREMENT_ID,
+# NEXT_PUBLIC_META_PIXEL_ID or NEXT_PUBLIC_CLARITY_PROJECT_ID here has no
+# effect. Edit that file instead. Other FFC sites DO read these variables,
+# so check the wiring before copying this block between repos.
 ```
 
 **Note**: Never commit `.env.local` or any file containing secrets to the repository.

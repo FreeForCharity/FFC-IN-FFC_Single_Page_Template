@@ -98,4 +98,51 @@ describe('CookieConsent consent-before-GA ordering', () => {
       expect(events).toContain('ga-script-injected')
     })
   })
+  it('queues the Consent Mode update BEFORE the custom consent_update event', async () => {
+    // In production both writes reach the same dataLayer queue and GTM
+    // processes it in order, so a container trigger keyed on `consent_update`
+    // must not be able to run before this choice's consent state is queued.
+    //
+    // What this case asserts is the CALL order that produces that queue
+    // order: window.gtag is a mock here, so the Consent Mode update never
+    // actually reaches dataLayer during the test. That is enough to
+    // discriminate the defect — swapping the two makes this fail — but it is
+    // not a direct assertion about dataLayer contents.
+    // This suite's beforeEach does not reset window.dataLayer, so own it here
+    // rather than inheriting whatever an earlier case left behind.
+    window.dataLayer = []
+    const queue = window.dataLayer as unknown[]
+    // `queue` is a fresh array each test, so `push` is inherited from
+    // Array.prototype and there is no own property to put back: deleting the
+    // override is what restores it. The `finally` is the point — a failing
+    // assertion below would otherwise leave this array instrumented, and the
+    // next thing to push through it would record a phantom event.
+    const originalPush = queue.push.bind(queue)
+    queue.push = ((...entries: unknown[]) => {
+      for (const entry of entries) {
+        if ((entry as { event?: string } | undefined)?.event === 'consent_update') {
+          events.push('custom-consent-event')
+        }
+      }
+      return originalPush(...entries)
+    }) as typeof queue.push
+
+    try {
+      localStorageMock.setItem(
+        'cookie-consent',
+        JSON.stringify({ necessary: true, functional: true, analytics: false, marketing: false })
+      )
+
+      render(<CookieConsent />)
+
+      await waitFor(() => {
+        expect(events).toContain('consent-update')
+        expect(events).toContain('custom-consent-event')
+      })
+
+      expect(events.indexOf('consent-update')).toBeLessThan(events.indexOf('custom-consent-event'))
+    } finally {
+      Reflect.deleteProperty(queue, 'push')
+    }
+  })
 })
