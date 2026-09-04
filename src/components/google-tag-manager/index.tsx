@@ -2,11 +2,34 @@
 
 import Script from 'next/script'
 import { analyticsConfig } from '@/lib/analytics.config'
-import { scriptString } from '@/components/cookie-consent'
 
 // Google Tag Manager container ID. Edit it in src/lib/analytics.config.ts —
 // the single, easy-to-find place for all analytics IDs.
 const GTM_ID = analyticsConfig.gtmId
+
+/**
+ * Serialises the container id for embedding in the inline script body.
+ *
+ * `JSON.stringify` supplies the quotes and escapes quotes and newlines, but
+ * NOT `<` — a value containing `</script>` would close the element early and
+ * let the rest parse as markup. U+2028/U+2029 are escaped too: legal in JSON,
+ * illegal in a JS string literal before ES2019.
+ *
+ * Defence in depth, not a live hole: the id is a build-time constant set by a
+ * maintainer, never by a visitor. It matters because `isConfigured()` only
+ * rejects placeholders — nothing validates the SHAPE of what lands here.
+ *
+ * Deliberately local rather than imported from the cookie-consent component,
+ * which exports the same helper: that module is `'use client'`, so importing
+ * from it makes this a client-boundary call and breaks the build wherever
+ * this component renders on the server.
+ */
+function scriptString(value: string): string {
+  return JSON.stringify(value)
+    .replace(/</g, '\\u003c')
+    .replace(/\u2028/g, '\\u2028')
+    .replace(/\u2029/g, '\\u2029')
+}
 
 export default function GoogleTagManager() {
   return (
