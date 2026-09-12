@@ -102,7 +102,7 @@ describe('CookieConsent inline script escaping', () => {
     // would misconfigure analytics on every site, which is a worse outcome
     // than the injection it guards against — and it would be silent.
     const all = (await renderWithEverythingGranted()).join('\n')
-    const match = all.match(/gtag\('config', (".*?"), \{/s)
+    const match = all.match(/gtag\('config', ("[\s\S]*?"), \{/)
     expect(match).not.toBeNull()
     expect(JSON.parse(match![1])).toBe(
       `G-X'); alert('xss'); //</script><img src=x onerror=alert(1)>`
