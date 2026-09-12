@@ -18,6 +18,7 @@
         "name": "next"
       }
     ],
+    "types": ["jest", "@testing-library/jest-dom", "node"],
     "paths": {
       "@/*": ["./src/*"]
     }
@@ -30,5 +31,5 @@
     "src/components/UI/BlogCard.tsx",
     ".next/dev/types/**/*.ts"
   ],
-  "exclude": ["node_modules"]
+  "exclude": ["node_modules", "__tests__", "tests"]
 }
