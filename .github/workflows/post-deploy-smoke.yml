@@ -28,7 +28,7 @@ jobs:
     if: ${{ github.event.workflow_run.conclusion == 'success' || github.event_name == 'workflow_dispatch' || github.event_name == 'schedule' }}
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v6
@@ -40,7 +40,7 @@ jobs:
         # to ship. Unconditional for the same reason: it must be in place
         # before the first step that needs it, which now runs before the
         # skip decision.
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
           node-version: '20'
 
@@ -853,7 +853,7 @@ jobs:
 
       - name: Upload screenshot + summary artifact
         if: always() && steps.url.outputs.skip != 'true'
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: smoke-visual-${{ github.run_number }}
           path: artifacts/

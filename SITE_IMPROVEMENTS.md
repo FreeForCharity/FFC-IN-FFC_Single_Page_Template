@@ -383,7 +383,7 @@ const createJestConfig = nextJest({
 })
 
 const customJestConfig = {
-  setupFilesAfterEnv: ['<rootDir>/jest.setup.js'],
+  setupFilesAfterEnv: ['<rootDir>/jest.setup.ts'],
   testEnvironment: 'jest-environment-jsdom',
   testMatch: [
     '**/__tests__/**/*.test.js',
@@ -449,7 +449,7 @@ module.exports = createJestConfig(customJestConfig)
    - `@testing-library/dom` (^10.4.1)
    - `@types/jest` (^30.0.0)
 2. Create `jest.config.js`
-3. Create `jest.setup.js`
+3. Create `jest.setup.ts`
 4. Create `__tests__/` directory structure
 5. Write initial test suite for critical components
 6. Add test commands to package.json

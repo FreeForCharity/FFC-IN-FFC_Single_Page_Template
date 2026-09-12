@@ -10,6 +10,11 @@ updates:
       interval: 'weekly'
       day: 'monday'
       time: '09:00' # UTC timezone (all times in dependabot.yml use UTC)
+    # 7-day release cooldown, matching pnpm's minimumReleaseAge (10080 min)
+    # in pnpm-workspace.yaml. Without this, Dependabot proposes versions the
+    # resolver would refuse, and the two layers disagree about "latest".
+    cooldown:
+      default-days: 7
     open-pull-requests-limit: 10
     commit-message:
       prefix: 'npm'
@@ -42,6 +47,10 @@ updates:
       interval: 'weekly'
       day: 'monday'
       time: '09:00' # UTC timezone (all times in dependabot.yml use UTC)
+    # Same 7-day cooldown for action pins — nothing else applies the safety
+    # window to Actions (pnpm's minimumReleaseAge only covers npm).
+    cooldown:
+      default-days: 7
     open-pull-requests-limit: 5
     commit-message:
       prefix: 'ci'

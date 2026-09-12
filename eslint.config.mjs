@@ -28,7 +28,7 @@ const eslintConfig = [
     ],
   },
   {
-    files: ['jest.config.js', 'jest.setup.js'],
+    files: ['jest.config.js', 'jest.setup.ts'],
     rules: {
       '@typescript-eslint/no-require-imports': 'off',
     },

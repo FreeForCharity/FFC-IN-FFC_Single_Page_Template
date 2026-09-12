@@ -238,7 +238,7 @@ pnpm test -t "should not have accessibility violations"
 - Code coverage collection enabled
 - Module path aliases configured
 
-**jest.setup.js**: Test environment setup
+**jest.setup.ts**: Test environment setup
 
 - Imports @testing-library/jest-dom for custom matchers
 - Imports jest-axe/extend-expect for accessibility matchers
