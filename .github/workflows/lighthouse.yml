@@ -62,24 +62,30 @@ jobs:
 
       - name: Stage site for Lighthouse
         id: stage
-        # lighthouserc.json serves ./out at the domain root and audits
-        # root-relative URLs. That matches a custom-domain deploy, but a
-        # subpath build prefixes every asset URL with /<repo-name> — served
-        # from the root, all CSS/JS would 404 and Lighthouse would audit an
-        # unstyled skeleton page (bogus scores, e.g. tap-target failures from
-        # default user-agent styles). Nest the export under the same subpath
-        # the production Pages deploy uses and audit the subpath URLs instead.
-        # The page list is derived from lighthouserc.json (single source of
-        # truth) so it can't drift from the config.
+        # lighthouserc.json serves ./out at the root and audits root-relative
+        # URLs. That matches a custom-domain deploy, but a subpath build
+        # prefixes every asset URL with /<repo-name>: served from the root they
+        # all 404 and Lighthouse silently scores an unstyled skeleton instead of
+        # failing. Nest the export under the same subpath the deploy uses and
+        # audit the subpath URLs. The page list comes from lighthouserc.json so
+        # it cannot drift from the config.
         run: |
           base="${{ steps.basepath.outputs.value }}"
           if [ -n "$base" ]; then
             mkdir -p "_lhci-site${base}"
             cp -r out/. "_lhci-site${base}/"
             flags="--collect.staticDistDir=./_lhci-site"
-            pages=$(jq -r '.ci.collect.url[] | sub("^http://localhost/"; "")' lighthouserc.json)
-            for page in $pages; do
-              flags="$flags --collect.url=http://localhost${base}/${page}"
+            # node, not jq: this workflow guards its other jq use with an
+            # install check, so a new unguarded one before Lighthouse runs
+            # would be the fragile step. Node is already set up above.
+            #
+            # node emits whole --collect.url flags rather than page fragments
+            # the shell re-joins: a bare "http://localhost/" has an empty
+            # fragment, and `for page in $pages` would drop it, silently
+            # removing the home page from the audit on a subpath build.
+            urls=$(BASE="$base" node -e 'const b = process.env.BASE; for (const u of require(process.cwd() + "/lighthouserc.json").ci.collect.url) console.log("--collect.url=http://localhost" + b + new URL(u).pathname)')
+            for u in $urls; do
+              flags="$flags $u"
             done
             echo "flags=$flags" >> "$GITHUB_OUTPUT"
           else
