@@ -40,7 +40,7 @@
     "@axe-core/playwright": "^4.13.0",
     "@axe-core/react": "^4.13.0",
     "@commitlint/cli": "^20.5.3",
-    "@commitlint/config-conventional": "^20.5.3",
+    "@commitlint/config-conventional": "^21.2.2",
     "@eslint/eslintrc": "^3",
     "@lhci/cli": "^0.15.1",
     "@next/bundle-analyzer": "^16.3.3",
