@@ -15,7 +15,9 @@
  *  6. Leftover Free For Charity brand identity (org name, freeforcharity.org
  *     URLs, EIN, phone, @freeforcharity.org emails) in rendered pages/
  *     components after a child site rebrands — the footer platform-credit
- *     attribution is the one allowlisted exception. This is the enforced
+ *     attribution is the one allowlisted exception, and FFC's own donation
+ *     policy page (src/app/free-for-charity-donation-policy/) is exempt as a
+ *     document that is FFC's by design. This is the enforced
  *     complement to the advisory `npm run check:rebrand` config/data checklist.
  *  7. A workflow passing `static_site_generator: next` to
  *     actions/configure-pages while this repo's Next config is TypeScript —
@@ -581,13 +583,62 @@ function withoutSupportedByBlock(relPath, body) {
   return body.replace(/supportedBy:\s*\{[^}]*\}/g, (block) => block.replace(/[^\n]/g, ' '))
 }
 
+// Pages that ARE Free For Charity's own documents, published on every site
+// under FFC's name by design — not leftover template branding. The footer's
+// "Free For Charity Donation Policy" link (allowlisted above) points at the
+// first. Exempted by exact path only, so the same identity anywhere else —
+// including the charity's own /donation-policy — is still an error.
+const FFC_OWN_DOCUMENTS = new Set(['src/app/free-for-charity-donation-policy/page.tsx'])
+
+/**
+ * Pure detector, exported for tests: every line in `files` that still carries
+ * Free For Charity's identity once the site is named `name`. Dormant (returns
+ * nothing) while `name` is still the template's own.
+ *
+ * @param {{path: string, body: string}[]} files repo-relative paths, any separator
+ * @param {string | null} name siteConfig.name
+ * @returns {{path: string, line: number, label: string}[]}
+ */
+export function brandIdentityFindings(files, name) {
+  if (!name || name === TEMPLATE_ORG_NAME) return []
+  const findings = []
+  for (const { path, body } of files) {
+    const rel = path.split(sep).join('/').split('\\').join('/')
+    if (FFC_OWN_DOCUMENTS.has(rel)) continue
+    const lines = withoutSupportedByBlock(rel, body).split('\n')
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i]
+      if (isAllowedIdentityLine(rel, line)) continue
+      for (const p of FFC_IDENTITY_PATTERNS) {
+        if (p.re.test(line)) findings.push({ path: rel, line: i + 1, label: p.label })
+      }
+    }
+  }
+  return findings
+}
+
+/**
+ * The value of the first quoted `name:` in site.config.ts (the type
+ * declaration's `name: string` is unquoted, so it never matches). Exported for
+ * tests. Reads a whole single- or double-quoted string, escapes included, so a
+ * name that contains the other quote character — "St. Mary's Shelter" — is
+ * read in full rather than cut off at the apostrophe.
+ *
+ * @param {string} source
+ * @returns {string | null}
+ */
+export function siteNameFromConfig(source) {
+  const m = source.match(/\bname:\s*(?:'((?:\\.|[^'\\\n])*)'|"((?:\\.|[^"\\\n])*)")/)
+  if (!m) return null
+  const raw = m[1] ?? m[2]
+  return raw.replace(/\\(.)/g, '$1')
+}
+
 async function checkBrandIdentity() {
   const cfgPath = join(SRC_DIR, 'lib', 'site.config.ts')
   let name = null
   try {
-    const cfg = await readFile(cfgPath, 'utf8')
-    const m = cfg.match(/name:\s*['"]([^'"]+)['"]/)
-    name = m ? m[1] : null
+    name = siteNameFromConfig(await readFile(cfgPath, 'utf8'))
   } catch {
     return // missing config handled in checkSiteConfigExists
   }
@@ -596,28 +647,20 @@ async function checkBrandIdentity() {
 
   // Scan the whole src/ tree (app, components, lib, data) — leftover FFC
   // identity in config or data modules is just as wrong as in a page.
-  const files = await walk(SRC_DIR, (n) => /\.(tsx?|jsx?)$/.test(n))
-  for (const full of files) {
-    const rel = relative(ROOT, full)
-    let body
+  const paths = await walk(SRC_DIR, (n) => /\.(tsx?|jsx?)$/.test(n))
+  const files = []
+  for (const full of paths) {
     try {
-      body = await readFile(full, 'utf8')
+      files.push({ path: relative(ROOT, full), body: await readFile(full, 'utf8') })
     } catch {
       continue
     }
-    const lines = withoutSupportedByBlock(rel, body).split('\n')
-    for (let i = 0; i < lines.length; i++) {
-      const line = lines[i]
-      if (isAllowedIdentityLine(rel, line)) continue
-      for (const p of FFC_IDENTITY_PATTERNS) {
-        if (p.re.test(line)) {
-          errors.push(
-            `${rel}:${i + 1} still references ${p.label} after this site rebranded to "${name}". ` +
-              `Replace it with the new organization's details.`
-          )
-        }
-      }
-    }
+  }
+  for (const f of brandIdentityFindings(files, name)) {
+    errors.push(
+      `${f.path}:${f.line} still references ${f.label} after this site rebranded to "${name}". ` +
+        `Replace it with the new organization's details.`
+    )
   }
 }
 

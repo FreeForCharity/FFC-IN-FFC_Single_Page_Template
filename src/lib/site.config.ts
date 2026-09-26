@@ -1,5 +1,5 @@
 /**
- * Central site configuration for Free For Charity template sites.
+ * Central site configuration for FFC template sites.
  *
  * EDIT THIS FILE to customize a new FFC-supported nonprofit site.
  * Most values that vary between sites flow from here so individual
@@ -65,7 +65,7 @@ export type SiteConfig = {
   vulnerabilityDisclosurePath: string
   /** Social links displayed in the footer. */
   social: readonly SiteSocialLink[]
-  /** IRS Employer Identification Number (tax ID), e.g. '46-2471893'. */
+  /** IRS Employer Identification Number (tax ID), in the form '12-3456789'. */
   ein: string
   /**
    * Year (or ISO date) the organization was founded, e.g. '2014'.
@@ -118,6 +118,11 @@ export type SiteConfig = {
    * these false so the section self-hides instead of showing FFC placeholders.
    * Data-driven sections (Team, Testimonials, Results) self-hide on their own
    * when their data files are emptied and need no flag here.
+   *
+   * Endowment and Programs (and the FAQ, which has no flag) additionally
+   * render only on the supporting organization's own site — see
+   * src/lib/section-visibility.ts — so a charity site never shows them even
+   * with these left at true.
    */
   sections: {
     /** FFC Endowment feature cards. */
@@ -269,4 +274,41 @@ export function twitterSite(): string | undefined {
 /** Returns the OG/Twitter card description, falling back to the longer page description. */
 export function cardDescription(): string {
   return siteConfig.shortDescription.trim() || siteConfig.description
+}
+
+/**
+ * True only on the supporting organization's OWN site — i.e. the template as
+ * shipped, where `name` still equals `supportedBy.name`.
+ *
+ * The template carries copy that is about the supporting organization itself
+ * (its endowment, its FAQ, its mission statement and video). On any other
+ * site that copy would make the supporter's claims in the charity's name, so
+ * the components that carry it render only when this returns true. A charity
+ * site never needs to change anything for that to happen: setting `name` is
+ * enough, which is exactly what provisioning does.
+ */
+export function isSupportingOrgSite(): boolean {
+  return siteConfig.name.trim() === siteConfig.supportedBy.name.trim()
+}
+
+/**
+ * `mailto:` link to `contactEmail`. The characters that would end or corrupt
+ * the address part of a mailto: URI (RFC 6068) are percent-encoded -- `?` and
+ * `#` end it, `&` and `%` corrupt it, and `,` separates recipients -- so a
+ * malformed contactEmail can never add a recipient or inject a header.
+ */
+export function mailtoHref(subject?: string): string {
+  const address = siteConfig.contactEmail.trim().replace(/[%?#&,\s]/g, encodeURIComponent)
+  return subject ? `mailto:${address}?subject=${encodeURIComponent(subject)}` : `mailto:${address}`
+}
+
+/**
+ * The phone number to publish, or null when either half is unset. A charity
+ * that publishes no number shows no number, rather than a link that dials
+ * nothing — the same rule the footer applies.
+ */
+export function publishedPhone(): { display: string; tel: string } | null {
+  const display = siteConfig.phone.display.trim()
+  const tel = siteConfig.phone.tel.trim()
+  return display && tel ? { display, tel } : null
 }

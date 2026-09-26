@@ -12,6 +12,7 @@ import { siteConfig } from '@/lib/site.config'
 import { assetPath } from '@/lib/assetPath'
 import { eventsSectionVisible } from '@/lib/events/visibility'
 import { configuredTeam } from '@/data/team'
+import { faqSectionVisible, programsSectionVisible } from '@/lib/section-visibility'
 
 // Maps a social link's label (as defined in siteConfig.social) to an icon.
 // Unknown labels fall back to a generic link icon (FiLink2) so a charity
@@ -86,15 +87,13 @@ const Footer: React.FC = () => {
               {[
                 { name: 'Home', href: '/#hero' },
                 { name: 'Mission', href: '/#mission' },
-                // Programs / Events self-hide (sections.showPrograms /
+                // Programs / Events / FAQ self-hide (section-visibility.ts /
                 // eventsSectionVisible); drop the dead quick-link too.
-                ...(siteConfig.sections.showPrograms
-                  ? [{ name: 'Programs', href: '/#programs' }]
-                  : []),
+                ...(programsSectionVisible() ? [{ name: 'Programs', href: '/#programs' }] : []),
                 ...(showEventsLink ? [{ name: 'Events', href: '/#events' }] : []),
                 { name: 'Donate', href: '/#donate' },
                 { name: 'Volunteer', href: '/#volunteer' },
-                { name: 'FAQ', href: '/#faq' },
+                ...(faqSectionVisible() ? [{ name: 'FAQ', href: '/#faq' }] : []),
                 ...(configuredTeam.length > 0 ? [{ name: 'Team', href: '/#team' }] : []),
                 // FFC footer standard: every supported charity site links back
                 // to the supporting org's hub. Always rendered — keep this

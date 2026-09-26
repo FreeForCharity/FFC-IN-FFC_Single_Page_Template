@@ -3,8 +3,7 @@
 import React, { useEffect, useRef, useState } from 'react'
 import Image from 'next/image'
 import { assetPath } from '@/lib/assetPath'
-
-const VIDEO_TITLE = "Learn about Free For Charity's mission to help nonprofits reduce costs"
+import { siteConfig } from '@/lib/site.config'
 
 /**
  * Click-to-play facade for the mission video. The multi-megabyte mp4 is not
@@ -19,6 +18,11 @@ const VIDEO_TITLE = "Learn about Free For Charity's mission to help nonprofits r
  * fetch it, preserving the page-weight win; crawlers still see the mp4 URL.
  */
 const MissionVideo = () => {
+  // Rendered only on the supporting organization's own site (see Mission), so
+  // siteConfig.name is that organization's name here. Read at render, not at
+  // module load, so the labels always match the config the page renders with.
+  const videoTitle = `Learn about ${siteConfig.name}'s mission to help nonprofits reduce costs`
+  const videoLabel = `${siteConfig.name} mission video`
   const [activated, setActivated] = useState(false)
   const videoRef = useRef<HTMLVideoElement | null>(null)
 
@@ -40,8 +44,8 @@ const MissionVideo = () => {
             playsInline
             preload="metadata"
             poster={assetPath('/videos/mission-video-poster.webp')}
-            aria-label="Free For Charity mission video"
-            title={VIDEO_TITLE}
+            aria-label={videoLabel}
+            title={videoTitle}
           >
             <source src={assetPath('/videos/mission-video.mp4')} type="video/mp4" />
             Your browser does not support the video tag.
@@ -51,8 +55,8 @@ const MissionVideo = () => {
           type="button"
           onClick={() => setActivated(true)}
           className="mission-video-facade group relative block w-full max-w-[800px] cursor-pointer overflow-hidden rounded-lg shadow-lg"
-          aria-label="Play the Free For Charity mission video"
-          title={VIDEO_TITLE}
+          aria-label={`Play the ${videoLabel}`}
+          title={videoTitle}
         >
           <Image
             src={assetPath('/videos/mission-video-poster.webp')}
@@ -81,8 +85,8 @@ const MissionVideo = () => {
       autoPlay
       playsInline
       poster={assetPath('/videos/mission-video-poster.webp')}
-      aria-label="Free For Charity mission video"
-      title={VIDEO_TITLE}
+      aria-label={videoLabel}
+      title={videoTitle}
     >
       <source src={assetPath('/videos/mission-video.mp4')} type="video/mp4" />
       Your browser does not support the video tag.

@@ -1,5 +1,6 @@
 import React from 'react'
 import { faqs } from '@/data/faqs'
+import { faqSectionVisible } from '@/lib/section-visibility'
 
 /**
  * Builds the schema.org FAQPage JSON-LD object from the site's FAQ data. Pulls
@@ -32,6 +33,9 @@ export function buildFaqSchema(): Record<string, unknown> {
  * Server component — no client runtime cost.
  */
 export default function FaqSchema() {
+  // Same predicate as the FAQ section: no structured data for answers the
+  // page does not show (and that belong to another organization).
+  if (!faqSectionVisible()) return null
   const schema = buildFaqSchema()
   // Escape '<' as its JSON unicode form so a FAQ answer that ever contains the
   // literal substring "</script>" cannot break out of this inline script tag

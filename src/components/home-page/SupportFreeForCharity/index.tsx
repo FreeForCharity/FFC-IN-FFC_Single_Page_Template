@@ -1,7 +1,7 @@
 import React, { CSSProperties, IframeHTMLAttributes } from 'react'
 import Image from 'next/image'
 import { assetPath } from '@/lib/assetPath'
-import { siteConfig } from '@/lib/site.config'
+import { isSupportingOrgSite, siteConfig } from '@/lib/site.config'
 
 interface ExtendedIframeProps extends IframeHTMLAttributes<HTMLIFrameElement> {
   allowpaymentrequest?: string
@@ -33,15 +33,16 @@ const Index = () => {
     <div id="donate">
       <div className="w-[90%] mx-auto py-[27px] mb-[60px] px-[20px] max-w-[1280px]">
         <h2 className="font-[400] text-[40px] lg:text-[48px] leading-[100%] tracking-[0] text-center mx-auto mb-[60px] faustina-font">
-          Support Free For Charity
+          Support {siteConfig.name}
         </h2>
 
         <div className="flex items-center flex-col lg:flex-row gap-[40px] lg:gap-[20px]">
           {/* Left side: Description and pointing hands image */}
           <div className="flex flex-col w-full lg:w-[50%]">
             <p className="mb-[20px] font-[400] text-[25px] leading-[150%] tracking-[0] text-center lg:text-left lato-font">
-              By donating you help drive our mission and allow us to support more charities with our
-              Domain, Website, and other services.
+              {isSupportingOrgSite()
+                ? 'By donating you help drive our mission and allow us to support more charities with our Domain, Website, and other services.'
+                : `By donating you help drive ${siteConfig.name}'s mission.`}
             </p>
             {/* Pointing hands image - flipped horizontally to point toward the form on the right */}
             <div className="w-full flex justify-center lg:justify-end">
