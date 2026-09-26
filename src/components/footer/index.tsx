@@ -8,7 +8,7 @@ import { FaFacebookF, FaLinkedinIn, FaGithub } from 'react-icons/fa'
 import { FaXTwitter } from 'react-icons/fa6'
 import type { IconType } from 'react-icons'
 
-import { siteConfig } from '@/lib/site.config'
+import { siteConfig, publishedPhone } from '@/lib/site.config'
 import { assetPath } from '@/lib/assetPath'
 import { eventsSectionVisible } from '@/lib/events/visibility'
 import { configuredTeam } from '@/data/team'
@@ -28,6 +28,7 @@ const socialIconByLabel: Record<string, IconType> = {
 }
 
 const Footer: React.FC = () => {
+  const phone = publishedPhone()
   const currentYear = React.useMemo(() => new Date().getFullYear(), [])
   const socialLinks = siteConfig.social.filter((s) => s.href)
   // Trim so whitespace-only config behaves like empty (link/clause self-hides).
@@ -199,18 +200,22 @@ const Footer: React.FC = () => {
               </div>
             </div>
 
-            <div className="flex items-start gap-3">
-              <FiPhone className="w-10 h-10 text-orange-500 flex-shrink-0 mt-0.5" />
-              <div>
-                <p className="font-[500] text-[22px]">Call Us Today</p>
-                <a
-                  href={`tel:${siteConfig.phone.tel}`}
-                  className="font-[500] text-[16px] hover:text-cyan-400 transition-colors aria-font"
-                >
-                  {siteConfig.phone.display}
-                </a>
+            {/* A charity that publishes no number gets no "Call Us" block, not a
+                tel: link that dials nothing. */}
+            {phone && (
+              <div className="flex items-start gap-3">
+                <FiPhone className="w-10 h-10 text-orange-500 flex-shrink-0 mt-0.5" />
+                <div>
+                  <p className="font-[500] text-[22px]">Call Us Today</p>
+                  <a
+                    href={`tel:${phone.tel}`}
+                    className="font-[500] text-[16px] hover:text-cyan-400 transition-colors aria-font"
+                  >
+                    {phone.display}
+                  </a>
+                </div>
               </div>
-            </div>
+            )}
 
             {siteConfig.addresses.map((address) => (
               <a
