@@ -151,6 +151,11 @@ describe('mailtoHref', () => {
     expect(mailtoHref()).toBe('mailto:a@b.example%2Cc@d.example%3Fbcc=e@f.example')
   })
 
+  it('removes whitespace inside the address instead of encoding it', () => {
+    asCharitySite({ contactEmail: 'hello @pantry.\nexample' })
+    expect(mailtoHref()).toBe('mailto:hello@pantry.example')
+  })
+
   it('appends an encoded subject', () => {
     asCharitySite()
     expect(mailtoHref('Hi & bye')).toMatch(/\?subject=Hi%20%26%20bye$/)

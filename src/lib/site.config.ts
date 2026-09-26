@@ -296,9 +296,12 @@ export function isSupportingOrgSite(): boolean {
  * the address part of a mailto: URI (RFC 6068) are percent-encoded -- `?` and
  * `#` end it, `&` and `%` corrupt it, and `,` separates recipients -- so a
  * malformed contactEmail can never add a recipient or inject a header.
+ * Whitespace is never part of an address, so it is removed rather than encoded.
  */
 export function mailtoHref(subject?: string): string {
-  const address = siteConfig.contactEmail.trim().replace(/[%?#&,\s]/g, encodeURIComponent)
+  const address = siteConfig.contactEmail
+    .replace(/\s+/g, '')
+    .replace(/[%?#&,]/g, encodeURIComponent)
   return subject ? `mailto:${address}?subject=${encodeURIComponent(subject)}` : `mailto:${address}`
 }
 
