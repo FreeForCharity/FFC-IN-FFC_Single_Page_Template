@@ -73,4 +73,19 @@ describe('addToCalendar URL helpers', () => {
       siteConfig.name = original
     }
   })
+
+  it('cannot inject a property through a carriage return in the name or event text', () => {
+    const original = siteConfig.name
+    siteConfig.name = 'Riverbend\r\nX-INJECTED:1\rX-ALSO:1'
+    try {
+      const withCr: UnifiedEvent = { ...event, title: 'Food drive\r\nX-TITLE:1' }
+      const decoded = decodeURIComponent(icsDataUri(withCr).replace(/^data:[^,]+,/, ''))
+      const lines = decoded.split('\r\n')
+      expect(lines.some((l) => /^X-/.test(l))).toBe(false)
+      expect(decoded).not.toMatch(/\r(?!\n)/)
+      expect(decoded).toContain('PRODID:-//Riverbend\\nX-INJECTED:1\\nX-ALSO:1//Events//EN')
+    } finally {
+      siteConfig.name = original
+    }
+  })
 })
