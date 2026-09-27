@@ -143,7 +143,8 @@ describe('no Google-hosted fonts', () => {
     /\b(?:from|import|require)\s*\(?\s*(?:\/\*[^*]*\*+(?:[^/*][^*]*\*+)*\/\s*)*(['"])next\/font\/google(?:\/[^'"]*)?\1/g
   const inComment = (code: string, at: number) => {
     const lineStart = code.lastIndexOf('\n', at - 1) + 1
-    if (code.slice(lineStart, at).includes('//')) return true
+    // `//` after a colon is a URL (https://...), not a comment, as in check:drift.
+    if (/(^|[^:])\/\//.test(code.slice(lineStart, at))) return true
     return code.lastIndexOf('/*', at) > code.lastIndexOf('*/', at)
   }
   const flagged = (code: string) =>
@@ -159,6 +160,7 @@ describe('no Google-hosted fonts', () => {
 
   it('applies that rule to imports but not to comments', () => {
     expect(flagged("import { Lato } from 'next/font/google'")).toBe(true)
+    expect(flagged("const u = 'https://x.example'; import('next/font/google')")).toBe(true)
     expect(flagged("await import(/* webpackPrefetch: true */ 'next/font/google')")).toBe(true)
     expect(flagged("// import { Lato } from 'next/font/google'")).toBe(false)
     expect(flagged("/*\n import { Lato } from 'next/font/google'\n*/")).toBe(false)
