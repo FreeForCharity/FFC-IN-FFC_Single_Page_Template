@@ -105,7 +105,11 @@ export function icsDataUri(event: UnifiedEvent): string {
 }
 
 function escapeIcsText(value: string): string {
+  // ICS lines end in CRLF, so a raw CR (alone or in CRLF) must not survive:
+  // it would end the line and let the rest of the value start a new
+  // property. Fold every line break to \n first, then escape it.
   return value
+    .replace(/\r\n?/g, '\n')
     .replace(/\\/g, '\\\\')
     .replace(/\n/g, '\\n')
     .replace(/,/g, '\\,')
