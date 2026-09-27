@@ -18,7 +18,7 @@
  *     attribution is the one allowlisted exception, and FFC's own donation
  *     policy page (src/app/free-for-charity-donation-policy/) is exempt as a
  *     document that is FFC's by design. This is the enforced
- *     complement to the advisory `npm run check:rebrand` config/data checklist.
+ *     complement to the advisory `pnpm run check:rebrand` config/data checklist.
  *  7. A workflow passing `static_site_generator: next` to
  *     actions/configure-pages while this repo's Next config is TypeScript —
  *     the action then writes its own next.config.js and the repo's real
@@ -28,7 +28,7 @@
  *     build must never contact Google; fonts are self-hosted via
  *     next/font/local.
  *
- * Run: `node scripts/check-drift.mjs` or `npm run check:drift`.
+ * Run: `node scripts/check-drift.mjs` or `pnpm run check:drift`.
  * Always resolves paths relative to the repo root, so it works regardless
  * of the CWD a developer invokes it from.
  * Exits non-zero on errors; warnings do not fail the check.
