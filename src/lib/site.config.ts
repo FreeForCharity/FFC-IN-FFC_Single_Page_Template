@@ -1,5 +1,5 @@
 /**
- * Central site configuration for Free For Charity template sites.
+ * Central site configuration for FFC template sites.
  *
  * EDIT THIS FILE to customize a new FFC-supported nonprofit site.
  * Most values that vary between sites flow from here so individual
@@ -30,6 +30,20 @@ export type SiteConfig = {
   name: string
   /** Short tagline used in the default title template. */
   tagline: string
+  /** One-sentence mission statement (same key and meaning as the Footer-Only template). */
+  mission: string
+  /**
+   * Absolute https URL of the charity's donation page (Zeffy, PayPal, a page
+   * on this site, ...). The Donate section links to it; empty falls back to a
+   * `mailto:` to `contactEmail`. See `donateHref()`. The supporting
+   * organization's own site embeds `integrations.zeffyDonationUrl` instead.
+   */
+  donationUrl: string
+  /**
+   * Absolute https URL of the charity's volunteer sign-up page. Empty falls
+   * back to a `mailto:` to `contactEmail`. See `volunteerHref()`.
+   */
+  volunteerUrl: string
   /** Plain-language description used for the <meta description> tag. */
   description: string
   /**
@@ -65,7 +79,7 @@ export type SiteConfig = {
   vulnerabilityDisclosurePath: string
   /** Social links displayed in the footer. */
   social: readonly SiteSocialLink[]
-  /** IRS Employer Identification Number (tax ID), e.g. '46-2471893'. */
+  /** IRS Employer Identification Number (tax ID), in the form '12-3456789'. */
   ein: string
   /**
    * Year (or ISO date) the organization was founded, e.g. '2014'.
@@ -100,7 +114,21 @@ export type SiteConfig = {
    * Distinct from `parentOrg` below, which covers genuine fiscal-sponsorship
    * ("a project of") relationships.
    */
-  supportedBy: { name: string; url: string; hubUrl: string }
+  supportedBy: {
+    name: string
+    url: string
+    hubUrl: string
+    /**
+     * The supporting organization's own legal contacts, published by its
+     * policy pages on ITS OWN site only (see `legalContact()`): the named
+     * Data Protection Officer and the address that policies route privacy
+     * requests to. A charity site never renders these, so provisioning leaves
+     * them untouched.
+     */
+    legalContactName?: string
+    legalContactEmail?: string
+    cookieContactEmail?: string
+  }
   /**
    * Parent / umbrella organization, when this site is "a project of" another
    * nonprofit. Omit for a standalone charity (the footer clause is hidden).
@@ -118,6 +146,11 @@ export type SiteConfig = {
    * these false so the section self-hides instead of showing FFC placeholders.
    * Data-driven sections (Team, Testimonials, Results) self-hide on their own
    * when their data files are emptied and need no flag here.
+   *
+   * Endowment and Programs (and the FAQ, which has no flag) additionally
+   * render only on the supporting organization's own site — see
+   * src/lib/section-visibility.ts — so a charity site never shows them even
+   * with these left at true.
    */
   sections: {
     /** FFC Endowment feature cards. */
@@ -136,6 +169,15 @@ export type SiteConfig = {
    * Third-party integration endpoints. Each fork points these at its own
    * accounts — the domains are already allow-listed in the CSP, so only the
    * path/ID changes here.
+   */
+  /**
+   * The supporting organization's OWN third-party targets (its endowment's
+   * Zeffy form, its Idealist listing, its Facebook page, its charity
+   * application form). They render only on the supporting organization's own
+   * site: a charity's site uses `donationUrl`, `volunteerUrl` and its own
+   * `social` links instead (see `donationEmbedUrl()`, `donateHref()`,
+   * `volunteerHref()`, `eventsFacebookPageUrl()`), so provisioning never has
+   * to find and replace them.
    */
   integrations: {
     /** Zeffy donation-form embed URL (the iframe `src`). */
@@ -158,6 +200,11 @@ export type SiteConfig = {
 export const siteConfig: SiteConfig = {
   name: 'Free For Charity',
   tagline: 'Reduce Costs, Increase Impact',
+  mission:
+    'Free For Charity connects students, professionals, and businesses with nonprofits to reduce costs and increase revenues.',
+  // Empty = a charity's Donate / Volunteer sections email contactEmail instead.
+  donationUrl: '',
+  volunteerUrl: '',
   description:
     'Free For Charity connects students, professionals, and businesses with nonprofits to reduce costs and increase revenues—putting more resources back into their missions.',
   shortDescription:
@@ -213,6 +260,9 @@ export const siteConfig: SiteConfig = {
     name: 'Free For Charity',
     url: 'https://freeforcharity.org',
     hubUrl: 'https://freeforcharity.org/hub/',
+    legalContactName: 'Clarke Moyer',
+    legalContactEmail: 'clarkemoyer@freeforcharity.org',
+    cookieContactEmail: 'privacy@freeforcharity.org',
   },
   parentOrg: {
     name: 'Free For Charity',
@@ -269,4 +319,115 @@ export function twitterSite(): string | undefined {
 /** Returns the OG/Twitter card description, falling back to the longer page description. */
 export function cardDescription(): string {
   return siteConfig.shortDescription.trim() || siteConfig.description
+}
+
+/**
+ * True only on the supporting organization's OWN site — i.e. the template as
+ * shipped, where `name` still equals `supportedBy.name`.
+ *
+ * The template carries copy that is about the supporting organization itself
+ * (its endowment, its FAQ, its mission statement and video). On any other
+ * site that copy would make the supporter's claims in the charity's name, so
+ * the components that carry it render only when this returns true. A charity
+ * site never needs to change anything for that to happen: setting `name` is
+ * enough, which is exactly what provisioning does.
+ */
+export function isSupportingOrgSite(): boolean {
+  return siteConfig.name.trim() === siteConfig.supportedBy.name.trim()
+}
+
+/**
+ * `mailto:` link to `contactEmail`. The characters that would end or corrupt
+ * the address part of a mailto: URI (RFC 6068) are percent-encoded -- `?` and
+ * `#` end it, `&` and `%` corrupt it, and `,` separates recipients -- so a
+ * malformed contactEmail can never add a recipient or inject a header.
+ * Whitespace is never part of an address, so it is removed rather than encoded.
+ */
+export function mailtoHref(subject?: string, email: string = siteConfig.contactEmail): string {
+  const address = email.replace(/\s+/g, '').replace(/[%?#&,]/g, encodeURIComponent)
+  return subject ? `mailto:${address}?subject=${encodeURIComponent(subject)}` : `mailto:${address}`
+}
+
+/**
+ * Who the policy pages name as the organization's legal contact.
+ *
+ * On the supporting organization's own site this is its named Data Protection
+ * Officer and their address, exactly as its policies have always published
+ * them. On every other site it is the site's own `contactEmail` with no named
+ * person: a charity's policies must never route privacy requests to, or name
+ * a DPO from, the organization that supports it.
+ */
+export function legalContact(kind: 'default' | 'cookie' = 'default'): {
+  name: string | null
+  email: string
+} {
+  const s = siteConfig.supportedBy
+  if (isSupportingOrgSite()) {
+    const email = kind === 'cookie' ? s.cookieContactEmail : s.legalContactEmail
+    if (email?.trim()) return { name: s.legalContactName?.trim() || null, email: email.trim() }
+  }
+  return { name: null, email: siteConfig.contactEmail.trim() }
+}
+
+/**
+ * A configured https URL, or a `mailto:` to `contactEmail` with `subject`.
+ * Anything that is not an https URL (including a `javascript:` value) falls
+ * back to the email, so a bad config can never ship a dangerous or dead link.
+ */
+function linkOrEmail(url: string, subject: string): string {
+  const trimmed = url.trim()
+  if (/^https:\/\/\S+$/i.test(trimmed)) return trimmed
+  return mailtoHref(subject)
+}
+
+/**
+ * The donation form the Donate section embeds, or null to render a Donate
+ * link (`donateHref()`) instead. Only the supporting organization's own site
+ * embeds, because `integrations.zeffyDonationUrl` is ITS endowment fund: on a
+ * charity's site it would collect donations to another organization under the
+ * charity's name.
+ */
+export function donationEmbedUrl(): string | null {
+  if (!isSupportingOrgSite()) return null
+  return siteConfig.integrations.zeffyDonationUrl.trim() || null
+}
+
+/** Donate link: `donationUrl`, else an email to the site's own contact address. */
+export function donateHref(): string {
+  return linkOrEmail(siteConfig.donationUrl, `Donating to ${siteConfig.name}`)
+}
+
+/**
+ * Volunteer link. The supporting organization's own site keeps its Idealist
+ * listing; every other site uses `volunteerUrl`, else an email.
+ */
+export function volunteerHref(): string {
+  if (isSupportingOrgSite() && siteConfig.integrations.idealistUrl.trim()) {
+    return siteConfig.integrations.idealistUrl.trim()
+  }
+  return linkOrEmail(siteConfig.volunteerUrl, `Volunteering with ${siteConfig.name}`)
+}
+
+/**
+ * The Facebook page the Events section links to, or '' to hide the link. The
+ * supporting organization's own site uses `integrations.eventsFacebookPageUrl`;
+ * a charity's site uses its own Facebook entry in `social`, if it has one.
+ */
+export function eventsFacebookPageUrl(): string {
+  if (isSupportingOrgSite()) return siteConfig.integrations.eventsFacebookPageUrl.trim()
+  const own = siteConfig.social.find((l) =>
+    /^https:\/\/([a-z0-9-]+\.)*facebook\.com\//i.test(l.href.trim())
+  )
+  return own ? own.href.trim() : ''
+}
+
+/**
+ * The phone number to publish, or null when either half is unset. A charity
+ * that publishes no number shows no number, rather than a link that dials
+ * nothing — the same rule the footer applies.
+ */
+export function publishedPhone(): { display: string; tel: string } | null {
+  const display = siteConfig.phone.display.trim()
+  const tel = siteConfig.phone.tel.trim()
+  return display && tel ? { display, tel } : null
 }

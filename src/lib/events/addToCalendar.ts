@@ -1,5 +1,6 @@
 import type { UnifiedEvent } from './types'
 import { safeHttpUrl } from './safeUrl'
+import { siteConfig } from '@/lib/site.config'
 
 function pad(n: number): string {
   return n.toString().padStart(2, '0')
@@ -78,7 +79,7 @@ export function icsDataUri(event: UnifiedEvent): string {
   const lines = [
     'BEGIN:VCALENDAR',
     'VERSION:2.0',
-    'PRODID:-//Free For Charity//Events//EN',
+    `PRODID:-//${escapeIcsText(siteConfig.name)}//Events//EN`,
     'BEGIN:VEVENT',
     `UID:${escapeIcsId(event.id)}`,
     `DTSTAMP:${toCompactUtc(new Date().toISOString())}`,

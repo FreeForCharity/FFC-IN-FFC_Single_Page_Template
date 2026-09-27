@@ -1,6 +1,7 @@
 import React from 'react'
 import TeamMemberCard from '@/components/ui/TeamMemberCard'
 import { configuredTeam } from '@/data/team'
+import { siteConfig } from '@/lib/site.config'
 
 // Team members are sourced from src/data/team/*.json (aggregated in
 // src/data/team.ts). To change the team, edit those JSON files — no need to
@@ -20,7 +21,7 @@ const index = () => {
   return (
     <div id="team" className="py-[50px]">
       <h2 className="font-[400] text-[40px] lg:text-[48px]  tracking-[0] text-center mx-auto mb-[50px] faustina-font">
-        The Free For Charity Team
+        The {siteConfig.name} Team
       </h2>
 
       <div className="w-[90%] mx-auto py-[40px]">

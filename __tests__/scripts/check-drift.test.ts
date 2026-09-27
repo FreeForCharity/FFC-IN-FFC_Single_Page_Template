@@ -134,6 +134,79 @@ describe('check-drift: Pages config discard', () => {
   })
 })
 
+/** Calls an exported pure function of check-drift.mjs in a child node process. */
+function callInChild<T>(fn: string, ...args: unknown[]): T {
+  const href = pathToFileURL(script).href
+  const out = execFileSync(
+    process.execPath,
+    [
+      '--input-type=module',
+      '-e',
+      `const m = await import(${JSON.stringify(href)});` +
+        `process.stdout.write(JSON.stringify(m.${fn}(...${JSON.stringify(args)})))`,
+    ],
+    { encoding: 'utf8' }
+  )
+  return JSON.parse(out)
+}
+
+type IdentityFinding = { path: string; line: number; label: string }
+
+describe('check-drift: brand identity', () => {
+  const FFC_PAGE = [
+    "const PAGE_NAME = 'Free For Charity Donation Policy'",
+    '<p>Free For Charity, a US 501(c)(3) non-profit organization (EIN 46-2471893)</p>',
+  ].join('\n')
+  const findings = (files: { path: string; body: string }[], name = 'Riverbend Pantry') =>
+    callInChild<IdentityFinding[]>('brandIdentityFindings', files, name)
+
+  it("exempts Free For Charity's own donation policy page, which is FFC's by design", () => {
+    expect(
+      findings([{ path: 'src/app/free-for-charity-donation-policy/page.tsx', body: FFC_PAGE }])
+    ).toEqual([])
+  })
+
+  it('exempts that page by exact path only — the same text anywhere else is an error', () => {
+    const out = findings([{ path: 'src/app/donation-policy/page.tsx', body: FFC_PAGE }])
+    expect(out.map((f) => f.line)).toEqual([1, 2, 2])
+    expect(out.map((f) => f.label).join(' ')).toMatch(/org name.*org name.*EIN/)
+  })
+
+  it('accepts Windows separators for the exempt path', () => {
+    expect(
+      findings([{ path: 'src\\app\\free-for-charity-donation-policy\\page.tsx', body: FFC_PAGE }])
+    ).toEqual([])
+  })
+
+  it("stays dormant on the template itself, where FFC's identity is correct", () => {
+    expect(
+      findings([{ path: 'src/app/donation-policy/page.tsx', body: FFC_PAGE }], 'Free For Charity')
+    ).toEqual([])
+  })
+})
+
+describe('check-drift: reading siteConfig.name', () => {
+  const nameOf = (source: string) => callInChild<string | null>('siteNameFromConfig', source)
+
+  it('skips the unquoted type declaration and reads the value', () => {
+    expect(
+      nameOf("export type SiteConfig = {\n  name: string\n}\nconst c = {\n  name: 'Riverbend',\n}")
+    ).toBe('Riverbend')
+  })
+
+  it('reads a double-quoted name containing an apostrophe in full', () => {
+    expect(nameOf(`  name: "St. Mary's Shelter & Kitchen",`)).toBe("St. Mary's Shelter & Kitchen")
+  })
+
+  it('reads a single-quoted name containing double quotes in full', () => {
+    expect(nameOf(`  name: 'Café Éclair "Arts" Collective',`)).toBe('Café Éclair "Arts" Collective')
+  })
+
+  it('unescapes an escaped quote', () => {
+    expect(nameOf("  name: 'O\\'Brien Fund',")).toBe("O'Brien Fund")
+  })
+})
+
 describe('check-drift script (end to end)', () => {
   it('passes against this repo — no live workflow discards next.config.ts', () => {
     const out = execFileSync(process.execPath, [script], { encoding: 'utf8' })

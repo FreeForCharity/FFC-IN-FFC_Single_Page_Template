@@ -70,6 +70,21 @@ describe('Footer component', () => {
     expect(telLink).toHaveTextContent(siteConfig.phone.display)
   })
 
+  it('omits the Call Us block when the charity publishes no phone number', () => {
+    const saved = { ...siteConfig.phone }
+    siteConfig.phone = { display: '', tel: '' }
+    try {
+      render(<Footer />)
+      expect(screen.queryByText('Call Us Today')).not.toBeInTheDocument()
+      const telLinks = screen
+        .getAllByRole('link')
+        .filter((link) => link.getAttribute('href')?.startsWith('tel:'))
+      expect(telLinks).toHaveLength(0)
+    } finally {
+      siteConfig.phone = saved
+    }
+  })
+
   it('always renders the permanent "Supported by" attribution in the bottom bar', () => {
     render(<Footer />)
     // FFC footer standard: the attribution renders unconditionally (it does

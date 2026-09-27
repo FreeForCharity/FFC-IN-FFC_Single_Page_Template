@@ -1,7 +1,15 @@
 import React from 'react'
 import FrequentlyAskedQuestions from '@/components/ui/Frequently-Asked-Questions'
+import { siteConfig } from '@/lib/site.config'
+import { faqSectionVisible } from '@/lib/section-visibility'
 
 const index = () => {
+  // Every answer below is the supporting organization's own, so the section
+  // renders only on its site; there siteConfig carries its name and EIN.
+  if (!faqSectionVisible()) return null
+  const ffc = siteConfig.name
+  const domainsUrl = `${siteConfig.supportedBy.url}/domains`
+
   return (
     <div id="faq" className="py-[50px]">
       <div className="w-[90%] mx-auto lg:px-[20px]">
@@ -35,7 +43,7 @@ const index = () => {
               FFC is also employing a premium subscription to Idealist to source additional IT
               project managers, IT Webmasters, and Graphic designers to expand how many charities we
               can support at one time, as well as working on partnerships with other charities and
-              technology vendors for additional services not offered by Free For Charity.
+              technology vendors for additional services not offered by {ffc}.
             </p>
           </FrequentlyAskedQuestions>
 
@@ -58,25 +66,25 @@ const index = () => {
             <p>
               While a lot has been accomplished on the IT hosting side and to a certain degree the
               IT project management and consulting side, one element of FFC has not even been
-              started. The Free For Charity directory showing services by category that are actually
-              entirely free to non-profits has not been developed yet. There are on the market a
-              number of regional consulting directories traditionally where the consultant is a
-              for-profit entity and pays money to be marketed to other nonprofits. We seek to
-              produce an entirely free directory with unbiased empirical metrics showing what
-              resources are available to nonprofits. By reducing the high cost often several hundred
-              dollars a year to be listed in these directories a broader suite of available
-              high-quality professionals can be made available to the nonprofit community at a
-              national level. However to accomplish this will require additional code and hosting
-              resources that have a hard cost not currently budgeted within the freeforcharity
-              budget. We are seeking grant opportunities to overcome these issues.
+              started. The {ffc} directory showing services by category that are actually entirely
+              free to non-profits has not been developed yet. There are on the market a number of
+              regional consulting directories traditionally where the consultant is a for-profit
+              entity and pays money to be marketed to other nonprofits. We seek to produce an
+              entirely free directory with unbiased empirical metrics showing what resources are
+              available to nonprofits. By reducing the high cost often several hundred dollars a
+              year to be listed in these directories a broader suite of available high-quality
+              professionals can be made available to the nonprofit community at a national level.
+              However to accomplish this will require additional code and hosting resources that
+              have a hard cost not currently budgeted within the freeforcharity budget. We are
+              seeking grant opportunities to overcome these issues.
             </p>
           </FrequentlyAskedQuestions>
 
           <FrequentlyAskedQuestions title="Is there a need for a charity to provide help for charities?">
             <p className="mb-[30px]">
-              Yes there is a need to provide help for charities in many ways! Free for Charity is
-              not the only ‘charity for charities’ helping to lower your costs. Another great
-              charity showing all the big name things you can get for free or at heavy discounts is 
+              Yes there is a need to provide help for charities in many ways! {ffc} is not the only
+              ‘charity for charities’ helping to lower your costs. Another great charity showing all
+              the big name things you can get for free or at heavy discounts is 
               <a href="#">TechSoup.org.</a> Even with these other sites many charities and non
               profits still pay for profit companies to do work every day or buy products at full
               cost. Some do so without knowing that as a charity they qualify for lower rates or
@@ -85,9 +93,8 @@ const index = () => {
               companies.
             </p>
             <p>
-              The Free for Charity services, consultant, and technology products directories seeks
-              to fix this problem with our motto “Decisions should be made by metrics not
-              marketing.”
+              The {ffc} services, consultant, and technology products directories seeks to fix this
+              problem with our motto “Decisions should be made by metrics not marketing.”
             </p>
           </FrequentlyAskedQuestions>
 
@@ -123,14 +130,15 @@ const index = () => {
             </p>
           </FrequentlyAskedQuestions>
 
-          <FrequentlyAskedQuestions title="Where does Free for Charity come in to help our charity or nonprofit?">
+          <FrequentlyAskedQuestions
+            title={`Where does ${ffc} come in to help our charity or nonprofit?`}
+          >
             <p className="mb-[30px]">
-              Free for Charity will fill these vital roles for non profits and charities saving
-              money for real program expenses. Most small to medium charities do not have the budget
-              for full-time IT staff or business analysts like for profit companies and large
-              charities. This is because grant managers and large donors want to see the lowest cost
-              to “overhead” and don’t always look closely at the results that fall under program
-              expenses.
+              {ffc} will fill these vital roles for non profits and charities saving money for real
+              program expenses. Most small to medium charities do not have the budget for full-time
+              IT staff or business analysts like for profit companies and large charities. This is
+              because grant managers and large donors want to see the lowest cost to “overhead” and
+              don’t always look closely at the results that fall under program expenses.
             </p>
             <p className="mb-[30px]">
               Because of this common practice by large donors and grant institutions it is actually
@@ -145,22 +153,21 @@ const index = () => {
               because it helps more than one program. With free for charity doing the work the
               target charity does not have to claim costs for overhead. Your nonprofit or charity
               group will gain access to professionals that have more expertise with the common
-              business tasks like researching products to meet the charities needs. Free for Charity
-              will also show you recommended technology and business practices that can save
-              thousands each year.
+              business tasks like researching products to meet the charities needs. {ffc} will also
+              show you recommended technology and business practices that can save thousands each
+              year.
             </p>
           </FrequentlyAskedQuestions>
 
           <FrequentlyAskedQuestions title="How can I tell if we have high overhead? / My charity does not have high overhead!">
             <p className="mb-[30px]">
-              Free for Charity is all about efficiency. Many charities ‘fix’ this overhead problem
-              by treating all staff as working on / in the programs or pro-rating between them all
-              and hoping they will not get audited. While on paper you show very low overhead the
-              functional effect is still the same. You have high paid staff like a director doing
-              work that should be done by skilled volunteers or technology. Items such as your
-              nonprofit or charity group bookkeeping data entry, or a full-time employee who updates
-              the charity website or nonprofit Facebook page every now and then between front desk
-              tasks.
+              {ffc} is all about efficiency. Many charities ‘fix’ this overhead problem by treating
+              all staff as working on / in the programs or pro-rating between them all and hoping
+              they will not get audited. While on paper you show very low overhead the functional
+              effect is still the same. You have high paid staff like a director doing work that
+              should be done by skilled volunteers or technology. Items such as your nonprofit or
+              charity group bookkeeping data entry, or a full-time employee who updates the charity
+              website or nonprofit Facebook page every now and then between front desk tasks.
             </p>
             <p className="mb-[30px]">
               If you have ever seen a charity with lower than 5% over head this is mostly what is
@@ -174,11 +181,11 @@ const index = () => {
             <p>
               We provide help for charities with efficiency. One element of efficiency is getting
               the best product at the lowest price. For charities and non profits much more labor
-              can be provided for free by volunteers. Free for Charity does not make your full-time
-              staff take on more and more roles we can fully take over many of these tasks with
-              expert volunteer labor. Business and IT professionals are always seeking to advance
-              their skills while helping out charities. We capture this labor pool (or create it
-              with training programs) and then manage the volunteers for your charities tasks and
+              can be provided for free by volunteers. {ffc} does not make your full-time staff take
+              on more and more roles we can fully take over many of these tasks with expert
+              volunteer labor. Business and IT professionals are always seeking to advance their
+              skills while helping out charities. We capture this labor pool (or create it with
+              training programs) and then manage the volunteers for your charities tasks and
               projects. We can do this at extremely low if not zero cost because of economies of
               scale, and because most of this work is process or research based and does not have
               ‘hard’ costs like equipment.
@@ -196,18 +203,18 @@ const index = () => {
               in your best volunteers leaving before a project is completed.
             </p>
             <p className="mb-[30px]">
-              Free for Charity will manage both the work and the results of the projects in-house.
-              All you have to do as a charity is to work with your project manager to set
-              expectations and define results at each stage of the project.
+              {ffc} will manage both the work and the results of the projects in-house. All you have
+              to do as a charity is to work with your project manager to set expectations and define
+              results at each stage of the project.
             </p>
             <p className="mb-[30px]">
               We also provide many physical services like nonprofit websites and hosting that are
               functionally like a product to your charity. We manage all the functions in the
               background with volunteers. With these other sites you get one person assigned to work
               your web project and you have no management support once it is done unless that one
-              person stays on as a volunteer permanently. With Free for Charity if your initial
-              volunteer leaves another from the web team still works on your project and keeps your
-              websites running and maintained. This is just one example.
+              person stays on as a volunteer permanently. With {ffc} if your initial volunteer
+              leaves another from the web team still works on your project and keeps your websites
+              running and maintained. This is just one example.
             </p>
           </FrequentlyAskedQuestions>
 
@@ -242,9 +249,9 @@ const index = () => {
               Yes, We have had IRS designation since 2014 and have been building our systems and
               testing or support for several years. While charities for charities are rare they do
               exist and in fact fill an important need in reducing overhead expenses for other
-              nonprofits. Our IRS designation number (EIN) is 46-2471893.  You can see our guidestar
-              profile here. We are proud to also recommend other charities for charities that
-              inspired us to create this nonprofit.
+              nonprofits. Our IRS designation number (EIN) is {siteConfig.ein}.  You can see our
+              guidestar profile here. We are proud to also recommend other charities for charities
+              that inspired us to create this nonprofit.
             </p>
           </FrequentlyAskedQuestions>
 
@@ -257,12 +264,8 @@ const index = () => {
               <strong>Ways to get in faster:</strong>
               <br />
               1. If you already have your 501(c)3 get your free domain from us{' '}
-              <a
-                href="https://freeforcharity.org/domains"
-                className="text-[#1c6e92] underline"
-                target="_blank"
-              >
-                freeforcharity.org/domains
+              <a href={domainsUrl} className="text-[#1c6e92] underline" target="_blank">
+                {domainsUrl.replace(/^https?:\/\//, '')}
               </a>
               <br />
               2. If you can provide your own qualified WordPress webmaster you may be moved up in
@@ -270,14 +273,16 @@ const index = () => {
             </p>
           </FrequentlyAskedQuestions>
 
-          <FrequentlyAskedQuestions title="If I am an individual or business and donate money for a domain package to Free for Charity, is this tax-deductible?">
+          <FrequentlyAskedQuestions
+            title={`If I am an individual or business and donate money for a domain package to ${ffc}, is this tax-deductible?`}
+          >
             <p>
-              While any official tax guidance should come from your accountant or other tax advisor
-              Free For Charity is a registered 501(c)(3) organization and donations are
-              tax-deductible. Our IRS designation number (EIN) is 46-2471893.  Upon checkout you
-              will receive a receipt to provide to your accountant. Specifically, if you represent a
-              business you can elect to deduct this as an expense versus as a donation depending on
-              the guidance of your tax advisor.
+              While any official tax guidance should come from your accountant or other tax advisor{' '}
+              {ffc} is a registered 501(c)(3) organization and donations are tax-deductible. Our IRS
+              designation number (EIN) is {siteConfig.ein}.  Upon checkout you will receive a
+              receipt to provide to your accountant. Specifically, if you represent a business you
+              can elect to deduct this as an expense versus as a donation depending on the guidance
+              of your tax advisor.
             </p>
           </FrequentlyAskedQuestions>
         </div>

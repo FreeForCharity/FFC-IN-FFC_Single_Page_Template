@@ -5,6 +5,7 @@ import {
   outlookLiveUrl,
 } from '@/lib/events/addToCalendar'
 import type { UnifiedEvent } from '@/lib/events/types'
+import { siteConfig } from '@/lib/site.config'
 
 const event: UnifiedEvent = {
   id: 'google:test',
@@ -59,5 +60,17 @@ describe('addToCalendar URL helpers', () => {
     const decoded = decodeURIComponent(uri.replace(/^data:[^,]+,/, ''))
     expect(decoded).toContain('DTSTART:20990615T143000Z')
     expect(decoded).toContain('DTEND:20990615T153000Z')
+  })
+
+  it("names the site's own organization, not the template's, as the calendar producer", () => {
+    const original = siteConfig.name
+    siteConfig.name = 'Riverbend Pantry, Inc.'
+    try {
+      const decoded = decodeURIComponent(icsDataUri(event).replace(/^data:[^,]+,/, ''))
+      expect(decoded).toContain('PRODID:-//Riverbend Pantry\\, Inc.//Events//EN')
+      expect(decoded).not.toMatch(/Free For Charity/)
+    } finally {
+      siteConfig.name = original
+    }
   })
 })
