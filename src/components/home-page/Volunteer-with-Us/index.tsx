@@ -18,7 +18,7 @@ const index = () => {
         </p>
         <a
           href={href}
-          {...(href.startsWith('https:') ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
+          {...(/^https:/i.test(href) ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
           className="w-[216px] h-[62px] top-[261px] left-[611px] rounded-[27px] 
              flex items-center justify-center px-[32px] py-[18px] gap-[10px] 
              text-[#113563] mx-auto mt-[30px] bg-white text-[20px] font-[400] font-sans text-center lato-font"

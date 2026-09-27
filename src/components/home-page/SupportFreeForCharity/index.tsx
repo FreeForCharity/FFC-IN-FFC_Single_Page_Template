@@ -81,7 +81,7 @@ const Index = () => {
             ) : (
               <a
                 href={donateLink}
-                {...(donateLink.startsWith('https:')
+                {...(/^https:/i.test(donateLink)
                   ? { target: '_blank', rel: 'noopener noreferrer' }
                   : {})}
                 className="rounded-[27px] flex items-center justify-center px-[32px] py-[18px] text-white bg-[#2A6682] text-[20px] font-[400] lato-font"

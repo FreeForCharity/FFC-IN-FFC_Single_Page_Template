@@ -57,6 +57,14 @@ describe('SupportFreeForCharity', () => {
     expect(link).toHaveAttribute('target', '_blank')
   })
 
+  it('opens an external donation page in a new tab whatever the scheme casing', () => {
+    asCharitySite({ donationUrl: 'HTTPS://www.zeffy.com/en-US/donation-form/riverbend-test' })
+    render(<Support />)
+    const link = screen.getByRole('link', { name: `Donate to ${CHARITY.name}` })
+    expect(link).toHaveAttribute('target', '_blank')
+    expect(link).toHaveAttribute('rel', 'noopener noreferrer')
+  })
+
   it('emails the charity when it has no donation page', () => {
     asCharitySite({ donationUrl: '' })
     render(<Support />)

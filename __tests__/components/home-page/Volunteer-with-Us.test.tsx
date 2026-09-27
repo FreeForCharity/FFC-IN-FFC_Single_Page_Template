@@ -39,6 +39,12 @@ describe('Volunteer-with-Us', () => {
     expect(container.innerHTML).not.toContain(siteConfig.integrations.idealistUrl)
   })
 
+  it('opens an external volunteer page in a new tab whatever the scheme casing', () => {
+    asCharitySite({ volunteerUrl: 'HTTPS://www.idealist.org/en/nonprofit/riverbend-test' })
+    render(<Volunteer />)
+    expect(screen.getByRole('link', { name: 'Volunteer' })).toHaveAttribute('target', '_blank')
+  })
+
   it('emails the charity when it has no volunteer page', () => {
     asCharitySite({ volunteerUrl: '' })
     render(<Volunteer />)
