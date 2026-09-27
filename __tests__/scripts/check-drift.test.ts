@@ -252,6 +252,12 @@ describe('check-drift: Google-hosted fonts', () => {
     expect(findings(tsx).map((f) => f.label)).toEqual(['a Google Fonts URL'])
   })
 
+  it('treats // as a comment only outside a string, even straight after code', () => {
+    expect(findings('const x = 1// was fonts.googleapis.com\n')).toEqual([])
+    const masked = "const cdn = '//cdn.example'; import('next/font/google')"
+    expect(findings(masked).map((f) => f.label)).toEqual(['a next/font/google import'])
+  })
+
   it('ignores the module and hosts named only in comments or prose', () => {
     const body = [
       "import localFont from 'next/font/local'",

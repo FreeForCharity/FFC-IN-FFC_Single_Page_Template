@@ -141,10 +141,23 @@ describe('no Google-hosted fonts', () => {
   // (src/lib/fonts.ts explains in a comment why it is banned).
   const NEXT_FONT_GOOGLE =
     /\b(?:from|import|require)\s*\(?\s*(?:\/\*[^*]*\*+(?:[^/*][^*]*\*+)*\/\s*)*(['"])next\/font\/google(?:\/[^'"]*)?\1/g
+  // Same test as check:drift's opensLineComment: a `//` counts only outside a
+  // quoted string, so `https://...` and `'//cdn...'` are not comments.
+  const opensLineComment = (prefix: string) => {
+    let quote: string | null = null
+    for (let i = 0; i < prefix.length; i++) {
+      const ch = prefix[i]
+      if (quote) {
+        if (ch === '\\') i++
+        else if (ch === quote) quote = null
+      } else if (ch === '"' || ch === "'" || ch === '`') quote = ch
+      else if (ch === '/' && prefix[i + 1] === '/') return true
+    }
+    return false
+  }
   const inComment = (code: string, at: number) => {
     const lineStart = code.lastIndexOf('\n', at - 1) + 1
-    // `//` after a colon is a URL (https://...), not a comment, as in check:drift.
-    if (/(^|[^:])\/\//.test(code.slice(lineStart, at))) return true
+    if (opensLineComment(code.slice(lineStart, at))) return true
     return code.lastIndexOf('/*', at) > code.lastIndexOf('*/', at)
   }
   const flagged = (code: string) =>
@@ -163,6 +176,8 @@ describe('no Google-hosted fonts', () => {
     expect(flagged("const u = 'https://x.example'; import('next/font/google')")).toBe(true)
     expect(flagged("await import(/* webpackPrefetch: true */ 'next/font/google')")).toBe(true)
     expect(flagged("// import { Lato } from 'next/font/google'")).toBe(false)
+    expect(flagged("const u = '//cdn.example'; import('next/font/google')")).toBe(true)
+    expect(flagged("const x = 1// import('next/font/google')")).toBe(false)
     expect(flagged("/*\n import { Lato } from 'next/font/google'\n*/")).toBe(false)
   })
 
