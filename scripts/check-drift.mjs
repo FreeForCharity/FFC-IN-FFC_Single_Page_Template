@@ -23,6 +23,10 @@
  *     actions/configure-pages while this repo's Next config is TypeScript —
  *     the action then writes its own next.config.js and the repo's real
  *     config is discarded on every deploy.
+ *  8. Fonts loaded from Google — a `next/font/google` import or a
+ *     fonts.googleapis.com / fonts.gstatic.com reference under src/. The
+ *     build must never contact Google; fonts are self-hosted via
+ *     next/font/local.
  *
  * Run: `node scripts/check-drift.mjs` or `npm run check:drift`.
  * Always resolves paths relative to the repo root, so it works regardless
@@ -761,6 +765,65 @@ async function checkPagesConfigDiscard() {
   }
 }
 
+// A module specifier for next/font/google (or a subpath of it) in an import,
+// dynamic import, re-export or require. Anchored on the quoted specifier after
+// `from` / `import` / `require`, so prose that merely names the module — the
+// comment in src/lib/fonts.ts explaining why it is banned — cannot match.
+const NEXT_FONT_GOOGLE =
+  /\b(?:from|import|require)\s*\(?\s*(['"])next\/font\/google(?:\/[^'"]*)?\1/g
+// Google's font CSS and font-file hosts: a hand-written <link>, @import or
+// url() to either is the same build/runtime dependency by another route.
+const GOOGLE_FONT_HOST = /\bfonts\.(?:googleapis|gstatic)\.com\b/g
+
+/**
+ * Pure detector, exported for tests: every place in `files` that loads fonts
+ * from Google — a `next/font/google` import (fetched from Google during
+ * `next build`, which fails the build whenever that fetch does; see
+ * FreeForCharity/FFC-IN-Footer_Only_Template#163) or a reference to
+ * fonts.googleapis.com / fonts.gstatic.com. Matches inside comments are
+ * ignored. Self-host with `next/font/local` instead (see src/lib/fonts.ts).
+ *
+ * @param {{path: string, body: string}[]} files repo-relative paths
+ * @returns {{path: string, line: number, label: string}[]}
+ */
+export function googleFontFindings(files) {
+  const findings = []
+  for (const { path, body } of files) {
+    const rel = path.split(sep).join('/').split('\\').join('/')
+    for (const [re, label] of [
+      [NEXT_FONT_GOOGLE, 'a next/font/google import'],
+      [GOOGLE_FONT_HOST, 'a Google Fonts URL'],
+    ]) {
+      re.lastIndex = 0
+      let m
+      while ((m = re.exec(body))) {
+        if (insideComment(body, m.index)) continue
+        findings.push({ path: rel, line: lineAt(body, m.index), label })
+      }
+    }
+  }
+  return findings
+}
+
+async function checkNoGoogleFonts() {
+  const paths = await walk(SRC_DIR, (n) => /\.(tsx?|jsx?|mjs|cjs|css)$/.test(n))
+  const files = []
+  for (const full of paths) {
+    try {
+      files.push({ path: relative(ROOT, full), body: await readFile(full, 'utf8') })
+    } catch {
+      continue
+    }
+  }
+  for (const f of googleFontFindings(files)) {
+    errors.push(
+      `${f.path}:${f.line} uses ${f.label}. Builds must not depend on Google: self-host the ` +
+        `font with next/font/local (woff2 files under src/app/fonts/) as src/lib/fonts.ts does. ` +
+        `See FreeForCharity/FFC-IN-Footer_Only_Template#163.`
+    )
+  }
+}
+
 async function main() {
   await checkSiteConfigExists()
   await checkSiteConfigUrl()
@@ -772,6 +835,7 @@ async function main() {
   await checkCspSync()
   await checkSecurityTxtSync()
   await checkPagesConfigDiscard()
+  await checkNoGoogleFonts()
 
   if (warnings.length) {
     console.warn('\n⚠️  Drift warnings:')
