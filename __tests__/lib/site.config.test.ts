@@ -6,6 +6,8 @@ import {
   isSupportingOrgSite,
   mailtoHref,
   publishedPhone,
+  eventsFacebookPageUrl,
+  donationEmbedUrl,
 } from '../../src/lib/site.config'
 import { asCharitySite, asSupporterSite, restoreSiteConfig } from '../helpers/site-identity'
 
@@ -163,6 +165,32 @@ describe('mailtoHref', () => {
   it('appends an encoded subject', () => {
     asCharitySite()
     expect(mailtoHref('Hi & bye')).toMatch(/\?subject=Hi%20%26%20bye$/)
+  })
+})
+
+describe("the supporting organization's integrations render only on its own site", () => {
+  afterEach(restoreSiteConfig)
+
+  it('embeds its donation form and links its Facebook page on its own site', () => {
+    asSupporterSite()
+    expect(donationEmbedUrl()).toBe(siteConfig.integrations.zeffyDonationUrl)
+    expect(eventsFacebookPageUrl()).toBe(siteConfig.integrations.eventsFacebookPageUrl)
+  })
+
+  it("uses a charity's own Facebook link, and never embeds the supporter's form", () => {
+    asCharitySite({
+      social: [
+        { label: 'LinkedIn', href: 'https://www.linkedin.com/company/riverbend-test' },
+        { label: 'Facebook', href: ' https://www.facebook.com/riverbend-test ' },
+      ],
+    })
+    expect(donationEmbedUrl()).toBeNull()
+    expect(eventsFacebookPageUrl()).toBe('https://www.facebook.com/riverbend-test')
+  })
+
+  it("hides the Events Facebook link when a charity has none, rather than use the supporter's", () => {
+    asCharitySite({ social: [{ label: 'X', href: 'https://x.com/riverbend-test' }] })
+    expect(eventsFacebookPageUrl()).toBe('')
   })
 })
 

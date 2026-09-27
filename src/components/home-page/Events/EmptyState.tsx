@@ -1,10 +1,10 @@
 import React from 'react'
-import { siteConfig } from '@/lib/site.config'
+import { eventsFacebookPageUrl } from '@/lib/site.config'
 
 export default function EmptyState() {
   // Per-charity config, never hardcoded; whitespace-only behaves like empty
   // (the follow button self-hides).
-  const facebookPageUrl = siteConfig.integrations.eventsFacebookPageUrl.trim()
+  const facebookPageUrl = eventsFacebookPageUrl()
   return (
     <div
       data-testid="events-empty-state"

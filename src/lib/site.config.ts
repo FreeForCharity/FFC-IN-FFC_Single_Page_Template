@@ -30,6 +30,20 @@ export type SiteConfig = {
   name: string
   /** Short tagline used in the default title template. */
   tagline: string
+  /** One-sentence mission statement (same key and meaning as the Footer-Only template). */
+  mission: string
+  /**
+   * Absolute https URL of the charity's donation page (Zeffy, PayPal, a page
+   * on this site, ...). The Donate section links to it; empty falls back to a
+   * `mailto:` to `contactEmail`. See `donateHref()`. The supporting
+   * organization's own site embeds `integrations.zeffyDonationUrl` instead.
+   */
+  donationUrl: string
+  /**
+   * Absolute https URL of the charity's volunteer sign-up page. Empty falls
+   * back to a `mailto:` to `contactEmail`. See `volunteerHref()`.
+   */
+  volunteerUrl: string
   /** Plain-language description used for the <meta description> tag. */
   description: string
   /**
@@ -156,6 +170,15 @@ export type SiteConfig = {
    * accounts — the domains are already allow-listed in the CSP, so only the
    * path/ID changes here.
    */
+  /**
+   * The supporting organization's OWN third-party targets (its endowment's
+   * Zeffy form, its Idealist listing, its Facebook page, its charity
+   * application form). They render only on the supporting organization's own
+   * site: a charity's site uses `donationUrl`, `volunteerUrl` and its own
+   * `social` links instead (see `donationEmbedUrl()`, `donateHref()`,
+   * `volunteerHref()`, `eventsFacebookPageUrl()`), so provisioning never has
+   * to find and replace them.
+   */
   integrations: {
     /** Zeffy donation-form embed URL (the iframe `src`). */
     zeffyDonationUrl: string
@@ -177,6 +200,11 @@ export type SiteConfig = {
 export const siteConfig: SiteConfig = {
   name: 'Free For Charity',
   tagline: 'Reduce Costs, Increase Impact',
+  mission:
+    'Free For Charity connects students, professionals, and businesses with nonprofits to reduce costs and increase revenues.',
+  // Empty = a charity's Donate / Volunteer sections email contactEmail instead.
+  donationUrl: '',
+  volunteerUrl: '',
   description:
     'Free For Charity connects students, professionals, and businesses with nonprofits to reduce costs and increase revenues—putting more resources back into their missions.',
   shortDescription:
@@ -339,6 +367,58 @@ export function legalContact(kind: 'default' | 'cookie' = 'default'): {
     if (email?.trim()) return { name: s.legalContactName?.trim() || null, email: email.trim() }
   }
   return { name: null, email: siteConfig.contactEmail.trim() }
+}
+
+/**
+ * A configured https URL, or a `mailto:` to `contactEmail` with `subject`.
+ * Anything that is not an https URL (including a `javascript:` value) falls
+ * back to the email, so a bad config can never ship a dangerous or dead link.
+ */
+function linkOrEmail(url: string, subject: string): string {
+  const trimmed = url.trim()
+  if (/^https:\/\/\S+$/i.test(trimmed)) return trimmed
+  return mailtoHref(subject)
+}
+
+/**
+ * The donation form the Donate section embeds, or null to render a Donate
+ * link (`donateHref()`) instead. Only the supporting organization's own site
+ * embeds, because `integrations.zeffyDonationUrl` is ITS endowment fund: on a
+ * charity's site it would collect donations to another organization under the
+ * charity's name.
+ */
+export function donationEmbedUrl(): string | null {
+  if (!isSupportingOrgSite()) return null
+  return siteConfig.integrations.zeffyDonationUrl.trim() || null
+}
+
+/** Donate link: `donationUrl`, else an email to the site's own contact address. */
+export function donateHref(): string {
+  return linkOrEmail(siteConfig.donationUrl, `Donating to ${siteConfig.name}`)
+}
+
+/**
+ * Volunteer link. The supporting organization's own site keeps its Idealist
+ * listing; every other site uses `volunteerUrl`, else an email.
+ */
+export function volunteerHref(): string {
+  if (isSupportingOrgSite() && siteConfig.integrations.idealistUrl.trim()) {
+    return siteConfig.integrations.idealistUrl.trim()
+  }
+  return linkOrEmail(siteConfig.volunteerUrl, `Volunteering with ${siteConfig.name}`)
+}
+
+/**
+ * The Facebook page the Events section links to, or '' to hide the link. The
+ * supporting organization's own site uses `integrations.eventsFacebookPageUrl`;
+ * a charity's site uses its own Facebook entry in `social`, if it has one.
+ */
+export function eventsFacebookPageUrl(): string {
+  if (isSupportingOrgSite()) return siteConfig.integrations.eventsFacebookPageUrl.trim()
+  const own = siteConfig.social.find((l) =>
+    /^https:\/\/([a-z0-9-]+\.)*facebook\.com\//i.test(l.href.trim())
+  )
+  return own ? own.href.trim() : ''
 }
 
 /**

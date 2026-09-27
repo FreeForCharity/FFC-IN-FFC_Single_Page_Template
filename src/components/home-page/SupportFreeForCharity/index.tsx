@@ -1,7 +1,7 @@
 import React, { CSSProperties, IframeHTMLAttributes } from 'react'
 import Image from 'next/image'
 import { assetPath } from '@/lib/assetPath'
-import { isSupportingOrgSite, siteConfig } from '@/lib/site.config'
+import { donateHref, donationEmbedUrl, isSupportingOrgSite, siteConfig } from '@/lib/site.config'
 
 interface ExtendedIframeProps extends IframeHTMLAttributes<HTMLIFrameElement> {
   allowpaymentrequest?: string
@@ -20,10 +20,14 @@ const Index = () => {
     height: '100%',
   }
 
+  // Only the supporting organization's own site embeds its (endowment) form;
+  // a charity's site links to its own donation page, else emails the charity.
+  const embedUrl = donationEmbedUrl()
+  const donateLink = donateHref()
   const donationFormProps: ExtendedIframeProps = {
     title: 'Donation form powered by Zeffy',
     style: donationFormStyle,
-    src: siteConfig.integrations.zeffyDonationUrl,
+    src: embedUrl ?? undefined,
     loading: 'lazy',
     allowpaymentrequest: '',
     allowtransparency: 'true',
@@ -58,21 +62,33 @@ const Index = () => {
             </div>
           </div>
 
-          {/* Right side: Zeffy Donation Form */}
+          {/* Right side: the supporter's embedded Zeffy form, or a Donate link */}
           <div className="w-full lg:w-[50%] flex justify-center">
-            <div
-              className="relative w-full max-w-[500px] h-[600px] bg-white rounded-lg shadow-lg overflow-hidden"
-              role="region"
-              aria-label="Donation form"
-            >
-              {/* CSS-only loading placeholder; the transparent Zeffy iframe
-                  paints over it once the form loads. Purely decorative. */}
+            {embedUrl ? (
               <div
-                className="absolute inset-0 animate-pulse bg-gray-100 pointer-events-none motion-reduce:animate-none"
-                aria-hidden="true"
-              />
-              <iframe {...donationFormProps}></iframe>
-            </div>
+                className="relative w-full max-w-[500px] h-[600px] bg-white rounded-lg shadow-lg overflow-hidden"
+                role="region"
+                aria-label="Donation form"
+              >
+                {/* CSS-only loading placeholder; the transparent Zeffy iframe
+                    paints over it once the form loads. Purely decorative. */}
+                <div
+                  className="absolute inset-0 animate-pulse bg-gray-100 pointer-events-none motion-reduce:animate-none"
+                  aria-hidden="true"
+                />
+                <iframe {...donationFormProps}></iframe>
+              </div>
+            ) : (
+              <a
+                href={donateLink}
+                {...(donateLink.startsWith('https:')
+                  ? { target: '_blank', rel: 'noopener noreferrer' }
+                  : {})}
+                className="rounded-[27px] flex items-center justify-center px-[32px] py-[18px] text-white bg-[#2A6682] text-[20px] font-[400] lato-font"
+              >
+                Donate to {siteConfig.name}
+              </a>
+            )}
           </div>
         </div>
       </div>
