@@ -243,6 +243,15 @@ describe('check-drift: Google-hosted fonts', () => {
     ])
   })
 
+  it('flags protocol-relative Google Fonts URLs, which are not comments', () => {
+    const css = '@font-face { src: url(//fonts.gstatic.com/s/lato/v24/x.woff2); }'
+    expect(findings(css, 'src/app/globals.css')).toEqual([
+      { path: 'src/app/globals.css', line: 1, label: 'a Google Fonts URL' },
+    ])
+    const tsx = "const href = '//fonts.googleapis.com/css2?family=Lato'"
+    expect(findings(tsx).map((f) => f.label)).toEqual(['a Google Fonts URL'])
+  })
+
   it('ignores the module and hosts named only in comments or prose', () => {
     const body = [
       "import localFont from 'next/font/local'",

@@ -777,6 +777,19 @@ const NEXT_FONT_GOOGLE =
 // url() to either is the same build/runtime dependency by another route.
 const GOOGLE_FONT_HOST = /\bfonts\.(?:googleapis|gstatic)\.com\b/g
 
+// Comment test for googleFontFindings. Stricter than insideComment() about `//`
+// so a protocol-relative URL is not mistaken for a comment: CSS has no `//`
+// comments at all (`url(//fonts.gstatic.com/...)`), and in JS/TS `//` opens a
+// comment only at the start of a line or after whitespace, never straight
+// after a quote or paren (`'//fonts.gstatic.com/...'`).
+function insideFontComment(body, index, isCss) {
+  if (!isCss) {
+    const lineStart = body.lastIndexOf('\n', index - 1) + 1
+    if (/(^|\s)\/\//.test(body.slice(lineStart, index))) return true
+  }
+  return body.lastIndexOf('/*', index) > body.lastIndexOf('*/', index)
+}
+
 /**
  * Pure detector, exported for tests: every place in `files` that loads fonts
  * from Google — a `next/font/google` import (fetched from Google during
@@ -792,6 +805,7 @@ export function googleFontFindings(files) {
   const findings = []
   for (const { path, body } of files) {
     const rel = path.split(sep).join('/').split('\\').join('/')
+    const isCss = /\.css$/i.test(rel)
     for (const [re, label] of [
       [NEXT_FONT_GOOGLE, 'a next/font/google import'],
       [GOOGLE_FONT_HOST, 'a Google Fonts URL'],
@@ -799,7 +813,7 @@ export function googleFontFindings(files) {
       re.lastIndex = 0
       let m
       while ((m = re.exec(body))) {
-        if (insideComment(body, m.index)) continue
+        if (insideFontComment(body, m.index, isCss)) continue
         findings.push({ path: rel, line: lineAt(body, m.index), label })
       }
     }
