@@ -140,7 +140,7 @@ describe('no Google-hosted fonts', () => {
   // import or require of the module counts; naming it in a comment does not
   // (src/lib/fonts.ts explains in a comment why it is banned).
   const NEXT_FONT_GOOGLE =
-    /\b(?:from|import|require)\s*\(?\s*(?:\/\*[\s\S]*?\*\/\s*)*(['"])next\/font\/google(?:\/[^'"]*)?\1/g
+    /\b(?:from|import|require)\s*\(?\s*(?:\/\*[^*]*\*+(?:[^/*][^*]*\*+)*\/\s*)*(['"])next\/font\/google(?:\/[^'"]*)?\1/g
   const inComment = (code: string, at: number) => {
     const lineStart = code.lastIndexOf('\n', at - 1) + 1
     if (code.slice(lineStart, at).includes('//')) return true

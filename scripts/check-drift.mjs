@@ -772,7 +772,7 @@ async function checkPagesConfigDiscard() {
 // Block comments may sit before the specifier, as webpack magic comments do:
 // import(/* webpackPrefetch: true */ 'next/font/google').
 const NEXT_FONT_GOOGLE =
-  /\b(?:from|import|require)\s*\(?\s*(?:\/\*[\s\S]*?\*\/\s*)*(['"])next\/font\/google(?:\/[^'"]*)?\1/g
+  /\b(?:from|import|require)\s*\(?\s*(?:\/\*[^*]*\*+(?:[^/*][^*]*\*+)*\/\s*)*(['"])next\/font\/google(?:\/[^'"]*)?\1/g
 // Google's font CSS and font-file hosts: a hand-written <link>, @import or
 // url() to either is the same build/runtime dependency by another route.
 const GOOGLE_FONT_HOST = /\bfonts\.(?:googleapis|gstatic)\.com\b/g
