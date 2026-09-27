@@ -226,8 +226,10 @@ describe('check-drift: Google-hosted fonts', () => {
       "export { Inter } from 'next/font/google/target.css'",
       "const m = await import('next/font/google')",
       "const r = require('next/font/google')",
+      "const w = await import(/* webpackPrefetch: true */ 'next/font/google')",
+      "const c = require(/* a */ /* b */ 'next/font/google')",
     ].join('\n')
-    expect(findings(body).map((f) => f.line)).toEqual([1, 2, 3, 4])
+    expect(findings(body).map((f) => f.line)).toEqual([1, 2, 3, 4, 5, 6])
   })
 
   it('flags a Google Fonts CSS or font-file URL in a stylesheet', () => {
