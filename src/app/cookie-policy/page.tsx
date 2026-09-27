@@ -2,7 +2,7 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 import BreadcrumbSchema from '@/components/seo/BreadcrumbSchema'
 import { pageMetadata } from '@/lib/page-metadata'
-import { mailtoHref, publishedPhone, siteConfig } from '@/lib/site.config'
+import { legalContact, mailtoHref, publishedPhone, siteConfig } from '@/lib/site.config'
 
 const PAGE_NAME = 'Cookie Policy'
 const CANONICAL_PATH = '/cookie-policy'
@@ -19,6 +19,7 @@ export const metadata: Metadata = pageMetadata({
 const LAST_UPDATED = 'August 30, 2026'
 
 export default function CookiePolicy() {
+  const legal = legalContact('cookie')
   const phone = publishedPhone()
   return (
     <div className="pt-[140px] pb-[54px]">
@@ -509,10 +510,15 @@ export default function CookiePolicy() {
             </li>
             <li className="text-[14px] text-[#666] leading-[24px] font-[500]">
               <strong>Email:</strong>{' '}
-              <a href={mailtoHref()} className="text-blue-600 underline">
-                {siteConfig.contactEmail}
+              <a href={mailtoHref(undefined, legal.email)} className="text-blue-600 underline">
+                {legal.email}
               </a>
             </li>
+            {legal.name && (
+              <li className="text-[14px] text-[#666] leading-[24px] font-[500]">
+                <strong>Emergency Contact:</strong> {legal.name}
+              </li>
+            )}
             {/* Only a configured number is shown, matching the footer's phone guard. */}
             {phone && (
               <li className="text-[14px] text-[#666] leading-[24px] font-[500]">

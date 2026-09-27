@@ -2,7 +2,7 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 import BreadcrumbSchema from '@/components/seo/BreadcrumbSchema'
 import { pageMetadata } from '@/lib/page-metadata'
-import { mailtoHref, publishedPhone, siteConfig, siteUrl } from '@/lib/site.config'
+import { legalContact, mailtoHref, publishedPhone, siteConfig, siteUrl } from '@/lib/site.config'
 
 const PAGE_NAME = 'Privacy Policy'
 const CANONICAL_PATH = '/privacy-policy'
@@ -16,6 +16,7 @@ export const metadata: Metadata = pageMetadata({
 })
 
 export default function PrivacyPolicy() {
+  const legal = legalContact()
   // Every way this policy tells a data subject to reach us comes from
   // siteConfig, so a rebranded site routes privacy requests to its own
   // organization. The phone follows the footer's rule: shown only when both
@@ -24,8 +25,8 @@ export default function PrivacyPolicy() {
   const link = 'text-[#0062CC] underline'
   const contact = (
     <>
-      <a href={mailtoHref()} className={link}>
-        {siteConfig.contactEmail}
+      <a href={mailtoHref(undefined, legal.email)} className={link}>
+        {legal.email}
       </a>
       {phone && (
         <>
@@ -573,8 +574,8 @@ export default function PrivacyPolicy() {
             </li>
             <li className="text-[14px] text-[#666] leading-[24px] font-[500]">
               <strong>Email:</strong>{' '}
-              <a href={mailtoHref()} className={link}>
-                {siteConfig.contactEmail}
+              <a href={mailtoHref(undefined, legal.email)} className={link}>
+                {legal.email}
               </a>
             </li>
             {phone && (
@@ -592,13 +593,32 @@ export default function PrivacyPolicy() {
             <strong>16. Additional Information</strong>
           </h2>
 
-          <p className="text-[14px] text-[#666] pb-[10px] leading-[24px] font-[500]">
-            <strong>16.1. Privacy Contact</strong>
-          </p>
-          <p className="text-[14px] text-[#666] pb-[10px] leading-[24px] font-[500]">
-            Questions about this Privacy Policy, or about how {siteConfig.name} handles your
-            personal information, can be sent to {contact}.
-          </p>
+          {legal.name ? (
+            <>
+              <p className="text-[14px] text-[#666] pb-[10px] leading-[24px] font-[500]">
+                <strong>16.1. Data Protection Officer</strong>
+              </p>
+              <p className="text-[14px] text-[#666] pb-[10px] leading-[24px] font-[500]">
+                We have appointed a Data Protection Officer (DPO) responsible for overseeing
+                questions in relation to this Privacy Policy:
+              </p>
+              <ul className="list-inside list-disc space-y-[4px] pb-[1em]">
+                <li className="text-[14px] text-[#666] leading-[24px] font-[500]">
+                  <strong>Contact DPO:</strong> {legal.name} {contact}
+                </li>
+              </ul>
+            </>
+          ) : (
+            <>
+              <p className="text-[14px] text-[#666] pb-[10px] leading-[24px] font-[500]">
+                <strong>16.1. Privacy Contact</strong>
+              </p>
+              <p className="text-[14px] text-[#666] pb-[10px] leading-[24px] font-[500]">
+                Questions about this Privacy Policy, or about how {siteConfig.name} handles your
+                personal information, can be sent to {contact}.
+              </p>
+            </>
+          )}
 
           <p className="text-[14px] text-[#666] pb-[10px] leading-[24px] font-[700] mt-[1.5em]">
             Your trust matters to us, and we are committed to protecting your personal information

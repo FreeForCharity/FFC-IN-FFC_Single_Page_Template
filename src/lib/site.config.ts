@@ -100,7 +100,21 @@ export type SiteConfig = {
    * Distinct from `parentOrg` below, which covers genuine fiscal-sponsorship
    * ("a project of") relationships.
    */
-  supportedBy: { name: string; url: string; hubUrl: string }
+  supportedBy: {
+    name: string
+    url: string
+    hubUrl: string
+    /**
+     * The supporting organization's own legal contacts, published by its
+     * policy pages on ITS OWN site only (see `legalContact()`): the named
+     * Data Protection Officer and the address that policies route privacy
+     * requests to. A charity site never renders these, so provisioning leaves
+     * them untouched.
+     */
+    legalContactName?: string
+    legalContactEmail?: string
+    cookieContactEmail?: string
+  }
   /**
    * Parent / umbrella organization, when this site is "a project of" another
    * nonprofit. Omit for a standalone charity (the footer clause is hidden).
@@ -218,6 +232,9 @@ export const siteConfig: SiteConfig = {
     name: 'Free For Charity',
     url: 'https://freeforcharity.org',
     hubUrl: 'https://freeforcharity.org/hub/',
+    legalContactName: 'Clarke Moyer',
+    legalContactEmail: 'clarkemoyer@freeforcharity.org',
+    cookieContactEmail: 'privacy@freeforcharity.org',
   },
   parentOrg: {
     name: 'Free For Charity',
@@ -298,11 +315,30 @@ export function isSupportingOrgSite(): boolean {
  * malformed contactEmail can never add a recipient or inject a header.
  * Whitespace is never part of an address, so it is removed rather than encoded.
  */
-export function mailtoHref(subject?: string): string {
-  const address = siteConfig.contactEmail
-    .replace(/\s+/g, '')
-    .replace(/[%?#&,]/g, encodeURIComponent)
+export function mailtoHref(subject?: string, email: string = siteConfig.contactEmail): string {
+  const address = email.replace(/\s+/g, '').replace(/[%?#&,]/g, encodeURIComponent)
   return subject ? `mailto:${address}?subject=${encodeURIComponent(subject)}` : `mailto:${address}`
+}
+
+/**
+ * Who the policy pages name as the organization's legal contact.
+ *
+ * On the supporting organization's own site this is its named Data Protection
+ * Officer and their address, exactly as its policies have always published
+ * them. On every other site it is the site's own `contactEmail` with no named
+ * person: a charity's policies must never route privacy requests to, or name
+ * a DPO from, the organization that supports it.
+ */
+export function legalContact(kind: 'default' | 'cookie' = 'default'): {
+  name: string | null
+  email: string
+} {
+  const s = siteConfig.supportedBy
+  if (isSupportingOrgSite()) {
+    const email = kind === 'cookie' ? s.cookieContactEmail : s.legalContactEmail
+    if (email?.trim()) return { name: s.legalContactName?.trim() || null, email: email.trim() }
+  }
+  return { name: null, email: siteConfig.contactEmail.trim() }
 }
 
 /**

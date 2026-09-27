@@ -1,7 +1,7 @@
 import type { Metadata } from 'next'
 import BreadcrumbSchema from '@/components/seo/BreadcrumbSchema'
 import { pageMetadata } from '@/lib/page-metadata'
-import { mailtoHref, publishedPhone, siteConfig } from '@/lib/site.config'
+import { legalContact, mailtoHref, publishedPhone, siteConfig } from '@/lib/site.config'
 
 const PAGE_NAME = 'Donation Policy'
 const CANONICAL_PATH = '/donation-policy'
@@ -15,6 +15,7 @@ export const metadata: Metadata = pageMetadata({
 })
 
 export default function DonationPolicy() {
+  const legal = legalContact()
   // A legal claim, made only when siteConfig.taxStatusLabel says the
   // organization holds IRS 501(c)(3) recognition. Provisioning writes '' for an
   // organization without it, and then neither the footer clause nor this page
@@ -93,8 +94,8 @@ export default function DonationPolicy() {
           <p>For questions about donations or this policy, please contact us at:</p>
           <p>
             Email:{' '}
-            <a href={mailtoHref()} className="text-primary underline">
-              {siteConfig.contactEmail}
+            <a href={mailtoHref(undefined, legal.email)} className="text-primary underline">
+              {legal.email}
             </a>
             {/* Only a configured number is shown, matching the footer's phone guard. */}
             {phone && (

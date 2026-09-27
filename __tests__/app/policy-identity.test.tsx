@@ -106,6 +106,15 @@ describe("policies a charity's site publishes as its own", () => {
     }
   })
 
+  it('names no Data Protection Officer or emergency contact of the supporting organization', () => {
+    for (const Component of [PrivacyPage, CookiePolicyPage]) {
+      const { container, unmount } = render(<Component />)
+      expect(container.textContent).not.toMatch(/Data Protection Officer|Emergency Contact/)
+      expect(container.textContent).not.toContain(siteConfig.supportedBy.legalContactName)
+      unmount()
+    }
+  })
+
   it('scopes the vulnerability disclosure policy to the charity’s own site', () => {
     const { container } = render(<VulnDisclosurePage />)
     expect(container.textContent).toContain(CHARITY.url)
@@ -152,6 +161,31 @@ describe('the donation policy’s tax claims follow siteConfig.taxStatusLabel', 
 describe("the supporting organization's own site", () => {
   beforeEach(asSupporterSite)
   afterEach(restoreSiteConfig)
+
+  // FFC's own published policies name its Data Protection Officer and route
+  // requests to the addresses it has always used. Only charity sites get the
+  // generic contact wording.
+  it('names its Data Protection Officer in the privacy policy', () => {
+    const { container } = render(<PrivacyPage />)
+    expect(container.textContent).toContain('16.1. Data Protection Officer')
+    expect(container.textContent).toContain(
+      `Contact DPO: ${siteConfig.supportedBy.legalContactName}`
+    )
+    expect(renderedEmails(container)).toEqual(new Set([siteConfig.supportedBy.legalContactEmail]))
+  })
+
+  it('routes each policy to the legal contact it has always published', () => {
+    for (const Component of [TermsPage, VulnDisclosurePage, DonationPolicyPage]) {
+      const { container, unmount } = render(<Component />)
+      expect(renderedEmails(container)).toEqual(new Set([siteConfig.supportedBy.legalContactEmail]))
+      unmount()
+    }
+    const { container } = render(<CookiePolicyPage />)
+    expect(renderedEmails(container)).toEqual(new Set([siteConfig.supportedBy.cookieContactEmail]))
+    expect(container.textContent).toContain(
+      `Emergency Contact: ${siteConfig.supportedBy.legalContactName}`
+    )
+  })
 
   it('keeps its infrastructure in the vulnerability disclosure scope', () => {
     const { container } = render(<VulnDisclosurePage />)
