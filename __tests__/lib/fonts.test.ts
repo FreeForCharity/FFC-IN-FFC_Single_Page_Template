@@ -136,12 +136,32 @@ describe('no Google-hosted fonts', () => {
       return statSync(full).isDirectory() ? walk(full) : [full]
     })
 
+  // Same rule as check:drift's googleFontFindings: an import, re-export, dynamic
+  // import or require of the module counts; naming it in a comment does not
+  // (src/lib/fonts.ts explains in a comment why it is banned).
+  const NEXT_FONT_GOOGLE =
+    /\b(?:from|import|require)\s*\(?\s*(?:\/\*[\s\S]*?\*\/\s*)*(['"])next\/font\/google(?:\/[^'"]*)?\1/g
+  const inComment = (code: string, at: number) => {
+    const lineStart = code.lastIndexOf('\n', at - 1) + 1
+    if (code.slice(lineStart, at).includes('//')) return true
+    return code.lastIndexOf('/*', at) > code.lastIndexOf('*/', at)
+  }
+  const flagged = (code: string) =>
+    [...code.matchAll(NEXT_FONT_GOOGLE)].some((m) => !inComment(code, m.index ?? 0))
+
   it('never imports next/font/google anywhere under src/', () => {
     const offenders = walk(SRC_DIR)
       .filter((f) => /\.(tsx?|jsx?|mjs|cjs)$/.test(f))
-      .filter((f) => /(['"])next\/font\/google(?:\/[^'"]*)?\1/.test(readFileSync(f, 'utf8')))
+      .filter((f) => flagged(readFileSync(f, 'utf8')))
       .map((f) => f.slice(ROOT.length + 1))
     expect(offenders).toEqual([])
+  })
+
+  it('applies that rule to imports but not to comments', () => {
+    expect(flagged("import { Lato } from 'next/font/google'")).toBe(true)
+    expect(flagged("await import(/* webpackPrefetch: true */ 'next/font/google')")).toBe(true)
+    expect(flagged("// import { Lato } from 'next/font/google'")).toBe(false)
+    expect(flagged("/*\n import { Lato } from 'next/font/google'\n*/")).toBe(false)
   })
 
   it('imports next/font/local in src/lib/fonts.ts', () => {
