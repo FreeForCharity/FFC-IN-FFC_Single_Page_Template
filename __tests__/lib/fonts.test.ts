@@ -59,7 +59,14 @@ describe('fonts module exports', () => {
     }
   })
 
-  it('configures the same normal-style weights the Google definition had', () => {
+  // A `weight` is either one weight ('400', a static file) or a range
+  // ('300 800', a variable file covering every weight in between).
+  const covers = (weight: string, w: string) => {
+    const [lo, hi = lo] = weight.split(' ').map(Number)
+    return Number(w) >= lo && Number(w) <= hi
+  }
+
+  it('covers every normal-style weight the Google definition had', () => {
     const expectedWeights: Record<FontName, string[]> = {
       openSans: ['400', '500', '600', '700', '800'],
       lato: ['400', '700'],
@@ -67,10 +74,10 @@ describe('fonts module exports', () => {
     }
     for (const [name, font] of Object.entries(allFonts)) {
       const src = srcOf(font)
-      expect({ name, weights: src.map((s) => s.weight) }).toEqual({
-        name,
-        weights: expectedWeights[name as FontName],
-      })
+      const missing = expectedWeights[name as FontName].filter(
+        (w) => !src.some((s) => covers(s.weight, w))
+      )
+      expect({ name, missing }).toEqual({ name, missing: [] })
       expect({ name, styles: [...new Set(src.map((s) => s.style))] }).toEqual({
         name,
         styles: ['normal'],
@@ -78,18 +85,28 @@ describe('fonts module exports', () => {
     }
   })
 
-  it('points every weight at a committed latin woff2 file that exists', () => {
+  it('loads the variable families from ONE file each, as the Google loader did', () => {
+    // A file per weight added seven preloaded requests and cost Lighthouse
+    // performance (FreeForCharity/FFC-IN-FFC_Single_Page_Template#479).
+    expect(srcOf(openSans).map((s) => s.weight)).toEqual(['300 800'])
+    expect(srcOf(faustina).map((s) => s.weight)).toEqual(['300 800'])
+    expect(Object.values(allFonts).flatMap(srcOf)).toHaveLength(4)
+  })
+
+  it('points every source at a committed latin woff2 file that exists', () => {
     for (const [name, font] of Object.entries(allFonts)) {
       const src = srcOf(font)
       expect(src.length).toBeGreaterThan(0)
       for (const { path, weight } of src) {
         const abs = resolve(FONTS_MODULE_DIR, path)
-        expect({ name, path, isWoff2: /-latin-\d+-normal\.woff2$/.test(path) }).toEqual({
+        const expectedSuffix = weight.includes(' ')
+          ? '-latin-wght-normal.woff2'
+          : `-latin-${weight}-normal.woff2`
+        expect({ name, path, suffix: path.endsWith(expectedSuffix) }).toEqual({
           name,
           path,
-          isWoff2: true,
+          suffix: true,
         })
-        expect(path).toContain(`-latin-${weight}-normal.woff2`)
         expect({ name, path, exists: existsSync(abs) }).toEqual({ name, path, exists: true })
         // woff2 magic number: the file is a real font, not an LFS pointer or stub.
         expect(readFileSync(abs).subarray(0, 4).toString('latin1')).toBe('wOF2')
