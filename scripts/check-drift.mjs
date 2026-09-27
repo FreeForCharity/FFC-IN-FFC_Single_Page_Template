@@ -18,13 +18,17 @@
  *     attribution is the one allowlisted exception, and FFC's own donation
  *     policy page (src/app/free-for-charity-donation-policy/) is exempt as a
  *     document that is FFC's by design. This is the enforced
- *     complement to the advisory `npm run check:rebrand` config/data checklist.
+ *     complement to the advisory `pnpm run check:rebrand` config/data checklist.
  *  7. A workflow passing `static_site_generator: next` to
  *     actions/configure-pages while this repo's Next config is TypeScript —
  *     the action then writes its own next.config.js and the repo's real
  *     config is discarded on every deploy.
+ *  8. Fonts loaded from Google — a `next/font/google` import or a
+ *     fonts.googleapis.com / fonts.gstatic.com reference under src/. The
+ *     build must never contact Google; fonts are self-hosted via
+ *     next/font/local.
  *
- * Run: `node scripts/check-drift.mjs` or `npm run check:drift`.
+ * Run: `node scripts/check-drift.mjs` or `pnpm run check:drift`.
  * Always resolves paths relative to the repo root, so it works regardless
  * of the CWD a developer invokes it from.
  * Exits non-zero on errors; warnings do not fail the check.
@@ -761,6 +765,106 @@ async function checkPagesConfigDiscard() {
   }
 }
 
+// A module specifier for next/font/google (or a subpath of it) in an import,
+// dynamic import, re-export or require. Anchored on the quoted specifier after
+// `from` / `import` / `require`, so prose that merely names the module — the
+// comment in src/lib/fonts.ts explaining why it is banned — cannot match.
+// Block comments may sit before the specifier, as webpack magic comments do:
+// import(/* webpackPrefetch: true */ 'next/font/google').
+const NEXT_FONT_GOOGLE =
+  /\b(?:from|import|require)\s*\(?\s*(?:\/\*[^*]*\*+(?:[^/*][^*]*\*+)*\/\s*)*(['"])next\/font\/google(?:\/[^'"]*)?\1/g
+// Google's font CSS and font-file hosts: a hand-written <link>, @import or
+// url() to either is the same build/runtime dependency by another route.
+const GOOGLE_FONT_HOST = /\bfonts\.(?:googleapis|gstatic)\.com\b/g
+
+// Where the comments are in `body`, from one left-to-right scan that also
+// tracks strings and CSS `url(...)`: a `//` or `/*` inside a string or url() is
+// not a comment, and a quote inside a comment is not a string. Plain CSS has no
+// `//` comments. '...' and "..." strings end at a line break, as in JS, so a
+// stray apostrophe in JSX text cannot swallow the rest of the file. Regex
+// literals are not modelled.
+function commentSpans(body, isCss) {
+  const spans = []
+  let i = 0
+  while (i < body.length) {
+    const ch = body[i]
+    if (ch === '"' || ch === "'" || ch === '`') {
+      i++
+      while (i < body.length && body[i] !== ch && (ch === '`' || body[i] !== '\n')) {
+        i += body[i] === '\\' ? 2 : 1
+      }
+      i++
+    } else if (/^url\(/i.test(body.slice(i, i + 4))) {
+      const end = body.indexOf(')', i)
+      i = end === -1 ? body.length : end + 1
+    } else if (ch === '/' && body[i + 1] === '*') {
+      const end = body.indexOf('*/', i + 2)
+      const stop = end === -1 ? body.length : end + 2
+      spans.push([i, stop])
+      i = stop
+    } else if (!isCss && ch === '/' && body[i + 1] === '/') {
+      const end = body.indexOf('\n', i)
+      const stop = end === -1 ? body.length : end
+      spans.push([i, stop])
+      i = stop
+    } else i++
+  }
+  return spans
+}
+
+const inSpans = (spans, index) => spans.some(([start, stop]) => index >= start && index < stop)
+
+/**
+ * Pure detector, exported for tests: every place in `files` that loads fonts
+ * from Google — a `next/font/google` import (fetched from Google during
+ * `next build`, which fails the build whenever that fetch does; see
+ * FreeForCharity/FFC-IN-Footer_Only_Template#163) or a reference to
+ * fonts.googleapis.com / fonts.gstatic.com. Matches inside comments are
+ * ignored. Self-host with `next/font/local` instead (see src/lib/fonts.ts).
+ *
+ * @param {{path: string, body: string}[]} files repo-relative paths
+ * @returns {{path: string, line: number, label: string}[]}
+ */
+export function googleFontFindings(files) {
+  const findings = []
+  for (const { path, body } of files) {
+    const rel = path.split(sep).join('/').split('\\').join('/')
+    const isCss = /\.css$/i.test(rel)
+    const spans = commentSpans(body, isCss)
+    for (const [re, label] of [
+      [NEXT_FONT_GOOGLE, 'a next/font/google import'],
+      [GOOGLE_FONT_HOST, 'a Google Fonts URL'],
+    ]) {
+      re.lastIndex = 0
+      let m
+      while ((m = re.exec(body))) {
+        if (inSpans(spans, m.index)) continue
+        findings.push({ path: rel, line: lineAt(body, m.index), label })
+      }
+    }
+  }
+  return findings
+}
+
+async function checkNoGoogleFonts() {
+  const paths = await walk(SRC_DIR, (n) => /\.(tsx?|jsx?|mjs|cjs|css)$/.test(n))
+  const files = []
+  for (const full of paths) {
+    try {
+      files.push({ path: relative(ROOT, full), body: await readFile(full, 'utf8') })
+    } catch {
+      continue
+    }
+  }
+  for (const f of googleFontFindings(files)) {
+    errors.push(
+      `${f.path}:${f.line} uses ${f.label}. Builds must not depend on Google: self-host the ` +
+        `font with next/font/local (woff2 files under src/app/fonts/) as src/lib/fonts.ts does. ` +
+        `See FreeForCharity/FFC-IN-Footer_Only_Template#163.`
+    )
+  }
+}
+
 async function main() {
   await checkSiteConfigExists()
   await checkSiteConfigUrl()
@@ -772,6 +876,7 @@ async function main() {
   await checkCspSync()
   await checkSecurityTxtSync()
   await checkPagesConfigDiscard()
+  await checkNoGoogleFonts()
 
   if (warnings.length) {
     console.warn('\n⚠️  Drift warnings:')

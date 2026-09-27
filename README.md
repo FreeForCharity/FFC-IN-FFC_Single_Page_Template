@@ -343,7 +343,7 @@ The main page (`/`) is a single-page application composed of scrollable sections
 
 - Next.js (App Router, TypeScript)
 - Tailwind-style utility classes for styling
-- next/font for Google fonts (Faustina, Fauna One, Lato, Inter)
+- Self-hosted fonts via `next/font/local` (Open Sans, Lato, Faustina — woff2 files in `src/app/fonts/`, no Google fetch at build time)
 
 ## Content Management
 
