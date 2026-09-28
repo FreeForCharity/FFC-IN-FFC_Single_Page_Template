@@ -57,12 +57,14 @@ export default function CookiePolicy() {
               Remember your cookie consent preferences
             </li>
             <li className="text-[14px] text-[#666] leading-[24px] font-[500]">
-              Understand how you use our website (only after you accept — see &quot;When we ask
-              permission first&quot; in Section 3.3)
+              Understand how you use our website (in the EEA, the UK and Switzerland only after you
+              accept; elsewhere from your first visit — see &quot;When we ask permission first&quot;
+              in Section 3.3)
             </li>
             <li className="text-[14px] text-[#666] leading-[24px] font-[500]">
-              Analyze website traffic and user behavior (only after you accept — see &quot;When we
-              ask permission first&quot; in Section 3.3)
+              Analyze website traffic and user behavior (in the EEA, the UK and Switzerland only
+              after you accept; elsewhere from your first visit — see &quot;When we ask permission
+              first&quot; in Section 3.3)
             </li>
             <li className="text-[14px] text-[#666] leading-[24px] font-[500]">
               Improve our website and user experience
@@ -220,8 +222,8 @@ export default function CookiePolicy() {
               <strong>When we ask permission first</strong>
             </p>
             <p className="text-sm text-[#666] mb-2">
-              We use Google Consent Mode, and we apply the strictest setting to everyone. No matter
-              where in the world you are, Google&apos;s tags set{' '}
+              We use Google Consent Mode, and what it does depends on where you are. In the European
+              Economic Area, the United Kingdom and Switzerland, Google&apos;s tags set{' '}
               <strong>
                 no analytics or advertising cookies and collect no identifiers from your device
               </strong>{' '}
@@ -230,9 +232,14 @@ export default function CookiePolicy() {
               your next visit.
             </p>
             <p className="text-sm text-[#666] mb-2">
-              There is no country in which analytics cookies are set before you choose. If you do
-              accept, you can turn them off again at any time using the Cookie Preferences link in
-              our footer, and we will delete the cookies listed below when you do.
+              Everywhere else, including the United States where this charity operates, analytics
+              cookies are set from your first visit without a prompt, because no law there requires
+              us to ask first. Advertising data is also shared with Google in those regions for our
+              Ad Grants search ads — you can stop that with the{' '}
+              <strong>Do Not Sell or Share My Personal Information</strong> link in our footer or by
+              sending a Global Privacy Control signal. Wherever you are, you can turn analytics off
+              at any time using the Cookie Preferences link in our footer, and we will delete the
+              cookies listed below when you do.
             </p>
             <p className="text-sm text-[#666]">
               <strong>Microsoft Clarity is different.</strong> It records how visitors move through

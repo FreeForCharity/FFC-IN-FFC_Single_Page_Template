@@ -375,14 +375,17 @@ export default function PrivacyPolicy() {
           </p>
           <ul className="list-inside list-disc space-y-[4px] pb-[1em]">
             <li className="text-[14px] text-[#666] leading-[24px] font-[500]">
-              <strong>Consent:</strong> Google&apos;s tags set no analytics or advertising cookies
-              and read no identifiers from your device until you accept through the cookie consent
-              banner, wherever in the world you are — until then they only count visits in an
-              aggregate, cookie-free way. Session recording (Microsoft Clarity) and marketing (Meta
-              Pixel) scripts load only if you explicitly opt in, everywhere in the world. You can
-              withdraw consent at any time via the Cookie Preferences link in the footer; this site
-              then deletes the tracking cookies it set, Google&apos;s tags return to that
-              cookie-free state, and the opt-in scripts stop loading from your next page view.
+              <strong>Consent:</strong> In the European Economic Area, the United Kingdom and
+              Switzerland, Google&apos;s tags set no analytics or advertising cookies and read no
+              identifiers from your device until you accept through the cookie consent banner —
+              until then they only count visits in an aggregate, cookie-free way. Elsewhere,
+              including the United States, analytics cookies are set from your first visit and our
+              basis is legitimate interests rather than consent; you can still switch them off at
+              any time. Session recording (Microsoft Clarity) and marketing (Meta Pixel) scripts
+              load only if you explicitly opt in, everywhere in the world. You can withdraw consent
+              at any time via the Cookie Preferences link in the footer; this site then deletes the
+              tracking cookies it set, Google&apos;s tags return to that cookie-free state, and the
+              opt-in scripts stop loading from your next page view.
             </li>
             <li className="text-[14px] text-[#666] leading-[24px] font-[500]">
               <strong>Legitimate interests:</strong> Operating, securing, and improving this website
@@ -474,10 +477,11 @@ export default function PrivacyPolicy() {
           <p className="text-[14px] text-[#666] pb-[10px] leading-[24px] font-[500]">
             <strong>Your rights.</strong> You have the right to: know what personal information we
             collect, use, and disclose, and to access it; delete personal information we collected
-            from you; correct inaccurate personal information; opt out of any sale or sharing of
-            personal information (not applicable, since we do neither); limit the use of sensitive
+            from you; correct inaccurate personal information; opt out of the sharing of personal
+            information for advertising, as described above — this right does apply here, and the
+            footer link or a Global Privacy Control signal exercises it; limit the use of sensitive
             personal information; and not be discriminated against for exercising any of these
-            rights.
+            rights, which means opting out does not change what this site offers you.
           </p>
           <p className="text-[14px] text-[#666] pb-[10px] leading-[24px] font-[500]">
             <strong>Opt-out preference signals (Global Privacy Control / Do Not Track).</strong>{' '}
