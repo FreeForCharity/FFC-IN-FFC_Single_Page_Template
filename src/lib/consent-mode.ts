@@ -256,12 +256,27 @@ export function setSaleShareOptOut(optOut: boolean, prefs?: ConsentPreferences):
     updateGoogleConsent(prefs)
     return
   }
+
+  // WITHOUT prefs this path may only ever TIGHTEN, never grant.
+  //
+  // With no preferences passed there is no record of what the visitor chose
+  // in the banner, so granting here would loosen advertising consent on no
+  // evidence at all — including for an EEA/UK/CH visitor who never accepted
+  // anything. An earlier revision did exactly that: clearing the flag pushed
+  // ad_storage and ad_user_data to 'granted' unconditionally, overriding the
+  // banner's marketing toggle. Today's only caller passes optOut=true, but
+  // this is an exported API and the next caller is the problem.
+  //
+  // Clearing the opt-out therefore removes the stored flag and stops. The
+  // visitor's real state is re-derived from the banner on the next
+  // updateGoogleConsent, and from the bootstrap on the next page load, both
+  // of which have the preferences this path lacks.
+  if (!hasSaleShareOptOut()) return
   if (typeof window.gtag !== 'function') return
-  const value = hasSaleShareOptOut() ? 'denied' : AD_PERSONALIZATION ? 'granted' : 'denied'
   window.gtag('consent', 'update', {
-    ad_storage: hasSaleShareOptOut() ? 'denied' : 'granted',
-    ad_user_data: hasSaleShareOptOut() ? 'denied' : 'granted',
-    ad_personalization: value,
-    personalization_storage: value,
+    ad_storage: 'denied',
+    ad_user_data: 'denied',
+    ad_personalization: 'denied',
+    personalization_storage: 'denied',
   })
 }

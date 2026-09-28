@@ -9,7 +9,11 @@
  * are deliberately written to FAIL if the opt-out is removed, inverted, or
  * quietly downgraded to "analytics too".
  */
-import { CONSENT_MODE_BOOTSTRAP, SALE_SHARE_OPT_OUT_KEY } from '../../src/lib/consent-mode'
+import {
+  CONSENT_MODE_BOOTSTRAP,
+  SALE_SHARE_OPT_OUT_KEY,
+  setSaleShareOptOut,
+} from '../../src/lib/consent-mode'
 
 describe('the bootstrap reads a universal opt-out before any tag loads', () => {
   it('reads GPC and the stored opt-out BEFORE the first consent default', () => {
@@ -73,5 +77,62 @@ describe('the bootstrap reads a universal opt-out before any tag loads', () => {
     expect(scoped).toContain("'ad_storage': 'denied'")
     expect(scoped).toContain("'analytics_storage': 'denied'")
     expect(scoped).toContain("'region'")
+  })
+})
+
+describe('setSaleShareOptOut may only tighten when no preferences are passed', () => {
+  const realGtag = window.gtag
+
+  beforeEach(() => {
+    window.localStorage.clear()
+    window.gtag = jest.fn()
+  })
+  afterEach(() => {
+    window.gtag = realGtag
+    window.localStorage.clear()
+  })
+
+  it('never pushes a GRANT when called without preferences', () => {
+    // Regression guard. An earlier revision pushed ad_storage/ad_user_data
+    // 'granted' here, overriding the banner's marketing toggle on no
+    // evidence — including for an EEA visitor who never accepted.
+    setSaleShareOptOut(false)
+
+    const calls = (window.gtag as jest.Mock).mock.calls
+    const granted = calls.filter(([, , payload]) =>
+      Object.values((payload ?? {}) as Record<string, string>).includes('granted')
+    )
+    expect(granted).toHaveLength(0)
+  })
+
+  it('denies every advertising signal when opting out', () => {
+    setSaleShareOptOut(true)
+
+    const update = (window.gtag as jest.Mock).mock.calls.find(
+      ([cmd, action]) => cmd === 'consent' && action === 'update'
+    )
+    expect(update).toBeDefined()
+    expect(update?.[2]).toEqual({
+      ad_storage: 'denied',
+      ad_user_data: 'denied',
+      ad_personalization: 'denied',
+      personalization_storage: 'denied',
+    })
+  })
+
+  it('defers to the banner when preferences ARE passed', () => {
+    // The prefs path is the only one allowed to grant, because it is the
+    // only one that knows what the visitor actually chose.
+    setSaleShareOptOut(false, {
+      necessary: true,
+      functional: true,
+      analytics: true,
+      marketing: true,
+    })
+
+    const update = (window.gtag as jest.Mock).mock.calls.find(
+      ([cmd, action]) => cmd === 'consent' && action === 'update'
+    )
+    expect(update?.[2]).toMatchObject({ ad_storage: 'granted' })
   })
 })
