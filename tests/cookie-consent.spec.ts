@@ -342,8 +342,17 @@ test.describe('Google Consent Mode bootstrap', () => {
     expect(unscoped!.ad_personalization).toBe('denied')
     expect(unscoped!.wait_for_update).toBe(500)
 
-    // functionality/security stay granted: they carry no tracking, and the
-    // banner itself depends on functionality storage to remember a choice.
+    // functionality/security stay granted because neither carries a tracking
+    // identifier -- that is the whole reason, and it used to be stated with a
+    // second one that was false: that the banner "depends on functionality
+    // storage to remember a choice". It does not. Consent Mode signals govern
+    // what GOOGLE'S TAGS may do; the banner persists its choice by writing
+    // first-party localStorage directly (src/components/cookie-consent,
+    // 'cookie-consent' key), which no Consent Mode signal gates. The false
+    // reason was the dangerous half: it invited a maintainer to believe
+    // denying functionality_storage would break consent persistence, which
+    // would make this assertion look load-bearing for a behaviour it does not
+    // protect.
     expect(unscoped!.functionality_storage).toBe('granted')
     expect(unscoped!.security_storage).toBe('granted')
 
