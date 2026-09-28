@@ -2,14 +2,26 @@
  * Ordering contract: a stored consent choice must be applied (the gtag
  * consent update pushed) BEFORE the direct GA4 script is injected.
  *
- * Without this ordering, a returning visitor who previously GRANTED
- * analytics would get the deny-by-default bootstrap replayed ahead of their
- * stored grant: GA's config lands in the queue first and its opening hit
- * goes out cookieless, before the update applies. Both of the bootstrap's
- * default calls carry wait_for_update, but that is a bounded grace window
- * (500ms), not an ordering guarantee — a slow hydration can outlast it —
- * which is exactly why the restore-before-load ordering this file locks in
- * still matters.
+ * THE HAZARD INVERTED WHEN THIS BRANCH RESTORED REGIONAL GATING, and it got
+ * worse. This header used to describe the global-denial model's risk: a
+ * returning visitor who had GRANTED analytics lost their opening hit to the
+ * denied default, which cost a data point.
+ *
+ * Under the regional model the dangerous visitor is the opposite one. Outside
+ * the EEA/UK/CH the unscoped default GRANTS analytics_storage, so a returning
+ * visitor who previously DECLINED has a permissive default sitting in the
+ * queue ahead of their stored denial. If GA4 is injected before the denial is
+ * applied, its opening hit goes out WITH cookies — for someone who explicitly
+ * said no. That is a privacy failure rather than a measurement loss, which is
+ * why the ordering this file locks in matters more now, not less.
+ *
+ * Note that the test below asserts exactly that case — a stored DENIAL
+ * applied before injection — so the old header was arguing against the
+ * assertion directly beneath it.
+ *
+ * Both of the bootstrap's default calls carry wait_for_update, but that is a
+ * bounded grace window (500ms), not an ordering guarantee: a slow hydration
+ * can outlast it.
  *
  * This file mocks a REAL-looking measurement ID so the loader actually
  * injects; the placeholder-inertness behavior is asserted separately in
