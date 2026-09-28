@@ -2,22 +2,26 @@ import React from 'react'
 import { SustainableFundingCard } from '@/components/ui/SustainableFundingCard'
 import { assetPath } from '@/lib/assetPath'
 import { siteConfig } from '@/lib/site.config'
+import { endowmentSectionVisible } from '@/lib/section-visibility'
 
 const Home: React.FC = () => {
-  if (!siteConfig.sections.showEndowment) return null
+  if (!endowmentSectionVisible()) return null
+  // This is the supporting organization's endowment, so it carries that
+  // organization's name — the section never renders on any other site.
+  const supporter = siteConfig.supportedBy.name
 
   return (
     <div className="pb-[30px]">
       <div className="w-[90%] mx-auto lg:px-[20px] max-w-[1280px]">
         <div>
           <h2 className="font-[400] text-[40px] lg:text-[48px] leading-[100%] tracking-[0] text-center mx-auto mb-[30px] faustina-font">
-            Free For Charity Endowment Features
+            {supporter} Endowment Features
           </h2>
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-[24px]">
             <SustainableFundingCard
               imageUrl={assetPath('/Svgs/sustainable-funding.svg')}
               title="Sustainable Funding"
-              text="The Endowment ensures that only the investment gains are used, providing a sustainable funding source for the Free For Charity Domain Program."
+              text={`The Endowment ensures that only the investment gains are used, providing a sustainable funding source for the ${supporter} Domain Program.`}
             />
             <SustainableFundingCard
               imageUrl={assetPath('/Svgs/Long-Term-Impact.svg')}

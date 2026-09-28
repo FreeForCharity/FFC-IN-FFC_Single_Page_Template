@@ -693,8 +693,8 @@ pnpm audit
 
 ### Issue: Build fails
 
-**Cause**: Google Fonts network access (per project instructions)  
-**Solution**: Temporarily comment out font imports in layout.tsx
+**Cause**: Not fonts — they are self-hosted via `next/font/local` and the build does not contact Google.  
+**Solution**: Read the first error in the build output; `pnpm run check:drift` and `pnpm exec tsc --noEmit` catch most causes earlier
 
 ### Issue: Content not showing
 

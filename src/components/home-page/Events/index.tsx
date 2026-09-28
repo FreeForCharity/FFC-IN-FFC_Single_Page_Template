@@ -1,6 +1,6 @@
 import React from 'react'
 import snapshot from '@/data/events.generated.json'
-import { siteConfig } from '@/lib/site.config'
+import { eventsFacebookPageUrl } from '@/lib/site.config'
 import type { EventsSnapshot, UnifiedEvent } from '@/lib/events/types'
 import { groupByMonth } from '@/lib/events/grouping'
 import { safeHttpUrl, safeHttpsImageUrl } from '@/lib/events/safeUrl'
@@ -47,7 +47,7 @@ const Events = () => {
   const updatedAt = data.updatedAt ? new Date(data.updatedAt) : null
   // Public page link is per-charity config, never hardcoded; whitespace-only
   // behaves like empty (link self-hides), matching the other sections.
-  const facebookPageUrl = siteConfig.integrations.eventsFacebookPageUrl.trim()
+  const facebookPageUrl = eventsFacebookPageUrl()
 
   return (
     <section id="events" className="py-[52px]" aria-label="Upcoming Events">

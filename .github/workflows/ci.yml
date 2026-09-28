@@ -26,6 +26,13 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v6
 
+      - name: Check for prohibited lockfiles
+        run: |
+          if [ -f package-lock.json ] || [ -f yarn.lock ]; then
+            echo "::error::Prohibited lockfile detected (package-lock.json or yarn.lock). Only pnpm-lock.yaml is permitted."
+            exit 1
+          fi
+
       - name: Setup pnpm
         uses: pnpm/action-setup@v6
 

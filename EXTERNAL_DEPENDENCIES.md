@@ -104,7 +104,7 @@ These are services we directly integrate into our application code.
 - **Data Collected:** Donation transaction data
 - **Privacy Policy:** https://support.zeffy.com/legal-data-privacy-security
 
-**Getting your own donation URL:** Sign up free at https://www.zeffy.com, create a donation form for your charity, then copy its embed/iframe URL. Set it in `siteConfig.integrations.zeffyDonationUrl` in `src/lib/site.config.ts` (the `www.zeffy.com` domain is already allow-listed in the CSP).
+**Getting your own donation URL:** Sign up free at https://www.zeffy.com (or use PayPal or any other https donation page), then set `siteConfig.donationUrl` in `src/lib/site.config.ts` to your donation page's URL. The Donate section links to it, and emails `contactEmail` when it is empty. The embedded form driven by `siteConfig.integrations.zeffyDonationUrl` is Free For Charity's own endowment fund and renders only on Free For Charity's own site, so a charity site never collects donations for another organization.
 
 ### Transparency & Validation
 
@@ -129,7 +129,7 @@ These are services we directly integrate into our application code.
 - **Data Collected:** None (external link only)
 - **Privacy Policy:** https://www.idealist.org/en/privacy
 
-**Getting your own profile URL:** Create your nonprofit's profile at https://www.idealist.org, then copy your volunteer-opportunities URL. Set it in `siteConfig.integrations.idealistUrl` in `src/lib/site.config.ts`.
+**Getting your own profile URL:** Create your nonprofit's profile at https://www.idealist.org, then copy your volunteer-opportunities URL into `siteConfig.volunteerUrl` in `src/lib/site.config.ts`. The Volunteer button links to it, and emails `contactEmail` when it is empty. `siteConfig.integrations.idealistUrl` is Free For Charity's own listing and is used only on Free For Charity's own site.
 
 ## Transitive Dependencies
 

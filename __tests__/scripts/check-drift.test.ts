@@ -134,6 +134,158 @@ describe('check-drift: Pages config discard', () => {
   })
 })
 
+/** Calls an exported pure function of check-drift.mjs in a child node process. */
+function callInChild<T>(fn: string, ...args: unknown[]): T {
+  const href = pathToFileURL(script).href
+  const out = execFileSync(
+    process.execPath,
+    [
+      '--input-type=module',
+      '-e',
+      `const m = await import(${JSON.stringify(href)});` +
+        `process.stdout.write(JSON.stringify(m.${fn}(...${JSON.stringify(args)})))`,
+    ],
+    { encoding: 'utf8' }
+  )
+  return JSON.parse(out)
+}
+
+type IdentityFinding = { path: string; line: number; label: string }
+
+describe('check-drift: brand identity', () => {
+  const FFC_PAGE = [
+    "const PAGE_NAME = 'Free For Charity Donation Policy'",
+    '<p>Free For Charity, a US 501(c)(3) non-profit organization (EIN 46-2471893)</p>',
+  ].join('\n')
+  const findings = (files: { path: string; body: string }[], name = 'Riverbend Pantry') =>
+    callInChild<IdentityFinding[]>('brandIdentityFindings', files, name)
+
+  it("exempts Free For Charity's own donation policy page, which is FFC's by design", () => {
+    expect(
+      findings([{ path: 'src/app/free-for-charity-donation-policy/page.tsx', body: FFC_PAGE }])
+    ).toEqual([])
+  })
+
+  it('exempts that page by exact path only — the same text anywhere else is an error', () => {
+    const out = findings([{ path: 'src/app/donation-policy/page.tsx', body: FFC_PAGE }])
+    expect(out.map((f) => f.line)).toEqual([1, 2, 2])
+    expect(out.map((f) => f.label).join(' ')).toMatch(/org name.*org name.*EIN/)
+  })
+
+  it('accepts Windows separators for the exempt path', () => {
+    expect(
+      findings([{ path: 'src\\app\\free-for-charity-donation-policy\\page.tsx', body: FFC_PAGE }])
+    ).toEqual([])
+  })
+
+  it("stays dormant on the template itself, where FFC's identity is correct", () => {
+    expect(
+      findings([{ path: 'src/app/donation-policy/page.tsx', body: FFC_PAGE }], 'Free For Charity')
+    ).toEqual([])
+  })
+})
+
+describe('check-drift: reading siteConfig.name', () => {
+  const nameOf = (source: string) => callInChild<string | null>('siteNameFromConfig', source)
+
+  it('skips the unquoted type declaration and reads the value', () => {
+    expect(
+      nameOf("export type SiteConfig = {\n  name: string\n}\nconst c = {\n  name: 'Riverbend',\n}")
+    ).toBe('Riverbend')
+  })
+
+  it('reads a double-quoted name containing an apostrophe in full', () => {
+    expect(nameOf(`  name: "St. Mary's Shelter & Kitchen",`)).toBe("St. Mary's Shelter & Kitchen")
+  })
+
+  it('reads a single-quoted name containing double quotes in full', () => {
+    expect(nameOf(`  name: 'Café Éclair "Arts" Collective',`)).toBe('Café Éclair "Arts" Collective')
+  })
+
+  it('unescapes an escaped quote', () => {
+    expect(nameOf("  name: 'O\\'Brien Fund',")).toBe("O'Brien Fund")
+  })
+})
+
+type FontFinding = { path: string; line: number; label: string }
+
+describe('check-drift: Google-hosted fonts', () => {
+  const findings = (body: string, path = 'src/lib/fonts.ts') =>
+    callInChild<FontFinding[]>('googleFontFindings', [{ path, body }])
+
+  it('flags a static next/font/google import, with its line', () => {
+    const body = "// fonts\nimport { Lato } from 'next/font/google'\n"
+    expect(findings(body)).toEqual([
+      { path: 'src/lib/fonts.ts', line: 2, label: 'a next/font/google import' },
+    ])
+  })
+
+  it('flags double quotes, a subpath, a dynamic import and a require', () => {
+    const body = [
+      'import { Lato } from "next/font/google"',
+      "export { Inter } from 'next/font/google/target.css'",
+      "const m = await import('next/font/google')",
+      "const r = require('next/font/google')",
+      "const w = await import(/* webpackPrefetch: true */ 'next/font/google')",
+      "const c = require(/* a */ /* b */ 'next/font/google')",
+    ].join('\n')
+    expect(findings(body).map((f) => f.line)).toEqual([1, 2, 3, 4, 5, 6])
+  })
+
+  it('flags a Google Fonts CSS or font-file URL in a stylesheet', () => {
+    const body = [
+      "@import url('https://fonts.googleapis.com/css2?family=Lato&display=swap');",
+      '@font-face { src: url(https://fonts.gstatic.com/s/lato/v24/x.woff2); }',
+    ].join('\n')
+    expect(findings(body, 'src/app/globals.css')).toEqual([
+      { path: 'src/app/globals.css', line: 1, label: 'a Google Fonts URL' },
+      { path: 'src/app/globals.css', line: 2, label: 'a Google Fonts URL' },
+    ])
+  })
+
+  it('flags protocol-relative Google Fonts URLs, which are not comments', () => {
+    const css = '@font-face { src: url(//fonts.gstatic.com/s/lato/v24/x.woff2); }'
+    expect(findings(css, 'src/app/globals.css')).toEqual([
+      { path: 'src/app/globals.css', line: 1, label: 'a Google Fonts URL' },
+    ])
+    const tsx = "const href = '//fonts.googleapis.com/css2?family=Lato'"
+    expect(findings(tsx).map((f) => f.label)).toEqual(['a Google Fonts URL'])
+  })
+
+  it('treats // as a comment only outside a string, even straight after code', () => {
+    expect(findings('const x = 1// was fonts.googleapis.com\n')).toEqual([])
+    const masked = "const cdn = '//cdn.example'; import('next/font/google')"
+    expect(findings(masked).map((f) => f.label)).toEqual(['a next/font/google import'])
+  })
+
+  it('does not read a /* inside a string as a block comment', () => {
+    const body = "const s = '/*'\nimport { Lato } from 'next/font/google'\n"
+    expect(findings(body)).toEqual([
+      { path: 'src/lib/fonts.ts', line: 2, label: 'a next/font/google import' },
+    ])
+    expect(findings("/*\n const s = '*/'\n fonts.googleapis.com\n*/\n")).toEqual([
+      { path: 'src/lib/fonts.ts', line: 3, label: 'a Google Fonts URL' },
+    ])
+  })
+
+  it('ignores the module and hosts named only in comments or prose', () => {
+    const body = [
+      "import localFont from 'next/font/local'",
+      '// `next/font/google` downloads from fonts.gstatic.com during next build',
+      '/* never: import { Lato } from "next/font/google" */',
+    ].join('\n')
+    expect(findings(body)).toEqual([])
+  })
+
+  it('does not flag next/font/local or a look-alike module', () => {
+    const body = [
+      "import localFont from 'next/font/local'",
+      "import x from 'next/font/google-ish'",
+    ].join('\n')
+    expect(findings(body)).toEqual([])
+  })
+})
+
 describe('check-drift script (end to end)', () => {
   it('passes against this repo — no live workflow discards next.config.ts', () => {
     const out = execFileSync(process.execPath, [script], { encoding: 'utf8' })
