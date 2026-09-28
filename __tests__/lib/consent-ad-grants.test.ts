@@ -63,6 +63,13 @@ describe('the bootstrap reads a universal opt-out before any tag loads', () => {
     // would buy nothing and carry the heaviest CPRA weight, so the shipped
     // default is denied and a site opts in via analyticsConfig.
     expect(unscoped).toContain("'ad_personalization': 'denied'")
+
+    // personalization_storage too. Copilot's point on the canary PR: an
+    // absence check that names only SOME signals lets a regression grant the
+    // unnamed ones and still pass. These two move together — both govern
+    // personalisation, and the implementation comments treat them as one
+    // policy — so a test that pins one and not the other is only half a test.
+    expect(unscoped).toContain("'personalization_storage': 'denied'")
   })
 
   it('still denies everything inside the EEA/UK/CH, unconditionally', () => {

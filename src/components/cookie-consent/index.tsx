@@ -24,27 +24,14 @@ declare global {
   }
 }
 
-/**
- * Serialises a value for embedding inside an inline `<script>` body.
- *
- * `JSON.stringify` supplies the surrounding quotes and escapes quotes and
- * newlines, but it does NOT escape `<` — so a value containing `</script>`
- * would still close the element early and let the remainder be parsed as
- * markup. Escaping `<` closes that. U+2028/U+2029 are escaped too: they are
- * legal inside a JSON string but were illegal in a JS string literal before
- * ES2019.
- *
- * The IDs these wrap are build-time values set by a maintainer, not by a
- * visitor, so this is defence in depth rather than a live hole. It matters
- * because `isConfigured()` only rejects placeholder values — it does not
- * validate shape, so nothing else checks what reaches the script body.
- */
-export function scriptString(value: string): string {
-  return JSON.stringify(value)
-    .replace(/</g, '\\u003c')
-    .replace(/\u2028/g, '\\u2028')
-    .replace(/\u2029/g, '\\u2029')
-}
+// scriptString lives in @/lib/script-string so the GTM loader and this
+// component cannot drift apart: the duplicate copies meant an escaping fix
+// could land in one and not the other, and only one was ever tested.
+// Re-exported here because existing tests and forks import it from this path.
+import { scriptString } from '@/lib/script-string'
+
+// Re-exported because existing tests and forks import it from this path.
+export { scriptString }
 
 interface CookiePreferences {
   necessary: boolean
