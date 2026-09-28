@@ -22,6 +22,28 @@ export const analyticsConfig = {
 
   // Microsoft Clarity project ID.
   clarityProjectId: 'XXXXXXXXXX',
+
+  // --- Advertising policy. Not IDs: these change what this site is allowed
+  // --- to do, and they carry legal consequences. Read before editing.
+
+  // TRUE when this site's audience is children — a preschool, a youth
+  // league, a children's programme. Denies every advertising signal for
+  // every visitor, everywhere, regardless of region or consent. COPPA and
+  // Google's own policies do not permit ad personalisation on child-directed
+  // properties, and a child's "accept" is not a valid legal basis. Analytics
+  // is unaffected. When in doubt set it TRUE: the cost is remarketing a
+  // child-directed site cannot lawfully use anyway.
+  childDirected: false as boolean,
+
+  // TRUE only when this site deliberately runs PERSONALISED advertising —
+  // remarketing, audience targeting, Display. Google Ad Grants accounts
+  // CANNOT do any of that (Grants are search-only), so a Grant-funded site
+  // should leave this FALSE: it buys nothing, and ad_personalization is the
+  // signal that most squarely enables cross-context behavioural advertising
+  // under California, Colorado and Connecticut law. Ad Grants conversion
+  // tracking does NOT need it — that runs on ad_storage and ad_user_data,
+  // which stay granted outside the EEA/UK/CH.
+  adPersonalization: false as boolean,
 } as const
 
 /**

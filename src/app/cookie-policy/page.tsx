@@ -476,14 +476,19 @@ export default function CookiePolicy() {
             <strong>5. Do Not Track and Global Privacy Control</strong>
           </h2>
           <p className="text-[14px] text-[#666] pb-[10px] leading-[24px] font-[500]">
-            This site does not read or respond to Do Not Track or Global Privacy Control browser
-            signals programmatically. We do not sell or share personal information as defined by the
-            CCPA/CPRA, so there is nothing for those signals to opt out of on this site. Analytics
-            cookies are <strong>never</strong> set before you accept, anywhere in the world (see
-            &quot;When we ask permission first&quot; in Section 3.3); if you do accept, you can turn
-            them off again at any time via the Cookie Preferences link in the footer, and we delete
-            the cookies we set when you do. Microsoft Clarity and the Meta Pixel stay off everywhere
-            unless you explicitly opt in.
+            This site reads the Global Privacy Control (GPC) signal and treats it as an opt-out of
+            advertising data sharing, applied before any Google tag loads — so a browser sending GPC
+            never has advertising cookies set. We do share advertising data with Google to measure
+            our Google Ad Grants search ads, which California law may treat as
+            &ldquo;sharing&rdquo;, and that is exactly what GPC opts you out of. You can also use
+            the <em>Do Not Sell or Share My Personal Information</em> link in the footer. Do Not
+            Track is a separate, deprecated signal with no agreed meaning, and we do not act on it.
+            GPC does not switch off basic analytics, which you control separately: outside the EEA,
+            the UK and Switzerland analytics cookies are set automatically (see &quot;When we ask
+            permission first&quot; in Section 3.3), and any visitor can turn them off at any time
+            via the Cookie Preferences link in the footer — we delete the cookies we set when you
+            do. Microsoft Clarity and the Meta Pixel stay off everywhere unless you explicitly opt
+            in.
           </p>
 
           {/* Section 6 */}

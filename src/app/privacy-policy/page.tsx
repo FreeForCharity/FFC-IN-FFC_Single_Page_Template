@@ -415,13 +415,35 @@ export default function PrivacyPolicy() {
             supplements the rest of this policy.
           </p>
           <p className="text-[14px] text-[#666] pb-[10px] leading-[24px] font-[500]">
-            <strong>We do not sell or share your personal information.</strong> Free For Charity
-            does not sell personal information, and does not share it for cross-context behavioral
-            advertising, as those terms are defined by California law — and has not done so in the
-            preceding 12 months. We do not knowingly collect or sell the personal information of
-            anyone under 16. We do not collect sensitive personal information beyond what is
-            necessary to provide this website and our services, and we do not use it to infer
-            characteristics about you.
+            <strong>We do not sell your personal information for money.</strong> Free For Charity
+            has never received, and does not receive, payment for your personal information.
+            California law defines &ldquo;sharing&rdquo; broadly enough to cover what we describe
+            next, so we tell you plainly rather than rely on that distinction.
+          </p>
+          <p className="text-[14px] text-[#666] pb-[10px] leading-[24px] font-[500]">
+            <strong>We do share advertising data with Google.</strong> This site advertises through
+            Google Ad Grants, the programme that gives nonprofits free search advertising to reach
+            people looking to donate or volunteer. Keeping that grant requires us to measure which
+            ads lead to those actions, so where advertising storage is permitted we allow Google to
+            set advertising cookies and to receive conversion data. Under the CCPA/CPRA this may
+            constitute &ldquo;sharing&rdquo; for cross-context behavioral advertising, and you have
+            the right to opt out. We do not enable personalized or remarketing advertising — Ad
+            Grants accounts cannot use it, and we leave that signal switched off.
+          </p>
+          <p className="text-[14px] text-[#666] pb-[10px] leading-[24px] font-[500]">
+            <strong>How to opt out.</strong> Use the{' '}
+            <em>Do Not Sell or Share My Personal Information</em> link in the site footer. We also
+            honor the Global Privacy Control (GPC): if your browser or an extension sends that
+            signal we treat it as an opt-out automatically, and you need do nothing else. Opting out
+            stops advertising data sharing; it does not switch off the basic analytics we use to see
+            how the site performs, which you control separately through Cookie Preferences. Visitors
+            in the EEA, the UK and Switzerland are never opted in to begin with — nothing is shared
+            there until you accept.
+          </p>
+          <p className="text-[14px] text-[#666] pb-[10px] leading-[24px] font-[500]">
+            We do not knowingly collect or sell the personal information of anyone under 16. We do
+            not collect sensitive personal information beyond what is necessary to provide this
+            website and our services, and we do not use it to infer characteristics about you.
           </p>
           <p className="text-[14px] text-[#666] pb-[10px] leading-[24px] font-[500]">
             <strong>Your rights.</strong> You have the right to: know what personal information we
@@ -433,13 +455,17 @@ export default function PrivacyPolicy() {
           </p>
           <p className="text-[14px] text-[#666] pb-[10px] leading-[24px] font-[500]">
             <strong>Opt-out preference signals (Global Privacy Control / Do Not Track).</strong>{' '}
-            This site does not read or respond to GPC or DNT browser signals programmatically. We do
-            not sell or share personal information as defined by the CCPA/CPRA, so there is nothing
-            for such a signal to opt out of under California law. Analytics cookies are never set
-            before you accept, anywhere in the world; if you do accept, you can turn them off again
-            at any time via the Cookie Preferences link in the footer, and we delete the cookies we
-            set when you do. Session recording (Microsoft Clarity) and marketing (Meta Pixel)
-            scripts never load unless you explicitly opt in.
+            This site reads the Global Privacy Control (GPC) signal and treats it as an opt-out of
+            advertising data sharing. The check runs before any Google tag loads, so a browser
+            sending GPC never has advertising cookies set in the first place — there is nothing to
+            undo afterwards. Because GPC is a statutory signal, this site does not override it: if
+            your browser sends it, the opt-out stands even if you also press Accept. Do Not Track
+            (DNT) is a separate, deprecated signal with no agreed meaning, and we do not act on it.
+            GPC opts you out of sale and sharing, not of basic analytics: outside the EEA, the UK
+            and Switzerland analytics cookies are set automatically, and any visitor, anywhere, can
+            turn them off at any time via the Cookie Preferences link in the footer — we delete the
+            cookies we set when you do. Session recording (Microsoft Clarity) and marketing (Meta
+            Pixel) scripts never load unless you explicitly opt in.
           </p>
           <p className="text-[14px] text-[#666] pb-[10px] leading-[24px] font-[500]">
             <strong>Exercising your rights.</strong> Submit a request to{' '}
