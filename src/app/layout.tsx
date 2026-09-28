@@ -3,7 +3,7 @@ import './globals.css'
 import Header from './../components/header'
 import Footer from './../components/footer'
 import CookieConsent from './../components/cookie-consent'
-import GoogleTagManager, { GoogleTagManagerNoScript } from './../components/google-tag-manager'
+import GoogleTagManager from './../components/google-tag-manager'
 import { siteConfig, siteUrl, twitterSite, cardDescription } from '@/lib/site.config'
 import { assetPath } from '@/lib/assetPath'
 import { openSans, lato, faustina } from '@/lib/fonts'
@@ -128,7 +128,19 @@ export default function RootLayout({
         className={['antialiased', openSans.variable, lato.variable, faustina.variable].join(' ')}
         suppressHydrationWarning={true}
       >
-        <GoogleTagManagerNoScript />
+        {/* The GTM <noscript> iframe is DELIBERATELY NOT MOUNTED.
+            It is the one path consent cannot reach: with JavaScript disabled
+            the consent bootstrap above never executes, the cookie banner
+            never renders, and the footer opt-out control does not exist — yet
+            the iframe would still request the GTM container. Consent Mode is
+            a JavaScript API, so that request carries no consent signal at
+            all, and a visitor sending GPC has no way to stop it.
+            It also bought nothing: GA4 cannot run without JavaScript, so the
+            iframe measures essentially nothing while contradicting the
+            privacy policy's claim that the consent check runs before any
+            Google tag loads. Removing it is what makes that claim true.
+            Re-mounting it re-opens an unconsented, un-opt-out-able request to
+            Google on every JS-disabled visit. */}
         {/* Skip-to-content link (WCAG 2.4.1). First focusable element in the
             body so keyboard users tabbing in can jump past the header
             navigation. Visually hidden until focused — see .skip-to-content

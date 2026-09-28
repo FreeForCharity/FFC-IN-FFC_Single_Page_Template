@@ -53,16 +53,16 @@ export default function GoogleTagManager() {
 }
 
 // Export a component for the noscript iframe that goes in the body
-export function GoogleTagManagerNoScript() {
-  return (
-    <noscript>
-      <iframe
-        src={`https://www.googletagmanager.com/ns.html?id=${GTM_ID}`}
-        height="0"
-        width="0"
-        style={{ display: 'none', visibility: 'hidden' }}
-        title="Google Tag Manager"
-      />
-    </noscript>
-  )
-}
+// The <noscript> GTM iframe used to live here and has been REMOVED, not
+// merely unmounted.
+//
+// It is the one tracking path consent cannot reach: with JavaScript disabled
+// the consent bootstrap never executes, the cookie banner never renders, and
+// the footer opt-out control does not exist — yet the iframe would still
+// request the GTM container with no consent signal, and a visitor sending GPC
+// would have no way to stop it. GA4 cannot run without JavaScript either, so
+// it measured essentially nothing in exchange.
+//
+// Deleted rather than commented out because an unmounted export is one line
+// away from returning, and its return would silently falsify the privacy
+// policy's claim that the consent check runs before any Google tag loads.

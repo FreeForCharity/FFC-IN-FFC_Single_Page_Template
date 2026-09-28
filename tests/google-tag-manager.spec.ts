@@ -65,14 +65,23 @@ test.describe('Google Tag Manager Integration', () => {
     expect(scriptContent).toContain('dataLayer')
   })
 
-  test('should have GTM noscript fallback in body', async ({ page }) => {
+  test('must NOT ship the GTM noscript fallback', async ({ page }) => {
     await page.goto('/')
 
-    // Check for noscript iframe element
-    // We verify it exists in the HTML even though it won't render with JavaScript enabled
+    // Inverted deliberately. This test used to assert the iframe was present.
+    //
+    // The <noscript> iframe is the one tracking path consent cannot reach:
+    // with JavaScript disabled the consent bootstrap never runs, the banner
+    // never renders, and the footer opt-out control does not exist — but the
+    // iframe would still request the GTM container, carrying no consent
+    // signal, with no way for a GPC-sending visitor to stop it.
+    //
+    // It is asserted by ABSENCE because re-adding it is a one-line edit that
+    // any presence-only suite would wave through, and the privacy policy's
+    // claim that the consent check runs before any Google tag loads would
+    // silently become false again.
     const pageContent = await page.content()
-    expect(pageContent).toContain('googletagmanager.com/ns.html')
-    expect(pageContent).toContain('noscript')
+    expect(pageContent).not.toContain('googletagmanager.com/ns.html')
   })
 
   test('should push events to dataLayer', async ({ page }) => {

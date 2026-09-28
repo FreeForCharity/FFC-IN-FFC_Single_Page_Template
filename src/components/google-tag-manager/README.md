@@ -11,7 +11,12 @@ Google Tag Manager (GTM) is a tag management system that allows you to manage an
 ### Components
 
 1. **GoogleTagManager** - Main component that injects the GTM script into the page
-2. **GoogleTagManagerNoScript** - Fallback iframe for users with JavaScript disabled
+2. ~~**GoogleTagManagerNoScript**~~ - REMOVED. The `<noscript>` iframe was the one
+   tracking path consent could not reach: with JavaScript disabled the consent
+   bootstrap never runs, the banner never renders, and the opt-out control does
+   not exist, yet the iframe still requested the GTM container with no consent
+   signal. GA4 cannot run without JavaScript, so it measured almost nothing in
+   exchange. Do not reintroduce it.
 
 ### Features
 
@@ -47,7 +52,7 @@ Replace the value with your actual GTM container ID from Google Tag Manager (e.g
 The component is automatically integrated into the root layout (`src/app/layout.tsx`):
 
 ```tsx
-import GoogleTagManager, { GoogleTagManagerNoScript } from './../components/GoogleTagManager'
+import GoogleTagManager from './../components/GoogleTagManager'
 
 export default function RootLayout({ children }) {
   return (
@@ -55,10 +60,7 @@ export default function RootLayout({ children }) {
       <head>
         <GoogleTagManager />
       </head>
-      <body>
-        <GoogleTagManagerNoScript />
-        {/* ... rest of body content */}
-      </body>
+      <body>{/* ... rest of body content */}</body>
     </html>
   )
 }
