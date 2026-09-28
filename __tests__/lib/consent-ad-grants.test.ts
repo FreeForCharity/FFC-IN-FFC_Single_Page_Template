@@ -127,6 +127,31 @@ describe('setSaleShareOptOut may only tighten when no preferences are passed', (
     })
   })
 
+  it('still denies when localStorage is blocked, e.g. a private window', () => {
+    // Copilot's finding. The deny used to be gated on hasSaleShareOptOut(),
+    // which re-reads localStorage; when that read throws, its catch reports
+    // false, so the denial was skipped entirely and the control did nothing
+    // — in precisely the browsers whose users are most likely to use it.
+    // The storage write may fail silently; the live denial may not.
+    const store = window.localStorage
+    Object.defineProperty(window, 'localStorage', {
+      configurable: true,
+      get() {
+        throw new Error('storage blocked')
+      },
+    })
+
+    try {
+      setSaleShareOptOut(true)
+      const update = (window.gtag as jest.Mock).mock.calls.find(
+        ([cmd, action]) => cmd === 'consent' && action === 'update'
+      )
+      expect(update?.[2]).toMatchObject({ ad_storage: 'denied', ad_user_data: 'denied' })
+    } finally {
+      Object.defineProperty(window, 'localStorage', { configurable: true, value: store })
+    }
+  })
+
   it('defers to the banner when preferences ARE passed', () => {
     // The prefs path is the only one allowed to grant, because it is the
     // only one that knows what the visitor actually chose.

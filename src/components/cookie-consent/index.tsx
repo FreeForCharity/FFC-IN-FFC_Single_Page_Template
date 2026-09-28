@@ -56,9 +56,9 @@ export default function CookieConsent() {
 
   // Loads the direct GA4 tag. NOT gated on the analytics toggle: Google's
   // tags speak Consent Mode, so the bootstrap in src/lib/consent-mode.ts
-  // gates their cookie STORAGE worldwide while the script itself loads on
+  // gates their cookie STORAGE by region while the script itself loads on
   // every pageview (a visitor who has not opted in is measured via
-  // cookieless pings only, in every country). With the shipped placeholder
+  // cookieless pings only, in the EEA/UK/CH). With the shipped placeholder
   // ID this loader is inert — GTM delivers GA4 for fleet sites.
   const loadGoogleAnalytics = useCallback(() => {
     if (
@@ -248,7 +248,7 @@ export default function CookieConsent() {
       // The direct GA4 tag loads regardless of the choice (Consent Mode
       // gates its storage, not its loading) — but only AFTER the consent
       // update above, so a stored choice is already in the dataLayer when
-      // the GA queue replays. The bootstrap denies worldwide now, so
+      // the GA queue replays. The bootstrap denies in the EEA/UK/CH, so
       // loading first no longer risks a cookie-based hit ahead of a stored
       // denial; it would instead cost a returning GRANTER their opening
       // hit, sent cookieless before the grant applied.
@@ -334,7 +334,7 @@ export default function CookieConsent() {
     // which then loads GA itself), and only THEN is the GA4 loader called
     // directly — that call is for the no-stored-choice case and is an
     // idempotent no-op when applyConsent already ran. With the bootstrap
-    // denying worldwide, loading GA before the restore no longer risks a
+    // denying regionally, loading GA before the restore no longer risks a
     // cookie-based hit ahead of a stored denial — it would cost a
     // returning GRANTER their opening hit, sent cookieless before the
     // stored grant applied.

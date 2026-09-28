@@ -117,10 +117,12 @@ export default function RootLayout({
             tag loads, which is why it is an inline <head> script placed
             above the GoogleTagManager component rather than a next/script:
             the consent state has to already be in the dataLayer when GTM/GA4
-            initialise. Denied worldwide: one unscoped default withholds
-            analytics and ad storage from every visitor until they opt in, so
-            there is no region left for Google to resolve from the visitor's
-            IP address. See src/lib/consent-mode.ts. */}
+            initialise. Regional: a region-scoped default denies
+            everything for EEA/UK/CH visitors, and an unscoped one grants
+            analytics and Ad Grants conversion signals to everyone else.
+            Google resolves the most specific matching region from the
+            visitor's IP. A universal opt-out signal (GPC) or the footer
+            control denies advertising everywhere, and can only tighten. See src/lib/consent-mode.ts. */}
         <script dangerouslySetInnerHTML={{ __html: CONSENT_MODE_BOOTSTRAP }} />
         <GoogleTagManager />
       </head>

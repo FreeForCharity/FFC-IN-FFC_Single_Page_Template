@@ -5,8 +5,8 @@
  * Without this ordering, a returning visitor who previously GRANTED
  * analytics would get the deny-by-default bootstrap replayed ahead of their
  * stored grant: GA's config lands in the queue first and its opening hit
- * goes out cookieless, before the update applies. The bootstrap's single
- * default call carries wait_for_update, but that is a bounded grace window
+ * goes out cookieless, before the update applies. Both of the bootstrap's
+ * default calls carry wait_for_update, but that is a bounded grace window
  * (500ms), not an ordering guarantee — a slow hydration can outlast it —
  * which is exactly why the restore-before-load ordering this file locks in
  * still matters.

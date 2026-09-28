@@ -394,19 +394,25 @@ export default function PrivacyPolicy() {
             </li>
           </ul>
           <p className="text-[14px] text-[#666] pb-[10px] leading-[24px] font-[500]">
-            <strong>How consent works, in plain language.</strong> We use Google Consent Mode,
-            configured to withhold storage from every visitor until they accept — the same standard
-            worldwide, not only where the law demands it. Until you accept, Google&apos;s tags set
-            no analytics or advertising cookies and read no identifiers from your device, and
-            analytics counts your visit only in an aggregate, cookie-free way. There is no country
-            in which measurement begins before you choose. To be precise about what does happen:
-            those tags still load and send a cookie-free signal to Google before you decide, which
-            is what lets us count visits without identifying anyone; nothing is stored on your
-            device and nothing follows you to your next visit. One thing does travel: if you arrived
-            from an ad, the click identifier already in your link is carried between pages of this
-            site so the ad can still be credited if you accept — until you do, it is stripped from
-            what the tags send. You can change your mind at any time via the Cookie Preferences link
-            in the footer. See our{' '}
+            <strong>How consent works, in plain language.</strong> We use Google Consent Mode, and
+            what it does depends on where you are. If you are in the European Economic Area, the
+            United Kingdom or Switzerland, nothing is stored until you accept: Google&apos;s tags
+            set no analytics or advertising cookies and read no identifiers from your device, and
+            analytics counts your visit only in an aggregate, cookie-free way. Everywhere else —
+            including the United States, where this charity operates — analytics cookies are set
+            from your first page view without a prompt, because no law there requires us to ask
+            first and the measurement is what tells us whether the site is working. Advertising data
+            is shared with Google in those regions too, for the Ad Grants search ads described in
+            the California section below, and you can stop that at any time with the{' '}
+            <em>Do Not Sell or Share My Personal Information</em> link in the footer or by sending a
+            Global Privacy Control signal. To be precise about what happens before an EEA/UK/Swiss
+            visitor decides: the tags still load and send a cookie-free signal to Google, which is
+            what lets us count visits without identifying anyone; nothing is stored on your device
+            and nothing follows you to your next visit. One thing does travel: if you arrived from
+            an ad, the click identifier already in your link is carried between pages of this site
+            so the ad can still be credited if you accept — until you do, it is stripped from what
+            the tags send. You can change your mind at any time via the Cookie Preferences link in
+            the footer. See our{' '}
             <Link href="/cookie-policy" className="text-[#0062CC] underline">
               Cookie Policy
             </Link>{' '}

@@ -295,7 +295,9 @@ test.describe('Cookie Preferences Modal', () => {
 })
 
 test.describe('Google Consent Mode bootstrap', () => {
-  test('sets a single global denial inline, before any Google tag loads', async ({ page }) => {
+  test('sets the regional consent defaults inline, before any Google tag loads', async ({
+    page,
+  }) => {
     await page.goto('/')
 
     // The bootstrap is an inline <head> script, so the consent default is
@@ -308,27 +310,60 @@ test.describe('Google Consent Mode bootstrap', () => {
         .map((args) => args[2] as Record<string, unknown>)
     })
 
-    // ONE default, applying to everyone. A second call — or a `region` on
-    // this one — would reintroduce a class of visitor measured before they
-    // consented, which is the whole thing this asserts against.
-    expect(defaults).toHaveLength(1)
+    // TWO defaults: a region-scoped denial for EEA/UK/CH, then an unscoped
+    // one for everyone else. Google resolves the most specific matching
+    // region, so an EEA visitor gets the denial and the rest fall through.
+    //
+    // This case previously asserted a SINGLE unscoped denial — the global
+    // opt-in model this branch reverses. It is asserted positively AND by
+    // absence below, because the failure that matters is the region-scoped
+    // call quietly losing its region and starting to apply to everyone.
+    expect(defaults).toHaveLength(2)
 
-    expect(defaults[0].analytics_storage).toBe('denied')
-    expect(defaults[0].ad_storage).toBe('denied')
-    expect(defaults[0].ad_user_data).toBe('denied')
-    expect(defaults[0].ad_personalization).toBe('denied')
-    expect(defaults[0].wait_for_update).toBe(500)
-    expect(defaults[0].region).toBeUndefined()
+    const scoped = defaults.find((d) => d.region !== undefined)
+    const unscoped = defaults.find((d) => d.region === undefined)
+    expect(scoped).toBeDefined()
+    expect(unscoped).toBeDefined()
+
+    // EEA/UK/CH: nothing until they accept.
+    expect(scoped!.analytics_storage).toBe('denied')
+    expect(scoped!.ad_storage).toBe('denied')
+    expect(scoped!.ad_user_data).toBe('denied')
+    expect(scoped!.ad_personalization).toBe('denied')
+    expect(scoped!.wait_for_update).toBe(500)
+    expect(Array.isArray(scoped!.region)).toBe(true)
+    expect(scoped!.region as string[]).toContain('DE')
+    expect(scoped!.region as string[]).toContain('GB')
+    expect(scoped!.region as string[]).toContain('CH')
+
+    // Everyone else: analytics and Ad Grants conversion signals, but
+    // personalised advertising stays off by default.
+    expect(unscoped!.analytics_storage).toBe('granted')
+    expect(unscoped!.ad_personalization).toBe('denied')
+    expect(unscoped!.wait_for_update).toBe(500)
 
     // functionality/security stay granted: they carry no tracking, and the
     // banner itself depends on functionality storage to remember a choice.
-    expect(defaults[0].functionality_storage).toBe('granted')
-    expect(defaults[0].security_storage).toBe('granted')
+    expect(unscoped!.functionality_storage).toBe('granted')
+    expect(unscoped!.security_storage).toBe('granted')
 
-    // Asserted as an absence too — reinstating a permissive default is a
-    // one-line edit that every positive assertion above would still pass.
-    const granted = defaults.filter((d) => d.analytics_storage === 'granted')
-    expect(granted).toHaveLength(0)
+    // Asserted as an absence too, but the absence that matters under the
+    // regional model is the inverse of the global one. Analytics IS granted
+    // outside the EEA/UK/CH by design, so asserting "nothing grants
+    // analytics" would now be asserting the bug. What must never happen is a
+    // REGION-SCOPED call granting anything: that is the single edit which
+    // would start measuring EEA visitors before they consent, and every
+    // positive assertion above would still pass with it in place.
+    const scopedGrants = defaults.filter(
+      (d) =>
+        d.region !== undefined &&
+        Object.values(d).some((v) => v === 'granted' && d.functionality_storage !== v)
+    )
+    expect(scopedGrants.map((d) => d.region)).toEqual([])
+
+    // And exactly one call may be unscoped. A second would silently shadow
+    // the regional denial for whichever visitors it matched.
+    expect(defaults.filter((d) => d.region === undefined)).toHaveLength(1)
   })
 
   test('accepting the banner pushes a gtag consent update', async ({ page, context }) => {

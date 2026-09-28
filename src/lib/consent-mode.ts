@@ -271,8 +271,18 @@ export function setSaleShareOptOut(optOut: boolean, prefs?: ConsentPreferences):
   // visitor's real state is re-derived from the banner on the next
   // updateGoogleConsent, and from the bootstrap on the next page load, both
   // of which have the preferences this path lacks.
-  if (!hasSaleShareOptOut()) return
+  if (!optOut) return
   if (typeof window.gtag !== 'function') return
+
+  // Keyed on the `optOut` ARGUMENT, never on a re-read of stored state.
+  //
+  // An earlier revision gated this on `hasSaleShareOptOut()`. That helper
+  // reads localStorage, and in a private window the read THROWS and its catch
+  // reports false — so the deny was skipped and clicking "Do Not Sell or
+  // Share" did nothing at all, in exactly the browsers whose users are most
+  // likely to click it. The storage write above is allowed to fail silently;
+  // the live denial is not, because it is the part that actually stops the
+  // tags for this session.
   window.gtag('consent', 'update', {
     ad_storage: 'denied',
     ad_user_data: 'denied',
