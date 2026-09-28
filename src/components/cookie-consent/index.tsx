@@ -225,7 +225,9 @@ export default function CookieConsent() {
       // Google Consent Mode `update`: runs on every banner interaction AND
       // every stored-choice restore. This is what gates the Google tags'
       // cookie storage — the tags themselves load regardless (see
-      // src/lib/consent-mode.ts for the global denial they start from).
+      // src/lib/consent-mode.ts for the regional defaults they start from:
+      // denied in the EEA/UK/CH, analytics and Ad Grants signals granted
+      // elsewhere unless the visitor has opted out of sale/sharing).
       //
       // Queued BEFORE the custom `consent_update` event pushed below: both
       // writes land in the same dataLayer queue and GTM processes it in order,

@@ -7,7 +7,10 @@ import { testConfig } from './test.config'
  * These tests verify that Google Tag Manager is properly integrated:
  * 1. GTM script is loaded in the head section
  * 2. dataLayer is initialized
- * 3. GTM noscript fallback exists in body
+ * 3. The GTM noscript fallback is ABSENT — see the test below for why. This
+ *    line used to assert the opposite; leaving it stale would have left the
+ *    file's documentation arguing against its own assertion, which is how a
+ *    future maintainer talks themselves into "fixing" the test.
  * 4. GTM ID is configured in the component
  *
  * Note: Test expectations use values from test.config.ts for easy customization
