@@ -4,6 +4,8 @@ import { siteConfig } from '@/lib/site.config'
 import EndowmentFeatures from '../../../src/components/home-page/Endowment-Features'
 import OurPrograms from '../../../src/components/home-page/Our-Programs'
 import Events from '../../../src/components/home-page/Events'
+import FrequentlyAskedQuestions from '../../../src/components/home-page/FrequentlyAskedQuestions'
+import { asCharitySite, restoreSiteConfig } from '../../helpers/site-identity'
 
 // Self-hiding behavior (FFC-Cloudflare-Automation#816 Part B): the FFC-specific
 // marketing sections are gated behind siteConfig.sections.* so a rebranded fork
@@ -20,6 +22,7 @@ describe('home-page section visibility flags', () => {
     sourcesConfigured: process.env.EVENTS_SOURCES_CONFIGURED,
   }
   afterEach(() => {
+    restoreSiteConfig()
     siteConfig.sections.showEndowment = original.showEndowment
     siteConfig.sections.showPrograms = original.showPrograms
     siteConfig.sections.showEvents = original.showEvents
@@ -39,6 +42,21 @@ describe('home-page section visibility flags', () => {
   it('Our-Programs renders nothing when showPrograms is false', () => {
     siteConfig.sections.showPrograms = false
     const { container } = render(<OurPrograms />)
+    expect(container).toBeEmptyDOMElement()
+  })
+
+  // Endowment, Programs and FAQ are the supporting organization's own copy. On
+  // a charity's site they self-hide even with every flag left at its default,
+  // which is exactly the state provisioning leaves a new charity site in.
+  it.each([
+    ['Endowment-Features', EndowmentFeatures],
+    ['Our-Programs', OurPrograms],
+    ['FrequentlyAskedQuestions', FrequentlyAskedQuestions],
+  ])('%s renders nothing on a charity site, flags on', (_name, Section) => {
+    asCharitySite()
+    siteConfig.sections.showEndowment = true
+    siteConfig.sections.showPrograms = true
+    const { container } = render(<Section />)
     expect(container).toBeEmptyDOMElement()
   })
 

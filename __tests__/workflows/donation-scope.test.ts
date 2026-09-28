@@ -21,7 +21,7 @@ import { tmpdir } from 'os'
 import { join } from 'path'
 
 const WORKFLOW_PATH = join(__dirname, '..', '..', '.github', 'workflows', 'post-deploy-smoke.yml')
-const workflow = readFileSync(WORKFLOW_PATH, 'utf8')
+const workflow = readFileSync(WORKFLOW_PATH, 'utf8').replace(/\r\n/g, '\n')
 
 /** Pull the resolver script out of its heredoc and undo the YAML indentation. */
 function extractResolver(): string {

@@ -9,10 +9,11 @@ import { FaXTwitter } from 'react-icons/fa6'
 import type { IconType } from 'react-icons'
 import { SaleShareOptOut } from '@/components/sale-share-opt-out'
 
-import { siteConfig } from '@/lib/site.config'
+import { siteConfig, publishedPhone } from '@/lib/site.config'
 import { assetPath } from '@/lib/assetPath'
 import { eventsSectionVisible } from '@/lib/events/visibility'
 import { configuredTeam } from '@/data/team'
+import { faqSectionVisible, programsSectionVisible } from '@/lib/section-visibility'
 
 // Maps a social link's label (as defined in siteConfig.social) to an icon.
 // Unknown labels fall back to a generic link icon (FiLink2) so a charity
@@ -28,6 +29,7 @@ const socialIconByLabel: Record<string, IconType> = {
 }
 
 const Footer: React.FC = () => {
+  const phone = publishedPhone()
   const currentYear = React.useMemo(() => new Date().getFullYear(), [])
   const socialLinks = siteConfig.social.filter((s) => s.href)
   // Trim so whitespace-only config behaves like empty (link/clause self-hides).
@@ -87,15 +89,13 @@ const Footer: React.FC = () => {
               {[
                 { name: 'Home', href: '/#hero' },
                 { name: 'Mission', href: '/#mission' },
-                // Programs / Events self-hide (sections.showPrograms /
+                // Programs / Events / FAQ self-hide (section-visibility.ts /
                 // eventsSectionVisible); drop the dead quick-link too.
-                ...(siteConfig.sections.showPrograms
-                  ? [{ name: 'Programs', href: '/#programs' }]
-                  : []),
+                ...(programsSectionVisible() ? [{ name: 'Programs', href: '/#programs' }] : []),
                 ...(showEventsLink ? [{ name: 'Events', href: '/#events' }] : []),
                 { name: 'Donate', href: '/#donate' },
                 { name: 'Volunteer', href: '/#volunteer' },
-                { name: 'FAQ', href: '/#faq' },
+                ...(faqSectionVisible() ? [{ name: 'FAQ', href: '/#faq' }] : []),
                 ...(configuredTeam.length > 0 ? [{ name: 'Team', href: '/#team' }] : []),
                 // FFC footer standard: every supported charity site links back
                 // to the supporting org's hub. Always rendered — keep this
@@ -208,18 +208,22 @@ const Footer: React.FC = () => {
               </div>
             </div>
 
-            <div className="flex items-start gap-3">
-              <FiPhone className="w-10 h-10 text-orange-500 flex-shrink-0 mt-0.5" />
-              <div>
-                <p className="font-[500] text-[22px]">Call Us Today</p>
-                <a
-                  href={`tel:${siteConfig.phone.tel}`}
-                  className="font-[500] text-[16px] hover:text-cyan-400 transition-colors aria-font"
-                >
-                  {siteConfig.phone.display}
-                </a>
+            {/* A charity that publishes no number gets no "Call Us" block, not a
+                tel: link that dials nothing. */}
+            {phone && (
+              <div className="flex items-start gap-3">
+                <FiPhone className="w-10 h-10 text-orange-500 flex-shrink-0 mt-0.5" />
+                <div>
+                  <p className="font-[500] text-[22px]">Call Us Today</p>
+                  <a
+                    href={`tel:${phone.tel}`}
+                    className="font-[500] text-[16px] hover:text-cyan-400 transition-colors aria-font"
+                  >
+                    {phone.display}
+                  </a>
+                </div>
               </div>
-            </div>
+            )}
 
             {siteConfig.addresses.map((address) => (
               <a

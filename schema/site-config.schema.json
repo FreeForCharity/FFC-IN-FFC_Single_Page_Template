@@ -32,9 +32,10 @@
       "type": "object",
       "additionalProperties": true,
       "required": ["display", "tel"],
+      "$comment": "Both keys are required, but either may be the empty string, which means 'this charity publishes no phone number'. The footer then omits the Call Us block entirely. This matches the existing convention for social[].href and twitterHandle: present but empty disables the feature. Requiring a non-empty value forced a placeholder into the config, which shipped as a tel: link that looked callable and dialled nothing.",
       "properties": {
-        "display": { "type": "string", "minLength": 1 },
-        "tel": { "type": "string", "minLength": 1 }
+        "display": { "type": "string" },
+        "tel": { "type": "string" }
       }
     },
     "addresses": {

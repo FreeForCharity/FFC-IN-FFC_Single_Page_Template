@@ -136,9 +136,9 @@ You are using a server-only feature (cookies, headers, searchParams on server co
 
 This is expected. For static exports, `<img>` with `assetPath()` is the correct approach. The `next/image` component does not work with `output: 'export'` in all cases.
 
-### Google Fonts not loading
+### Fonts
 
-Google Fonts require network access. On restricted networks, the site falls back to system fonts. This is by design and not a bug.
+Fonts are self-hosted with `next/font/local` (`src/lib/fonts.ts`, woff2 files in `src/app/fonts/`), so neither the build nor the site needs network access to Google. Do not reintroduce `next/font/google` — `check:drift` rejects it.
 
 ### Tests fail after content changes
 

@@ -3,6 +3,7 @@ import Link from 'next/link'
 import type { Metadata } from 'next'
 import BreadcrumbSchema from '@/components/seo/BreadcrumbSchema'
 import { pageMetadata } from '@/lib/page-metadata'
+import { siteConfig } from '@/lib/site.config'
 
 const PAGE_NAME = 'Security Acknowledgements'
 const CANONICAL_PATH = '/security-acknowledgements'
@@ -11,7 +12,7 @@ const CANONICAL_PATH = '/security-acknowledgements'
 // per-page OG/Twitter handling is documented in src/lib/page-metadata.ts.
 export const metadata: Metadata = pageMetadata({
   title: PAGE_NAME,
-  description: 'Security Acknowledgements for Free For Charity website',
+  description: `Security Acknowledgements for the ${siteConfig.name} website`,
   canonical: CANONICAL_PATH,
 })
 
@@ -25,7 +26,7 @@ const index = () => {
             Security Acknowledgements
           </h1>
           <p className="mb-[20px] pb-[10px] text-[14px] font-[500] leading-[25px] text-[#666]">
-            Free For Charity would like to extend our sincere gratitude to the following security
+            {siteConfig.name} would like to extend our sincere gratitude to the following security
             researchers for their invaluable contributions in helping us keep our platform safe. By
             responsibly disclosing vulnerabilities, they have played a crucial role in protecting
             our users and our data.

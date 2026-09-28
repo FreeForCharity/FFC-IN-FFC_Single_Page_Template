@@ -43,5 +43,5 @@ Issue -> branch -> PR -> merge queue. No direct commits to main.
 
 - Static export: no API routes, no middleware, no ISR
 - `<img>` with `assetPath()` is correct; `next/image` has static export limitations
-- Google Fonts may fail on restricted networks (graceful fallback to system fonts)
+- Fonts are self-hosted via `next/font/local` (`src/lib/fonts.ts`, files in `src/app/fonts/`); never use `next/font/google` or Google Fonts URLs (`check:drift` fails on them)
 - Never expose secrets in code; use `${{ secrets.* }}` in workflows

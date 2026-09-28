@@ -2,8 +2,11 @@ import React from 'react'
 import { render } from '@testing-library/react'
 import FaqSchema, { buildFaqSchema } from '../../../src/components/seo/FaqSchema'
 import { faqs } from '../../../src/data/faqs'
+import { asCharitySite, asSupporterSite, restoreSiteConfig } from '../../helpers/site-identity'
 
 describe('FaqSchema', () => {
+  afterEach(restoreSiteConfig)
+
   it('builds a schema.org FAQPage object from the faqs data', () => {
     const schema = buildFaqSchema()
 
@@ -29,6 +32,7 @@ describe('FaqSchema', () => {
   })
 
   it('renders a single application/ld+json script block whose JSON parses', () => {
+    asSupporterSite()
     const { container } = render(<FaqSchema />)
     const scripts = container.querySelectorAll('script[type="application/ld+json"]')
     expect(scripts.length).toBe(1)
@@ -37,5 +41,11 @@ describe('FaqSchema', () => {
     const parsed = JSON.parse(text) as Record<string, unknown>
     expect(parsed['@type']).toBe('FAQPage')
     expect((parsed.mainEntity as unknown[]).length).toBe(faqs.length)
+  })
+
+  it("emits no FAQPage on a charity's site, where the FAQ section does not render", () => {
+    asCharitySite()
+    const { container } = render(<FaqSchema />)
+    expect(container.querySelectorAll('script[type="application/ld+json"]')).toHaveLength(0)
   })
 })
