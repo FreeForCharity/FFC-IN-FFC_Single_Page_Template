@@ -1,5 +1,5 @@
 import React from 'react'
-import { siteConfig, siteUrl } from '@/lib/site.config'
+import { isPending, publishedPhone, siteConfig, siteUrl } from '@/lib/site.config'
 import { assetPath } from '@/lib/assetPath'
 
 /**
@@ -37,26 +37,36 @@ export function buildOrganizationSchema(): Record<string, unknown> {
     schema.foundingDate = siteConfig.foundingDate
   }
 
-  if (siteConfig.contactEmail) {
-    schema.email = siteConfig.contactEmail
+  // A pending field (siteConfig.pending) has an empty value and shows a
+  // placeholder on the page; it must never reach structured data, where a
+  // blank or placeholder value would read as a real (bogus) fact.
+  const email = siteConfig.contactEmail.trim()
+  if (email && !isPending('email')) {
+    schema.email = email
   }
 
-  if (siteConfig.ein) {
+  const ein = siteConfig.ein.trim()
+  if (/^\d{2}-\d{7}$/.test(ein) && !isPending('ein')) {
     // schema.org/Organization taxID — surfaces the EIN to search/knowledge panels.
-    schema.taxID = siteConfig.ein
+    // Only a well-formed IRS EIN (12-3456789) is emitted.
+    schema.taxID = ein
   }
 
-  if (siteConfig.phone?.tel) {
+  // Both halves or nothing, the footer's rule (publishedPhone).
+  const phone = isPending('phone') ? null : publishedPhone()
+  if (phone) {
     // Use the normalized tel value (digits) rather than the display form so
     // search-engine parsers reliably recognize the number.
-    schema.telephone = siteConfig.phone.tel
+    schema.telephone = phone.tel
   }
 
-  const primaryAddress = siteConfig.addresses?.[0]
-  if (primaryAddress && primaryAddress.lines.length > 0) {
+  const primaryLines = isPending('address')
+    ? []
+    : (siteConfig.addresses?.[0]?.lines ?? []).map((line) => line.trim()).filter(Boolean)
+  if (primaryLines.length > 0) {
     schema.address = {
       '@type': 'PostalAddress',
-      streetAddress: primaryAddress.lines.join(', '),
+      streetAddress: primaryLines.join(', '),
     }
   }
 

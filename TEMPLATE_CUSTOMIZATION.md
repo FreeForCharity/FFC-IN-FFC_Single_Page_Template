@@ -14,26 +14,71 @@ is the **map** — what changes where, and why.
 truth for site-specific values. Update the `siteConfig` export with your
 charity's name, URL, contact email, social links, etc.
 
-| Property                      | Where it shows up                                                                                                                                                                                                      |
-| ----------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `name`                        | `<title>`, OG/Twitter `site_name`, 404 page, error page, footer copyright, manifest                                                                                                                                    |
-| `tagline`                     | Default `<title>` and OG title                                                                                                                                                                                         |
-| `description`                 | `<meta description>` (long form for search engines), manifest fallback                                                                                                                                                 |
-| `shortDescription`            | OG / Twitter card description (tuned for social previews; falls back to `description`)                                                                                                                                 |
-| `url`                         | `metadataBase`, sitemap entries, robots `Sitemap:` line                                                                                                                                                                |
-| `twitterHandle`               | Twitter card `site` attribute (the leading `@` is added automatically)                                                                                                                                                 |
-| `contactEmail`                | Footer e-mail link. `security.txt` has its own `Contact:` line — keep them in sync.                                                                                                                                    |
-| `keywords`                    | `<meta keywords>`                                                                                                                                                                                                      |
-| `themeColor`                  | Web manifest `theme_color` and `background_color`                                                                                                                                                                      |
-| `vulnerabilityDisclosurePath` | 404 page CTA, error page disclosure link                                                                                                                                                                               |
-| `social`                      | Footer social-link rail (icon resolved by `label`: Facebook, X (Twitter), LinkedIn, GitHub)                                                                                                                            |
-| `ein`                         | Footer EIN display line                                                                                                                                                                                                |
-| `phone`                       | Footer phone link (`phone.display` shown, `phone.tel` used for the `tel:` link)                                                                                                                                        |
-| `addresses`                   | Footer contact column (`addresses[].label` / `.lines` / `.mapUrl`)                                                                                                                                                     |
-| `guidestar`                   | Footer GuideStar/Candid seal links (`guidestar.profileUrl`, `guidestar.directProfileUrl`)                                                                                                                              |
-| `supportedBy`                 | Permanent "Supported by Free For Charity" bottom-bar attribution and "Supported Charity Login" hub link. Part of the FFC footer standard: required, always rendered — do **not** change or remove it when customizing. |
-| `parentOrg`                   | Footer "a project of" parent-org clause (omit for a standalone charity)                                                                                                                                                |
-| `integrations`                | Zeffy donation embed, Idealist profile, Events Facebook page URL, Microsoft Forms URL                                                                                                                                  |
+| Property                      | Where it shows up                                                                                                                                                                                                                                   |
+| ----------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `name`                        | `<title>`, OG/Twitter `site_name`, 404 page, error page, footer copyright, manifest                                                                                                                                                                 |
+| `tagline`                     | Default `<title>` and OG title                                                                                                                                                                                                                      |
+| `description`                 | `<meta description>` (long form for search engines), manifest fallback                                                                                                                                                                              |
+| `shortDescription`            | OG / Twitter card description (tuned for social previews; falls back to `description`)                                                                                                                                                              |
+| `url`                         | `metadataBase`, sitemap entries, robots `Sitemap:` line                                                                                                                                                                                             |
+| `twitterHandle`               | Twitter card `site` attribute (the leading `@` is added automatically)                                                                                                                                                                              |
+| `contactEmail`                | Footer e-mail link. `security.txt` has its own `Contact:` line — keep them in sync.                                                                                                                                                                 |
+| `keywords`                    | `<meta keywords>`                                                                                                                                                                                                                                   |
+| `themeColor`                  | Web manifest `theme_color` and `background_color`                                                                                                                                                                                                   |
+| `vulnerabilityDisclosurePath` | 404 page CTA, error page disclosure link                                                                                                                                                                                                            |
+| `social`                      | Footer social-link rail (icon resolved by `label`: Facebook, X (Twitter), LinkedIn, GitHub)                                                                                                                                                         |
+| `ein`                         | Footer EIN display line                                                                                                                                                                                                                             |
+| `phone`                       | Footer phone link (`phone.display` shown, `phone.tel` used for the `tel:` link)                                                                                                                                                                     |
+| `addresses`                   | Footer contact column (`addresses[].label` / `.lines` / `.mapUrl`)                                                                                                                                                                                  |
+| `guidestar`                   | Footer GuideStar/Candid seal (`guidestar.profileUrl`) and direct-profile button (`guidestar.directProfileUrl`); each shows only when its own URL is set. Leave both `''` until the charity has a Candid profile — never copy another organization's |
+| `supportedBy`                 | Permanent "Supported by Free For Charity" bottom-bar attribution and "Supported Charity Login" hub link. Part of the FFC footer standard: required, always rendered — do **not** change or remove it when customizing.                              |
+| `pending`                     | Footer-standard fields still awaiting the charity — each shows "Awaiting information from the charity" in its slot (see below). Omit when nothing is pending                                                                                        |
+| `parentOrg`                   | Footer "a project of" parent-org clause (omit for a standalone charity)                                                                                                                                                                             |
+| `integrations`                | Zeffy donation embed, Idealist profile, Events Facebook page URL, Microsoft Forms URL                                                                                                                                                               |
+
+### Fields still awaiting the charity — `pending`
+
+The FFC footer standard expects an email, phone, address, EIN, GuideStar /
+Candid profile, social links, a team, and donation / volunteer pages. When a
+charity has not supplied one **yet**, do not borrow a value (least of all the
+template's Free For Charity details) and do not silently hide it. Leave the
+value empty and list the field in `pending`:
+
+```ts
+// src/lib/site.config.ts (in a fork)
+phone: { display: '', tel: '' },
+guidestar: { profileUrl: '', directProfileUrl: '' },
+donationUrl: '',
+pending: ['phone', 'guidestar', 'donationUrl'],
+```
+
+Each pending field renders the exported `PENDING_TEXT` ("Awaiting information
+from the charity") in its slot as **plain text, never a link** — no `tel:`
+link, no `mailto:`, no GuideStar seal, no map link — and is left out of the
+JSON-LD structured data. Components check a field with `isPending(field)`.
+
+| `PendingField` | Empty value while pending                             | Where the placeholder shows                                    |
+| -------------- | ----------------------------------------------------- | -------------------------------------------------------------- |
+| `email`        | `contactEmail: ''`                                    | Footer E-mail                                                  |
+| `phone`        | `phone: { display: '', tel: '' }`                     | Footer "Call Us Today"                                         |
+| `address`      | `addresses: []`                                       | Footer Address                                                 |
+| `ein`          | `ein: ''`                                             | Footer EIN line, Donation Policy EIN clause                    |
+| `guidestar`    | `guidestar: { profileUrl: '', directProfileUrl: '' }` | Footer Endorsements                                            |
+| `social`       | every `social[].href` `''`                            | Footer Social Media                                            |
+| `team`         | no member in `src/data/team/*.json` has a `name`      | Team section (the section and its nav links stay visible)      |
+| `donationUrl`  | `donationUrl: ''`                                     | Donate section and footer Donate link (email fallback remains) |
+| `volunteerUrl` | `volunteerUrl: ''`                                    | Volunteer section and footer Volunteer link (email fallback)   |
+
+Rules:
+
+- A pending field **must** have an empty value; the unit tests fail otherwise.
+  When the charity supplies it, fill in the value **and** remove the field
+  from `pending`.
+- An empty value that is **not** listed in `pending` keeps its plain meaning:
+  the charity has none (e.g. no public phone), and the slot is omitted.
+- `taxStatusLabel` is deliberately **not** a pending field: it is a legal claim,
+  and `''` means "make no claim".
+- The template itself sets no `pending`.
 
 ### Things `siteConfig` does NOT drive
 

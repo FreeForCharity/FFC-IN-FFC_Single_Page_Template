@@ -1,7 +1,14 @@
 import type { Metadata } from 'next'
 import BreadcrumbSchema from '@/components/seo/BreadcrumbSchema'
 import { pageMetadata } from '@/lib/page-metadata'
-import { legalContact, mailtoHref, publishedPhone, siteConfig } from '@/lib/site.config'
+import {
+  PENDING_TEXT,
+  isPending,
+  legalContact,
+  mailtoHref,
+  publishedPhone,
+  siteConfig,
+} from '@/lib/site.config'
 
 const PAGE_NAME = 'Donation Policy'
 const CANONICAL_PATH = '/donation-policy'
@@ -22,6 +29,10 @@ export default function DonationPolicy() {
   // may call a donation tax-deductible.
   const taxExempt = siteConfig.taxStatusLabel.trim() !== ''
   const phone = publishedPhone()
+  // The EIN clause: the EIN itself, the pending placeholder while the charity
+  // has not supplied it, or nothing when it has none (see PendingField).
+  const ein = siteConfig.ein.trim()
+  const einClause = isPending('ein') ? ` (EIN: ${PENDING_TEXT})` : ein ? ` (EIN: ${ein})` : ''
   return (
     <div className="ffc-container py-16">
       <BreadcrumbSchema name={PAGE_NAME} path={CANONICAL_PATH} />
@@ -40,15 +51,15 @@ export default function DonationPolicy() {
           </h2>
           {taxExempt ? (
             <p>
-              {siteConfig.name} is a qualified 501(c)(3) nonprofit organization{' '}
-              {`(EIN: ${siteConfig.ein}).`} Donations are tax-deductible to the full extent allowed
-              by law.
+              {siteConfig.name} is a qualified 501(c)(3) nonprofit organization{einClause}.
+              Donations are tax-deductible to the full extent allowed by law.
             </p>
           ) : (
             <p>
-              {siteConfig.name} {`(EIN: ${siteConfig.ein})`} has not yet received IRS recognition as
-              a 501(c)(3) organization, so donations may not be tax-deductible. Please consult a tax
-              advisor before claiming a deduction.
+              {siteConfig.name}
+              {einClause} has not yet received IRS recognition as a 501(c)(3) organization, so
+              donations may not be tax-deductible. Please consult a tax advisor before claiming a
+              deduction.
             </p>
           )}
 

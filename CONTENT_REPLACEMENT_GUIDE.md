@@ -360,10 +360,24 @@ The footer appears at the bottom of every page and contains important links and 
 | Footer  | Column 1 Heading             | "Endorsements"                                                                                                                                 | _(You might use "Certifications", "Verified By", or similar)_       |
 | Footer  | Endorsement Image 1          | `/Svgs/footerImage.svg` (GuideStar Platinum Seal) — asset/markup in `src/components/footer/index.tsx`                                          | _(Logo/seal image from your endorsing organizations)_               |
 | Footer  | Endorsement Image 1 Alt Text | "GuideStar Platinum Seal of Transparency" — in `src/components/footer/index.tsx`                                                               |                                                                     |
-| Footer  | Endorsement Image 1 Link     | "https://www.guidestar.org/profile/46-2471893" — set `guidestar.profileUrl` in `src/lib/site.config.ts`                                        | _(Link to your profile page)_                                       |
+| Footer  | Endorsement Image 1 Link     | "https://www.guidestar.org/profile/46-2471893" — set `guidestar.profileUrl` in `src/lib/site.config.ts`                                        | _(Link to your profile page, or `''` for none: the seal hides)_     |
 | Footer  | Direct Profile Link Text     | "Direct GuideStar Profile Link"                                                                                                                | _(Or your equivalent verification link)_                            |
-| Footer  | Direct Profile Link URL      | "https://www.guidestar.org/profile/shared/bbbe173a-87b9-4af9-a8a2-cae255a95742" — set `guidestar.directProfileUrl` in `src/lib/site.config.ts` |                                                                     |
+| Footer  | Direct Profile Link URL      | "https://www.guidestar.org/profile/shared/bbbe173a-87b9-4af9-a8a2-cae255a95742" — set `guidestar.directProfileUrl` in `src/lib/site.config.ts` | _(Or `''` for none: the button hides)_                              |
 | Footer  | EIN Display Text             | "Free For Charity EIN: 46-2471893" — set `ein` in `src/lib/site.config.ts`                                                                     | _(Your charity's EIN number, e.g., "Your Charity EIN: XX-XXXXXXX")_ |
+
+> **No GuideStar / Candid profile yet?** Leave both `guidestar` URLs as `''` —
+> never copy another organization's profile (the seal is a transparency claim).
+> The seal and the direct-link button each render only when their own URL is
+> set. If the charity is expected to provide a profile, also list
+> `'guidestar'` in `pending` so the footer shows "Awaiting information from the
+> charity" instead.
+
+> **A footer value the charity hasn't sent yet?** Keep it empty and list it in
+> `siteConfig.pending` (any of `email`, `phone`, `address`, `ein`, `guidestar`,
+> `social`, `team`, `donationUrl`, `volunteerUrl`). Its slot then shows
+> "Awaiting information from the charity" as plain text, never a link. An empty
+> value that is not listed means the charity has none. `taxStatusLabel` is never
+> pending. See [TEMPLATE_CUSTOMIZATION.md](./TEMPLATE_CUSTOMIZATION.md#fields-still-awaiting-the-charity--pending).
 
 ### Column 2 - Quick Links
 

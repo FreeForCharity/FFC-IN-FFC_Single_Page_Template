@@ -1,4 +1,5 @@
-import { isSupportingOrgSite, siteConfig } from '@/lib/site.config'
+import { isPending, isSupportingOrgSite, siteConfig } from '@/lib/site.config'
+import { configuredTeam } from '@/data/team'
 
 /**
  * Self-hide predicates for the home-page sections whose copy is about the
@@ -29,4 +30,13 @@ export function endowmentSectionVisible(): boolean {
 /** The FAQ section and its FAQPage JSON-LD, whose answers are FFC's. */
 export function faqSectionVisible(): boolean {
   return isSupportingOrgSite()
+}
+
+/**
+ * The Team section and its #team nav links: shown when at least one member has
+ * a populated name, or while the team is pending (the section then renders the
+ * "awaiting information" placeholder instead of cards — see `PendingField`).
+ */
+export function teamSectionVisible(): boolean {
+  return configuredTeam.length > 0 || isPending('team')
 }
