@@ -5,6 +5,11 @@ import Footer from '../../src/components/footer'
 import Support from '../../src/components/home-page/SupportFreeForCharity'
 import Volunteer from '../../src/components/home-page/Volunteer-with-Us'
 import DonationPolicyPage from '../../src/app/donation-policy/page'
+import CookiePolicyPage from '../../src/app/cookie-policy/page'
+import PrivacyPolicyPage from '../../src/app/privacy-policy/page'
+import TermsPage from '../../src/app/terms-of-service/page'
+import VulnDisclosurePage from '../../src/app/vulnerability-disclosure-policy/page'
+import ContactEmail from '../../src/components/ui/ContactEmail'
 import { buildOrganizationSchema } from '../../src/components/seo/OrganizationSchema'
 import { PENDING_TEXT, siteConfig } from '../../src/lib/site.config'
 import {
@@ -260,5 +265,64 @@ describe('donation policy EIN clause', () => {
     asCharitySite({ ein: '' })
     const { container } = render(<DonationPolicyPage />)
     expect(container.textContent).not.toContain('EIN:')
+  })
+})
+
+// The policy pages name the site's contact email in their prose. While that
+// email is pending it is empty, and a bare <a href="mailto:"> would render an
+// empty, unnamed link: the placeholder shows instead.
+describe('pending email on the policy pages', () => {
+  afterEach(restoreSiteConfig)
+
+  const pages: [string, () => React.JSX.Element][] = [
+    ['Cookie Policy', CookiePolicyPage],
+    ['Donation Policy', DonationPolicyPage],
+    ['Privacy Policy', PrivacyPolicyPage],
+    ['Terms of Service', TermsPage],
+    ['Vulnerability Disclosure Policy', VulnDisclosurePage],
+  ]
+
+  it.each(pages)('%s shows the placeholder and no empty mailto: link', (_, Page) => {
+    asCharitySite()
+    withFooterFieldsPending()
+    const { container } = render(<Page />)
+    const mailtos = [...container.querySelectorAll('a[href^="mailto:"]')].map((a) =>
+      a.getAttribute('href')
+    )
+    // No mailto: without an address (bare, or straight into a ?subject=).
+    expect(mailtos.filter((href) => /^mailto:(\?|$)/.test(href ?? ''))).toEqual([])
+    expect(placeholders(container).length).toBeGreaterThan(0)
+  })
+
+  it.each(pages)('%s links the configured email when it is not pending', (_, Page) => {
+    asCharitySite()
+    const { container } = render(<Page />)
+    expect(container.querySelector(`a[href="mailto:${CHARITY.contactEmail}"]`)).not.toBeNull()
+    expect(placeholders(container)).toHaveLength(0)
+  })
+})
+
+describe('ContactEmail', () => {
+  afterEach(restoreSiteConfig)
+
+  it('links a configured address', () => {
+    render(<ContactEmail email=" hello@example.org " className="x" />)
+    const link = screen.getByRole('link', { name: 'hello@example.org' })
+    expect(link).toHaveAttribute('href', 'mailto:hello@example.org')
+    expect(link).toHaveClass('x')
+  })
+
+  it('shows the placeholder as plain text while the email is pending', () => {
+    asCharitySite({ contactEmail: '', pending: ['email'] })
+    const { container } = render(<ContactEmail email="" className="x" />)
+    expect(placeholders(container)).toHaveLength(1)
+    expect(container.querySelector('a')).toBeNull()
+  })
+
+  it('renders nothing for an empty address that is not pending', () => {
+    asCharitySite({ contactEmail: '' })
+    const { container } = render(<ContactEmail email="" className="x" />)
+    expect(container.querySelector('a')).toBeNull()
+    expect(container.textContent).toBe('')
   })
 })

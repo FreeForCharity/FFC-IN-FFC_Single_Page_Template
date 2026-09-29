@@ -59,7 +59,7 @@ JSON-LD structured data. Components check a field with `isPending(field)`.
 
 | `PendingField` | Empty value while pending                             | Where the placeholder shows                                    |
 | -------------- | ----------------------------------------------------- | -------------------------------------------------------------- |
-| `email`        | `contactEmail: ''`                                    | Footer E-mail                                                  |
+| `email`        | `contactEmail: ''`                                    | Footer E-mail; policy-page contact emails                      |
 | `phone`        | `phone: { display: '', tel: '' }`                     | Footer "Call Us Today"                                         |
 | `address`      | `addresses: []`                                       | Footer Address                                                 |
 | `ein`          | `ein: ''`                                             | Footer EIN line, Donation Policy EIN clause                    |
@@ -78,6 +78,9 @@ Rules:
   the charity has none (e.g. no public phone), and the slot is omitted.
 - `taxStatusLabel` is deliberately **not** a pending field: it is a legal claim,
   and `''` means "make no claim".
+- While `email` is pending, leave the `Contact:` line out of both
+  `security.txt` copies rather than list another organization's address, and
+  add it once the charity supplies one.
 - The template itself sets no `pending`.
 
 ### Things `siteConfig` does NOT drive

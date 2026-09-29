@@ -31,7 +31,7 @@ export type SiteAddress = {
  * its place (plain text, never a link), so a gap in the FFC footer standard is
  * a call to action on the page rather than a silent omission. The field's own
  * value must stay EMPTY while it is pending, so no placeholder or borrowed
- * value (e.g. the template's Free For Charity details) can ship behind it.
+ * value (e.g. the template's own details) can ship behind it.
  *
  * An empty value that is NOT listed here keeps its plain meaning: the charity
  * has none (e.g. no public phone). `taxStatusLabel` is deliberately not a

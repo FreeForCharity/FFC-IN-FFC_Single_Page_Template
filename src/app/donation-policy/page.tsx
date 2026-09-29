@@ -5,10 +5,10 @@ import {
   PENDING_TEXT,
   isPending,
   legalContact,
-  mailtoHref,
   publishedPhone,
   siteConfig,
 } from '@/lib/site.config'
+import ContactEmail from '@/components/ui/ContactEmail'
 
 const PAGE_NAME = 'Donation Policy'
 const CANONICAL_PATH = '/donation-policy'
@@ -104,10 +104,7 @@ export default function DonationPolicy() {
           </h2>
           <p>For questions about donations or this policy, please contact us at:</p>
           <p>
-            Email:{' '}
-            <a href={mailtoHref(undefined, legal.email)} className="text-primary underline">
-              {legal.email}
-            </a>
+            Email: <ContactEmail email={legal.email} className="text-primary underline" />
             {/* Only a configured number is shown, matching the footer's phone guard. */}
             {phone && (
               <>
