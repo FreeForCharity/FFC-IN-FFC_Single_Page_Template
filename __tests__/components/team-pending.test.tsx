@@ -10,7 +10,7 @@ jest.mock('@/data/team', () => ({
   configuredTeam: [],
 }))
 
-import Team from '@/components/home-page/TheFreeForCharityTeam'
+import Team, { teamHeading } from '@/components/home-page/TheFreeForCharityTeam'
 import Header from '@/components/header'
 import Footer from '@/components/footer'
 import { PENDING_TEXT, siteConfig } from '@/lib/site.config'
@@ -23,7 +23,7 @@ describe('pending team', () => {
     asCharitySite({ pending: ['team'] })
     const { container } = render(<Team />)
     expect(container.querySelector('#team')).not.toBeNull()
-    expect(screen.getByRole('heading', { name: `The ${CHARITY.name} Team` })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: teamHeading(CHARITY.name!) })).toBeInTheDocument()
     const note = screen.getByText(PENDING_TEXT)
     expect(note.closest('a')).toBeNull()
   })

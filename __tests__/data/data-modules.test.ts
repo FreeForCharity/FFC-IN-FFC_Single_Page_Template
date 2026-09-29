@@ -1,5 +1,6 @@
 import { testimonials } from '@/data/testimonials'
-import { team } from '@/data/team'
+import { configuredTeam, team } from '@/data/team'
+import { isPending } from '@/lib/site.config'
 import { faqs } from '@/data/faqs'
 import { results } from '@/data/results'
 
@@ -28,7 +29,10 @@ describe('data modules', () => {
       expect(team.length).toBeGreaterThan(0)
     })
     it('every member has a name and role; LinkedIn, when present, is an https://linkedin.com URL', () => {
-      for (const m of team) {
+      // A roster the charity has not supplied yet (siteConfig.pending includes
+      // 'team') is blanked JSON files, members with no name yet; only the
+      // configured members must then be complete (there may be none).
+      for (const m of isPending('team') ? configuredTeam : team) {
         expect(m.name).toBeTruthy()
         expect(m.role).toBeTruthy()
         // Photos were removed in favor of initials monograms — no imageUrl field.
