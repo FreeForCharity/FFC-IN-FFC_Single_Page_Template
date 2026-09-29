@@ -80,7 +80,8 @@ Rules:
   and `''` means "make no claim".
 - While `email` is pending, leave the `Contact:` line out of both
   `security.txt` copies rather than list another organization's address, and
-  add it once the charity supplies one.
+  add it once the charity supplies one. The post-deploy smoke check then
+  reports the missing line as a notice rather than a failure.
 - The template itself sets no `pending`.
 
 ### Things `siteConfig` does NOT drive
