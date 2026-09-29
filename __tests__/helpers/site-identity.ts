@@ -75,8 +75,16 @@ export const CHARITY: Partial<SiteConfig> = {
   taxStatusLabel: 'a US 501c3 Non Profit',
 }
 
-/** A charity site; `overrides` layer on top of `CHARITY`. */
+/**
+ * A charity site; `overrides` layer on top of `CHARITY`.
+ *
+ * `pending` is cleared first. CHARITY supplies every field, so nothing is
+ * pending unless a test says so in `overrides` -- and a fork's own checked-in
+ * `pending` (e.g. ['volunteerUrl']) must not leak into a test about a
+ * different state.
+ */
 export function asCharitySite(overrides: Partial<SiteConfig> = {}): void {
+  delete (siteConfig as Partial<SiteConfig>).pending
   Object.assign(siteConfig, JSON.parse(JSON.stringify(CHARITY)), overrides)
 }
 

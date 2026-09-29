@@ -42,6 +42,7 @@ describe('pending team', () => {
 
   it('self-hides (with its nav links) when the empty team is NOT pending', () => {
     asCharitySite()
+    // asCharitySite() clears any pending list the site ships with.
     expect(siteConfig.pending).toBeUndefined()
     const { container } = render(<Team />)
     expect(container).toBeEmptyDOMElement()

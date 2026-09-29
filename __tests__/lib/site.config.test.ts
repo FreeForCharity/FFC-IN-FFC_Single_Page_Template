@@ -299,7 +299,9 @@ describe('siteConfig contract', () => {
 describe('siteConfig.pending contract', () => {
   afterEach(restoreSiteConfig)
 
-  it('is not set by the template itself', () => {
+  // About the template as shipped: a provisioned charity may legitimately
+  // list pending fields, so this is skipped once the site is rebranded.
+  ;(isSupportingOrgSite() ? it : it.skip)('is not set by the template itself', () => {
     expect(siteConfig.pending).toBeUndefined()
     expect(isPending('email')).toBe(false)
   })

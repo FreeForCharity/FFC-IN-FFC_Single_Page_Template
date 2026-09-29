@@ -40,7 +40,15 @@ function placeholders(container: HTMLElement): HTMLElement[] {
 describe('pending footer fields', () => {
   afterEach(restoreSiteConfig)
 
-  it('renders no placeholder when nothing is pending (the template as shipped)', () => {
+  it('renders one placeholder per pending footer field as shipped, and none when nothing is pending', () => {
+    // As checked in: none on the template itself, one per pending footer field
+    // on a charity site that has some ('team' renders in its own section).
+    const shipped = (siteConfig.pending ?? []).filter((f) => f !== 'team')
+    const asShipped = render(<Footer />)
+    expect(placeholders(asShipped.container)).toHaveLength(shipped.length)
+    asShipped.unmount()
+
+    asCharitySite()
     const { container } = render(<Footer />)
     expect(placeholders(container)).toHaveLength(0)
   })
