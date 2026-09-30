@@ -1,7 +1,14 @@
 import React, { CSSProperties, IframeHTMLAttributes } from 'react'
 import Image from 'next/image'
 import { assetPath } from '@/lib/assetPath'
-import { donateHref, donationEmbedUrl, isSupportingOrgSite, siteConfig } from '@/lib/site.config'
+import PendingNote from '@/components/ui/PendingNote'
+import {
+  donateHref,
+  donationEmbedUrl,
+  isPending,
+  isSupportingOrgSite,
+  siteConfig,
+} from '@/lib/site.config'
 
 interface ExtendedIframeProps extends IframeHTMLAttributes<HTMLIFrameElement> {
   allowpaymentrequest?: string
@@ -24,6 +31,10 @@ const Index = () => {
   // a charity's site links to its own donation page, else emails the charity.
   const embedUrl = donationEmbedUrl()
   const donateLink = donateHref()
+  // The email fallback needs an address to write to: with no donation URL and
+  // no contact email (e.g. both pending) there is no link to offer at all.
+  const hasDonateLink = /^https:/i.test(donateLink) || siteConfig.contactEmail.trim() !== ''
+  const donationPending = isPending('donationUrl')
   const donationFormProps: ExtendedIframeProps = {
     title: 'Donation form powered by Zeffy',
     style: donationFormStyle,
@@ -63,7 +74,7 @@ const Index = () => {
           </div>
 
           {/* Right side: the supporter's embedded Zeffy form, or a Donate link */}
-          <div className="w-full lg:w-[50%] flex justify-center">
+          <div className="w-full lg:w-[50%] flex flex-col items-center gap-[16px]">
             {embedUrl ? (
               <div
                 className="relative w-full max-w-[500px] h-[600px] bg-white rounded-lg shadow-lg overflow-hidden"
@@ -79,15 +90,22 @@ const Index = () => {
                 <iframe {...donationFormProps}></iframe>
               </div>
             ) : (
-              <a
-                href={donateLink}
-                {...(/^https:/i.test(donateLink)
-                  ? { target: '_blank', rel: 'noopener noreferrer' }
-                  : {})}
-                className="rounded-[27px] flex items-center justify-center px-[32px] py-[18px] text-white bg-[#2A6682] text-[20px] font-[400] lato-font"
-              >
-                Donate to {siteConfig.name}
-              </a>
+              hasDonateLink && (
+                <a
+                  href={donateLink}
+                  {...(/^https:/i.test(donateLink)
+                    ? { target: '_blank', rel: 'noopener noreferrer' }
+                    : {})}
+                  className="rounded-[27px] flex items-center justify-center px-[32px] py-[18px] text-white bg-[#2A6682] text-[20px] font-[400] lato-font"
+                >
+                  Donate to {siteConfig.name}
+                </a>
+              )
+            )}
+            {/* The charity's donation page is still to come: say so, as plain
+                text, next to the email fallback (see PendingField). */}
+            {!embedUrl && donationPending && (
+              <PendingNote className="text-center text-[18px] text-gray-700 lato-font" />
             )}
           </div>
         </div>

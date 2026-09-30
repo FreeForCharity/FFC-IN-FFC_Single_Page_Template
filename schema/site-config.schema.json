@@ -23,11 +23,14 @@
     "shortDescription": { "type": "string" },
     "url": { "type": "string", "minLength": 1 },
     "twitterHandle": { "type": "string" },
-    "contactEmail": { "type": "string", "minLength": 1 },
+    "contactEmail": {
+      "type": "string",
+      "description": "May be empty only while listed in `pending`."
+    },
     "keywords": { "type": "array", "items": { "type": "string" } },
     "themeColor": { "type": "string" },
     "vulnerabilityDisclosurePath": { "type": "string" },
-    "ein": { "type": "string", "minLength": 1 },
+    "ein": { "type": "string", "description": "May be empty only while listed in `pending`." },
     "phone": {
       "type": "object",
       "additionalProperties": true,
@@ -56,8 +59,14 @@
       "additionalProperties": true,
       "required": ["profileUrl", "directProfileUrl"],
       "properties": {
-        "profileUrl": { "type": "string", "minLength": 1 },
-        "directProfileUrl": { "type": "string", "minLength": 1 }
+        "profileUrl": {
+          "type": "string",
+          "description": "Empty string = no GuideStar profile yet; the footer hides the seal."
+        },
+        "directProfileUrl": {
+          "type": "string",
+          "description": "Empty string = no direct GuideStar profile link yet; the footer hides that button."
+        }
       }
     },
     "social": {
@@ -81,6 +90,11 @@
         "url": { "const": "https://freeforcharity.org" },
         "hubUrl": { "type": "string", "minLength": 1 }
       }
+    },
+    "pending": {
+      "type": "array",
+      "description": "Footer-standard fields still awaiting the charity; each renders a visible placeholder and must have an empty value.",
+      "items": { "type": "string" }
     },
     "parentOrg": {
       "type": "object",
