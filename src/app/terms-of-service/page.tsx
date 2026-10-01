@@ -1,7 +1,8 @@
 import type { Metadata } from 'next'
 import BreadcrumbSchema from '@/components/seo/BreadcrumbSchema'
 import { pageMetadata } from '@/lib/page-metadata'
-import { legalContact, mailtoHref, publishedPhone, siteConfig } from '@/lib/site.config'
+import { legalContact, publishedPhone, siteConfig } from '@/lib/site.config'
+import ContactEmail from '@/components/ui/ContactEmail'
 
 const PAGE_NAME = 'Terms of Service'
 const CANONICAL_PATH = '/terms-of-service'
@@ -242,10 +243,7 @@ export default function TermsOfService() {
           </p>
           <p className="text-[14px] text-[#666] pb-[10px] leading-[24px] font-[500]">{name}</p>
           <p className="text-[14px] text-[#666] pb-[10px] leading-[24px] font-[500]">
-            Email:{' '}
-            <a href={mailtoHref(undefined, legal.email)} className="text-[#0062CC] underline">
-              {legal.email}
-            </a>
+            Email: <ContactEmail email={legal.email} className="text-[#0062CC] underline" />
           </p>
           {/* Only a configured number is shown, matching the footer's phone guard. */}
           {phone && (

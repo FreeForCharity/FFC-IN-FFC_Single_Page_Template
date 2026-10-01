@@ -8,8 +8,11 @@ import { LiaSearchSolid } from 'react-icons/lia'
 import { RxCross2 } from 'react-icons/rx'
 import { assetPath } from '@/lib/assetPath'
 import { siteConfig } from '@/lib/site.config'
-import { configuredTeam } from '@/data/team'
-import { faqSectionVisible, programsSectionVisible } from '@/lib/section-visibility'
+import {
+  faqSectionVisible,
+  programsSectionVisible,
+  teamSectionVisible,
+} from '@/lib/section-visibility'
 
 interface MenuItem {
   label: string
@@ -43,14 +46,15 @@ const Header: React.FC = () => {
   const [activeSection, setActiveSection] = useState<string>('')
 
   // Drop nav entries whose section self-hides so we never link to a missing
-  // #anchor (Programs / FAQ -> src/lib/section-visibility.ts; Team -> configuredTeam, i.e. at
-  // least one member with a populated name — matches the Team section's guard).
+  // #anchor (Programs / FAQ / Team -> src/lib/section-visibility.ts; Team shows while at
+  // least one member has a populated name, or while the team is pending — the same
+  // guard the Team section uses).
   // Built directly each render so it reflects the current config; the scroll-spy
   // uses the stable module-level SCROLL_SPY_SECTIONS instead.
   const menuItems: MenuItem[] = ALL_MENU_ITEMS.filter((item) => {
     if (item.path === '/#programs') return programsSectionVisible()
     if (item.path === '/#faq') return faqSectionVisible()
-    if (item.path === '/#team') return configuredTeam.length > 0
+    if (item.path === '/#team') return teamSectionVisible()
     return true
   })
 

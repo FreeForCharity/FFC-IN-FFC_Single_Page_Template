@@ -2,7 +2,7 @@ import React from 'react'
 import { render, screen } from '@testing-library/react'
 import { axe, toHaveNoViolations } from 'jest-axe'
 import Footer from '../../src/components/footer'
-import { siteConfig } from '../../src/lib/site.config'
+import { PENDING_TEXT, isPending, siteConfig } from '../../src/lib/site.config'
 
 // Extend Jest matchers
 expect.extend(toHaveNoViolations)
@@ -42,11 +42,25 @@ describe('Footer component', () => {
     expect(screen.getByText(new RegExp(currentYear.toString()))).toBeInTheDocument()
   })
 
-  it('should have GuideStar profile link', () => {
+  // The GuideStar links render only for a configured profile. A charity with
+  // none yet has them pending (placeholder) or not at all; both states are
+  // covered in pending-placeholders.test.tsx.
+  const hasGuidestar = Boolean(siteConfig.guidestar.directProfileUrl.trim())
+  ;(hasGuidestar ? it : it.skip)('should have GuideStar profile link', () => {
     render(<Footer />)
     const guidestarLink = screen.getByText(/GuideStar Profile/i)
     expect(guidestarLink).toBeInTheDocument()
   })
+
+  ;(isPending('guidestar') ? it : it.skip)(
+    'shows the GuideStar placeholder while GuideStar is pending',
+    () => {
+      render(<Footer />)
+      expect(screen.getByText('GuideStar / Candid Profile')).toBeInTheDocument()
+      expect(screen.queryByText(/GuideStar Profile Link/i)).not.toBeInTheDocument()
+      expect(screen.getAllByText(PENDING_TEXT).length).toBeGreaterThan(0)
+    }
+  )
 
   it('should have email contact link', () => {
     render(<Footer />)

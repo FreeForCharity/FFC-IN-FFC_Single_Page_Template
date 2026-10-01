@@ -25,6 +25,38 @@ export type SiteAddress = {
   mapUrl: string
 }
 
+/**
+ * A footer-standard field the charity has not supplied yet. Listing a field in
+ * `siteConfig.pending` renders a visible "awaiting information" placeholder in
+ * its place (plain text, never a link), so a gap in the FFC footer standard is
+ * a call to action on the page rather than a silent omission. The field's own
+ * value must stay EMPTY while it is pending, so no placeholder or borrowed
+ * value (e.g. the template's own details) can ship behind it.
+ *
+ * An empty value that is NOT listed here keeps its plain meaning: the charity
+ * has none (e.g. no public phone). `taxStatusLabel` is deliberately not a
+ * pending field: it is a legal claim, and '' means "make no claim".
+ *
+ * What "empty" means per field: `email` → `contactEmail`; `phone` → both
+ * `phone.display` and `phone.tel`; `address` → `addresses: []`; `ein` → `ein`;
+ * `guidestar` → both `guidestar` URLs; `social` → every `social[].href`;
+ * `team` → no member in src/data/team/*.json has a name; `donationUrl` /
+ * `volunteerUrl` → that URL.
+ */
+export type PendingField =
+  | 'email'
+  | 'phone'
+  | 'address'
+  | 'ein'
+  | 'guidestar'
+  | 'social'
+  | 'team'
+  | 'donationUrl'
+  | 'volunteerUrl'
+
+/** Visible text shown in place of a pending field. */
+export const PENDING_TEXT = 'Awaiting information from the charity'
+
 export type SiteConfig = {
   /** Display name of the charity (used in titles, OG/Twitter cards). */
   name: string
@@ -134,6 +166,15 @@ export type SiteConfig = {
    * nonprofit. Omit for a standalone charity (the footer clause is hidden).
    */
   parentOrg?: { name: string; url: string; hubUrl: string }
+  /**
+   * Footer-standard fields still awaiting the charity. Each listed field keeps
+   * an EMPTY value and renders a visible plain-text placeholder
+   * (`PENDING_TEXT`) in its slot, never a link. An empty value NOT listed here
+   * means "the charity has none". `taxStatusLabel` is deliberately not
+   * pending-able: it is a legal claim, so '' means "make no claim". See
+   * `PendingField`. Omit (or leave empty) when nothing is pending.
+   */
+  pending?: readonly PendingField[]
   /**
    * Label appended after the org name in the footer copyright line to describe
    * tax status, e.g. 'a US 501c3 Non Profit' or 'a pre-501(c)(3) nonprofit'.
@@ -367,6 +408,11 @@ export function legalContact(kind: 'default' | 'cookie' = 'default'): {
     if (email?.trim()) return { name: s.legalContactName?.trim() || null, email: email.trim() }
   }
   return { name: null, email: siteConfig.contactEmail.trim() }
+}
+
+/** True when `field` is listed in `siteConfig.pending`. */
+export function isPending(field: PendingField): boolean {
+  return siteConfig.pending?.includes(field) ?? false
 }
 
 /**
