@@ -300,8 +300,8 @@ test.describe('Google Consent Mode bootstrap', () => {
   }) => {
     await page.goto('/')
 
-    // The bootstrap is an inline <head> script, so the two consent defaults
-    // are in the dataLayer synchronously — no waiting on lazyOnload GTM.
+    // The bootstrap is an inline <head> script, so the consent default is
+    // in the dataLayer synchronously — no waiting on lazyOnload GTM.
     const defaults = await page.evaluate(() => {
       const dl = (window as unknown as { dataLayer?: unknown[] }).dataLayer || []
       return dl
@@ -310,24 +310,69 @@ test.describe('Google Consent Mode bootstrap', () => {
         .map((args) => args[2] as Record<string, unknown>)
     })
 
+    // TWO defaults: a region-scoped denial for EEA/UK/CH, then an unscoped
+    // one for everyone else. Google resolves the most specific matching
+    // region, so an EEA visitor gets the denial and the rest fall through.
+    //
+    // This case previously asserted a SINGLE unscoped denial — the global
+    // opt-in model this branch reverses. It is asserted positively AND by
+    // absence below, because the failure that matters is the region-scoped
+    // call quietly losing its region and starting to apply to everyone.
     expect(defaults).toHaveLength(2)
 
-    // Region-scoped denial first: EEA/UK/CH (32 codes) denied by default,
-    // holding tags briefly for a stored choice.
-    expect(defaults[0].analytics_storage).toBe('denied')
-    expect(defaults[0].ad_storage).toBe('denied')
-    expect(defaults[0].wait_for_update).toBe(500)
-    expect(Array.isArray(defaults[0].region)).toBe(true)
-    expect(defaults[0].region as string[]).toHaveLength(32)
+    const scoped = defaults.find((d) => d.region !== undefined)
+    const unscoped = defaults.find((d) => d.region === undefined)
+    expect(scoped).toBeDefined()
+    expect(unscoped).toBeDefined()
 
-    // Then the unscoped grant for everyone else (region-specific settings
-    // take precedence, so this does not weaken the EEA/UK/CH denial). It
-    // also carries wait_for_update: GTM loads from the layout here, so a
-    // returning non-EEA decliner's stored choice needs the same window.
-    expect(defaults[1].analytics_storage).toBe('granted')
-    expect(defaults[1].ad_storage).toBe('granted')
-    expect(defaults[1].wait_for_update).toBe(500)
-    expect(defaults[1].region).toBeUndefined()
+    // EEA/UK/CH: nothing until they accept.
+    expect(scoped!.analytics_storage).toBe('denied')
+    expect(scoped!.ad_storage).toBe('denied')
+    expect(scoped!.ad_user_data).toBe('denied')
+    expect(scoped!.ad_personalization).toBe('denied')
+    expect(scoped!.wait_for_update).toBe(500)
+    expect(Array.isArray(scoped!.region)).toBe(true)
+    expect(scoped!.region as string[]).toContain('DE')
+    expect(scoped!.region as string[]).toContain('GB')
+    expect(scoped!.region as string[]).toContain('CH')
+
+    // Everyone else: analytics and Ad Grants conversion signals, but
+    // personalised advertising stays off by default.
+    expect(unscoped!.analytics_storage).toBe('granted')
+    expect(unscoped!.ad_personalization).toBe('denied')
+    expect(unscoped!.wait_for_update).toBe(500)
+
+    // functionality/security stay granted because neither carries a tracking
+    // identifier -- that is the whole reason, and it used to be stated with a
+    // second one that was false: that the banner "depends on functionality
+    // storage to remember a choice". It does not. Consent Mode signals govern
+    // what GOOGLE'S TAGS may do; the banner persists its choice by writing
+    // first-party localStorage directly (src/components/cookie-consent,
+    // 'cookie-consent' key), which no Consent Mode signal gates. The false
+    // reason was the dangerous half: it invited a maintainer to believe
+    // denying functionality_storage would break consent persistence, which
+    // would make this assertion look load-bearing for a behaviour it does not
+    // protect.
+    expect(unscoped!.functionality_storage).toBe('granted')
+    expect(unscoped!.security_storage).toBe('granted')
+
+    // Asserted as an absence too, but the absence that matters under the
+    // regional model is the inverse of the global one. Analytics IS granted
+    // outside the EEA/UK/CH by design, so asserting "nothing grants
+    // analytics" would now be asserting the bug. What must never happen is a
+    // REGION-SCOPED call granting anything: that is the single edit which
+    // would start measuring EEA visitors before they consent, and every
+    // positive assertion above would still pass with it in place.
+    const scopedGrants = defaults.filter(
+      (d) =>
+        d.region !== undefined &&
+        Object.values(d).some((v) => v === 'granted' && d.functionality_storage !== v)
+    )
+    expect(scopedGrants.map((d) => d.region)).toEqual([])
+
+    // And exactly one call may be unscoped. A second would silently shadow
+    // the regional denial for whichever visitors it matched.
+    expect(defaults.filter((d) => d.region === undefined)).toHaveLength(1)
   })
 
   test('accepting the banner pushes a gtag consent update', async ({ page, context }) => {

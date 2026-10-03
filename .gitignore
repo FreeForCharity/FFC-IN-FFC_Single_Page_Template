@@ -47,3 +47,9 @@ next-env.d.ts
 # Decap CMS uploads
 /public/uploads
 *.bak
+
+# npm lockfile. This repo uses pnpm (see packageManager in package.json);
+# package-lock.json was removed deliberately in the pnpm migration. An stray
+# `npx`/`npm` invocation regenerates it, and committing it would reintroduce a
+# second, unhardened dependency source.
+package-lock.json
