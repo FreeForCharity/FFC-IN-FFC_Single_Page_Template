@@ -388,7 +388,7 @@ export default function CookieConsent() {
       delete window.openCookiePreferences
       window.removeEventListener(SALE_SHARE_OPT_OUT_EVENT, onSaleShareOptOut)
     }
-  }, [loadPreferencesFromLocalStorage, loadGoogleAnalytics])
+  }, [loadPreferencesFromLocalStorage, loadGoogleAnalytics, expireCookies])
 
   // Focus management for modal
   useEffect(() => {
