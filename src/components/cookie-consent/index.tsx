@@ -20,10 +20,30 @@ interface DataLayerEvent {
   [key: string]: string | number | boolean | undefined
 }
 
+/**
+ * A dataLayer write that deliberately carries NO `event` key.
+ *
+ * GTM merges dataLayer keys, so a push without `event` updates the variables
+ * a container reads without firing any trigger. That is what the sale/share
+ * opt-out needs: it has to correct the published `marketing_consent` mid-page
+ * without re-firing `consent_update`, which would re-trigger every tag keyed
+ * on that event and send a duplicate pageview from any whose conditions still
+ * hold.
+ *
+ * `event?: never` rather than `event?: string`: this is not "an event where
+ * the name is optional", it is the other kind of write, and keeping them
+ * distinct is what stops a push that MEANT to name an event from compiling
+ * silently without one.
+ */
+interface DataLayerValues {
+  event?: never
+  [key: string]: string | number | boolean | undefined
+}
+
 // Extend Window interface to include dataLayer and openCookiePreferences
 declare global {
   interface Window {
-    dataLayer: DataLayerEvent[]
+    dataLayer: (DataLayerEvent | DataLayerValues)[]
     openCookiePreferences?: () => void
   }
 }
@@ -225,13 +245,22 @@ export default function CookieConsent() {
       // Delete each non-granted category's cookies on EVERY apply — not
       // only on withdrawal of a stored grant, because cookies set under
       // this site's earlier permissive default outlive that default.
-      // `hasSaleShareOptOut()` is in the CONDITION, not only inside
+      // `adsDenied` is in the CONDITION, not only inside
       // deleteTrackingCookies, and that matters: an opted-out visitor whose
       // stored choice is accept-everything has both categories granted, so
       // without it this branch never runs and the Pixel keeps its cookies.
       // The clause was first added inside the helper alone, where it was
       // unreachable for exactly that visitor — a mutation run found it inert.
-      if (!prefs.analytics || !prefs.marketing || hasSaleShareOptOut()) {
+      // ONE read of the opt-out for the whole apply. Three separate
+      // decisions below turn on it -- which cookies are expired, what Consent
+      // Mode is told, and what the documented `consent_update` event publishes
+      // -- and re-reading storage for each let them disagree about the same
+      // visitor. A read that starts succeeding or failing mid-apply (a private
+      // window, a quota error) could expire the marketing cookies and then
+      // publish `marketing_consent: 'granted'` in the same breath.
+      const adsDenied = hasSaleShareOptOut()
+
+      if (!prefs.analytics || !prefs.marketing || adsDenied) {
         deleteTrackingCookies(prefs)
       }
 
@@ -247,7 +276,7 @@ export default function CookieConsent() {
       // so a container trigger keyed on that event would otherwise evaluate
       // consent state before this choice had been applied. The ordering case
       // in this repo's test suite fails if the two are swapped.
-      updateGoogleConsent(prefs)
+      updateGoogleConsent(prefs, { adsDenied })
 
       // Push consent update to GTM dataLayer
       if (typeof window !== 'undefined') {
@@ -256,7 +285,20 @@ export default function CookieConsent() {
           event: 'consent_update',
           functional_consent: prefs.functional ? 'granted' : 'denied',
           analytics_consent: prefs.analytics ? 'granted' : 'denied',
-          marketing_consent: prefs.marketing ? 'granted' : 'denied',
+          // The EFFECTIVE state, not the raw preference. A sale/share opt-out
+          // -- footer control, GPC, or a child-directed site -- denies
+          // advertising regardless of what the banner's marketing toggle says,
+          // and this event is documented for container tags to key on. Until
+          // this read `prefs.marketing`, an opted-out visitor who had earlier
+          // accepted marketing had 'granted' republished on every pageview,
+          // and any GTM tag trusting it fired: the opt-out was honoured for
+          // Google tags via Consent Mode and discarded for everything else.
+          //
+          // `analytics_consent` is deliberately NOT gated the same way. The
+          // opt-out is of sale/sharing for advertising; first-party analytics
+          // is a separate choice the visitor still holds, and denying it here
+          // would withdraw consent they never withdrew.
+          marketing_consent: prefs.marketing && !adsDenied ? 'granted' : 'denied',
         })
       }
 
@@ -380,6 +422,22 @@ export default function CookieConsent() {
     // rather than promising more.
     const onSaleShareOptOut = () => {
       expireCookies(['_fbp', 'fr'])
+
+      // applyConsent published the pre-opt-out `marketing_consent`, and for an
+      // opt-out that happens DURING this page nothing republishes it: a GTM
+      // container reading that variable would go on seeing 'granted' until the
+      // next navigation re-ran applyConsent.
+      //
+      // Pushed with NO `event` key on purpose. GTM merges dataLayer keys, so
+      // this corrects the variable without firing a second `consent_update`.
+      // Re-firing it would re-trigger every tag keyed on that event, and any
+      // whose conditions still hold -- an analytics tag, for a visitor who
+      // consented to analytics -- would send a duplicate pageview. Fixing a
+      // privacy defect must not buy a measurement one.
+      if (typeof window !== 'undefined') {
+        window.dataLayer = window.dataLayer || []
+        window.dataLayer.push({ marketing_consent: 'denied' })
+      }
     }
     window.addEventListener(SALE_SHARE_OPT_OUT_EVENT, onSaleShareOptOut)
 

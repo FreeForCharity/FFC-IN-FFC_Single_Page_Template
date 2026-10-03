@@ -179,3 +179,160 @@ describe('sale/share opt-out and the non-Google marketing tag', () => {
     expect(writes.every((w) => w.includes('expires=Thu, 01 Jan 1970'))).toBe(true)
   })
 })
+
+/**
+ * `consent_update` is a DOCUMENTED integration point -- the GTM README tells
+ * container authors to key tags on it -- so what it publishes is a contract,
+ * not an internal detail.
+ *
+ * It published `prefs.marketing` verbatim. A visitor who accepted marketing
+ * and then opted out of sale/sharing (footer control, GPC, or a child-directed
+ * site) therefore had `marketing_consent: 'granted'` republished on every
+ * later pageview, and any container tag trusting it fired. The opt-out was
+ * honoured for Google tags through Consent Mode and discarded for everything
+ * downstream of this payload. Reported by Copilot on
+ * FFC-IN-Footer_Only_Template#140.
+ *
+ * Four cases, because three of them pass for the wrong reasons on their own:
+ * the denial needs a positive control to show it discriminates; the analytics
+ * signal must NOT be swept up, since the opt-out is of sale/sharing and not of
+ * the first-party analytics the visitor still consented to; and a mid-page
+ * opt-out has to correct the published value WITHOUT re-firing the event.
+ */
+describe('consent_update publishes the effective marketing state', () => {
+  beforeEach(() => {
+    localStorageMock.clear()
+    window.dataLayer = []
+  })
+
+  /** Every `consent_update` event pushed so far. */
+  function consentEvents() {
+    return (window.dataLayer ?? []).filter(
+      (e) => (e as { event?: string }).event === 'consent_update'
+    ) as Array<Record<string, unknown>>
+  }
+
+  it('publishes denied for an opted-out visitor whose stored choice accepted marketing', async () => {
+    localStorageMock.setItem('cookie-consent', ACCEPTED_ALL)
+    localStorageMock.setItem(SALE_SHARE_OPT_OUT_KEY, 'true')
+
+    render(<CookieConsent />)
+
+    await waitFor(() => {
+      expect(consentEvents()).toHaveLength(1)
+    })
+    expect(consentEvents()[0].marketing_consent).toBe('denied')
+  })
+
+  it('publishes granted for the SAME stored choice without an opt-out', async () => {
+    // The positive control. Without it the assertion above would also pass if
+    // the payload stopped carrying marketing_consent at all, or if this
+    // harness never reached applyConsent.
+    localStorageMock.setItem('cookie-consent', ACCEPTED_ALL)
+
+    render(<CookieConsent />)
+
+    await waitFor(() => {
+      expect(consentEvents()).toHaveLength(1)
+    })
+    expect(consentEvents()[0].marketing_consent).toBe('granted')
+  })
+
+  it('leaves analytics_consent granted for that opted-out visitor', async () => {
+    // Scope. The opt-out is of sale/sharing for advertising; withdrawing the
+    // analytics consent the visitor did give would be a different wrong answer
+    // that the denial assertion above cannot tell apart.
+    localStorageMock.setItem('cookie-consent', ACCEPTED_ALL)
+    localStorageMock.setItem(SALE_SHARE_OPT_OUT_KEY, 'true')
+
+    render(<CookieConsent />)
+
+    await waitFor(() => {
+      expect(consentEvents()).toHaveLength(1)
+    })
+    expect(consentEvents()[0].analytics_consent).toBe('granted')
+    expect(consentEvents()[0].functional_consent).toBe('granted')
+  })
+
+  it('corrects the published value on a mid-page opt-out without re-firing the event', async () => {
+    localStorageMock.setItem('cookie-consent', ACCEPTED_ALL)
+
+    render(<CookieConsent />)
+
+    await waitFor(() => {
+      expect(consentEvents()).toHaveLength(1)
+    })
+    expect(consentEvents()[0].marketing_consent).toBe('granted')
+
+    localStorageMock.setItem(SALE_SHARE_OPT_OUT_KEY, 'true')
+    window.dispatchEvent(new Event(SALE_SHARE_OPT_OUT_EVENT))
+
+    await waitFor(() => {
+      const last = window.dataLayer[window.dataLayer.length - 1] as Record<string, unknown>
+      expect(last.marketing_consent).toBe('denied')
+    })
+
+    const last = window.dataLayer[window.dataLayer.length - 1] as Record<string, unknown>
+    // No `event` key: GTM merges dataLayer keys, so the variable is corrected
+    // without re-triggering tags. Re-firing `consent_update` would make an
+    // analytics tag whose conditions still hold send a duplicate pageview.
+    expect(last.event).toBeUndefined()
+    expect(consentEvents()).toHaveLength(1)
+  })
+
+  it('does not let storage failing mid-apply split the Google update from the published event', async () => {
+    // applyConsent reads the opt-out ONCE and passes the answer to every
+    // decision that depends on it. This is the case that makes that
+    // load-bearing: a version re-deriving it per decision has the second read
+    // throw, is told `false` by the catch, and GRANTS advertising it has just
+    // published as denied -- for the same visitor, in the same apply.
+    //
+    // Not hypothetical about the mechanism: that is exactly how an earlier
+    // defect in this feature worked, where setSaleShareOptOut(true, prefs)
+    // lost its own argument to a storage read that threw.
+    localStorageMock.setItem('cookie-consent', ACCEPTED_ALL)
+    localStorageMock.setItem(SALE_SHARE_OPT_OUT_KEY, 'true')
+
+    const gtagMock = jest.fn()
+    window.gtag = gtagMock
+
+    // The opt-out key reads correctly once, then storage goes away.
+    const realGetItem = localStorageMock.getItem
+    let optOutReads = 0
+    localStorageMock.getItem = (key: string) => {
+      if (key === SALE_SHARE_OPT_OUT_KEY) {
+        optOutReads += 1
+        if (optOutReads > 1) throw new Error('storage unavailable')
+      }
+      return realGetItem(key)
+    }
+
+    try {
+      render(<CookieConsent />)
+
+      await waitFor(() => {
+        expect(consentEvents()).toHaveLength(1)
+      })
+      expect(consentEvents()[0].marketing_consent).toBe('denied')
+
+      // Typed rather than left to inference: `mock.calls` is `any[][]`, so an
+      // un-annotated callback parameter is an implicit any that fails the
+      // project's noImplicitAny, and the annotation also gives the payload
+      // below a real shape instead of `any`.
+      const calls = gtagMock.mock.calls as Array<[string, string, Record<string, string>]>
+      const updates = calls.filter((c) => c[0] === 'consent' && c[1] === 'update')
+      expect(updates).toHaveLength(1)
+      expect(updates[0][2]).toMatchObject({
+        ad_storage: 'denied',
+        ad_user_data: 'denied',
+        ad_personalization: 'denied',
+      })
+      // The visitor's analytics consent survives: this is a sale/share
+      // opt-out, and storage misbehaving is not a reason to withdraw it.
+      expect(updates[0][2]).toMatchObject({ analytics_storage: 'granted' })
+    } finally {
+      localStorageMock.getItem = realGetItem
+      window.gtag = undefined
+    }
+  })
+})

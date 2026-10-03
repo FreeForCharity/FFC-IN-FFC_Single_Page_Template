@@ -24,7 +24,7 @@ Google Tag Manager (GTM) is a tag management system that allows you to manage an
 - ✅ Consent Mode v2 defaults are set BEFORE GTM loads (inline bootstrap in the root layout — see `src/lib/consent-mode.ts`)
 - ✅ Initializes `dataLayer` before GTM loads
 - ✅ Uses Next.js Script component with `lazyOnload` strategy
-- ✅ Includes noscript fallback for accessibility
+- ✅ No `<noscript>` iframe: the one GTM request a visitor could not refuse
 - ✅ Integrates with existing cookie consent system
 - ✅ GTM ID read from `src/lib/analytics.config.ts` (one place for all analytics IDs)
 
@@ -95,11 +95,36 @@ GTM loads on **every pageview**. Consent gates what its Google tags may **store*
 - In denied regions, GA4 (whether delivered by GTM or by the direct loader) sends cookieless pings until the visitor accepts; everywhere else it uses cookies from the first pageview.
 - Every banner interaction AND every stored-choice restore pushes `gtag('consent', 'update', ...)` (via `updateGoogleConsent` in `src/lib/consent-mode.ts`) plus a `consent_update` dataLayer event that GTM triggers can use.
 
+`marketing_consent` on that event is the **effective** advertising state, not
+the banner toggle. A visitor who accepted marketing and then opted out of
+sale/sharing — by the footer’s “Do Not Sell or Share” control, by a browser
+sending Global Privacy Control, or by this site being configured
+child-directed — publishes `marketing_consent: 'denied'`. Key marketing tags
+on this value rather than on your own copy of the banner choice; before this
+was the case, the event republished the raw preference and a container tag
+trusting it fired for an opted-out visitor.
+
+An opt-out made **during** a page pushes `{ marketing_consent: 'denied' }` with
+**no `event` key**. GTM merges dataLayer keys, so that corrects the variable
+without re-firing `consent_update` — which would re-trigger every tag keyed on
+that event and send a duplicate pageview from any whose conditions still hold.
+
+`analytics_consent` is deliberately **not** gated by the opt-out. It is an
+opt-out of sale/sharing for advertising, not a withdrawal of the first-party
+analytics consent the visitor gave.
+
 Non-Google scripts do **not** speak Consent Mode, so the `CookieConsent` component keeps them strictly opt-in everywhere: Microsoft Clarity loads only on an explicit analytics grant, and the Meta Pixel only on an explicit marketing grant. Withdrawing consent deletes the third-party cookies those services set.
 
-### 4. Noscript Fallback
+### 4. No Noscript Fallback
 
-For users with JavaScript disabled, the component includes an iframe fallback that allows GTM to track basic page views.
+There is deliberately no `<noscript>` iframe, and this section exists to say so
+rather than leave its removal looking like an oversight. With JavaScript
+disabled the Consent Mode bootstrap never runs, the cookie banner never
+renders and the “Do Not Sell or Share” control does not exist — yet the
+iframe would still request the GTM container carrying no consent signal,
+which made it the one Google request a visitor had no way to refuse. GA4
+cannot run without JavaScript, so it measured almost nothing in exchange.
+Its absence is asserted in the test suite, so re-adding it fails CI.
 
 ## Testing
 
@@ -114,7 +139,7 @@ Test coverage includes:
 
 - ✅ DataLayer initialization
 - ✅ GTM script loading
-- ✅ Noscript fallback presence
+- ✅ Absence of the `<noscript>` iframe (asserted, so re-adding it fails CI)
 - ✅ Event pushing to dataLayer
 - ✅ Cookie consent integration
 
