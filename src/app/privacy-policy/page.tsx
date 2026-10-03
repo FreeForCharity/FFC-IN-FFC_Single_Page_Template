@@ -2,7 +2,8 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 import BreadcrumbSchema from '@/components/seo/BreadcrumbSchema'
 import { pageMetadata } from '@/lib/page-metadata'
-import { legalContact, mailtoHref, publishedPhone, siteConfig, siteUrl } from '@/lib/site.config'
+import { legalContact, publishedPhone, siteConfig, siteUrl } from '@/lib/site.config'
+import ContactEmail from '@/components/ui/ContactEmail'
 
 const PAGE_NAME = 'Privacy Policy'
 const CANONICAL_PATH = '/privacy-policy'
@@ -25,9 +26,7 @@ export default function PrivacyPolicy() {
   const link = 'text-[#0062CC] underline'
   const contact = (
     <>
-      <a href={mailtoHref(undefined, legal.email)} className={link}>
-        {legal.email}
-      </a>
+      <ContactEmail email={legal.email} className={link} />
       {phone && (
         <>
           {' '}
@@ -630,10 +629,7 @@ export default function PrivacyPolicy() {
               <strong>Organization:</strong> {siteConfig.name}
             </li>
             <li className="text-[14px] text-[#666] leading-[24px] font-[500]">
-              <strong>Email:</strong>{' '}
-              <a href={mailtoHref(undefined, legal.email)} className={link}>
-                {legal.email}
-              </a>
+              <strong>Email:</strong> <ContactEmail email={legal.email} className={link} />
             </li>
             {phone && (
               <li className="text-[14px] text-[#666] leading-[24px] font-[500]">

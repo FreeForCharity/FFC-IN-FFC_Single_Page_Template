@@ -9,11 +9,18 @@ import { FaXTwitter } from 'react-icons/fa6'
 import type { IconType } from 'react-icons'
 import { SaleShareOptOut } from '@/components/sale-share-opt-out'
 
-import { siteConfig, publishedPhone } from '@/lib/site.config'
+import { isPending, mailtoHref, publishedPhone, siteConfig } from '@/lib/site.config'
 import { assetPath } from '@/lib/assetPath'
 import { eventsSectionVisible } from '@/lib/events/visibility'
-import { configuredTeam } from '@/data/team'
-import { faqSectionVisible, programsSectionVisible } from '@/lib/section-visibility'
+import {
+  faqSectionVisible,
+  programsSectionVisible,
+  teamSectionVisible,
+} from '@/lib/section-visibility'
+import PendingNote from '@/components/ui/PendingNote'
+
+// Footer-standard placeholder styling on the black footer background.
+const PENDING_NOTE_CLASS = 'text-[15px] text-gray-300'
 
 // Maps a social link's label (as defined in siteConfig.social) to an icon.
 // Unknown labels fall back to a generic link icon (FiLink2) so a charity
@@ -31,7 +38,10 @@ const socialIconByLabel: Record<string, IconType> = {
 const Footer: React.FC = () => {
   const phone = publishedPhone()
   const currentYear = React.useMemo(() => new Date().getFullYear(), [])
-  const socialLinks = siteConfig.social.filter((s) => s.href)
+  const socialLinks = siteConfig.social.filter((s) => s.href.trim())
+  const ein = siteConfig.ein.trim()
+  const guidestarProfileUrl = siteConfig.guidestar.profileUrl.trim()
+  const guidestarDirectUrl = siteConfig.guidestar.directProfileUrl.trim()
   // Trim so whitespace-only config behaves like empty (link/clause self-hides).
   const taxStatusLabel = siteConfig.taxStatusLabel.trim()
   // Same predicate the Events section uses to self-hide, so the quick-link
@@ -45,38 +55,56 @@ const Footer: React.FC = () => {
           <h2 className="text-[28px] text-white">Endorsements</h2>
 
           <div className="space-y-4">
-            <a
-              href={siteConfig.guidestar.profileUrl}
-              aria-label={`View ${siteConfig.name} GuideStar Profile`}
-            >
-              <Image
-                src={assetPath('/Svgs/footerImage.svg')}
-                alt="GuideStar Platinum Seal of Transparency"
-                width={108}
-                height={108}
-              />
-            </a>
-            <Link
-              href={siteConfig.guidestar.directProfileUrl}
-              className="group relative my-4 flex w-full max-w-[230px] items-center justify-between
-                border-2 border-[#2ea3f2] bg-black px-5 py-2.5 text-[#2ea3f2]
-                transition-all duration-300 hover:border-transparent aria-font"
-            >
-              <span className="text-[17px] font-medium leading-tight sm:text-[18px] md:text-[20px] transition-transform duration-300 group-hover:-translate-x-1">
-                Direct GuideStar Profile Link
-              </span>
+            {/* The seal and the direct link are transparency claims: each renders
+                only when its own GuideStar URL is configured, so a charity with no
+                profile shows neither rather than linking to someone else's. */}
+            {guidestarProfileUrl && (
+              <a
+                href={guidestarProfileUrl}
+                aria-label={`View ${siteConfig.name} GuideStar Profile`}
+              >
+                <Image
+                  src={assetPath('/Svgs/footerImage.svg')}
+                  alt="GuideStar Platinum Seal of Transparency"
+                  width={108}
+                  height={108}
+                />
+              </a>
+            )}
+            {isPending('guidestar') && (
+              <div>
+                <p className="font-[500] text-[22px]">GuideStar / Candid Profile</p>
+                <PendingNote className={PENDING_NOTE_CLASS} />
+              </div>
+            )}
+            {guidestarDirectUrl && (
+              <Link
+                href={guidestarDirectUrl}
+                className="group relative my-4 flex w-full max-w-[230px] items-center justify-between
+                  border-2 border-[#2ea3f2] bg-black px-5 py-2.5 text-[#2ea3f2]
+                  transition-all duration-300 hover:border-transparent aria-font"
+              >
+                <span className="text-[17px] font-medium leading-tight sm:text-[18px] md:text-[20px] transition-transform duration-300 group-hover:-translate-x-1">
+                  Direct GuideStar Profile Link
+                </span>
 
-              <FiArrowRight
-                className="h-8 w-8 translate-x-2 opacity-0 text-[#2ea3f2] transition-all duration-300 group-hover:translate-x-0 group-hover:opacity-100"
-                strokeWidth={2}
-              />
-            </Link>
+                <FiArrowRight
+                  className="h-8 w-8 translate-x-2 opacity-0 text-[#2ea3f2] transition-all duration-300 group-hover:translate-x-0 group-hover:opacity-100"
+                  strokeWidth={2}
+                />
+              </Link>
+            )}
 
-            <p>
-              <span className="font-[500] text-[22px]">
-                {siteConfig.name} EIN: {siteConfig.ein}
-              </span>
-            </p>
+            {/* A pending EIN shows the placeholder; an empty, non-pending EIN
+                (the charity has none) drops the line rather than print "EIN:". */}
+            {(ein || isPending('ein')) && (
+              <p>
+                <span className="font-[500] text-[22px]">
+                  {isPending('ein') ? `${siteConfig.name} EIN:` : `${siteConfig.name} EIN: ${ein}`}
+                </span>
+                {isPending('ein') && <PendingNote className={PENDING_NOTE_CLASS} />}
+              </p>
+            )}
           </div>
         </div>
 
@@ -93,10 +121,12 @@ const Footer: React.FC = () => {
                 // eventsSectionVisible); drop the dead quick-link too.
                 ...(programsSectionVisible() ? [{ name: 'Programs', href: '/#programs' }] : []),
                 ...(showEventsLink ? [{ name: 'Events', href: '/#events' }] : []),
-                { name: 'Donate', href: '/#donate' },
-                { name: 'Volunteer', href: '/#volunteer' },
+                // The sections behind these anchors always render; a pending
+                // donation / volunteer URL also shows its placeholder here.
+                { name: 'Donate', href: '/#donate', pending: isPending('donationUrl') },
+                { name: 'Volunteer', href: '/#volunteer', pending: isPending('volunteerUrl') },
                 ...(faqSectionVisible() ? [{ name: 'FAQ', href: '/#faq' }] : []),
-                ...(configuredTeam.length > 0 ? [{ name: 'Team', href: '/#team' }] : []),
+                ...(teamSectionVisible() ? [{ name: 'Team', href: '/#team' }] : []),
                 // FFC footer standard: every supported charity site links back
                 // to the supporting org's hub. Always rendered — keep this
                 // entry when customizing a fork.
@@ -113,6 +143,9 @@ const Footer: React.FC = () => {
                     >
                       {link.name}
                     </Link>
+                    {'pending' in link && link.pending && (
+                      <PendingNote className={PENDING_NOTE_CLASS} />
+                    )}
                   </li>
                 )
               })}
@@ -199,17 +232,31 @@ const Footer: React.FC = () => {
               <FiMail className="w-10 h-10 text-orange-500 flex-shrink-0 mt-0.5" />
               <div>
                 <p className="font-[500] text-[22px]">E-mail</p>
-                <a
-                  href={`mailto:${siteConfig.contactEmail}`}
-                  className="font-[500] text-[15px] hover:text-cyan-400 transition-colors break-all aria-font"
-                >
-                  {siteConfig.contactEmail}
-                </a>
+                {isPending('email') ? (
+                  <PendingNote className={PENDING_NOTE_CLASS} />
+                ) : (
+                  <a
+                    href={mailtoHref()}
+                    className="font-[500] text-[15px] hover:text-cyan-400 transition-colors break-all aria-font"
+                  >
+                    {siteConfig.contactEmail}
+                  </a>
+                )}
               </div>
             </div>
 
             {/* A charity that publishes no number gets no "Call Us" block, not a
-                tel: link that dials nothing. */}
+                tel: link that dials nothing. A pending number shows the placeholder,
+                with no tel: link. */}
+            {isPending('phone') && (
+              <div className="flex items-start gap-3">
+                <FiPhone className="w-10 h-10 text-orange-500 flex-shrink-0 mt-0.5" />
+                <div>
+                  <p className="font-[500] text-[22px]">Call Us Today</p>
+                  <PendingNote className={PENDING_NOTE_CLASS} />
+                </div>
+              </div>
+            )}
             {phone && (
               <div className="flex items-start gap-3">
                 <FiPhone className="w-10 h-10 text-orange-500 flex-shrink-0 mt-0.5" />
@@ -221,6 +268,17 @@ const Footer: React.FC = () => {
                   >
                     {phone.display}
                   </a>
+                </div>
+              </div>
+            )}
+
+            {/* A pending address shows the placeholder, with no map link. */}
+            {isPending('address') && (
+              <div className="flex items-start gap-3">
+                <FiMapPin className="w-10 h-10 text-orange-500 flex-shrink-0 mt-0.5" />
+                <div>
+                  <p className="font-[500] text-[22px]">Address</p>
+                  <PendingNote className={PENDING_NOTE_CLASS} />
                 </div>
               </div>
             )}
@@ -252,6 +310,12 @@ const Footer: React.FC = () => {
               </a>
             ))}
 
+            {isPending('social') && (
+              <div className="pt-4">
+                <p className="font-[500] text-[22px]">Social Media</p>
+                <PendingNote className={PENDING_NOTE_CLASS} />
+              </div>
+            )}
             <div className="flex gap-3 pt-4">
               {socialLinks.map(({ href, label }) => {
                 const Icon = socialIconByLabel[label] ?? FiLink2

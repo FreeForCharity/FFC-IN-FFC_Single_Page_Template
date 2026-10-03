@@ -33,8 +33,22 @@ async function waitForGtm(page: Page): Promise<void> {
   )
 }
 
+/**
+ * Skips a test that needs the GTM tag itself. The GTM id is empty until the
+ * charity's own container is provisioned, and the site then correctly renders
+ * no tag, so there is nothing to wait for. The cookie-consent test below still
+ * runs: the consent bootstrap creates the dataLayer without a container.
+ */
+function skipWithoutContainer() {
+  test.skip(
+    !testConfig.googleTagManager.configured,
+    'GTM id is empty: no container provisioned for this site yet'
+  )
+}
+
 test.describe('Google Tag Manager Integration', () => {
   test('should initialize dataLayer on page load', async ({ page }) => {
+    skipWithoutContainer()
     await page.goto('/')
     await waitForGtm(page)
 
@@ -54,6 +68,7 @@ test.describe('Google Tag Manager Integration', () => {
   })
 
   test('should load GTM script with correct ID', async ({ page }) => {
+    skipWithoutContainer()
     await page.goto('/')
     await waitForGtm(page)
 
@@ -83,11 +98,18 @@ test.describe('Google Tag Manager Integration', () => {
     // any presence-only suite would wave through, and the privacy policy's
     // claim that the consent check runs before any Google tag loads would
     // silently become false again.
+    //
+    // And deliberately NOT behind `skipWithoutContainer()`, which main's
+    // presence version carried: the iframe must be absent whether or not a
+    // container is provisioned, so skipping on an unconfigured fork would
+    // retire the check on exactly the sites most likely to be re-provisioned
+    // from this template.
     const pageContent = await page.content()
     expect(pageContent).not.toContain('googletagmanager.com/ns.html')
   })
 
   test('should push events to dataLayer', async ({ page }) => {
+    skipWithoutContainer()
     await page.goto('/')
     await waitForGtm(page)
 
@@ -109,6 +131,7 @@ test.describe('Google Tag Manager Integration', () => {
   })
 
   test('should load GTM script after page interaction', async ({ page }) => {
+    skipWithoutContainer()
     await page.goto('/')
     await waitForGtm(page)
 
@@ -165,6 +188,7 @@ test.describe('Google Tag Manager Integration', () => {
 
 test.describe('Google Tag Manager Configuration', () => {
   test('should load GTM script with configured ID', async ({ page }) => {
+    skipWithoutContainer()
     // This test verifies that GTM loads with the configured ID from test.config.ts
     // The GTM_ID is configured in the component
 

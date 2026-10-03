@@ -116,6 +116,9 @@ You don't have to edit either workflow when you rename the repo.
       profile links in `src/lib/site.config.ts` — `ein`, `phone`,
       `addresses`, and `guidestar.profileUrl` / `guidestar.directProfileUrl`.
       The footer reads these from siteConfig; no footer code edit needed.
+      No GuideStar / Candid profile? Leave both URLs `''` (the seal hides) —
+      never copy another organization's. A value the charity hasn't sent
+      yet stays empty and is listed in `pending` (see TEMPLATE_CUSTOMIZATION.md).
 
 ### Contact Information
 

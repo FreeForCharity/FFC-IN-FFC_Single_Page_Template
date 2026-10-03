@@ -11,7 +11,7 @@
  * 3. Maintain a single source of truth for test expectations
  */
 
-import { analyticsConfig } from '../src/lib/analytics.config'
+import { analyticsConfig, isConfigured } from '../src/lib/analytics.config'
 import { siteConfig } from '../src/lib/site.config'
 
 export const testConfig = {
@@ -115,10 +115,15 @@ export const testConfig = {
    * Used in: tests/google-tag-manager.spec.ts
    *
    * Sourced from the same src/lib/analytics.config.ts the component reads, so
-   * the expected ID always matches what the build embedded.
+   * the expected ID always matches what the build embedded. A charity site's
+   * id is empty until its own container is provisioned; the site then renders
+   * no tag, and the specs that need the tag itself skip (the consent test,
+   * which needs only the dataLayer, still runs). `configured` uses the same
+   * isConfigured() test the loader does.
    */
   googleTagManager: {
-    id: analyticsConfig.gtmId,
+    id: analyticsConfig.gtmId.trim(),
+    configured: isConfigured(analyticsConfig.gtmId),
   },
 
   /**

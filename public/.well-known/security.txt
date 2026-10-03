@@ -11,6 +11,11 @@
 # also published at /security.txt as a fallback. Hosts that support
 # `.well-known/` (Cloudflare Pages, Netlify, plain nginx, etc.) serve both.
 # The drift checker enforces that /security.txt stays in sync with this file.
+#
+# Contact is the charity's own address. While the site's email is still
+# awaiting the charity (listed in siteConfig.pending), leave the Contact line
+# out entirely rather than list another organization's address, and add
+# `Contact: mailto:<address>` once the charity supplies one.
 
 Contact: mailto:security@freeforcharity.org
 Expires: 2027-01-01T00:00:00.000Z

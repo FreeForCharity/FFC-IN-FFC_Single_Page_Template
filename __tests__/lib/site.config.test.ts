@@ -8,8 +8,17 @@ import {
   publishedPhone,
   eventsFacebookPageUrl,
   donationEmbedUrl,
+  isPending,
+  PENDING_TEXT,
+  type PendingField,
 } from '../../src/lib/site.config'
-import { asCharitySite, asSupporterSite, restoreSiteConfig } from '../helpers/site-identity'
+import { configuredTeam } from '../../src/data/team'
+import {
+  asCharitySite,
+  asSupporterSite,
+  restoreSiteConfig,
+  withFooterFieldsPending,
+} from '../helpers/site-identity'
 
 describe('supportedBy (FFC footer standard)', () => {
   // The permanent "Supported by" attribution is required on every FFC-supported
@@ -209,5 +218,152 @@ describe('publishedPhone', () => {
   ])('returns null unless both halves are set (%j)', (phone) => {
     asCharitySite({ phone })
     expect(publishedPhone()).toBeNull()
+  })
+})
+
+// FreeForCharity/FFC-IN-FFC_Single_Page_Template#482: the `pending` convention.
+// Every PendingField, mapped to "its value is empty". A pending field must carry
+// no value, so no placeholder or borrowed (template / FFC) value can ship behind
+// the "awaiting information" notice.
+const PENDING_IS_EMPTY: Record<PendingField, () => boolean> = {
+  email: () => siteConfig.contactEmail.trim() === '',
+  phone: () => siteConfig.phone.display.trim() === '' && siteConfig.phone.tel.trim() === '',
+  address: () => siteConfig.addresses.length === 0,
+  ein: () => siteConfig.ein.trim() === '',
+  guidestar: () =>
+    siteConfig.guidestar.profileUrl.trim() === '' &&
+    siteConfig.guidestar.directProfileUrl.trim() === '',
+  social: () => siteConfig.social.every((s) => s.href.trim() === ''),
+  team: () => configuredTeam.length === 0,
+  donationUrl: () => siteConfig.donationUrl.trim() === '',
+  volunteerUrl: () => siteConfig.volunteerUrl.trim() === '',
+}
+
+/** Every way the current config breaks the pending contract (empty = none). */
+function pendingViolations(): string[] {
+  const pending = siteConfig.pending ?? []
+  const known = Object.keys(PENDING_IS_EMPTY)
+  const violations: string[] = []
+  for (const field of pending) {
+    if (!known.includes(field)) violations.push(`unknown pending field "${field}"`)
+    else if (!PENDING_IS_EMPTY[field]()) violations.push(`pending ${field} has a value`)
+  }
+  if (new Set(pending).size !== pending.length) violations.push('pending lists a field twice')
+  return violations
+}
+
+describe('siteConfig contract', () => {
+  afterEach(restoreSiteConfig)
+
+  it('the checked-in config satisfies the pending contract', () => {
+    // The template itself sets no `pending`; a provisioned fork may. Either
+    // way every listed field is known, listed once, and has an empty value.
+    expect(pendingViolations()).toEqual([])
+  })
+
+  // The shared schema lets `ein` and `contactEmail` be empty; these checks are
+  // what hold them to "empty ONLY while pending".
+  const EIN = /^\d{2}-\d{7}$/ // IRS EIN format: two digits, hyphen, seven digits.
+  const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+  function expectEinAndEmailContract(): void {
+    expect(siteConfig.ein).toMatch(isPending('ein') ? /^$/ : EIN)
+    expect(siteConfig.contactEmail).toMatch(isPending('email') ? /^$/ : EMAIL)
+  }
+
+  it('carries a well-formed EIN and email, or empty ones while they are pending', () => {
+    expectEinAndEmailContract()
+  })
+
+  it('a pending EIN / email relaxes the format checks to "empty"', () => {
+    withFooterFieldsPending()
+    expectEinAndEmailContract()
+    expect(pendingViolations()).toEqual([])
+  })
+
+  it('an empty EIN or email that is NOT pending breaks the contract', () => {
+    asCharitySite({ ein: '' })
+    expect(siteConfig.ein).not.toMatch(EIN)
+    asCharitySite({ contactEmail: '' })
+    expect(siteConfig.contactEmail).not.toMatch(EMAIL)
+    asCharitySite()
+    expectEinAndEmailContract()
+  })
+
+  it('carries https GuideStar URLs, or empty ones for "no profile yet"', () => {
+    for (const url of [siteConfig.guidestar.profileUrl, siteConfig.guidestar.directProfileUrl]) {
+      expect(url).toMatch(/^(https:\/\/\S+)?$/)
+    }
+  })
+})
+
+describe('siteConfig.pending contract', () => {
+  afterEach(restoreSiteConfig)
+
+  // About the template as shipped: a provisioned charity may legitimately
+  // list pending fields, so this is skipped once the site is rebranded.
+  ;(isSupportingOrgSite() ? it : it.skip)('is not set by the template itself', () => {
+    expect(siteConfig.pending).toBeUndefined()
+    expect(isPending('email')).toBe(false)
+  })
+
+  it('isPending reports exactly the listed fields', () => {
+    siteConfig.pending = ['phone', 'guidestar']
+    expect(isPending('phone')).toBe(true)
+    expect(isPending('guidestar')).toBe(true)
+    expect(isPending('email')).toBe(false)
+    expect(isPending('team')).toBe(false)
+  })
+
+  it('exposes the visible placeholder text', () => {
+    expect(PENDING_TEXT).toBe('Awaiting information from the charity')
+  })
+
+  it('accepts every footer field pending with an empty value', () => {
+    withFooterFieldsPending()
+    expect(siteConfig.pending?.length).toBe(8)
+    expect(pendingViolations()).toEqual([])
+  })
+
+  it.each([
+    ['email', { contactEmail: 'hello@pantry.example' }],
+    ['phone', { phone: { display: '(555) 010-0101', tel: '15550100101' } }],
+    [
+      'address',
+      { addresses: [{ label: 'Office', lines: ['1 Main St'], mapUrl: 'https://maps.example' }] },
+    ],
+    ['ein', { ein: '12-3456789' }],
+    [
+      'guidestar',
+      {
+        guidestar: {
+          profileUrl: 'https://www.guidestar.org/profile/12-3456789',
+          directProfileUrl: '',
+        },
+      },
+    ],
+    ['social', { social: [{ label: 'LinkedIn', href: 'https://www.linkedin.com/company/x' }] }],
+    ['donationUrl', { donationUrl: 'https://www.zeffy.com/x' }],
+    ['volunteerUrl', { volunteerUrl: 'https://www.idealist.org/x' }],
+  ] as const)('flags a pending %s that still carries a value', (field, value) => {
+    withFooterFieldsPending()
+    Object.assign(siteConfig, value)
+    expect(pendingViolations()).toEqual([`pending ${field} has a value`])
+  })
+
+  it('flags a pending team while team members are configured', () => {
+    // The checked-in team data is populated, so a pending team is a violation.
+    siteConfig.pending = ['team']
+    expect(pendingViolations()).toEqual(
+      configuredTeam.length > 0 ? ['pending team has a value'] : []
+    )
+  })
+
+  it('flags unknown and duplicated fields', () => {
+    withFooterFieldsPending()
+    siteConfig.pending = ['phone', 'phone', 'fax' as PendingField]
+    expect(pendingViolations()).toEqual([
+      'unknown pending field "fax"',
+      'pending lists a field twice',
+    ])
   })
 })

@@ -2,7 +2,8 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 import BreadcrumbSchema from '@/components/seo/BreadcrumbSchema'
 import { pageMetadata } from '@/lib/page-metadata'
-import { legalContact, mailtoHref, publishedPhone, siteConfig } from '@/lib/site.config'
+import { legalContact, publishedPhone, siteConfig } from '@/lib/site.config'
+import ContactEmail from '@/components/ui/ContactEmail'
 
 const PAGE_NAME = 'Cookie Policy'
 const CANONICAL_PATH = '/cookie-policy'
@@ -524,9 +525,7 @@ export default function CookiePolicy() {
             </li>
             <li className="text-[14px] text-[#666] leading-[24px] font-[500]">
               <strong>Email:</strong>{' '}
-              <a href={mailtoHref(undefined, legal.email)} className="text-blue-600 underline">
-                {legal.email}
-              </a>
+              <ContactEmail email={legal.email} className="text-blue-600 underline" />
             </li>
             {legal.name && (
               <li className="text-[14px] text-[#666] leading-[24px] font-[500]">
