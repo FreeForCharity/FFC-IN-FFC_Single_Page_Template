@@ -194,6 +194,41 @@ export default function CookieConsent() {
     })
   }, [])
 
+  // Every advertising cookie this site can be left holding, expired in one
+  // place.
+  //
+  // Three call sites need this list -- the category deletion below, the
+  // restore path when there is no banner record, and the window event that
+  // carries an opt-out to tags that do not speak Consent Mode -- and each
+  // used to carry its own `['_fbp', 'fr']`. Copilot found the consequence:
+  // every copy was Meta's only, so an opt-out left Google's identifiers in
+  // place while the policy said advertising cookies had been deleted.
+  //
+  // GOOGLE'S ARE SWEPT BY PREFIX, not enumerated. Which of `_gcl_aw`,
+  // `_gcl_dc` and `_gcl_gb` exists depends on the click parameter that brought
+  // the visitor, and `_gac_<property-id>` depends on the property configured,
+  // so a hardcoded list goes stale without anything failing -- the same reason
+  // the `_ga_*` sweep further down exists. The cookie policy names the same
+  // families in prose.
+  const expireAdvertisingCookies = useCallback(() => {
+    // Meta's two only. `_gcl_au` was named here as well, and a mutation
+    // removing it was detected by nothing: the `_gcl_` prefix sweep below
+    // already catches that name, so the entry was redundant rather than
+    // untested. Removed instead of given a test that would assert the sweep
+    // twice. Meta's two stay named because neither prefix matches them.
+    const names = ['_fbp', 'fr']
+
+    if (typeof document !== 'undefined') {
+      const regex = /(?:^|;\s*)((?:_gcl_|_gac_)[^=;\s]*)/g
+      let match: RegExpExecArray | null
+      while ((match = regex.exec(document.cookie)) !== null) {
+        names.push(match[1])
+      }
+    }
+
+    expireCookies(names)
+  }, [expireCookies])
+
   // Deletes each NON-granted category's third-party cookies (analytics:
   // GA4 + Clarity; marketing: Meta Pixel). Called with no argument
   // (Decline All) it deletes every category. Deletion cannot depend on a
@@ -228,10 +263,10 @@ export default function CookieConsent() {
       }
 
       if (deleteMarketing) {
-        expireCookies(['_fbp', 'fr'])
+        expireAdvertisingCookies()
       }
     },
-    [expireCookies]
+    [expireCookies, expireAdvertisingCookies]
   )
 
   const applyConsent = useCallback(
@@ -353,7 +388,7 @@ export default function CookieConsent() {
       // ANALYTICS COOKIES ARE NOT TOUCHED. This is an opt-out of sale and
       // sharing for advertising, not a withdrawal of analytics consent.
       if (hasSaleShareOptOut()) {
-        expireCookies(['_fbp', 'fr'])
+        expireAdvertisingCookies()
       }
 
       try {
@@ -396,7 +431,7 @@ export default function CookieConsent() {
         if (showBannerIfMissing) setShowBanner(true)
       }
     },
-    [applyConsent, expireCookies]
+    [applyConsent, expireAdvertisingCookies]
   )
 
   const handleCancelPreferences = useCallback(() => {
@@ -444,7 +479,7 @@ export default function CookieConsent() {
     // most a client-side control can honestly do, and the policy text says so
     // rather than promising more.
     const onSaleShareOptOut = () => {
-      expireCookies(['_fbp', 'fr'])
+      expireAdvertisingCookies()
 
       // applyConsent published the pre-opt-out `marketing_consent`, and for an
       // opt-out that happens DURING this page nothing republishes it: a GTM
@@ -469,7 +504,7 @@ export default function CookieConsent() {
       delete window.openCookiePreferences
       window.removeEventListener(SALE_SHARE_OPT_OUT_EVENT, onSaleShareOptOut)
     }
-  }, [loadPreferencesFromLocalStorage, loadGoogleAnalytics, expireCookies])
+  }, [loadPreferencesFromLocalStorage, loadGoogleAnalytics, expireAdvertisingCookies])
 
   // Focus management for modal
   useEffect(() => {

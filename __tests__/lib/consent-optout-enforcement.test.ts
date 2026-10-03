@@ -191,6 +191,48 @@ describe('the sale/share opt-out may be tightened but never loosened', () => {
     expect(withStorageRefusing(() => hasSaleShareOptOut())).toBe(false)
   })
 
+  it('a clear that storage refuses leaves the denial standing', () => {
+    // The mirror of the case above, and the harder half to get right. The
+    // visitor asks to opt back IN while `removeItem` throws: the stored
+    // `ffc-sale-share-opt-out=true` is therefore still on their device, so the
+    // honest reading of "I could not tell" is that they are still opted out.
+    //
+    // A single `sessionOptOut = optOut` before the write got this backwards.
+    // It cleared the in-memory denial, the next read threw and answered false
+    // from its catch, and `prefs.marketing` granted advertising to a visitor
+    // whose opt-out was still recorded. Reported by Copilot, and the mirror
+    // image of the bug the session flag was added to fix -- which is exactly
+    // why one line looked like enough.
+    window.localStorage.setItem(SALE_SHARE_OPT_OUT_KEY, 'true')
+    expect(hasSaleShareOptOut()).toBe(true)
+
+    const gtag = jest.fn()
+    window.gtag = gtag
+
+    withStorageRefusing(() => setSaleShareOptOut(false, ALL_ON))
+
+    const payload = updatePayload(gtag)
+    expect(payload.ad_storage).toBe('denied')
+    expect(payload.ad_user_data).toBe('denied')
+    // The visitor's analytics choice is still honoured, as everywhere else.
+    expect(payload.analytics_storage).toBe('granted')
+  })
+
+  it('positive control: a clear that SUCCEEDS does let advertising be granted', () => {
+    // Without this the case above would also pass if clearing had simply been
+    // made impossible, which would leave the control stuck for anyone who
+    // changed their mind.
+    window.localStorage.setItem(SALE_SHARE_OPT_OUT_KEY, 'true')
+    expect(hasSaleShareOptOut()).toBe(true)
+
+    const gtag = jest.fn()
+    window.gtag = gtag
+
+    setSaleShareOptOut(false, ALL_ON)
+
+    expect(updatePayload(gtag).ad_storage).toBe('granted')
+  })
+
   it('opting back in clears the session flag when storage works', () => {
     // Otherwise the enforcement above would be a one-way door for the session,
     // and the control would be stuck reading "off" for a visitor who changed

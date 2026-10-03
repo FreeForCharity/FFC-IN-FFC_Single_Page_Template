@@ -233,6 +233,112 @@ describe('sale/share opt-out and the non-Google marketing tag', () => {
 })
 
 /**
+ * The opt-out has to take GOOGLE'S advertising cookies too, not just Meta's.
+ *
+ * Reported by Copilot on FFC-EX-canary#40. Outside the EEA/UK/CH this site
+ * grants Google `ad_storage` for Ad Grants conversion tracking, so Google Ads
+ * and the conversion linker can have written `_gcl_*` and `_gac_*` cookies
+ * before the visitor opts out. Consent Mode denying storage stops new ones; it
+ * does not remove those. Every deletion site carried `['_fbp', 'fr']` and
+ * nothing else, so the privacy policy's promise that an opt-out deletes
+ * advertising cookies was true of Meta and false of Google.
+ */
+describe('the opt-out expires Google advertising cookies as well as Meta\u2019s', () => {
+  // A jar as a returning visitor who arrived from an ad would have it. The
+  // dynamic names are the point: `_gcl_aw` depends on the click parameter and
+  // `_gac_G-...` on the configured property, so they are swept by prefix and
+  // an enumerated list would miss them.
+  const JAR = [
+    '_ga=GA1.1.123',
+    '_ga_G-TEST1234567=GS1.1.456',
+    '_fbp=fb.1.789',
+    '_gcl_au=1.1.111.222',
+    '_gcl_aw=GCL.1.aaa',
+    '_gac_G-TEST1234567=1.1.bbb',
+  ].join('; ')
+
+  /** Cookie writes, with a populated jar on the way in. */
+  function captureWithJar(): string[] {
+    const writes: string[] = []
+    Object.defineProperty(document, 'cookie', {
+      configurable: true,
+      get: () => JAR,
+      set: (v: string) => {
+        writes.push(v)
+      },
+    })
+    return writes
+  }
+
+  const expired = (writes: string[], name: string) =>
+    writes.some((w) => w.startsWith(`${name}=`) && w.includes('expires=Thu, 01 Jan 1970'))
+
+  beforeEach(() => {
+    localStorageMock.clear()
+  })
+
+  it('expires _gcl_au, the dynamic _gcl_* and the dynamic _gac_* on opt-out', async () => {
+    localStorageMock.setItem('cookie-consent', ACCEPTED_ALL)
+    localStorageMock.setItem(SALE_SHARE_OPT_OUT_KEY, 'true')
+
+    const writes = captureWithJar()
+    render(<CookieConsent />)
+
+    await waitFor(() => {
+      expect(expired(writes, '_fbp')).toBe(true)
+    })
+    expect(expired(writes, '_gcl_au')).toBe(true)
+    expect(expired(writes, '_gcl_aw')).toBe(true)
+    expect(expired(writes, '_gac_G-TEST1234567')).toBe(true)
+
+    // Analytics survives. The opt-out is of sale and sharing for advertising,
+    // and `_ga`/`_ga_*` are this visitor's analytics consent, which stands.
+    expect(expired(writes, '_ga')).toBe(false)
+    expect(expired(writes, '_ga_G-TEST1234567')).toBe(false)
+  })
+
+  it('positive control: the same jar survives when marketing is granted and nothing is opted out', async () => {
+    // Otherwise the case above would pass just as well if the component had
+    // started expiring the advertising cookies on every restore.
+    localStorageMock.setItem('cookie-consent', ACCEPTED_ALL)
+
+    const writes = captureWithJar()
+    render(<CookieConsent />)
+
+    await waitFor(() => {
+      expect(localStorageMock.getItem('cookie-consent')).toBe(ACCEPTED_ALL)
+    })
+
+    expect(expired(writes, '_gcl_au')).toBe(false)
+    expect(expired(writes, '_gcl_aw')).toBe(false)
+    expect(expired(writes, '_gac_G-TEST1234567')).toBe(false)
+    expect(expired(writes, '_fbp')).toBe(false)
+  })
+
+  it('takes them on the window event too, not only on restore', async () => {
+    // The mid-page opt-out path has its own deletion call site, and before
+    // these were one list it had its own copy of the Meta-only names.
+    localStorageMock.setItem('cookie-consent', ACCEPTED_ALL)
+    render(<CookieConsent />)
+
+    await waitFor(() => {
+      expect(localStorageMock.getItem('cookie-consent')).toBe(ACCEPTED_ALL)
+    })
+
+    const writes = captureWithJar()
+    window.dispatchEvent(new Event(SALE_SHARE_OPT_OUT_EVENT))
+
+    await waitFor(() => {
+      expect(expired(writes, '_gcl_au')).toBe(true)
+    })
+    expect(expired(writes, '_gcl_aw')).toBe(true)
+    expect(expired(writes, '_gac_G-TEST1234567')).toBe(true)
+    expect(expired(writes, '_fbp')).toBe(true)
+    expect(expired(writes, '_ga')).toBe(false)
+  })
+})
+
+/**
  * `consent_update` is a DOCUMENTED integration point -- the GTM README tells
  * container authors to key tags on it -- so what it publishes is a contract,
  * not an internal detail.

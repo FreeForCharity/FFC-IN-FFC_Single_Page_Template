@@ -333,18 +333,35 @@ export function hasSaleShareOptOut(): boolean {
  */
 export function setSaleShareOptOut(optOut: boolean, prefs?: ConsentPreferences): void {
   if (typeof window === 'undefined') return
-  // Set BEFORE the write that can throw. Enforcement for the rest of this
-  // session must not depend on persistence succeeding; a storage failure may
-  // cost the choice its survival across navigation, which is the honest limit
-  // of a client-side control and is what the policy text states, but it may
-  // not cost it effect here and now.
-  sessionOptOut = optOut
+  // BOTH DIRECTIONS FAIL CLOSED, and that is why these are not one
+  // assignment.
+  //
+  // Opting OUT raises the in-memory denial BEFORE the write that can throw:
+  // enforcement for the rest of this session must not depend on persistence
+  // succeeding. A storage failure may cost the choice its survival across
+  // navigation -- the honest limit of a client-side control, and what the
+  // policy text states -- but it may not cost it effect here and now.
+  //
+  // Opting back IN lowers it only AFTER a removal that actually succeeded. A
+  // single `sessionOptOut = optOut` before the write got this backwards: with
+  // `ffc-sale-share-opt-out=true` still on the device and `removeItem`
+  // throwing, it cleared the denial in memory while the stored opt-out
+  // remained, and the next read threw, answered false from its catch, and
+  // granted advertising to a visitor whose opt-out was still recorded. The
+  // mirror image of the bug the flag was added to fix, which is exactly why
+  // one line looked like enough. Reported by Copilot.
+  if (optOut) sessionOptOut = true
   try {
     if (optOut) window.localStorage.setItem(SALE_SHARE_OPT_OUT_KEY, 'true')
-    else window.localStorage.removeItem(SALE_SHARE_OPT_OUT_KEY)
+    else {
+      window.localStorage.removeItem(SALE_SHARE_OPT_OUT_KEY)
+      sessionOptOut = false
+    }
   } catch {
     // A private window that refuses storage still gets the live update below;
-    // the choice simply will not survive the session.
+    // the choice simply will not survive the session. And a clear that failed
+    // leaves the denial standing, on purpose: the stored opt-out may still be
+    // there, and the safe reading of "I could not tell" is that it is.
   }
   // Tell the non-Google tags, which cannot hear a Consent Mode update.
   if (optOut) {

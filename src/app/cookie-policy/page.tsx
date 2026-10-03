@@ -395,6 +395,62 @@ export default function CookiePolicy() {
             </p>
           </div>
 
+          {/* Google Ads / Ad Grants conversion tracking */}
+          <div className="bg-gray-50 p-4 rounded-lg mb-4">
+            <h4 className="font-semibold mb-2 text-[#333]">
+              Google Ads conversion tracking (Ad Grants)
+            </h4>
+            <p className="text-sm mb-2 text-[#666]">
+              This site advertises through Google Ad Grants, which gives nonprofits free search
+              advertising. Keeping that grant requires us to measure which ads lead to a donation or
+              a volunteer sign-up, so where advertising storage is permitted Google may set the
+              cookies below. They are advertising cookies, not analytics: the{' '}
+              <em>Do Not Sell or Share My Personal Information</em> link in our footer, and a
+              browser sending Global Privacy Control, both stop them being set and delete the ones
+              already on your device.
+            </p>
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b">
+                    <th className="text-left py-2 pr-4 text-[#333]">Cookie Name</th>
+                    <th className="text-left py-2 pr-4 text-[#333]">Purpose</th>
+                    <th className="text-left py-2 text-[#333]">Duration</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr className="border-b">
+                    <td className="py-2 pr-4 font-mono text-[#666]">_gcl_au</td>
+                    <td className="py-2 pr-4 text-[#666]">
+                      Links an ad click to a later action on this site
+                    </td>
+                    <td className="py-2 text-[#666]">3 months</td>
+                  </tr>
+                  <tr className="border-b">
+                    <td className="py-2 pr-4 font-mono text-[#666]">_gcl_aw, _gcl_dc, _gcl_gb</td>
+                    <td className="py-2 pr-4 text-[#666]">
+                      Records which kind of ad click brought you here; which one is set depends on
+                      the ad
+                    </td>
+                    <td className="py-2 text-[#666]">90 days</td>
+                  </tr>
+                  <tr>
+                    <td className="py-2 pr-4 font-mono text-[#666]">_gac_&lt;property-id&gt;</td>
+                    <td className="py-2 pr-4 text-[#666]">
+                      Carries ad-click details to our analytics property so a conversion can be
+                      credited
+                    </td>
+                    <td className="py-2 text-[#666]">90 days</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <p className="text-xs mt-2 text-gray-600">
+              We do <strong>not</strong> enable personalized or remarketing advertising. Ad Grants
+              accounts cannot use it, and we leave that signal switched off.
+            </p>
+          </div>
+
           {/* Section 4 */}
           <h2 className="text-[26px] leading-[26px] font-[700] text-[#333] mb-[10px]">
             <strong>4. How to Manage Cookies</strong>
