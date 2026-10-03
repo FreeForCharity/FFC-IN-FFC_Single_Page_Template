@@ -235,7 +235,14 @@ export function updateGoogleConsent(
   // setSaleShareOptOut, surviving in the prefs branch: the invariant was
   // stated in one layer and violated in the next, which is why the suite went
   // green over it. Reported by Copilot on Footer_Only_Template#140.
-  const optedOut = opts?.adsDenied ?? hasSaleShareOptOut()
+  //
+  // `=== true || ` and NOT `??`: the override may only ever ADD a denial.
+  // With `??`, an explicit `{ adsDenied: false }` replaced the enforced
+  // state outright and GRANTED advertising on a child-directed site or to a
+  // visitor sending GPC -- the two cases that are not the visitor's to waive
+  // and not a caller's either. An override added to stop an opt-out being
+  // lost could be used to lose one, which is the opposite of its purpose.
+  const optedOut = opts?.adsDenied === true || hasSaleShareOptOut()
   const analytics = prefs.analytics ? 'granted' : 'denied'
   const marketing = prefs.marketing && !optedOut ? 'granted' : 'denied'
   const personalization = marketing === 'granted' && AD_PERSONALIZATION ? 'granted' : 'denied'
@@ -252,6 +259,25 @@ export function updateGoogleConsent(
 }
 
 /**
+ * In-memory mirror of the opt-out, for this page's lifetime.
+ *
+ * `localStorage` is the record, but it is not always available: some privacy
+ * modes throw on both read and write. Before this existed, an opt-out made in
+ * such a session was applied to the live tags and then immediately forgotten,
+ * because every later check re-read the storage that had refused the write --
+ * so the next preference save re-granted advertising, the Meta loader ran
+ * again, and the footer control rendered as though the visitor had never
+ * clicked it.
+ *
+ * It is module state, so it resets on navigation. That is not a workaround for
+ * storage: with storage unavailable the choice genuinely cannot survive a page
+ * load, and the privacy and cookie policies say so rather than promising more.
+ * What this guarantees is narrower and worth having on its own -- within the
+ * session where the visitor exercised the right, nothing silently undoes it.
+ */
+let sessionOptOut = false
+
+/**
  * Whether this visitor has exercised a statutory opt-out of sale/sharing —
  * by sending a universal opt-out signal (GPC), by using this site's own
  * control, or because the site is child-directed and can never share.
@@ -260,6 +286,12 @@ export function updateGoogleConsent(
  */
 export function hasSaleShareOptOut(): boolean {
   if (CHILD_DIRECTED) return true
+  // The in-memory flag is consulted BEFORE storage, and deliberately cannot be
+  // cleared by a storage failure. Without it an opt-out made in a private
+  // window held only until the next call: the write threw, nothing recorded
+  // the choice, this read reported false, and the next preference save granted
+  // advertising again while the footer control went back to reading "opt in".
+  if (sessionOptOut) return true
   if (typeof window === 'undefined') return false
   try {
     const nav = window.navigator as Navigator & { globalPrivacyControl?: boolean }
@@ -282,6 +314,12 @@ export function hasSaleShareOptOut(): boolean {
  */
 export function setSaleShareOptOut(optOut: boolean, prefs?: ConsentPreferences): void {
   if (typeof window === 'undefined') return
+  // Set BEFORE the write that can throw. Enforcement for the rest of this
+  // session must not depend on persistence succeeding; a storage failure may
+  // cost the choice its survival across navigation, which is the honest limit
+  // of a client-side control and is what the policy text states, but it may
+  // not cost it effect here and now.
+  sessionOptOut = optOut
   try {
     if (optOut) window.localStorage.setItem(SALE_SHARE_OPT_OUT_KEY, 'true')
     else window.localStorage.removeItem(SALE_SHARE_OPT_OUT_KEY)

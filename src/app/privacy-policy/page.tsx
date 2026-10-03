@@ -479,6 +479,14 @@ export default function PrivacyPolicy() {
             navigate, and we would rather say so than imply otherwise.
           </p>
           <p className="text-[14px] text-[#666] pb-[10px] leading-[24px] font-[500]">
+            One more limit, for the same reason. We record your choice in your browser&apos;s own
+            storage, and some private-browsing modes refuse to let us write anything there. When
+            that happens the opt-out still takes effect for the rest of your visit — nothing we do
+            can quietly undo it — but there is nowhere to remember it, so you may need to make it
+            again on a later visit. A browser sending Global Privacy Control needs no record at all:
+            we read that signal fresh on every page.
+          </p>
+          <p className="text-[14px] text-[#666] pb-[10px] leading-[24px] font-[500]">
             We do not knowingly collect or sell the personal information of anyone under 16. We do
             not collect sensitive personal information beyond what is necessary to provide this
             website and our services, and we do not use it to infer characteristics about you.
