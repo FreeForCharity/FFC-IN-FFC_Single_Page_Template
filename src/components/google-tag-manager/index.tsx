@@ -30,7 +30,6 @@ export default function GoogleTagManager() {
   )
 }
 
-// Export a component for the noscript iframe that goes in the body
 // The <noscript> GTM iframe used to live here and has been REMOVED, not
 // merely unmounted.
 //

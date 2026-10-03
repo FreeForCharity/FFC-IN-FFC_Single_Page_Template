@@ -401,6 +401,25 @@ export function setSaleShareOptOut(optOut: boolean, prefs?: ConsentPreferences):
     else {
       window.localStorage.removeItem(SALE_SHARE_OPT_OUT_KEY)
       sessionOptOut = false
+      // The bootstrap's published observation is a mirror of the flag just
+      // removed, so it has to come down with it. Without this the clear could
+      // not take effect on the page it was called on: `sessionOptOut` went
+      // false, and the next `hasSaleShareOptOut()` re-latched `true` from the
+      // stale publication, leaving the footer control reading "Advertising
+      // sharing is off" for a visitor who had just opted back in. A defect in
+      // the fix that introduced the publication, reported by Copilot.
+      //
+      // `false` rather than `delete`, for consistency with the bootstrap's
+      // own publication and nothing more: a mutation swapping it for
+      // `undefined` is detected by nothing, because the only reader tests
+      // `=== true`. Claiming the two values mean different things HERE would
+      // be inventing a contract no code relies on -- the distinction is real
+      // only at the bootstrap's unconditional publication, which has its own
+      // case.
+      //
+      // GPC and `childDirected` are re-derived on every call, so clearing this
+      // cannot override either. That one IS load-bearing, and has a case.
+      ;(window as SaleShareOptOutWindow)[SALE_SHARE_OPT_OUT_GLOBAL] = false
     }
   } catch {
     // A private window that refuses storage still gets the live update below;

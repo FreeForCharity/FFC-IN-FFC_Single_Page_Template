@@ -198,6 +198,51 @@ describe('the sale/share opt-out may be tightened but never loosened', () => {
     }
   })
 
+  it('a successful clear takes effect even when the bootstrap had published an opt-out', () => {
+    // A defect in the fix that introduced the publication, and the reason it
+    // slipped: in jsdom no bootstrap runs, so every other case here leaves the
+    // property undefined and the stale-mirror path is never reached.
+    //
+    // The sequence is the ordinary one for a returning visitor who changes
+    // their mind: the page loaded with a stored opt-out, so the bootstrap
+    // published `true`; they then use the control to opt back in, the removal
+    // succeeds, and the clear has to take effect on THIS page. Before this it
+    // did not -- `sessionOptOut` went false and the next read re-latched
+    // `true` from the stale publication, leaving the footer reading
+    // "Advertising sharing is off".
+    const w = window as Window & { __ffcSaleShareOptOut?: boolean }
+    window.localStorage.setItem(SALE_SHARE_OPT_OUT_KEY, 'true')
+    w[SALE_SHARE_OPT_OUT_GLOBAL as '__ffcSaleShareOptOut'] = true
+    try {
+      expect(hasSaleShareOptOut()).toBe(true)
+
+      const gtag = jest.fn()
+      window.gtag = gtag
+      setSaleShareOptOut(false, ALL_ON)
+
+      expect(hasSaleShareOptOut()).toBe(false)
+      expect(updatePayload(gtag).ad_storage).toBe('granted')
+    } finally {
+      Reflect.deleteProperty(w, SALE_SHARE_OPT_OUT_GLOBAL)
+    }
+  })
+
+  it('but a clear cannot override GPC, whatever the mirror says', () => {
+    // The guard on the case above. Clearing the mirror must not become a way
+    // to defeat a universal opt-out signal the law requires honouring — GPC
+    // is re-derived on every call, so it survives.
+    const w = window as Window & { __ffcSaleShareOptOut?: boolean }
+    w[SALE_SHARE_OPT_OUT_GLOBAL as '__ffcSaleShareOptOut'] = true
+    try {
+      withGpc(() => {
+        setSaleShareOptOut(false, ALL_ON)
+        expect(hasSaleShareOptOut()).toBe(true)
+      })
+    } finally {
+      Reflect.deleteProperty(w, SALE_SHARE_OPT_OUT_GLOBAL)
+    }
+  })
+
   it('publishes false rather than nothing, so "saw no opt-out" differs from "never ran"', () => {
     // The positive control for the case above, and the reason the bootstrap
     // assigns unconditionally: a `false` must NOT be read as an opt-out, or
