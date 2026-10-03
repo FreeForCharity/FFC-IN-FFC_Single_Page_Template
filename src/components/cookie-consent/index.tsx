@@ -336,6 +336,26 @@ export default function CookieConsent() {
   // Helper to load preferences from localStorage and update state
   const loadPreferencesFromLocalStorage = useCallback(
     (showBannerIfMissing = true) => {
+      // A sale/share opt-out is a statutory right and does not depend on a
+      // banner record existing. Before this, a visitor sending GPC whose
+      // stored choice had been cleared -- or whose storage could not be read
+      // -- had Google's advertising signals denied by the bootstrap and kept
+      // the Meta Pixel's `_fbp`/`fr` cookies, because every missing-choice
+      // branch below returns without running any cleanup. The policy says an
+      // opt-out deletes those cookies, so it has to.
+      //
+      // At the top rather than in the branches: there are several ways to
+      // reach "no usable preferences" (no record, unparseable JSON, failed
+      // validation, storage throwing) and a fix placed in one of them is a
+      // fix the next one will not have. Expiring a cookie is idempotent, so
+      // doing it on the stored-choice path as well costs nothing.
+      //
+      // ANALYTICS COOKIES ARE NOT TOUCHED. This is an opt-out of sale and
+      // sharing for advertising, not a withdrawal of analytics consent.
+      if (hasSaleShareOptOut()) {
+        expireCookies(['_fbp', 'fr'])
+      }
+
       try {
         const consent = localStorage.getItem('cookie-consent')
         if (!consent) {
@@ -376,7 +396,7 @@ export default function CookieConsent() {
         if (showBannerIfMissing) setShowBanner(true)
       }
     },
-    [applyConsent]
+    [applyConsent, expireCookies]
   )
 
   const handleCancelPreferences = useCallback(() => {

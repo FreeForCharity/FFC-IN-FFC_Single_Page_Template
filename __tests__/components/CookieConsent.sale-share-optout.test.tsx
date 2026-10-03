@@ -152,6 +152,42 @@ describe('sale/share opt-out and the non-Google marketing tag', () => {
     })
   })
 
+  it('expires the Meta cookies for an opted-out visitor with NO stored choice', async () => {
+    // The right does not depend on a banner record existing. A visitor sending
+    // GPC whose stored choice has been cleared -- or whose storage cannot be
+    // read -- previously had Google's advertising signals denied by the
+    // bootstrap and kept `_fbp`/`fr`, because every missing-choice branch
+    // returned without running any cleanup. The privacy policy says an opt-out
+    // deletes those cookies.
+    localStorageMock.setItem(SALE_SHARE_OPT_OUT_KEY, 'true')
+
+    const writes = captureCookieWrites()
+    render(<CookieConsent />)
+
+    await waitFor(() => {
+      expect(writes.some((w) => w.startsWith('_fbp='))).toBe(true)
+    })
+    expect(writes.some((w) => w.startsWith('fr='))).toBe(true)
+    // Expired, not set.
+    expect(writes.every((w) => w.includes('expires=Thu, 01 Jan 1970'))).toBe(true)
+    // And the analytics cookies are left alone: there is no stored choice to
+    // withdraw, and this is an opt-out of sale/sharing either way.
+    expect(writes.some((w) => w.startsWith('_ga='))).toBe(false)
+  })
+
+  it('positive control: with no stored choice and no opt-out, nothing is expired', async () => {
+    // Otherwise the case above would also pass if the restore path had simply
+    // started expiring the Meta cookies for every undecided visitor.
+    const writes = captureCookieWrites()
+    render(<CookieConsent />)
+
+    await waitFor(() => {
+      expect(document.querySelectorAll('script').length).toBeGreaterThanOrEqual(0)
+    })
+    expect(writes.some((w) => w.startsWith('_fbp='))).toBe(false)
+    expect(writes.some((w) => w.startsWith('fr='))).toBe(false)
+  })
+
   it('expires the Meta cookies on restore for an opted-out visitor', async () => {
     // Distinct from the event case below. This is the RESTORE path: a visitor
     // who accepted marketing and is now opted out must not keep the Pixel's
