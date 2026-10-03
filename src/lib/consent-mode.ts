@@ -50,6 +50,27 @@ import { analyticsConfig } from '@/lib/analytics.config'
 export const SALE_SHARE_OPT_OUT_KEY = 'ffc-sale-share-opt-out'
 
 /**
+ * Where the inline bootstrap publishes the opt-out it observed, for the rest
+ * of the page to latch.
+ *
+ * The bootstrap reads `localStorage` and GPC itself, in the document <head>,
+ * before this module exists -- so it was a fourth reader sitting outside the
+ * latch below. Its read could succeed, deny advertising at default time, and
+ * then storage could start throwing: the helper's catch answered false,
+ * `applyConsent` passed `adsDenied: false`, `ad_storage` and `ad_user_data`
+ * were re-granted and the Meta loader ran, undoing a denial already applied on
+ * the page. Reported by Copilot.
+ *
+ * Published unconditionally, including when it is `false`: a reader has to be
+ * able to tell "the bootstrap saw no opt-out" from "the bootstrap never ran",
+ * and only the latter leaves the property undefined.
+ */
+export const SALE_SHARE_OPT_OUT_GLOBAL = '__ffcSaleShareOptOut'
+
+/** `window` with the property the inline bootstrap publishes. */
+type SaleShareOptOutWindow = Window & { __ffcSaleShareOptOut?: boolean }
+
+/**
  * Window event dispatched when the visitor opts out of sale/sharing.
  *
  * Consent Mode only governs GOOGLE tags. The Meta Pixel does not speak it, so
@@ -159,6 +180,7 @@ try {
   if (navigator.globalPrivacyControl === true) ffcAdsDenied = true;
   if (localStorage.getItem(${JSON.stringify(SALE_SHARE_OPT_OUT_KEY)}) === 'true') ffcAdsDenied = true;
 } catch (e) {}
+window.${SALE_SHARE_OPT_OUT_GLOBAL} = ffcAdsDenied;
 gtag('consent', 'default', {
   'ad_storage': 'denied',
   'ad_user_data': 'denied',
@@ -293,6 +315,14 @@ export function hasSaleShareOptOut(): boolean {
   // advertising again while the footer control went back to reading "opt in".
   if (sessionOptOut) return true
   if (typeof window === 'undefined') return false
+  // The bootstrap's own read, latched. It ran in the <head> before this module
+  // existed, so without this it was the one reader the latch could not cover,
+  // and a storage failure after it could re-grant advertising it had already
+  // denied.
+  if ((window as SaleShareOptOutWindow)[SALE_SHARE_OPT_OUT_GLOBAL] === true) {
+    sessionOptOut = true
+    return true
+  }
   try {
     const nav = window.navigator as Navigator & { globalPrivacyControl?: boolean }
     // Not latched, deliberately. GPC is read from `navigator`, which cannot

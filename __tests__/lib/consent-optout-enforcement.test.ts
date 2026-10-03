@@ -30,6 +30,8 @@
  * two positive controls are there so they cannot pass by refusing everything.
  */
 import {
+  CONSENT_MODE_BOOTSTRAP,
+  SALE_SHARE_OPT_OUT_GLOBAL,
   SALE_SHARE_OPT_OUT_KEY,
   hasSaleShareOptOut,
   setSaleShareOptOut,
@@ -169,6 +171,51 @@ describe('the sale/share opt-out may be tightened but never loosened', () => {
     // Analytics is untouched. This is an opt-out of sale/sharing for
     // advertising, not a withdrawal of the analytics consent the visitor gave.
     expect(payload.analytics_storage).toBe('granted')
+  })
+
+  it('latches the opt-out the inline BOOTSTRAP observed, not only its own reads', () => {
+    // The bootstrap reads storage and GPC itself, in the document <head>,
+    // before this module exists -- so it was the one reader the latch could
+    // not cover. Its read could succeed and deny advertising at default time,
+    // storage could then start throwing, and this helper's catch answered
+    // false: `applyConsent` passed `adsDenied: false`, `ad_storage` and
+    // `ad_user_data` were re-granted, and the Meta loader ran, undoing a
+    // denial already applied on the page. Reported by Copilot.
+    //
+    // Simulated the way it actually happens: the property is already on
+    // `window` when this module's first read occurs, and storage is refusing.
+    const w = window as Window & { __ffcSaleShareOptOut?: boolean }
+    w[SALE_SHARE_OPT_OUT_GLOBAL as '__ffcSaleShareOptOut'] = true
+    try {
+      expect(withStorageRefusing(() => hasSaleShareOptOut())).toBe(true)
+
+      const gtag = jest.fn()
+      window.gtag = gtag
+      withStorageRefusing(() => updateGoogleConsent(ALL_ON))
+      expect(updatePayload(gtag).ad_storage).toBe('denied')
+    } finally {
+      Reflect.deleteProperty(w, SALE_SHARE_OPT_OUT_GLOBAL)
+    }
+  })
+
+  it('publishes false rather than nothing, so "saw no opt-out" differs from "never ran"', () => {
+    // The positive control for the case above, and the reason the bootstrap
+    // assigns unconditionally: a `false` must NOT be read as an opt-out, or
+    // every visitor would be reported as opted out the moment the bootstrap
+    // ran.
+    const w = window as Window & { __ffcSaleShareOptOut?: boolean }
+    w[SALE_SHARE_OPT_OUT_GLOBAL as '__ffcSaleShareOptOut'] = false
+    try {
+      expect(hasSaleShareOptOut()).toBe(false)
+    } finally {
+      Reflect.deleteProperty(w, SALE_SHARE_OPT_OUT_GLOBAL)
+    }
+  })
+
+  it('emits the publication in the bootstrap it ships', () => {
+    // The helper reading the property is half the fix; the bootstrap has to
+    // write it. Asserted on the emitted script, which is what reaches the page.
+    expect(CONSENT_MODE_BOOTSTRAP).toContain(`window.${SALE_SHARE_OPT_OUT_GLOBAL} = ffcAdsDenied`)
   })
 
   it('an opt-out once observed cannot be un-observed when storage starts failing', () => {
