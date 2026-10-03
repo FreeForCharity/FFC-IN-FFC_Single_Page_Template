@@ -175,6 +175,43 @@ describe('sale/share opt-out and the non-Google marketing tag', () => {
     expect(writes.some((w) => w.startsWith('_ga='))).toBe(false)
   })
 
+  it('publishes marketing_consent: denied for an opted-out visitor with no stored choice', async () => {
+    // Container tags are the gap this closes. Consent Mode governs Google's
+    // own tags; a tag inside the GTM container need not speak it, and with no
+    // stored banner choice there was no `consent_update` and no dataLayer
+    // variable either -- so a child-directed site published nothing a
+    // container could honour until the visitor touched the banner. Reported by
+    // Copilot, whose wider point was that the childDirected knob claimed
+    // enforcement this code does not own; the claim is narrowed and this is
+    // the part that could actually be delivered.
+    localStorageMock.setItem(SALE_SHARE_OPT_OUT_KEY, 'true')
+    window.dataLayer = []
+
+    render(<CookieConsent />)
+
+    await waitFor(() => {
+      expect(window.dataLayer.length).toBeGreaterThan(0)
+    })
+
+    const last = window.dataLayer[window.dataLayer.length - 1] as Record<string, unknown>
+    expect(last.marketing_consent).toBe('denied')
+    // No `event` key: the variable is published without firing a trigger on a
+    // page where no consent decision has been made.
+    expect(last.event).toBeUndefined()
+  })
+
+  it('positive control: publishes nothing when there is no stored choice and no opt-out', async () => {
+    // Otherwise the case above would pass on a build that denied marketing for
+    // every undecided visitor, which is a different wrong answer.
+    window.dataLayer = []
+
+    render(<CookieConsent />)
+    await screen.findByText('Accept All')
+
+    const pushed = window.dataLayer as Array<Record<string, unknown>>
+    expect(pushed.some((p) => p.marketing_consent === 'denied')).toBe(false)
+  })
+
   it('positive control: with no stored choice and no opt-out, nothing is expired', async () => {
     // Otherwise the case above would also pass if the restore path had simply
     // started expiring the Meta cookies for every undecided visitor.

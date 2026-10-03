@@ -33,6 +33,21 @@ export const analyticsConfig = {
   // properties, and a child's "accept" is not a valid legal basis. Analytics
   // is unaffected. When in doubt set it TRUE: the cost is remarketing a
   // child-directed site cannot lawfully use anyway.
+  //
+  // WHAT THIS KNOB CAN AND CANNOT DO, because the sentence above is narrower
+  // than it sounds. It denies Google's advertising signals in the Consent Mode
+  // bootstrap and every later update, reports every visitor as opted out of
+  // sale/sharing, stops this component's own Meta Pixel loader, expires the
+  // advertising cookies already on the device, and publishes
+  // `marketing_consent: 'denied'` on the dataLayer -- from the first pageview,
+  // before any banner choice.
+  //
+  // It does NOT reach a tag inside the GTM container that honours neither
+  // Consent Mode nor that dataLayer variable. Nothing in this repository can:
+  // container contents are managed in GTM, not here. A child-directed site
+  // must also be configured that way in its container, and this knob is not a
+  // substitute for doing so. Reported by Copilot, whose point was that the
+  // original wording promised enforcement this code does not own.
   childDirected: false as boolean,
 
   // TRUE only when this site deliberately runs PERSONALISED advertising —

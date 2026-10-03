@@ -380,7 +380,22 @@ export function setSaleShareOptOut(optOut: boolean, prefs?: ConsentPreferences):
   // granted advertising to a visitor whose opt-out was still recorded. The
   // mirror image of the bug the flag was added to fix, which is exactly why
   // one line looked like enough. Reported by Copilot.
-  if (optOut) sessionOptOut = true
+  // The denial goes up for BOTH directions, before either write.
+  //
+  // For an opt-out that is obvious. For a CLEAR it is the fail-closed half:
+  // the first version of this raised the flag only when opting out, and
+  // lowered it after a successful removal -- which is fail-closed only when
+  // something had already latched the denial. On a fresh module where nothing
+  // has called `hasSaleShareOptOut()` yet, `sessionOptOut` was false, a
+  // `removeItem` that threw left it false, the helper's own read threw too,
+  // and advertising was granted while `ffc-sale-share-opt-out=true` was still
+  // on the device. Reported by Copilot, refining its own earlier finding.
+  //
+  // The cost is a visitor who never opted out, asks to clear nothing, and
+  // whose removal fails: they spend the rest of that session treated as opted
+  // out. It only arises where storage is already broken, and it errs the safe
+  // way.
+  sessionOptOut = true
   try {
     if (optOut) window.localStorage.setItem(SALE_SHARE_OPT_OUT_KEY, 'true')
     else {

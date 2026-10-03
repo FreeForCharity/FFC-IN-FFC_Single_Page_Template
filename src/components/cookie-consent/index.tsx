@@ -389,6 +389,22 @@ export default function CookieConsent() {
       // sharing for advertising, not a withdrawal of analytics consent.
       if (hasSaleShareOptOut()) {
         expireAdvertisingCookies()
+
+        // And publish the denial for container tags, from the first pageview.
+        //
+        // Before this, a visitor with no stored banner choice -- including
+        // every first visit to a child-directed site -- had nothing on the
+        // dataLayer for a GTM tag to key on until they touched the banner, so
+        // the only thing carrying the denial was Consent Mode, which a
+        // container tag need not speak. Reported by Copilot.
+        //
+        // No `event` key, as with the mid-page correction: GTM merges
+        // dataLayer keys, so the variable becomes available without firing a
+        // trigger on a page where no consent decision has been made.
+        if (typeof window !== 'undefined') {
+          window.dataLayer = window.dataLayer || []
+          window.dataLayer.push({ marketing_consent: 'denied' })
+        }
       }
 
       try {

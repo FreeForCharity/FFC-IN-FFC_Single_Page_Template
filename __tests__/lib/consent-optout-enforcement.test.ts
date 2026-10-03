@@ -238,6 +238,28 @@ describe('the sale/share opt-out may be tightened but never loosened', () => {
     expect(withStorageRefusing(() => hasSaleShareOptOut())).toBe(false)
   })
 
+  it('a failed clear fails closed even when nothing had observed the opt-out yet', () => {
+    // The case the first fix missed, and the one Copilot came back for. No
+    // priming read here, so the latch is COLD: `sessionOptOut` is false, and
+    // raising the denial only when opting OUT left a failed clear with nothing
+    // to fall back on -- the helper's own read threw too, and advertising was
+    // granted while the stored opt-out was still on the device.
+    //
+    // Deliberately asserts the payload rather than `hasSaleShareOptOut()`,
+    // because the latter is true afterwards either way once storage recovers.
+    window.localStorage.setItem(SALE_SHARE_OPT_OUT_KEY, 'true')
+
+    const gtag = jest.fn()
+    window.gtag = gtag
+
+    withStorageRefusing(() => setSaleShareOptOut(false, ALL_ON))
+
+    const payload = updatePayload(gtag)
+    expect(payload.ad_storage).toBe('denied')
+    expect(payload.ad_user_data).toBe('denied')
+    expect(payload.analytics_storage).toBe('granted')
+  })
+
   it('a clear that storage refuses leaves the denial standing', () => {
     // The mirror of the case above, and the harder half to get right. The
     // visitor asks to opt back IN while `removeItem` throws: the stored
