@@ -295,8 +295,27 @@ export function hasSaleShareOptOut(): boolean {
   if (typeof window === 'undefined') return false
   try {
     const nav = window.navigator as Navigator & { globalPrivacyControl?: boolean }
+    // Not latched, deliberately. GPC is read from `navigator`, which cannot
+    // throw and does not stop being set mid-session, so a latch here would be
+    // state with no reachable effect -- a mutation removing it is detected by
+    // nothing, because there is nothing to detect. The latch below exists for
+    // storage, which really does start failing.
     if (nav.globalPrivacyControl === true) return true
-    return window.localStorage.getItem(SALE_SHARE_OPT_OUT_KEY) === 'true'
+    const stored = window.localStorage.getItem(SALE_SHARE_OPT_OUT_KEY) === 'true'
+    // LATCH. An opt-out that has been observed once cannot be un-observed for
+    // the rest of this session, even if the storage it came from starts
+    // throwing. Callers read this helper independently -- the Consent Mode
+    // update, the dataLayer event, the cookie deletion, the Meta loader -- and
+    // without the latch a read that began failing between two of them made
+    // them disagree in the direction that loses protection: advertising
+    // correctly reported as denied, and the Pixel's cookies left in place
+    // because the second read answered false from its catch.
+    //
+    // Monotone by construction, which is the point: it holds for call sites
+    // nobody remembered to thread a snapshot through. Only an explicit
+    // `setSaleShareOptOut(false)` clears it, because only the visitor may.
+    if (stored) sessionOptOut = true
+    return stored
   } catch {
     return false
   }

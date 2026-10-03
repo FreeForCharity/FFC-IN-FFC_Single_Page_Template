@@ -251,13 +251,16 @@ export default function CookieConsent() {
       // without it this branch never runs and the Pixel keeps its cookies.
       // The clause was first added inside the helper alone, where it was
       // unreachable for exactly that visitor — a mutation run found it inert.
-      // ONE read of the opt-out for the whole apply. Three separate
-      // decisions below turn on it -- which cookies are expired, what Consent
-      // Mode is told, and what the documented `consent_update` event publishes
-      // -- and re-reading storage for each let them disagree about the same
-      // visitor. A read that starts succeeding or failing mid-apply (a private
-      // window, a quota error) could expire the marketing cookies and then
-      // publish `marketing_consent: 'granted'` in the same breath.
+      // The opt-out, read once for the value this apply publishes.
+      //
+      // It is NOT the only read: deleteTrackingCookies and the Meta loader
+      // below call hasSaleShareOptOut() themselves, and an earlier version of
+      // this comment claimed otherwise -- it said "ONE read for the whole
+      // apply" when there were four. What makes those reads safe is that the
+      // helper LATCHES an observed opt-out for the session, so a later read
+      // can never be less restrictive than this one; threading a snapshot
+      // through every call site would have had to be remembered at each new
+      // one. Reported by Copilot, who read the claim against the code.
       const adsDenied = hasSaleShareOptOut()
 
       if (!prefs.analytics || !prefs.marketing || adsDenied) {

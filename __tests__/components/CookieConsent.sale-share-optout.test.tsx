@@ -34,7 +34,23 @@
 import React from 'react'
 import { render, waitFor } from '@testing-library/react'
 import CookieConsent from '../../src/components/cookie-consent'
-import { SALE_SHARE_OPT_OUT_EVENT, SALE_SHARE_OPT_OUT_KEY } from '../../src/lib/consent-mode'
+import {
+  SALE_SHARE_OPT_OUT_EVENT,
+  SALE_SHARE_OPT_OUT_KEY,
+  hasSaleShareOptOut,
+  setSaleShareOptOut,
+} from '../../src/lib/consent-mode'
+
+/**
+ * An observed opt-out is latched for the session, so it cannot be un-observed
+ * by a later storage failure. That latch is module state: without this hook a
+ * case that reads a stored opt-out leaves every later case in this file opted
+ * out, and three of them assert the opposite. Cleared through the public API,
+ * which is what a visitor opting back in does.
+ */
+beforeEach(() => {
+  setSaleShareOptOut(false)
+})
 
 /**
  * The Meta Pixel id comes from `analyticsConfig`, not an environment variable,
@@ -278,6 +294,51 @@ describe('consent_update publishes the effective marketing state', () => {
     // analytics tag whose conditions still hold send a duplicate pageview.
     expect(last.event).toBeUndefined()
     expect(consentEvents()).toHaveLength(1)
+  })
+
+  it('expires the Meta cookies when storage stops working after the opt-out was seen', async () => {
+    // The reported divergence. The apply does not read the opt-out once: the
+    // deletion helper and the Meta loader read it again. With storage failing
+    // in between, the published state said denied while the deletion saw false
+    // from its catch and left `_fbp`/`fr` in place -- Consent Mode honouring a
+    // right the cookies did not.
+    //
+    // Stated the way it actually happens: a read succeeds earlier in the
+    // session (the inline bootstrap, or the footer control the visitor just
+    // used), and storage then stops working. Once latched, later reads never
+    // reach storage at all, which is the mechanism rather than a gap in the
+    // test -- so this case proves storage IS broken for them.
+    localStorageMock.setItem('cookie-consent', ACCEPTED_ALL)
+    localStorageMock.setItem(SALE_SHARE_OPT_OUT_KEY, 'true')
+
+    // The earlier successful read, as the bootstrap or the control would make it.
+    expect(hasSaleShareOptOut()).toBe(true)
+
+    const realGetItem = localStorageMock.getItem
+    localStorageMock.getItem = (key: string) => {
+      if (key === SALE_SHARE_OPT_OUT_KEY) throw new Error('storage unavailable')
+      return realGetItem(key)
+    }
+
+    const writes = captureCookieWrites()
+    try {
+      // Every later read of the opt-out key throws, so nothing below can learn
+      // the opt-out from storage.
+      expect(() => window.localStorage.getItem(SALE_SHARE_OPT_OUT_KEY)).toThrow()
+
+      render(<CookieConsent />)
+
+      await waitFor(() => {
+        expect(consentEvents()).toHaveLength(1)
+      })
+      expect(consentEvents()[0].marketing_consent).toBe('denied')
+      expect(writes.some((w) => w.startsWith('_fbp='))).toBe(true)
+      expect(writes.some((w) => w.startsWith('fr='))).toBe(true)
+      // And the analytics cookies survive, as everywhere else.
+      expect(writes.some((w) => w.startsWith('_ga='))).toBe(false)
+    } finally {
+      localStorageMock.getItem = realGetItem
+    }
   })
 
   it('does not let storage failing mid-apply split the Google update from the published event', async () => {

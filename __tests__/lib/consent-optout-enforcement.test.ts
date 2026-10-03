@@ -171,6 +171,26 @@ describe('the sale/share opt-out may be tightened but never loosened', () => {
     expect(payload.analytics_storage).toBe('granted')
   })
 
+  it('an opt-out once observed cannot be un-observed when storage starts failing', () => {
+    // The reported divergence: separate call sites read this helper
+    // independently -- the Consent Mode update, the dataLayer event, the
+    // cookie deletion, the Meta loader -- and a read that began throwing
+    // between two of them made them disagree in the direction that loses
+    // protection. The latch makes every later read at least as restrictive as
+    // every earlier one, which no amount of passing snapshots around would
+    // guarantee for a call site nobody remembered.
+    window.localStorage.setItem(SALE_SHARE_OPT_OUT_KEY, 'true')
+
+    expect(hasSaleShareOptOut()).toBe(true)
+    expect(withStorageRefusing(() => hasSaleShareOptOut())).toBe(true)
+  })
+
+  it('positive control: a session that never saw an opt-out still reports false', () => {
+    // Without this the latch would pass by reporting true for everyone the
+    // moment storage misbehaved, which is a different wrong answer.
+    expect(withStorageRefusing(() => hasSaleShareOptOut())).toBe(false)
+  })
+
   it('opting back in clears the session flag when storage works', () => {
     // Otherwise the enforcement above would be a one-way door for the session,
     // and the control would be stuck reading "off" for a visitor who changed
