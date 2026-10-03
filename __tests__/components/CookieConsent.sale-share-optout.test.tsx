@@ -32,7 +32,7 @@
  * rather than promising more.
  */
 import React from 'react'
-import { render, waitFor } from '@testing-library/react'
+import { render, screen, waitFor } from '@testing-library/react'
 import CookieConsent from '../../src/components/cookie-consent'
 import {
   SALE_SHARE_OPT_OUT_EVENT,
@@ -181,9 +181,13 @@ describe('sale/share opt-out and the non-Google marketing tag', () => {
     const writes = captureCookieWrites()
     render(<CookieConsent />)
 
-    await waitFor(() => {
-      expect(document.querySelectorAll('script').length).toBeGreaterThanOrEqual(0)
-    })
+    // Waits for the BANNER, which is the component's own signal that the
+    // missing-choice path has run. The first draft waited on
+    // `querySelectorAll('script').length >= 0`, which is true on the first
+    // tick and therefore waited for nothing: a regression that expired these
+    // cookies asynchronously would have been asserted away before it
+    // happened. Reported by Copilot.
+    await screen.findByText('Accept All')
     expect(writes.some((w) => w.startsWith('_fbp='))).toBe(false)
     expect(writes.some((w) => w.startsWith('fr='))).toBe(false)
   })

@@ -402,10 +402,11 @@ export default function PrivacyPolicy() {
             set no analytics or advertising cookies and read no identifiers from your device, and
             analytics counts your visit only in an aggregate, cookie-free way. Everywhere else —
             including the United States, where this charity operates — analytics cookies are set
-            from your first page view without a prompt, because no law there requires us to ask
-            first and the measurement is what tells us whether the site is working. Advertising data
-            is shared with Google in those regions too, for the Ad Grants search ads described in
-            the California section below, and you can stop that at any time with the{' '}
+            from your first page view without requiring your prior opt-in — the banner is still
+            shown, so you can decline — because no law there requires us to ask first and the
+            measurement is what tells us whether the site is working. Advertising data is shared
+            with Google in those regions too, for the Ad Grants search ads described in the
+            California section below, and you can stop that at any time with the{' '}
             <em>Do Not Sell or Share My Personal Information</em> link in the footer or by sending a
             Global Privacy Control signal. To be precise about what happens before an EEA/UK/Swiss
             visitor decides: the tags still load and send a cookie-free signal to Google, which is

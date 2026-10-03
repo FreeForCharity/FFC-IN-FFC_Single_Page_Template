@@ -52,7 +52,7 @@ Replace the value with your actual GTM container ID from Google Tag Manager (e.g
 The component is automatically integrated into the root layout (`src/app/layout.tsx`):
 
 ```tsx
-import GoogleTagManager from './../components/GoogleTagManager'
+import GoogleTagManager from './../components/google-tag-manager'
 
 export default function RootLayout({ children }) {
   return (
@@ -217,7 +217,7 @@ The GTM implementation is optimized for performance:
 
 ### GTM Not Loading
 
-1. Verify the GTM ID in `src/components/GoogleTagManager/index.tsx` is correct
+1. Verify the GTM container id in `src/lib/analytics.config.ts` is correct
 
 2. Check GTM ID format (should be `GTM-XXXXXXX`)
 

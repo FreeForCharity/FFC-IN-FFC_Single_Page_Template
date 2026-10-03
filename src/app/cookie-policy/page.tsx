@@ -234,9 +234,10 @@ export default function CookiePolicy() {
             </p>
             <p className="text-sm text-[#666] mb-2">
               Everywhere else, including the United States where this charity operates, analytics
-              cookies are set from your first visit without a prompt, because no law there requires
-              us to ask first. Advertising data is also shared with Google in those regions for our
-              Ad Grants search ads — you can stop that with the{' '}
+              cookies are set from your first visit without requiring your prior opt-in — the banner
+              is still shown, and declining turns them off — because no law there requires us to ask
+              first. Advertising data is also shared with Google in those regions for our Ad Grants
+              search ads — you can stop that with the{' '}
               <strong>Do Not Sell or Share My Personal Information</strong> link in our footer or by
               sending a Global Privacy Control signal. Wherever you are, you can turn analytics off
               at any time using the Cookie Preferences link in our footer, and we will delete the
