@@ -11,8 +11,10 @@
  */
 import {
   CONSENT_MODE_BOOTSTRAP,
+  SALE_SHARE_OPT_OUT_EVENT,
   SALE_SHARE_OPT_OUT_KEY,
   setSaleShareOptOut,
+  updateGoogleConsent,
 } from '../../src/lib/consent-mode'
 
 describe('the bootstrap reads a universal opt-out before any tag loads', () => {
@@ -166,5 +168,122 @@ describe('setSaleShareOptOut may only tighten when no preferences are passed', (
       ([cmd, action]) => cmd === 'consent' && action === 'update'
     )
     expect(update?.[2]).toMatchObject({ ad_storage: 'granted' })
+  })
+})
+
+/**
+ * The opt-out has to survive two things that previously defeated it: a
+ * storage write that throws, and a non-Google tag that cannot hear a Consent
+ * Mode update at all. Both were reported by Copilot on
+ * FFC-IN-Footer_Only_Template#140 and were real.
+ */
+describe('the opt-out cannot be lost to a storage failure', () => {
+  const realLocalStorage = window.localStorage
+
+  function withStorageThrowing<T>(fn: () => T): T {
+    const boom = () => {
+      throw new Error('storage disabled')
+    }
+    Object.defineProperty(window, 'localStorage', {
+      configurable: true,
+      value: { getItem: boom, setItem: boom, removeItem: boom, clear: () => {} },
+    })
+    try {
+      return fn()
+    } finally {
+      Object.defineProperty(window, 'localStorage', {
+        configurable: true,
+        value: realLocalStorage,
+      })
+    }
+  }
+
+  afterEach(() => {
+    delete window.gtag
+    window.localStorage.clear()
+  })
+
+  it('WITH prefs, still denies ads when localStorage throws', () => {
+    const gtag = jest.fn()
+    window.gtag = gtag
+
+    // The hole this closes: setSaleShareOptOut(true, prefs) wrote the flag,
+    // and when the write threw it delegated to updateGoogleConsent, which
+    // re-read storage, threw, and reported "not opted out" from its catch. A
+    // prefs.marketing === true then GRANTED advertising, discarding the
+    // opt-out argument that was the entire point of the call.
+    //
+    // Same defect class as the no-prefs path, surviving one branch over: an
+    // invariant stated in one layer and violated in the next.
+    withStorageThrowing(() =>
+      setSaleShareOptOut(true, {
+        necessary: true,
+        functional: true,
+        analytics: true,
+        marketing: true,
+      })
+    )
+
+    expect(gtag).toHaveBeenCalledWith(
+      'consent',
+      'update',
+      expect.objectContaining({
+        ad_storage: 'denied',
+        ad_user_data: 'denied',
+        // Analytics is untouched: this is an opt-out of sale/sharing.
+        analytics_storage: 'granted',
+      })
+    )
+  })
+
+  it('honours an explicit adsDenied override without reading storage', () => {
+    const gtag = jest.fn()
+    window.gtag = gtag
+
+    updateGoogleConsent(
+      { necessary: true, functional: true, analytics: true, marketing: true },
+      { adsDenied: true }
+    )
+
+    expect(gtag).toHaveBeenCalledWith(
+      'consent',
+      'update',
+      expect.objectContaining({ ad_storage: 'denied', analytics_storage: 'granted' })
+    )
+  })
+})
+
+describe('the opt-out reaches tags that do not speak Consent Mode', () => {
+  afterEach(() => {
+    delete window.gtag
+    window.localStorage.clear()
+  })
+
+  it('announces an opt-out so the Meta Pixel can be stopped', () => {
+    const seen: string[] = []
+    const onOptOut = () => seen.push('opt-out')
+    window.addEventListener(SALE_SHARE_OPT_OUT_EVENT, onOptOut)
+    try {
+      setSaleShareOptOut(true)
+    } finally {
+      window.removeEventListener(SALE_SHARE_OPT_OUT_EVENT, onOptOut)
+    }
+
+    // Without this the footer control denied ad_storage while Meta kept its
+    // cookies and reloaded on the next page, so the control's own label was
+    // false.
+    expect(seen).toEqual(['opt-out'])
+  })
+
+  it('does NOT announce an opt-out when clearing the flag', () => {
+    const seen: string[] = []
+    const onOptOut = () => seen.push('opt-out')
+    window.addEventListener(SALE_SHARE_OPT_OUT_EVENT, onOptOut)
+    try {
+      setSaleShareOptOut(false)
+    } finally {
+      window.removeEventListener(SALE_SHARE_OPT_OUT_EVENT, onOptOut)
+    }
+    expect(seen).toEqual([])
   })
 })

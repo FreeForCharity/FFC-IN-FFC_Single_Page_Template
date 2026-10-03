@@ -49,6 +49,27 @@ import { analyticsConfig } from '@/lib/analytics.config'
  */
 export const SALE_SHARE_OPT_OUT_KEY = 'ffc-sale-share-opt-out'
 
+/**
+ * Window event dispatched when the visitor opts out of sale/sharing.
+ *
+ * Consent Mode only governs GOOGLE tags. The Meta Pixel does not speak it, so
+ * denying `ad_storage` does nothing to a Pixel that is already running or to
+ * the cookies it has already set — and the footer control would be claiming
+ * "advertising sharing is off" while Meta kept receiving PageView data.
+ *
+ * This event is how the opt-out reaches the non-Google tags. The cookie-consent
+ * component listens for it and expires the Pixel's cookies using the same
+ * domain-candidate helper it uses everywhere else; duplicating that logic in
+ * this module is exactly the divergence that the shared `scriptString` fix
+ * existed to prevent.
+ *
+ * What it cannot do, stated plainly because the policy text depends on it: a
+ * Pixel already executing in the current page cannot be unloaded. The opt-out
+ * expires its cookies and stops it loading on any later page, which is the
+ * most a client-side control can honestly offer.
+ */
+export const SALE_SHARE_OPT_OUT_EVENT = 'ffc:sale-share-opt-out'
+
 /** True when this site must never grant advertising signals. */
 const CHILD_DIRECTED = analyticsConfig.childDirected === true
 
@@ -195,10 +216,26 @@ declare global {
  * data for the charity and unchanged in what it reveals about the
  * individual.
  */
-export function updateGoogleConsent(prefs: ConsentPreferences): void {
+export function updateGoogleConsent(
+  prefs: ConsentPreferences,
+  opts?: { adsDenied?: boolean }
+): void {
   if (typeof window === 'undefined' || typeof window.gtag !== 'function') return
 
-  const optedOut = hasSaleShareOptOut()
+  // `adsDenied` lets a caller that ALREADY KNOWS the opt-out state say so,
+  // instead of this function re-deriving it from storage.
+  //
+  // That re-read was a real hole. `setSaleShareOptOut(true, prefs)` wrote the
+  // flag, and if the write threw — a private window — delegated here, where
+  // `hasSaleShareOptOut()` read storage, threw, and its catch reported false.
+  // A `prefs.marketing === true` then GRANTED advertising, silently discarding
+  // the opt-out argument that was the whole point of the call.
+  //
+  // This is the same defect that was already fixed in the no-prefs branch of
+  // setSaleShareOptOut, surviving in the prefs branch: the invariant was
+  // stated in one layer and violated in the next, which is why the suite went
+  // green over it. Reported by Copilot on Footer_Only_Template#140.
+  const optedOut = opts?.adsDenied ?? hasSaleShareOptOut()
   const analytics = prefs.analytics ? 'granted' : 'denied'
   const marketing = prefs.marketing && !optedOut ? 'granted' : 'denied'
   const personalization = marketing === 'granted' && AD_PERSONALIZATION ? 'granted' : 'denied'
@@ -252,8 +289,22 @@ export function setSaleShareOptOut(optOut: boolean, prefs?: ConsentPreferences):
     // A private window that refuses storage still gets the live update below;
     // the choice simply will not survive the session.
   }
+  // Tell the non-Google tags, which cannot hear a Consent Mode update.
+  if (optOut) {
+    try {
+      window.dispatchEvent(new Event(SALE_SHARE_OPT_OUT_EVENT))
+    } catch {
+      // An environment without Event/dispatchEvent still gets the Google-side
+      // denial below; losing the notification must not lose the opt-out.
+    }
+  }
+
   if (prefs) {
-    updateGoogleConsent(prefs)
+    // Pass the opt-out through explicitly rather than letting
+    // updateGoogleConsent re-read storage. A caller that opted out while
+    // storage was unavailable would otherwise have its argument discarded and
+    // advertising granted from prefs.marketing.
+    updateGoogleConsent(prefs, { adsDenied: optOut || hasSaleShareOptOut() })
     return
   }
 

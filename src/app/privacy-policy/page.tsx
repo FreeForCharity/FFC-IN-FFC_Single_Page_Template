@@ -470,6 +470,15 @@ export default function PrivacyPolicy() {
             there until you accept.
           </p>
           <p className="text-[14px] text-[#666] pb-[10px] leading-[24px] font-[500]">
+            <strong>When the opt-out takes effect.</strong> For Google&apos;s tags it is immediate:
+            the signal is read before any of them load, so a browser sending Global Privacy Control
+            never has advertising cookies set at all. The Meta Pixel does not understand that
+            signal, so we stop it by hand — opting out deletes the cookies it has already set and
+            prevents it loading on any later page. We are being precise rather than reassuring here:
+            a Pixel that is already running in the page you are on cannot be unloaded until you
+            navigate, and we would rather say so than imply otherwise.
+          </p>
+          <p className="text-[14px] text-[#666] pb-[10px] leading-[24px] font-[500]">
             We do not knowingly collect or sell the personal information of anyone under 16. We do
             not collect sensitive personal information beyond what is necessary to provide this
             website and our services, and we do not use it to infer characteristics about you.
