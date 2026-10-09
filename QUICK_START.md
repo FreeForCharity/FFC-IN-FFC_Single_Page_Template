@@ -166,17 +166,17 @@ FFC-IN-FFC_Single_Page_Template/
 
 ## Key Files to Know
 
-| File                     | Purpose                               |
-| ------------------------ | ------------------------------------- |
-| `src/app/page.tsx`       | Homepage content                      |
-| `src/app/layout.tsx`     | Site-wide layout and metadata         |
-| `src/components/header/` | Navigation and mobile menu            |
-| `src/components/footer/` | Footer with links and copyright       |
-| `next.config.ts`         | Next.js configuration (static export) |
+| File                     | Purpose                                  |
+| ------------------------ | ---------------------------------------- |
+| `src/app/page.tsx`       | Homepage content                         |
+| `src/app/layout.tsx`     | Site-wide layout and metadata            |
+| `src/components/header/` | Navigation and mobile menu               |
+| `src/components/footer/` | Footer with links and copyright          |
+| `next.config.ts`         | Next.js configuration (static export)    |
 | `src/app/globals.css`    | Tailwind CSS v4 configuration (`@theme`) |
-| `package.json`           | Dependencies and scripts              |
-| `.prettierrc.json`       | Prettier formatting rules             |
-| `commitlint.config.js`   | Commit message format rules           |
+| `package.json`           | Dependencies and scripts                 |
+| `.prettierrc.json`       | Prettier formatting rules                |
+| `commitlint.config.js`   | Commit message format rules              |
 
 ---
 
