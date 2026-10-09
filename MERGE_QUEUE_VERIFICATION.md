@@ -27,14 +27,14 @@ Based on the provided screenshots and GitHub API data, here's what happened when
 - **Workflow:** CI - Build and Test
 - **Steps Executed:**
   - Checkout repository
-  - Setup Node.js 20
-  - Install dependencies (`npm ci`)
-  - Check formatting (`npm run format:check`)
-  - Run linting (`npm run lint`)
-  - Run unit tests (`npm test`)
+  - Setup Node.js 24
+  - Install dependencies (`pnpm install --frozen-lockfile`)
+  - Check formatting (`pnpm run format:check`)
+  - Run linting (`pnpm run lint`)
+  - Run unit tests (`pnpm test`)
   - Install Playwright browsers
-  - Build Next.js site (`npm run build`)
-  - Run E2E tests (`npm run test:e2e`)
+  - Build Next.js site (`pnpm run build`)
+  - Run E2E tests (`pnpm run test:e2e`)
 
 ### 3. Deploy Workflow (Automated Deployment)
 
@@ -43,7 +43,7 @@ Based on the provided screenshots and GitHub API data, here's what happened when
 - **Status:** ✅ Completed successfully
 - **Workflow:** Deploy to GitHub Pages
 - **Trigger:** `workflow_run` (after CI completed)
-- **Environment Variable:** `NEXT_PUBLIC_BASE_PATH=/FFC_Single_Page_Template`
+- **Environment Variable:** `NEXT_PUBLIC_BASE_PATH=/FFC-IN-FFC_Single_Page_Template`
 - **Steps Executed:**
   - Build with Next.js for GitHub Pages
   - Deploy to GitHub Pages environment

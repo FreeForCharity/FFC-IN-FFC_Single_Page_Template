@@ -1,0 +1,110 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://freeforcharity.org/schemas/site-config.schema.json",
+  "$comment": "This file must stay identical in FFC-IN-FFC_Single_Page_Template and FFC-IN-Footer_Only_Template; CI validates the local config against it.",
+  "title": "FFC shared SiteConfig contract",
+  "description": "Shared core shape of the `siteConfig` object exported from src/lib/site.config.ts across the FFC website templates (FreeForCharity/FFC-Cloudflare-Automation#693). The `required` keys are the cross-template contract; `additionalProperties` stays true so each template can carry its own extras (e.g. `integrations`, `foundingDate`, `nonprofitStatus`).",
+  "type": "object",
+  "additionalProperties": true,
+  "required": [
+    "name",
+    "ein",
+    "contactEmail",
+    "phone",
+    "addresses",
+    "guidestar",
+    "social",
+    "supportedBy"
+  ],
+  "properties": {
+    "name": { "type": "string", "minLength": 1 },
+    "tagline": { "type": "string" },
+    "description": { "type": "string" },
+    "shortDescription": { "type": "string" },
+    "url": { "type": "string", "minLength": 1 },
+    "twitterHandle": { "type": "string" },
+    "contactEmail": {
+      "type": "string",
+      "description": "May be empty only while listed in `pending`."
+    },
+    "keywords": { "type": "array", "items": { "type": "string" } },
+    "themeColor": { "type": "string" },
+    "vulnerabilityDisclosurePath": { "type": "string" },
+    "ein": { "type": "string", "description": "May be empty only while listed in `pending`." },
+    "phone": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["display", "tel"],
+      "$comment": "Both keys are required, but either may be the empty string, which means 'this charity publishes no phone number'. The footer then omits the Call Us block entirely. This matches the existing convention for social[].href and twitterHandle: present but empty disables the feature. Requiring a non-empty value forced a placeholder into the config, which shipped as a tel: link that looked callable and dialled nothing.",
+      "properties": {
+        "display": { "type": "string" },
+        "tel": { "type": "string" }
+      }
+    },
+    "addresses": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": true,
+        "required": ["label", "lines", "mapUrl"],
+        "properties": {
+          "label": { "type": "string", "minLength": 1 },
+          "lines": { "type": "array", "items": { "type": "string" } },
+          "mapUrl": { "type": "string", "minLength": 1 }
+        }
+      }
+    },
+    "guidestar": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["profileUrl", "directProfileUrl"],
+      "properties": {
+        "profileUrl": {
+          "type": "string",
+          "description": "Empty string = no GuideStar profile yet; the footer hides the seal."
+        },
+        "directProfileUrl": {
+          "type": "string",
+          "description": "Empty string = no direct GuideStar profile link yet; the footer hides that button."
+        }
+      }
+    },
+    "social": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": true,
+        "required": ["label", "href"],
+        "properties": {
+          "label": { "type": "string", "minLength": 1 },
+          "href": { "type": "string" }
+        }
+      }
+    },
+    "supportedBy": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["name", "url", "hubUrl"],
+      "properties": {
+        "name": { "type": "string", "minLength": 1 },
+        "url": { "const": "https://freeforcharity.org" },
+        "hubUrl": { "type": "string", "minLength": 1 }
+      }
+    },
+    "pending": {
+      "type": "array",
+      "description": "Footer-standard fields still awaiting the charity; each renders a visible placeholder and must have an empty value.",
+      "items": { "type": "string" }
+    },
+    "parentOrg": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": ["name", "url", "hubUrl"],
+      "properties": {
+        "name": { "type": "string", "minLength": 1 },
+        "url": { "type": "string", "minLength": 1 },
+        "hubUrl": { "type": "string", "minLength": 1 }
+      }
+    }
+  }
+}

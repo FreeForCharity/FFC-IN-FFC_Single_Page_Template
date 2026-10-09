@@ -1,4 +1,4 @@
-# Copilot Instructions: FFC_Single_Page_Template
+# Copilot Instructions: FFC-IN-FFC_Single_Page_Template
 
 Free For Charity nonprofit website. Next.js static site on GitHub Pages.
 
@@ -8,11 +8,11 @@ Issue -> branch -> PR -> merge queue. No direct commits to main.
 
 ## Pre-Push Checks (in order)
 
-1. `npm run format`
-2. `npm run lint`
-3. `npm test`
-4. `npm run build`
-5. `npm run test:e2e`
+1. `pnpm run format`
+2. `pnpm run lint`
+3. `pnpm test`
+4. `pnpm run build`
+5. `pnpm run test:e2e`
 
 ## Architecture
 
@@ -35,13 +35,13 @@ Issue -> branch -> PR -> merge queue. No direct commits to main.
 - Prettier `format:check`
 - ESLint (no errors)
 - Jest (all tests pass)
-- `npm run build` (static export succeeds)
+- `pnpm run build` (static export succeeds)
 - Playwright E2E
-- CodeQL (static analysis, separate workflow)
+- CodeQL (static analysis, GitHub code scanning default setup — no workflow file)
 
 ## Known Constraints
 
 - Static export: no API routes, no middleware, no ISR
 - `<img>` with `assetPath()` is correct; `next/image` has static export limitations
-- Google Fonts may fail on restricted networks (graceful fallback to system fonts)
+- Fonts are self-hosted via `next/font/local` (`src/lib/fonts.ts`, files in `src/app/fonts/`); never use `next/font/google` or Google Fonts URLs (`check:drift` fails on them)
 - Never expose secrets in code; use `${{ secrets.* }}` in workflows

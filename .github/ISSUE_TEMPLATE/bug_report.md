@@ -46,7 +46,7 @@ assignees: ''
 **Additional Context:**
 
 - Node version (if applicable): [e.g., v20.19.5]
-- npm version (if applicable): [e.g., 10.8.2]
+- pnpm version (if applicable): [e.g., 10.34.5]
 
 ## Error Messages
 

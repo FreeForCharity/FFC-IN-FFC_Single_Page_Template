@@ -72,16 +72,18 @@ CI - Build and Test-refs/pull/87/merge exists
 
 ## This Repository's Actual CI/CD
 
-### Workflows Defined in Repository
+### CI/CD and Security Checks
+
+Repository Actions workflows, plus GitHub-managed CodeQL code scanning (default setup, no workflow file):
 
 1. **CI - Build and Test** (`.github/workflows/ci.yml`)
    - Runs: formatting check, linting, unit tests, build, E2E tests
    - Status: ✅ Working correctly
    - Current behavior: Cancels in-progress runs when new commits pushed
 
-2. **CodeQL Advanced** (`.github/workflows/codeql.yml`)
-   - Runs: Security scanning for JavaScript/TypeScript
-   - Status: ✅ Working correctly
+2. **CodeQL** (GitHub code scanning **default setup** — no workflow file)
+   - Runs: Security scanning for JavaScript/TypeScript and GitHub Actions
+   - Status: ✅ Working correctly (managed by GitHub, not a `codeql.yml` workflow)
 
 3. **Deploy to GitHub Pages** (`.github/workflows/deploy.yml`)
    - Runs: Builds and deploys to GitHub Pages
@@ -95,15 +97,15 @@ CI - Build and Test-refs/pull/87/merge exists
 
 ```bash
 # Build Status
-✅ npm run build        # ~30 seconds, 12 pages generated
+✅ pnpm run build        # ~30 seconds, 12 pages generated
 
 # Code Quality
-✅ npm run lint         # 16 expected warnings (documented as acceptable)
-✅ npm run format:check # Formatting verified
+✅ pnpm run lint         # 16 expected warnings (documented as acceptable)
+✅ pnpm run format:check # Formatting verified
 
 # Testing
-✅ npm test            # 26 unit tests passing
-✅ npm run test:e2e    # E2E tests passing (after build)
+✅ pnpm test            # 26 unit tests passing
+✅ pnpm run test:e2e    # E2E tests passing (after build)
 ```
 
 ## How to Address Copilot Suggestions

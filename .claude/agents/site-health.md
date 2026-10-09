@@ -23,7 +23,7 @@ You are checking the live health of an FFC-supported site. Default to the URL in
    - `/sitemap.xml` is 200 and contains the home URL.
 6. **security.txt** — `/.well-known/security.txt` is 200, `Expires:` is in the future.
 7. **Favicons & manifest** — `/favicon.ico`, `/icon.png` are 200. The manifest is served at `/manifest.webmanifest` (current — generated from siteConfig by `src/app/manifest.ts`) or `/site.webmanifest` (legacy, pre-#259). Try `/manifest.webmanifest` first; fall back to `/site.webmanifest`. Verify the response content-type is `application/manifest+json` or `application/json` (not HTML — `serve -s` SPA-falls-back to index.html on miss).
-8. **Broken links (optional)** — Suggest running `npm run check-links` locally if anything looks off.
+8. **Broken links (optional)** — Suggest running `pnpm run check-links` locally if anything looks off.
 
 ## How to report
 

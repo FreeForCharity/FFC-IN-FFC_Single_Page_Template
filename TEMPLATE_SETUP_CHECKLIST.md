@@ -12,9 +12,9 @@ Quick reference checklist for setting up a new repository from the FFC Single Pa
 - [ ] Create new repository with kebab-case name
 - [ ] Add repository description and topics
 - [ ] Clone repository locally
-- [ ] Run `npm install` to verify dependencies
-- [ ] Run `npm run build` to verify build works
-- [ ] Run `npm run dev` to test locally
+- [ ] Run `pnpm install` to verify dependencies
+- [ ] Run `pnpm run build` to verify build works
+- [ ] Run `pnpm run dev` to test locally
 
 ---
 
@@ -51,7 +51,7 @@ Quick reference checklist for setting up a new repository from the FFC Single Pa
 - [ ] Enable Dependency graph ✅
 - [ ] Enable Dependabot alerts ✅
 - [ ] Enable Dependabot security updates ✅
-- [ ] Enable Code scanning (CodeQL) - auto-configured by workflow
+- [ ] Enable Code scanning (CodeQL) - use **default setup** (do NOT add a `codeql.yml` advanced workflow; it conflicts with default setup)
 - [ ] Enable Secret scanning (if available)
 
 ---
@@ -65,8 +65,7 @@ Create ruleset named "Protect Main":
 - [ ] Require pull request before merging ✅
 - [ ] Require status checks to pass:
   - [ ] Test and Build (CI workflow)
-  - [ ] Analyze (javascript-typescript)
-  - [ ] Analyze (actions)
+  - [ ] CodeQL (code scanning default setup; appears after first scan)
 - [ ] Require branches to be up to date ✅
 - [ ] Require signed commits ✅
 - [ ] Block force pushes ✅
@@ -110,12 +109,16 @@ You don't have to edit either workflow when you rename the repo.
       twitter handle, contact email, social links, theme color
       everywhere they're consumed (title, OG/Twitter, footer, 404,
       manifest, sitemap, robots, security headers)
-- [ ] Run `npm run check:drift` after editing — the placeholder-URL
+- [ ] Run `pnpm run check:drift` after editing — the placeholder-URL
       and CSP-sync rules will flag anything still pointing at
-      `ffcworkingsite1.org` or out of sync
-- [ ] Update the EIN, mailing addresses, phone number, and GuideStar
-      profile link still hardcoded in `src/components/footer/index.tsx`
-      (these are not in siteConfig yet)
+      the template's default URL or out of sync
+- [ ] Set the EIN, mailing addresses, phone number, and GuideStar
+      profile links in `src/lib/site.config.ts` — `ein`, `phone`,
+      `addresses`, and `guidestar.profileUrl` / `guidestar.directProfileUrl`.
+      The footer reads these from siteConfig; no footer code edit needed.
+      No GuideStar / Candid profile? Leave both URLs `''` (the seal hides) —
+      never copy another organization's. A value the charity hasn't sent
+      yet stays empty and is listed in `pending` (see TEMPLATE_CUSTOMIZATION.md).
 
 ### Contact Information
 
@@ -133,14 +136,15 @@ You don't have to edit either workflow when you rename the repo.
       and `public/web-app-manifest-512x512.png` with the charity's
       branded assets (KEEP the filenames so layout.tsx and manifest.ts
       pick them up automatically)
-- [ ] Replace the header logo: `src/components/header/index.tsx`
-      currently hardcodes an external `https://freeforcharity.org/...`
-      WordPress URL. Self-host a logo under `public/Images/` and use
-      `assetPath('/Images/your-logo.png')` instead.
+- [ ] Replace the header logo: `src/components/header/index.tsx` uses
+      `assetPath('/Images/logo.webp')`. Swap `public/Images/logo.webp`
+      for your charity's logo (keep the filename, or update the path in
+      the header).
 - [ ] Replace the OG / Twitter card image — `layout.tsx` references
-      `/web-app-manifest-512x512.png` (a square 512×512). For proper
-      social cards, drop a 1200×630 image at the same filename or
-      update both layout.tsx references to point at a new asset.
+      `/Images/og-image.png` (1200×630 landscape). Drop your own
+      1200×630 image at `public/Images/og-image.png` (keep the
+      filename). The square `web-app-manifest-512x512.png` stays as the
+      PWA / app icon and JSON-LD logo.
 - [ ] Replace branded images and SVGs under `public/Images/` and
       `public/Svgs/`
 - [ ] Update color scheme in `src/app/globals.css`
@@ -148,8 +152,7 @@ You don't have to edit either workflow when you rename the repo.
 
 ### Content Data
 
-- [ ] Update team members in `src/data/team/`
-- [ ] Update team photos in `/public/team/`
+- [ ] Update team members in `src/data/team/` (name, role, optional LinkedIn — no photos; cards use initials monograms)
 - [ ] Update FAQs in `src/data/faqs/`
 - [ ] Update testimonials in `src/data/testimonials/`
 
@@ -179,7 +182,7 @@ You don't have to edit either workflow when you rename the repo.
 - [ ] Connect GitHub repository
 - [ ] Configure build settings:
   - Framework: Next.js (Static HTML Export)
-  - Build command: `npm run build`
+  - Build command: `pnpm run build`
   - Output: `out`
 - [ ] Enable automatic preview deployments
 - [ ] Enable PR comments
@@ -203,11 +206,11 @@ You don't have to edit either workflow when you rename the repo.
 
 ### Test Local Development
 
-- [ ] Run `npm run dev` - Site loads at http://localhost:3000
-- [ ] Run `npm run lint` - Only expected warnings (16 total)
-- [ ] Run `npm test` - All tests pass
-- [ ] Run `npm run build` - Build succeeds
-- [ ] Run `npm run preview` - Built site works
+- [ ] Run `pnpm run dev` - Site loads at http://localhost:3000
+- [ ] Run `pnpm run lint` - Only expected warnings (16 total)
+- [ ] Run `pnpm test` - All tests pass
+- [ ] Run `pnpm run build` - Build succeeds
+- [ ] Run `pnpm run preview` - Built site works
 
 ### Test GitHub Pages Deployment
 
@@ -286,7 +289,7 @@ You don't have to edit either workflow when you rename the repo.
 
 1. Check the deploy run's "Determine base path" step printed the
    expected value for your setup (empty with CNAME, `/<repo-name>` without)
-2. Confirm all image references use the `assetPath()` helper — `npm run
+2. Confirm all image references use the `assetPath()` helper — `pnpm run
 check:drift` will fail if any are missing
 3. Rebuild and redeploy
 
@@ -308,12 +311,12 @@ check:drift` will fail if any are missing
 ## Need Help?
 
 - 📖 **Complete Guide**: [TEMPLATE_USAGE.md](./TEMPLATE_USAGE.md)
-- 🐛 **Report Issues**: [GitHub Issues](https://github.com/FreeForCharity/FFC_Single_Page_Template/issues)
-- 💬 **Ask Questions**: [GitHub Discussions](https://github.com/FreeForCharity/FFC_Single_Page_Template/discussions)
+- 🐛 **Report Issues**: [GitHub Issues](https://github.com/FreeForCharity/FFC-IN-FFC_Single_Page_Template/issues)
+- 💬 **Ask Questions**: [GitHub Discussions](https://github.com/FreeForCharity/FFC-IN-FFC_Single_Page_Template/discussions)
 - 📚 **Documentation**: Review all `.md` files in repository root
 
 ---
 
-**Last Updated**: 2025-12-19  
+**Last Updated**: 2026-07-18  
 **Template Version**: 0.3.0  
-**Compatible with**: Next.js 16.0.7, Node.js 20.x
+**Compatible with**: Next.js 16.0.7, Node.js 24.x
