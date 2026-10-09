@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test'
+import { test, expect, type Page } from '@playwright/test'
 import { testConfig } from './test.config'
 
 /**
@@ -15,6 +15,22 @@ import { testConfig } from './test.config'
  *
  * Note: Test expectations use values from test.config.ts for easy customization
  */
+
+// Control the iframe response so loading assertions never depend on Microsoft
+// Forms or its network timing. Release it with a local fixture after asserting.
+async function holdApplicationForm(page: Page): Promise<() => void> {
+  let release: () => void = () => {}
+  const gate = new Promise<void>((resolve) => {
+    release = resolve
+  })
+  await page.route('**/forms.office.com/**', async (route) => {
+    await gate
+    await route
+      .fulfill({ contentType: 'text/html', body: '<!doctype html><p>Application form fixture</p>' })
+      .catch(() => {}) // The page may have closed after an assertion failed.
+  })
+  return release
+}
 
 test.describe('Application Form Button', () => {
   test.beforeEach(async ({ page }) => {
@@ -43,21 +59,15 @@ test.describe('Application Form Button', () => {
   })
 
   test('should display loading indicator before iframe loads', async ({ page }) => {
-    // Hold the Microsoft Forms iframe request open so its onLoad handler can't
-    // fire during the assertion window — that keeps isLoading=true and the
-    // indicator visible deterministically. Aborting doesn't work: Chromium
-    // fires onLoad for a failed iframe, hiding the indicator. Without this the
-    // test raced the live forms.office.com load and flaked in CI, which
-    // blocked the deploy pipeline.
-    await page.route('**/forms.office.com/**', async (route) => {
-      await new Promise((resolve) => setTimeout(resolve, 10000))
-      await route.abort().catch(() => {}) // page may already be closed at teardown
-    })
-
-    await page.getByRole('button', { name: testConfig.applicationForm.buttonText }).click()
-
+    const release = await holdApplicationForm(page)
     const loadingIndicator = page.getByText(testConfig.applicationForm.loadingText)
-    await expect(loadingIndicator).toBeVisible()
+    try {
+      await page.getByRole('button', { name: testConfig.applicationForm.buttonText }).click()
+      await expect(loadingIndicator).toBeVisible()
+    } finally {
+      release()
+    }
+    await expect(loadingIndicator).toBeHidden()
   })
 
   test('should display close button in modal', async ({ page }) => {
@@ -261,26 +271,19 @@ test.describe('Application Form Iframe Loading', () => {
   })
 
   test('should display loading indicator and iframe elements', async ({ page }) => {
-    // Hold the iframe request open so onLoad can't fire and hide the
-    // indicator during the assertion (see the sibling test for why aborting
-    // doesn't work). Removes the dependency on live forms.office.com timing.
-    await page.route('**/forms.office.com/**', async (route) => {
-      await new Promise((resolve) => setTimeout(resolve, 10000))
-      await route.abort().catch(() => {})
-    })
-
-    await page.getByRole('button', { name: testConfig.applicationForm.buttonText }).click()
-
-    const modal = page.locator('[role="dialog"][aria-modal="true"]')
-    await expect(modal).toBeVisible()
-
-    // Loading indicator should be visible (iframe load is blocked above).
+    const release = await holdApplicationForm(page)
     const loadingIndicator = page.getByText(testConfig.applicationForm.loadingText)
-    await expect(loadingIndicator).toBeVisible()
-
-    // The iframe element itself should exist in the DOM (its src points at
-    // the Microsoft Form; we don't require the remote content to load).
     const iframe = page.locator(`iframe[title="${testConfig.applicationForm.modalTitle}"]`)
+    try {
+      await page.getByRole('button', { name: testConfig.applicationForm.buttonText }).click()
+      const modal = page.locator('[role="dialog"][aria-modal="true"]')
+      await expect(modal).toBeVisible()
+      await expect(loadingIndicator).toBeVisible()
+      await expect(iframe).toBeVisible()
+    } finally {
+      release()
+    }
+    await expect(loadingIndicator).toBeHidden()
     await expect(iframe).toBeVisible()
   })
 })
