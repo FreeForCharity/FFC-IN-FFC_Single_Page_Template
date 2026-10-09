@@ -40,7 +40,7 @@ jobs:
         # to ship. Unconditional for the same reason: it must be in place
         # before the first step that needs it, which now runs before the
         # skip decision.
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
           node-version: '20'
 
