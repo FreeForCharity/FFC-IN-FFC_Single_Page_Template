@@ -1,0 +1,51 @@
+name: OSS Scanner Image
+
+# Builds .oss-scanner/Dockerfile exactly as Anthropic OSS Scanner does: repo
+# root as context, network available during the build. It then proves the
+# image works the way the scanner uses it, with NO network. Without this job,
+# a change that breaks the scanner's build is reported only as an email to
+# primary_contact. See .oss-scanner/README.md and
+# FreeForCharity/FFC-Cloudflare-Automation#1582.
+#
+# Weekly schedule: the base image digest and the registry can drift with no
+# commit here.
+
+on:
+  pull_request:
+    branches: ['main']
+  push:
+    branches: ['main']
+  schedule:
+    - cron: '41 5 * * 2' # weekly, Tuesday 05:41 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  image:
+    name: Build scanner image + offline checks
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          persist-credentials: false
+
+      - name: Build image (network on, as the scanner builds it)
+        run: docker build -f .oss-scanner/Dockerfile -t oss-scanner-image .
+
+      - name: Built site exists in the image
+        run: docker run --rm --network none oss-scanner-image test -f /src/out/index.html
+
+      - name: Unit tests pass with no network
+        run: docker run --rm --network none oss-scanner-image pnpm test
+
+      - name: Playwright browser is available with no network
+        run: docker run --rm --network none oss-scanner-image pnpm exec playwright --version

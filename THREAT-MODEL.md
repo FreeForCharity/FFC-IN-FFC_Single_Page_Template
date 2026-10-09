@@ -1,481 +1,118 @@
 # Threat Model
 
-This document outlines the security threat model for the Free For Charity website, identifying potential security risks, trust boundaries, and mitigation strategies for our technology stack.
+Security threat model for **FFC-IN-FFC_Single_Page_Template**, the full
+single-page website template of Free For Charity (FFC). It covers what the
+template ships, where untrusted input enters, the threats that matter, and how
+they are mitigated today.
+
+A machine-oriented version of the same model, written for automated
+vulnerability scanning, lives in
+[`.oss-scanner/threat_model.md`](./.oss-scanner/threat_model.md). Keep the two
+in step. When either disagrees with the code, the code is right.
+
+## Why this template is security-relevant
+
+Charity websites, `FFC-EX-<domain>` repositories, are created **from this
+repository** by FFC's provisioning automation in
+`FreeForCharity/FFC-Cloudflare-Automation`. Older sites were all built from it,
+and it is still a selectable template alongside `FFC-IN-Footer_Only_Template`.
+Consequences:
+
+- a defect here is **copied into every site built after it**;
+- a fix here does **not** reach existing sites. Each fix needs a deliberate
+  backport to the `FFC-EX-*` repositories;
+- each site is run by a 501(c)(3) charity whose volunteers edit content but
+  do not review code for security.
+
+## System overview
+
+| Part                  | What it is                                                                                                                                                                                                 |
+| --------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Application           | Next.js 16 (App Router), React 19, TypeScript, Tailwind CSS 4; **static export** (`output: 'export'`); exact versions in `package.json`                                                                     |
+| Hosting               | GitHub Pages, deployed by `.github/workflows/deploy.yml` after CI succeeds on `main`                                                                                                                       |
+| Package manager       | pnpm (pinned by `packageManager`); `pnpm-workspace.yaml` sets a 7-day `minimumReleaseAge`, and pnpm 10 blocks dependency lifecycle scripts by default                                                      |
+| Event feeds           | `scripts/fetch-events.mjs` pulls Google/Outlook ICS and the Facebook Graph API on a schedule (`refresh-events.yml`) and commits `src/data/events.generated.json` by PR                                     |
+| Embeds                | Zeffy donation form, Microsoft Forms application form (sandboxed iframe), GuideStar widget, YouTube/Facebook frames                                                                                         |
+| Runtime third parties | Google Tag Manager → GA4, Microsoft Clarity, Meta Pixel. All are gated by the cookie-consent banner and Google Consent Mode v2                                                                              |
+| Security headers      | CSP and Referrer-Policy as `<meta>` tags in `src/app/layout.tsx`. GitHub Pages cannot send response headers; `public/_headers` is for a future Cloudflare Pages deploy (see T10)                          |
+| Disclosure            | `security.txt` (`public/` and `public/.well-known/`), `/vulnerability-disclosure-policy`, `/security-acknowledgements`                                                                                     |
+
+There is no server, database, user account or API. All content is fixed at
+build time.
+
+## Trust boundaries and untrusted input
+
+1. **Event feeds (untrusted).** Anyone who can edit an event on the
+   connected calendar or Facebook page controls its title, description,
+   location, links and image URL. The data is parsed in `src/lib/events/`,
+   URL-filtered by `safeUrl.ts` (http/https only; https for images), and
+   emitted as HTML and JSON-LD (`safeJsonLdSerialize` escapes `<`).
+2. **Visitor's browser state.** The consent banner reads `localStorage` and
+   the `cookie-consent` cookie, which a sibling subdomain on a shared host such
+   as `*.github.io` can plant. Stored consent is parsed and validated, never
+   trusted.
+3. **Volunteer-authored content (semi-trusted).** `src/lib/site.config.ts`,
+   `src/lib/analytics.config.ts`, `src/data/{team,faqs,testimonials}/*.json`,
+   `src/data/results.ts`, and embed URLs arrive by reviewed PR. They are checked
+   by `check:site-config`, `check:drift`, and `check:rebrand`.
+4. **Third-party scripts and frames.** These run with the privileges their
+   placement gives them; the CSP limits which origins may run or be framed.
+5. **CI/CD.** Fork PRs run CI with a read-only token. `refresh-events.yml`
+   holds the `EVENTS_*` secrets and `contents: write`. `deploy.yml` holds
+   `pages: write` and `id-token: write`.
+6. **Dependencies.** The npm registry, via the committed `pnpm-lock.yaml`.
+
+## Threats and mitigations
+
+| ID  | Threat                                                                                                          | Impact   | Current mitigations                                                                                                                                                                                                              | Residual |
+| --- | --------------------------------------------------------------------------------------------------------------- | -------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- |
+| T1  | XSS or link injection from **event feed** data (`javascript:` URLs, `</script>` in JSON-LD, markup in text)     | Critical | React escaping; `safeHttpUrl`/`safeHttpsImageUrl`; `safeJsonLdSerialize`; parser unit tests in `__tests__/lib/events`; refresh lands as a reviewable PR, not a direct push                                                      | Medium   |
+| T2  | Parser abuse from feeds (oversized responses, pathological RRULEs, hangs)                                       | Medium   | 10 MiB cap per feed; 30 s fetch timeout; bounded Facebook pagination; allowlisted ICS hosts; a failing source is skipped, not fatal                                                                                               | Low      |
+| T3  | XSS via volunteer-authored config/data or embed URLs                                                            | High     | React escaping; config validation; CSP `object-src 'none'`, `base-uri 'self'`, `frame-src` allowlist; sandboxed Microsoft Forms iframe                                                                                           | Medium   |
+| T4  | Consent bypass: analytics or marketing cookies or identifying hits after a decline                              | High     | Consent Mode v2 regional defaults before GTM; `update` pushed before GA config; non-granted cookies expired on every apply; Playwright `cookie-consent.spec.ts`                                                                   | Low      |
+| T5  | `'unsafe-inline'` / `'unsafe-eval'` in `script-src` turn any HTML injection into script execution               | High     | `'unsafe-inline'` is a known trade-off (no per-request nonces on GitHub Pages). `'unsafe-eval'` has **no recorded rationale** and should be removed if nothing needs it. Defence today is T1/T3 input handling                | Medium   |
+| T6  | Event-feed secrets leak, or the refresh workflow is abused to push content                                      | High     | Secrets only in `refresh-events.yml`; `scrubSecrets` removes feed URLs and tokens from logged errors; output is a PR against `main`, so it is reviewed and CI-gated                                                                                                   | Low      |
+| T7  | Compromised or malicious dependency                                                                             | Critical | Lockfile; `minimumReleaseAge` 7 days; lifecycle scripts blocked; daily `pnpm audit` (`security-audit.yml`); Dependabot (npm, Actions, scanner base image)                                                                        | Medium   |
+| T8  | CI injection or token abuse from a fork PR or `workflow_run`                                                    | Critical | `pull_request` (not `pull_request_target`); least-privilege `permissions:`; deploy only from `main` after CI success; OpenSSF Scorecard tracks token permissions and pinning                                                       | Low      |
+| T9  | Unreviewed change reaches `main` (account takeover, social engineering)                                         | Critical | `main` ruleset (see [SECURITY.md](./SECURITY.md)): PRs, required status checks and code scanning, signed commits, no force-push/deletion                                                                                          | Medium   |
+| T10 | Missing HTTP security headers (HSTS, `nosniff`, framing, `Permissions-Policy`) on GitHub Pages                  | Low      | CSP and Referrer-Policy via `<meta>`; HTTPS enforced. Moving to Cloudflare Pages would honor `public/_headers`. **Do not** proxy the Pages DNS through Cloudflare (orange cloud): it breaks GitHub's certificate renewal ~90 days later | Low      |
+| T11 | A template defect propagates to every charity site built from it                                                | High     | This model; OSS Scanner enrollment (below); fixes tracked for backport across `FFC-EX-*` sites                                                                                                                                   | Medium   |
+| T12 | Third-party script or embed compromise (GTM tags, Zeffy, GuideStar)                                             | High     | Consent gating; CSP allowlists; no secrets or PII in the page                                                                                                                                                                    | Medium   |
+| T13 | Stale `security.txt` stops researchers from reaching us                                                         | Low      | `security-txt-expiry.yml` checks the `Expires` field weekly                                                                                                                                                                      | Low      |
+
+## Verification in place
+
+- **CI** (`ci.yml`): format, lint, Jest unit tests (including the event
+  parsers), static build, Playwright e2e (including `events.spec.ts`).
+- **Guards**: `check:drift`, `check:site-config`, `check:rebrand`,
+  `verify:build`.
+- **Code scanning**: CodeQL default setup (`javascript-typescript`,
+  `actions`) on every PR.
+- **Supply chain**: `security-audit.yml` (`pnpm audit`, daily and on lockfile
+  changes); Dependabot; **OpenSSF Scorecard** (`scorecard.yml`, published to the
+  OpenSSF API).
+- **Automated vulnerability scanning**: enrollment in
+  [Anthropic OSS Scanner](https://github.com/anthropics/oss-scanner) is
+  prepared under [`.oss-scanner/`](./.oss-scanner/README.md).
+  `oss-scanner-image.yml` proves the scanner image builds and its tests pass
+  with no network. Tracking: FreeForCharity/FFC-Cloudflare-Automation#1582.
+
+## Out of scope
+
+The security of visitors' devices and networks, GitHub's, Google's, Meta's and
+the embed providers' infrastructure, the connected calendar and Facebook
+accounts themselves, and physical security. DNS and domain security are covered
+in `FreeForCharity/FFC-Cloudflare-Automation`.
 
-## Overview
+## Reporting
 
-The Free For Charity website is a static Next.js application deployed to GitHub Pages. As a nonprofit organization, we prioritize protecting our reputation, maintaining service availability, and ensuring the security of our community.
+See [SECURITY.md](./SECURITY.md#reporting-a-vulnerability). Do not report
+vulnerabilities in public issues.
 
-## System Architecture
+## Review
 
-### Components
+Review this model when the architecture changes (hosting, a new embed or data
+feed), after any security incident, when an automated-scanner report reveals a
+threat missing here, and at least annually.
 
-1. **Frontend Application**
-   - Next.js 16.0.7 (App Router)
-   - TypeScript, React 19.2.0
-   - Static site generation (`output: "export"`)
-   - Client-side JavaScript
-
-2. **Hosting and Deployment**
-   - GitHub Pages (static hosting)
-   - Custom domain: none (served from the GitHub Pages default URL, https://freeforcharity.github.io/FFC-IN-FFC_Single_Page_Template/); forks may configure their own
-   - GitHub Actions CI/CD pipeline
-
-3. **Development Pipeline**
-   - GitHub repository
-   - npm package dependencies
-   - Automated testing (Jest, Playwright)
-   - Code scanning (CodeQL)
-   - Dependabot security updates
-
-4. **Third-Party Integrations**
-   - Google Analytics (via Google Tag Manager)
-   - External assets (images, fonts)
-
-## Trust Boundaries
-
-### Boundary 1: User Browser ↔ Website
-
-**Trust Relationship**: We serve static content; users trust us to provide safe, legitimate content.
-
-**Assets at Risk**:
-
-- User privacy
-- User device security
-- Organization reputation
-
-### Boundary 2: GitHub Repository ↔ Deployment
-
-**Trust Relationship**: GitHub Actions automates deployment; we trust GitHub's infrastructure.
-
-**Assets at Risk**:
-
-- Website integrity
-- Source code confidentiality
-- Deployment credentials
-
-### Boundary 3: Dependencies ↔ Application
-
-**Trust Relationship**: We depend on npm packages; we trust the npm ecosystem and package maintainers.
-
-**Assets at Risk**:
-
-- Application security
-- User data
-- Build integrity
-
-### Boundary 4: Developers ↔ Repository
-
-**Trust Relationship**: Maintainers have write access; we trust them to follow security practices.
-
-**Assets at Risk**:
-
-- Code quality
-- Security posture
-- Project integrity
-
-## Threat Analysis
-
-### 1. Static Site Threats
-
-#### T1.1: Cross-Site Scripting (XSS)
-
-**Description**: Injection of malicious scripts into the website through user-generated content or compromised dependencies.
-
-**Impact**: High - Could steal user data, deface site, redirect users to malicious sites
-
-**Likelihood**: Low - Static site with no user input forms currently active
-
-**Mitigations**:
-
-- ✅ React automatically escapes output
-- ✅ Next.js built-in XSS protections
-- ✅ Content Security Policy delivered via `<meta http-equiv>` in the page
-  `<head>` (GitHub Pages cannot serve a CSP _header_; the meta form applies).
-  See T4.3 for the header-delivery limitation.
-- ✅ Regular dependency updates via Dependabot
-- ⚠️ Manual review of third-party scripts (Google Tag Manager)
-
-**Residual Risk**: Low
-
-#### T1.2: Content Injection via Compromised Build
-
-**Description**: Attacker modifies source code or dependencies to inject malicious content during build.
-
-**Impact**: Critical - Could compromise all users
-
-**Likelihood**: Low - Strong branch protection and code review
-
-**Mitigations**:
-
-- ✅ Branch protection rules on main branch
-- ✅ Required code reviews
-- ✅ Signed commits requirement
-- ✅ CodeQL scanning on all PRs
-- ✅ Automated testing before deployment
-- ✅ Force push blocked
-
-**Residual Risk**: Low
-
-### 2. Dependency Chain Attacks
-
-#### T2.1: Malicious npm Package
-
-**Description**: A dependency or transitive dependency contains malicious code.
-
-**Impact**: Critical - Could execute arbitrary code during build or in user browsers
-
-**Likelihood**: Medium - npm ecosystem is a known target
-
-**Mitigations**:
-
-- ✅ pnpm audit runs in CI/CD
-- ✅ Dependabot alerts enabled
-- ✅ Lock file committed (pnpm-lock.yaml)
-- ✅ Limited dependencies (minimal attack surface)
-- ⚠️ Manual review of dependency updates
-- ⚠️ No automated dependency update merging
-
-**Residual Risk**: Medium
-
-#### T2.2: Dependency Confusion
-
-**Description**: Attacker publishes malicious package with same name as internal package.
-
-**Impact**: Medium - Could compromise build pipeline
-
-**Likelihood**: Low - No internal packages currently
-
-**Mitigations**:
-
-- ✅ All dependencies from public npm registry
-- ✅ pnpm-lock.yaml ensures consistent versions
-
-**Residual Risk**: Low
-
-### 3. CI/CD Pipeline Threats
-
-#### T3.1: GitHub Actions Workflow Manipulation
-
-**Description**: Attacker modifies workflow files to inject malicious steps.
-
-**Impact**: Critical - Could compromise deployment keys, source code, or deployed site
-
-**Likelihood**: Low - Protected by branch protection
-
-**Mitigations**:
-
-- ✅ Workflow files protected by branch protection
-- ✅ Required reviews for all changes
-- ✅ Signed commits required
-- ✅ Limited use of third-party actions
-- ✅ Actions pinned to specific versions (where possible)
-
-**Residual Risk**: Low
-
-#### T3.2: Secrets Exposure
-
-**Description**: Sensitive credentials exposed in logs, code, or artifacts.
-
-**Impact**: High - Could allow unauthorized deployments or access
-
-**Likelihood**: Low - No sensitive secrets currently stored
-
-**Mitigations**:
-
-- ✅ GitHub secrets used for any credentials
-- ✅ .gitignore configured to exclude sensitive files
-- ✅ Pre-commit hooks prevent accidental commits
-- ✅ Public repository - no false sense of security
-
-**Residual Risk**: Low
-
-#### T3.3: Build Artifact Tampering
-
-**Description**: Attacker modifies built artifacts before deployment.
-
-**Impact**: Critical - Could serve malicious content to users
-
-**Likelihood**: Very Low - Direct pipeline from build to deployment
-
-**Mitigations**:
-
-- ✅ Automated deployment pipeline (no manual steps)
-- ✅ Build and deploy happen in same workflow
-- ✅ GitHub Actions infrastructure security
-
-**Residual Risk**: Very Low
-
-### 4. GitHub Pages Hosting Threats
-
-#### T4.1: DNS Hijacking
-
-**Description**: Attacker compromises DNS records to redirect traffic.
-
-**Impact**: Critical - Could phish users or damage reputation
-
-**Likelihood**: Low - DNS provider security
-
-**Mitigations**:
-
-- ⚠️ DNSSEC (depends on DNS provider configuration)
-- ⚠️ CAA records to restrict certificate issuance
-- ✅ HTTPS enforced by GitHub Pages
-- ✅ Regular monitoring of domain configuration
-
-**Residual Risk**: Low
-
-#### T4.2: GitHub Pages Infrastructure Compromise
-
-**Description**: GitHub Pages infrastructure is compromised.
-
-**Impact**: Critical - Could affect all users
-
-**Likelihood**: Very Low - GitHub's security measures
-
-**Mitigations**:
-
-- ✅ Trust in GitHub's security practices
-- ✅ Multiple availability zones
-- ✅ GitHub's incident response
-
-**Residual Risk**: Very Low (external dependency)
-
-#### T4.3: Missing HTTP Security Headers (GitHub Pages limitation)
-
-**Description**: GitHub Pages cannot serve custom HTTP response headers and
-ignores the `public/_headers` file (a Cloudflare Pages / Netlify convention).
-With DNS delegated to Cloudflare in **DNS-only** mode — the only configuration
-that keeps GitHub's automatic HTTPS certificate renewal working — Cloudflare is
-not in the request path and cannot inject headers either. As a result HSTS,
-`X-Content-Type-Options`, `X-Frame-Options` / CSP `frame-ancestors`,
-`Permissions-Policy`, and cross-origin isolation headers are not delivered.
-
-**Impact**: Low - Removes defense-in-depth layers (clickjacking framing, MIME
-sniffing, first-visit HTTPS downgrade). The site has no authenticated,
-state-changing UI to clickjack, no user-generated content, and serves
-developer-committed assets with correct content types, so no active exploit
-path depends on these headers.
-
-**Likelihood**: N/A - Structural limitation, not an attacker action.
-
-**Mitigations**:
-
-- ✅ CSP and Referrer-Policy delivered via `<meta>` tags in `src/app/layout.tsx`
-  (the two protections that have a working meta-tag form).
-- ✅ HTTPS enforced by GitHub Pages (mitigates most first-visit downgrade risk
-  after the initial request).
-- ⚠️ HSTS, framing protection, `nosniff`, and `Permissions-Policy` are absent
-  and accepted for a static, no-login site. If compliance or a required
-  security-scanner grade makes them mandatory, migrate hosting to **Cloudflare
-  Pages**, where `public/_headers` is honored natively. See `CLOUDFLARE_SETUP.md`.
-- ⛔ **Do NOT** attempt to add headers by proxying the GitHub Pages DNS records
-  through Cloudflare (orange cloud): it stops GitHub's certificate renewal and
-  breaks HTTPS ~90 days later. This is a documented pitfall, not a mitigation.
-
-**Residual Risk**: Low (accepted for the current static, no-login site)
-
-### 5. Social Engineering and Account Compromise
-
-#### T5.1: Maintainer Account Takeover
-
-**Description**: Attacker gains access to maintainer GitHub account.
-
-**Impact**: Critical - Could push malicious code
-
-**Likelihood**: Medium - Common attack vector
-
-**Mitigations**:
-
-- ⚠️ 2FA enforcement (recommended, not technically enforced)
-- ✅ Branch protection prevents direct pushes
-- ✅ Required reviews provide oversight
-- ✅ Signed commits for verification
-- ⚠️ Regular security training for maintainers
-
-**Residual Risk**: Medium
-
-#### T5.2: Social Engineering of Reviewers
-
-**Description**: Attacker tricks reviewers into approving malicious PR.
-
-**Impact**: High - Could introduce vulnerabilities
-
-**Likelihood**: Low - Small, trusted team
-
-**Mitigations**:
-
-- ✅ Automated security scanning (CodeQL)
-- ✅ Multiple eyes on changes
-- ✅ Test suite must pass
-- ⚠️ Security awareness training
-
-**Residual Risk**: Low
-
-### 6. Client-Side Threats
-
-#### T6.1: Browser-Based Attacks
-
-**Description**: Attacks targeting users' browsers (drive-by downloads, etc.).
-
-**Impact**: Medium - Could harm users
-
-**Likelihood**: Low - Static content, no file uploads
-
-**Mitigations**:
-
-- ✅ HTTPS enforced
-- ✅ Content Security Policy
-- ✅ No user file uploads
-- ✅ No server-side code execution
-- ✅ Subresource Integrity for external scripts (where possible)
-
-**Residual Risk**: Low
-
-#### T6.2: Third-Party Script Compromise
-
-**Description**: Google Tag Manager or other third-party scripts compromised.
-
-**Impact**: High - Could inject malicious code
-
-**Likelihood**: Low - Google's security practices
-
-**Mitigations**:
-
-- ✅ Limited third-party scripts
-- ✅ Async loading to limit impact
-- ⚠️ Subresource Integrity (not always available for third-party services)
-- ⚠️ Regular review of third-party integrations
-
-**Residual Risk**: Medium (external dependency)
-
-### 7. Data Privacy Threats
-
-#### T7.1: Analytics Data Leakage
-
-**Description**: Sensitive user information collected or exposed via analytics.
-
-**Impact**: Medium - Privacy violation, regulatory risk
-
-**Likelihood**: Low - Minimal data collection
-
-**Mitigations**:
-
-- ✅ Cookie consent banner
-- ✅ Privacy policy published
-- ✅ No PII intentionally collected
-- ✅ Google Analytics configured for privacy
-- ⚠️ Regular privacy policy reviews
-
-**Residual Risk**: Low
-
-### 8. Availability Threats
-
-#### T8.1: DDoS Attack
-
-**Description**: Distributed denial of service against the website.
-
-**Impact**: Medium - Site unavailable, but no data loss
-
-**Likelihood**: Low - Not a high-value target
-
-**Mitigations**:
-
-- ✅ GitHub Pages CDN provides some DDoS protection
-- ✅ Static content is highly cacheable
-- ✅ Nonprofit status reduces motivation
-
-**Residual Risk**: Low
-
-#### T8.2: GitHub Pages Outage
-
-**Description**: GitHub Pages service disruption.
-
-**Impact**: Medium - Site temporarily unavailable
-
-**Likelihood**: Low - GitHub's reliability
-
-**Mitigations**:
-
-- ✅ Static site can be hosted elsewhere if needed
-- ✅ Source code in Git (can redeploy)
-- ⚠️ No automatic failover to backup hosting
-
-**Residual Risk**: Medium (external dependency)
-
-## Risk Summary
-
-### Critical Risks
-
-None currently - all critical threats have effective mitigations
-
-### High Risks
-
-- **H1**: Maintainer account takeover (Medium likelihood) - Recommend enforcing 2FA
-- **H2**: Third-party script compromise (Low likelihood) - External dependency
-
-### Medium Risks
-
-- **M1**: Malicious npm package (Medium likelihood) - Ongoing monitoring needed
-- **M2**: GitHub Pages outage (Low likelihood) - Acceptable external dependency risk
-
-## Security Roadmap
-
-### Immediate Actions (High Priority)
-
-1. ✅ Document threat model (this document)
-2. ⚠️ Enable 2FA for all maintainers
-3. ⚠️ Review and document third-party script usage
-
-### Short-Term Actions (3-6 months)
-
-1. ⚠️ Implement automated dependency update reviews
-2. ⚠️ Add CSP headers verification to tests
-3. ⚠️ Document security incident response plan
-4. ⚠️ Security training for maintainers
-
-### Long-Term Actions (6-12 months)
-
-1. ⚠️ Regular security audits
-2. ⚠️ Penetration testing
-3. ⚠️ Consider backup hosting provider
-4. ⚠️ Evaluate WAF (Web Application Firewall) options
-
-## Security Assumptions
-
-1. **GitHub Security**: We trust GitHub's infrastructure security
-2. **npm Ecosystem**: We trust npm registry with appropriate verification
-3. **Browser Security**: We assume users have up-to-date, secure browsers
-4. **HTTPS**: We rely on HTTPS for transport security
-5. **Static Site Model**: Reduced attack surface due to no server-side code
-
-## Out of Scope
-
-The following are not covered by this threat model:
-
-- User device security
-- Network security between user and GitHub
-- Social media account security
-- Email security
-- Physical security
-
-## Reporting Security Issues
-
-See [SECURITY.md](./SECURITY.md) for instructions on reporting security vulnerabilities.
-
-## Review and Updates
-
-This threat model should be reviewed:
-
-- Annually
-- After major architectural changes
-- After security incidents
-- When new threat intelligence emerges
-
----
-
-**Last Updated**: December 6, 2025  
-**Version**: 1.0  
-**Next Review**: December 6, 2026
-
-For security policies and vulnerability reporting, see [SECURITY.md](./SECURITY.md).
+**Last reviewed:** 2026-10-09 · **Next review due:** 2027-10-09
