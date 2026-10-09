@@ -82,7 +82,7 @@ Page Access Tokens expire roughly every 60 days. Set a calendar reminder for day
 
 ## Local development
 
-`npm run dev` does not need any of these secrets — it reads whatever is already committed in `src/data/events.generated.json`. To preview real data locally:
+`pnpm run dev` does not need any of these secrets — it reads whatever is already committed in `src/data/events.generated.json`. To preview real data locally:
 
 ```bash
 EVENTS_GOOGLE_ICS_URL="https://..." \
@@ -92,7 +92,7 @@ EVENTS_FACEBOOK_ACCESS_TOKEN="EAAB..." \
 node scripts/fetch-events.mjs
 ```
 
-Then run `npm run dev` and visit `#events`.
+Then run `pnpm run dev` and visit `#events`.
 
 ## Troubleshooting
 

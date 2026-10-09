@@ -146,10 +146,9 @@ These settings must be configured for your repository to function properly with 
 
 **Required for deployment to work:**
 
-1. **Source**: Select **"Deploy from a branch"**
-2. **Branch**: Select **`gh-pages`** branch and **`/ (root)`** folder
-   - The deploy workflow automatically creates and manages the `gh-pages` branch
-   - Do NOT use the `main` branch directly for Pages
+1. **Source**: Select **"GitHub Actions"**
+2. **Branch**: None needed — the deploy workflow uploads the built site and publishes it with `actions/deploy-pages`
+   - Do NOT use "Deploy from a branch" for this template
 3. **Custom domain** (optional):
    - Enter your custom domain (e.g., `www.yournonprofit.org`)
    - Wait for DNS check to complete
@@ -202,7 +201,7 @@ Value: YOUR-ORG.github.io
 
 **Why these permissions are needed:**
 
-- **Read and write permissions**: Allows deploy workflow to push to `gh-pages` branch
+- **Read and write permissions**: Default token permissions for workflows (the deploy workflow itself requests `pages: write` and `id-token: write` for `actions/deploy-pages`)
 - **Create and approve PRs**: Allows Dependabot to create PRs and workflows to post comments
 - Without these permissions, deployments will fail and Dependabot won't function
 
@@ -234,7 +233,7 @@ The primary GitHub Actions workflows are described below (CI, Deploy, Lighthouse
 2. **Deploy to GitHub Pages** (`.github/workflows/deploy.yml`)
    - Runs on: After CI workflow succeeds on main branch
    - Purpose: Deploys built site to GitHub Pages
-   - What it does: Builds site with basePath, deploys to `gh-pages` branch
+   - What it does: Builds site with the computed basePath, publishes it with `actions/deploy-pages`
 
 3. **CodeQL Security Scanning** (GitHub code scanning **default setup** — no workflow file)
    - Runs on: Push to main, PRs to main, weekly schedule (managed by GitHub)
@@ -283,29 +282,17 @@ To enable Lighthouse CI GitHub integration features:
 
 ### Customizing basePath for Your Repository
 
-The deploy workflow sets `NEXT_PUBLIC_BASE_PATH` for GitHub Pages routing:
+**No edits needed.** The deploy and Lighthouse workflows compute `NEXT_PUBLIC_BASE_PATH` automatically in their "Determine base path" step:
 
 ```yaml
 env:
-  NEXT_PUBLIC_BASE_PATH: /FFC-IN-FFC_Single_Page_Template
+  NEXT_PUBLIC_BASE_PATH: ${{ steps.basepath.outputs.value }}
 ```
 
-**This needs to be updated** in `.github/workflows/deploy.yml` and `.github/workflows/lighthouse.yml`:
+- **No `public/CNAME`**: the basePath is `/<your-repo-name>` (GitHub Pages default URL), so renaming the repository needs no workflow edit
+- **`public/CNAME` present (custom domain)**: the basePath is empty
 
-**Option A: Using AI/Copilot (Recommended)**
-
-- Ask Copilot: "Update `NEXT_PUBLIC_BASE_PATH` in both `.github/workflows/deploy.yml` and `.github/workflows/lighthouse.yml` from `/FFC-IN-FFC_Single_Page_Template` to `/YOUR-REPO-NAME`"
-- Copilot will automatically find and replace the values in both files
-
-**Option B: Manual Update**
-
-1. Open `.github/workflows/deploy.yml`
-2. Search for `NEXT_PUBLIC_BASE_PATH: /FFC-IN-FFC_Single_Page_Template`
-3. Replace with your repository name, for example: `NEXT_PUBLIC_BASE_PATH: /YOUR-REPO-NAME`
-4. Repeat steps 1–3 for `.github/workflows/lighthouse.yml`
-5. Commit the changes
-
-**If using a custom domain**: You can ask Copilot to remove the `NEXT_PUBLIC_BASE_PATH` line from both workflow files, as custom domains don't need a basePath.
+The CI workflow (`ci.yml`) builds without a basePath so E2E tests can serve the output at the root.
 
 ---
 
@@ -656,7 +643,7 @@ Files to update:
 
 **Logo files** (in `/public` directory):
 
-- Replace `logo.svg` with your logo
+- Replace `Images/logo.webp` with your logo
 - Update `favicon.ico` with your favicon
 - Update Open Graph images in `/public` if present
 
@@ -719,16 +706,16 @@ Review and customize:
 
 **Solution**:
 
-1. Verify Settings → Pages source is set to `gh-pages` branch
+1. Verify Settings → Pages source is set to **GitHub Actions**
 2. Wait 2-5 minutes for deployment to propagate
 3. Check Actions tab to ensure deploy workflow succeeded
-4. Verify `NEXT_PUBLIC_BASE_PATH` in deploy.yml matches your repository name
+4. Check the deploy run's "Determine base path" step: it should use `/<your-repo-name>` (no `public/CNAME`) or an empty value (custom domain)
 
 **Problem**: Images don't load on GitHub Pages
 
 **Solution**:
 
-1. Verify `NEXT_PUBLIC_BASE_PATH` is set correctly in deploy workflow
+1. Verify the deploy run's "Determine base path" step chose the expected value (it is computed automatically from `public/CNAME`)
 2. Check that images use the `assetPath()` helper function
 3. Rebuild and redeploy the site
 
@@ -918,7 +905,6 @@ After completing the "Rebrand Template To A New Brand" issue with all required i
 - Contact email updates: Multiple files with contact information
 - Social media links: Footer and other components
 - CODEOWNERS updates: GitHub usernames
-- Workflow basePath updates: `.github/workflows/deploy.yml` and `.github/workflows/lighthouse.yml`
 
 **Example Copilot Instructions:**
 
@@ -928,7 +914,6 @@ Based on the information in issue #[number], update all instances of:
 - "46-2471893" to "[New EIN]"
 - the template default URL to "[new-domain.org]"
 - Update CODEOWNERS with @[username1], @[username2]
-- Update NEXT_PUBLIC_BASE_PATH in both workflow files to /[new-repo-name]
 - Update all social media links in footer components
 ```
 
@@ -936,7 +921,7 @@ Based on the information in issue #[number], update all instances of:
 
 These cannot be automated by AI and require manual work:
 
-- Logo files (`/public/logo.svg`, `/public/favicon.ico`) - Must upload new files
+- Logo files (`public/Images/logo.webp`, `public/favicon.ico`) - Must upload new files
 - Team member data (`src/data/team/*.json`) - Can be updated by Copilot with provided information (no photos — cards use initials monograms)
 - FAQs (`src/data/faqs/*.json`) - Can be updated by Copilot with provided Q&A content
 - Testimonials (`src/data/testimonials/*.json`) - Can be updated by Copilot with provided testimonial text
@@ -971,4 +956,4 @@ These cannot be automated by AI and require manual work:
 
 **Last Updated**: 2026-07-18  
 **Template Version**: 0.3.0  
-**Compatible with**: Next.js 16.0.7, Node.js 24.x
+**Compatible with**: Next.js 16 (exact version in `package.json`), Node.js 24.x

@@ -201,7 +201,7 @@ with no Transform Rules to maintain.
 High level:
 
 1. Create a Cloudflare Pages project connected to this GitHub repository.
-2. Build command `npm run build`, output directory `out` (matches the static
+2. Build command `pnpm run build`, output directory `out` (matches the static
    export in `next.config.ts`).
 3. Point the custom domain at the Pages project (proxied is correct **here** —
    Cloudflare is the host, so there is no GitHub certificate to break).

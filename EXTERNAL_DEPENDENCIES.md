@@ -86,7 +86,7 @@ These are services we directly integrate into our application code.
 - **Purpose:** Charity application form
 - **Form URL:** `https://forms.office.com/r/vePxGq6JqG`
 - **Implementation:** Embedded via iframe in `src/components/ui/ApplicationFormButton.tsx`
-- **Sandbox Attributes:** `allow-scripts allow-forms allow-popups`
+- **Sandbox Attributes:** `allow-scripts allow-forms allow-popups allow-same-origin`
 - **Load Trigger:** On-demand when user clicks "Apply to Become a Supported Charity"
 - **Data Collected:** User-submitted form data
 - **User Control:** Modal can be closed without submitting
@@ -263,7 +263,7 @@ To improve performance, we preconnect to frequently used domains:
 
 ### Third-Party Script Security
 
-1. **Iframe Sandboxing:** Microsoft Forms iframe restricted with `allow-scripts allow-forms allow-popups`
+1. **Iframe Sandboxing:** Microsoft Forms iframe restricted with `allow-scripts allow-forms allow-popups allow-same-origin`
 2. **Content Security Policy:** Configured to allow only necessary domains
 3. **HTTPS Only:** All external resources loaded via HTTPS
 4. **Regular Audits:** Dependencies monitored for security vulnerabilities

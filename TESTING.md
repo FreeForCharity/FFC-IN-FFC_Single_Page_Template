@@ -250,9 +250,9 @@ pnpm test -t "should not have accessibility violations"
 
 ### Test Framework
 
-**Test Framework**: Playwright v1.56.0  
+**Test Framework**: Playwright (version in `package.json`)  
 **Browser**: Chromium (uses system browser to avoid network restrictions)  
-**Test Files**: 2 test suites, 6 test cases (5 active, 1 skipped)
+**Test Files**: `tests/*.spec.ts` (run `pnpm run test:e2e`)
 
 ### Test Files and Coverage
 
@@ -286,37 +286,9 @@ Tests that verify the Free For Charity logo displays correctly across the site.
      - Both logos use identical image source paths
      - Image path pattern matches expected format
 
-#### 2. GitHub Pages Deployment Tests (`tests/github-pages.spec.ts`)
+#### 2. Other E2E Specs
 
-Tests that verify image loading works correctly for both custom domain and GitHub Pages deployments.
-
-**Test Cases:**
-
-4. **`images should load correctly with proper paths`**
-   - **Purpose**: Validates image paths work in both deployment scenarios
-   - **Checks**:
-     - NavBar logo is visible (image loaded successfully)
-     - Hero logo is visible (image loaded successfully)
-     - Both image src attributes end with `/web-app-manifest-512x512.png`
-     - Both logos use identical path
-   - **Deployment Compatibility**:
-     - Custom domain: `/web-app-manifest-512x512.png`
-   - GitHub Pages: `/FFC-IN-FFC_Single_Page_Template/web-app-manifest-512x512.png`
-
-5. **`images should return 200 status code`**
-   - **Purpose**: Verifies images load successfully via HTTP
-   - **Checks**:
-     - Captures HTTP responses for logo image
-     - At least one image request is made
-     - All image requests return status code 200 OK
-   - **Method**: Monitors network responses using Playwright's response listener
-
-6. **`images have natural dimensions indicating successful load`** ⏭️ **SKIPPED**
-   - **Purpose**: Verifies image has loaded by checking natural dimensions
-   - **Status**: Temporarily disabled
-   - **Reason**: naturalWidth/naturalHeight return 0 in CI despite image being visible
-   - **Expected Behavior**: Should verify 512x512 pixel dimensions
-   - **Notes**: Works locally, fails in GitHub Actions. Needs investigation.
+The remaining `tests/*.spec.ts` files cover accessibility (axe), cookie consent, events, analytics tags, head metadata, image loading, social links and more. See `tests/README.md` for the current list.
 
 ### Running Tests
 
@@ -330,9 +302,10 @@ pnpm run build
 pnpm exec playwright install chromium
 
 # Run tests in different modes
-pnpm test              # Headless mode (default)
-pnpm run test:headed   # With browser visible
-pnpm run test:ui       # Interactive Playwright UI
+pnpm run test:e2e          # Headless mode (default)
+pnpm run test:e2e:headed   # With browser visible
+pnpm run test:e2e:ui       # Interactive Playwright UI
+pnpm test                  # Jest unit tests (not Playwright)
 ```
 
 #### CI/CD Environment
@@ -435,14 +408,11 @@ Tests run automatically in GitHub Actions with the following workflows:
 
 - **Rules**: Next.js core-web-vitals + TypeScript
 - **Ignored Paths**: node_modules, .next, out, build, test-results, playwright-report
-- **Integration**: Runs automatically during `pnpm run build`
+- **Integration**: Runs via `pnpm run lint` (a separate CI step and pre-commit hook); Next.js 16 does not run ESLint during `next build`
 
 **Current Warnings**:
 
-- 8 warnings about using `<img>` instead of `<Image />` and React hooks (expected and acceptable)
-  - 6 warnings about `<img>` tags in various components (Footer, Header, UI components)
-  - 2 warnings about React hooks exhaustive dependencies
-- These warnings are intentional for static export with GitHub Pages basePath support and are not blocking issues
+- Run `pnpm run lint` to see the current list; warnings are not blocking
 
 ### TypeScript
 
@@ -716,14 +686,22 @@ pnpm audit
 ```
 FFC-IN-FFC_Single_Page_Template/
 ├── tests/                          # Test suite
-│   ├── logo.spec.ts               # Logo visibility tests (3 tests)
-│   ├── github-pages.spec.ts       # Deployment compatibility tests (3 tests)
+│   ├── logo.spec.ts               # Logo visibility tests
+│   ├── *.spec.ts                  # Other E2E specs (see tests/README.md)
 │   └── README.md                  # Test documentation
 ├── playwright.config.ts            # Playwright configuration
 ├── .github/workflows/
 │   ├── ci.yml                     # CI pipeline with linting, testing
 │   ├── deploy.yml                 # Deployment pipeline to GitHub Pages
-│   └── lighthouse.yml             # Performance monitoring
+│   ├── drift-check.yml            # FFC best-practice drift check
+│   ├── lighthouse.yml             # Performance monitoring
+│   ├── oss-scanner-image.yml      # OSS scanner container image
+│   ├── phantom-revert-guard.yml   # Phantom-revert protection
+│   ├── post-deploy-smoke.yml      # Smoke checks against the live site
+│   ├── refresh-events.yml         # Refreshes events data
+│   ├── scorecard.yml              # OpenSSF Scorecard
+│   ├── security-audit.yml         # pnpm audit (high severity)
+│   └── security-txt-expiry.yml    # security.txt expiry check
 │   # CodeQL runs via GitHub code scanning default setup (no workflow file)
 ├── public/                         # Static assets
 ├── src/data/
@@ -850,6 +828,6 @@ FFC-IN-FFC_Single_Page_Template/
 
 ---
 
-**Test Suite Status**: ✅ 26 unit tests passing (4 test suites), 5 E2E passing, 1 E2E skipped  
+**Test Suite Status**: ✅ Jest unit tests in `__tests__/` (`pnpm test`) and Playwright E2E tests in `tests/` (`pnpm run test:e2e`)  
 **Integration Status**: ✅ Complete  
 **Last Tested**: December 2025

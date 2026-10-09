@@ -1,5 +1,7 @@
 # Technical Debt
 
+> **Snapshot:** This document is a dated snapshot (last updated December 2025). Some files, versions, and counts it names may have changed since; check the current code, `package.json`, and `pnpm run lint` output before acting on it.
+
 **Document Purpose:** This document tracks backend and React application technical debt - code quality issues, security vulnerabilities, component fixes, and internal application improvements that are hidden from users but important for maintainability.
 
 **Scope:** This document covers technical items that affect the **internal workings** of the React application, not user-facing features. For UI/UX enhancements and user-visible improvements, see [SITE_IMPROVEMENTS.md](./SITE_IMPROVEMENTS.md).
@@ -31,7 +33,7 @@ This document tracks technical debt items that:
 - Require monitoring and eventual resolution
 - Are acceptable tradeoffs for now but not ideal long-term
 
-**Current Technical Debt Count:** 1 React Hooks warning + 6 Next.js Image warnings + 4 security vulnerabilities (low severity)
+**Current Technical Debt Count:** 1 React Hooks warning + 6 Next.js Image warnings (the 4 low-severity `tmp` vulnerabilities have since been resolved — see Security Vulnerabilities)
 
 **Recent Progress (December 2025):** Reduced React Hooks warnings from 10 to 1 (90% reduction) by fixing exhaustive-deps and set-state-in-effect issues.
 
@@ -86,7 +88,7 @@ The project has **1 React Hooks ESLint warning** remaining after recent refactor
 
 **Affected Files:**
 
-- `src/components/home/Testimonials/index.tsx` (1 remaining - ClientTestimonials was refactored to not use Swiper)
+- `src/components/home-page/Testimonials/index.tsx` (1 remaining - ClientTestimonials was refactored to not use Swiper)
 
 **Why it's acceptable now:**
 
@@ -132,11 +134,13 @@ The project has **1 React Hooks ESLint warning** remaining after recent refactor
 
 ## Security Vulnerabilities
 
-### Current Status (December 2025)
+### Current Status
 
-The project has **4 low severity vulnerabilities** identified by pnpm audit:
+The December 2025 snapshot listed **4 low severity vulnerabilities** identified by pnpm audit. They are now resolved; current advisories are tracked in the repository's **Security** tab and by `.github/workflows/security-audit.yml`.
 
-#### 1. tmp Package Vulnerabilities (4 low severity)
+#### 1. ✅ tmp Package Vulnerabilities (4 low severity) — RESOLVED
+
+**Resolution:** `pnpm.overrides` in `package.json` forces `tmp` `^0.2.6` (the lockfile resolves `tmp@0.2.7`).
 
 **CVE:** GHSA-52f5-9888-hmc6  
 **Severity:** Low  
@@ -285,7 +289,7 @@ These are internal code quality improvements that don't affect user experience:
 - **Increased Test Coverage**: Target 25-50% coverage for critical components
 - **Component Unit Tests**: Add more Jest tests for complex components
 
-**Current Status:** 5% test coverage baseline established  
+**Current Status:** Coverage thresholds (45% branches, 58% functions/lines/statements) enforced in `jest.config.js`  
 **Priority:** Medium  
 **Impact:** Catches bugs earlier in development cycle
 

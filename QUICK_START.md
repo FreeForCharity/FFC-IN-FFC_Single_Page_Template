@@ -9,7 +9,7 @@ Get up and running with the FFC Single Page Template in 5 minutes.
 ## Prerequisites
 
 - **Node.js 24.x** - [Download here](https://nodejs.org/)
-- **npm** (comes with Node.js)
+- **pnpm** (via Corepack; version pinned by `packageManager` in package.json)
 - **Git** - [Download here](https://git-scm.com/)
 
 ## 5-Minute Setup
@@ -147,10 +147,11 @@ FFC-IN-FFC_Single_Page_Template/
 │   │   ├── page.tsx            # Homepage
 │   │   └── globals.css         # Global styles
 │   ├── components/             # All UI components
-│   │   ├── Header/             # Navigation header
-│   │   ├── Footer/             # Footer component
-│   │   ├── CookieConsent/      # Cookie consent banner
-│   │   └── ...                 # 80+ other components
+│   │   ├── header/             # Navigation header
+│   │   ├── footer/             # Footer component
+│   │   ├── cookie-consent/     # Cookie consent banner
+│   │   ├── home-page/          # Homepage sections (Hero/, Mission/, ...)
+│   │   └── ...                 # Other components (seo/, ui/, ...)
 │   ├── lib/
 │   │   └── assetPath.ts        # GitHub Pages asset helper
 │   └── data/                   # Static content data
@@ -169,10 +170,10 @@ FFC-IN-FFC_Single_Page_Template/
 | ------------------------ | ------------------------------------- |
 | `src/app/page.tsx`       | Homepage content                      |
 | `src/app/layout.tsx`     | Site-wide layout and metadata         |
-| `src/components/Header/` | Navigation and mobile menu            |
-| `src/components/Footer/` | Footer with links and copyright       |
+| `src/components/header/` | Navigation and mobile menu            |
+| `src/components/footer/` | Footer with links and copyright       |
 | `next.config.ts`         | Next.js configuration (static export) |
-| `tailwind.config.ts`     | Tailwind CSS configuration            |
+| `src/app/globals.css`    | Tailwind CSS v4 configuration (`@theme`) |
 | `package.json`           | Dependencies and scripts              |
 | `.prettierrc.json`       | Prettier formatting rules             |
 | `commitlint.config.js`   | Commit message format rules           |
@@ -204,7 +205,7 @@ NEXT_PUBLIC_GTM_ID=
 
 ### 1. Edit Homepage Content
 
-Open `src/app/page.tsx` and find the hero section:
+Open `src/components/home-page/Hero/index.tsx` and find the hero heading:
 
 ```tsx
 <h1 className="text-4xl font-bold">Free For Charity</h1>

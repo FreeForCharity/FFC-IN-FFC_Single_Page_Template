@@ -1,6 +1,10 @@
 # Free For Charity Website
 
-Single-page Next.js 16.0.7 website built with App Router for Free For Charity nonprofit organization.
+[![CI](https://github.com/FreeForCharity/FFC-IN-FFC_Single_Page_Template/actions/workflows/ci.yml/badge.svg)](https://github.com/FreeForCharity/FFC-IN-FFC_Single_Page_Template/actions/workflows/ci.yml)
+[![OpenSSF Scorecard](https://api.scorecard.dev/projects/github.com/FreeForCharity/FFC-IN-FFC_Single_Page_Template/badge)](https://scorecard.dev/viewer/?uri=github.com/FreeForCharity/FFC-IN-FFC_Single_Page_Template)
+[![License: Apache 2.0](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](./LICENSE)
+
+Single-page Next.js 16 website (exact version in `package.json`) built with App Router for Free For Charity nonprofit organization.
 
 ## Who This Template Is For — and Where It Fits in the FFC Journey
 
@@ -134,10 +138,9 @@ hand or use the same address for both.
 5. public/Images/ and public/Svgs/
    - Replace branded assets. KEEP existing filenames where possible so the
      LCP preload in layout.tsx still hits a real file.
-   - Header logo: src/components/header/index.tsx still hardcodes an image
-     from a third-party URL (freeforcharity.org WordPress). Replace it
-     with a self-hosted asset under /Images/ or /Svgs/ and use
-     assetPath().
+   - Header logo: src/components/header/index.tsx loads
+     assetPath('/Images/logo.webp'). Replace public/Images/logo.webp with
+     the charity's logo (keep the filename) or update that path.
 
 6. src/data/{faqs,team,testimonials}.ts
    - Replace example content with the charity's real data.
@@ -166,11 +169,13 @@ hand or use the same address for both.
 - `.github/workflows/ci.yml`, `.github/workflows/scorecard.yml`,
   `.github/workflows/security-audit.yml`,
   `.github/workflows/security-txt-expiry.yml`,
-  `.github/workflows/drift-check.yml`, `.github/workflows/uptime.yml`,
+  `.github/workflows/drift-check.yml`,
+  `.github/workflows/post-deploy-smoke.yml`,
+  `.github/workflows/refresh-events.yml`,
   `.github/workflows/phantom-revert-guard.yml` — shared CI/security workflows.
 - `.github/workflows/deploy.yml`, `.github/workflows/lighthouse.yml` —
-  you ONLY edit `NEXT_PUBLIC_BASE_PATH` in these (per step 9). Don't
-  change anything else.
+  no edits needed: `NEXT_PUBLIC_BASE_PATH` is computed by their
+  "Determine base path" step (per step 9). Don't change anything else.
 - `src/lib/assetPath.ts`, `src/app/manifest.ts`,
   `src/app/sitemap.ts`, `src/app/robots.ts` — shared helpers that
   derive everything from `siteConfig`. Don't hardcode values here.
@@ -229,7 +234,7 @@ The **[Content Replacement Guide](./CONTENT_REPLACEMENT_GUIDE.md)** provides a c
 
 ✅ **Ready to Use:**
 
-- Next.js 16.0.7 with TypeScript and static export
+- Next.js (version pinned in `package.json`) with TypeScript and static export
 - Tailwind CSS for styling
 - Comprehensive testing (Jest + Playwright)
 - GitHub Actions CI/CD workflows
@@ -297,16 +302,14 @@ The site is live and fully functional with the following features:
 
 ⚠️ **Known Limitations:**
 
-- Global Donate and Volunteer popups present in codebase but currently commented out in `layout.tsx`
 - 6 placeholder links remain in non-critical locations:
   - 2 program application CTAs in "Ready to Get Started Now?" section (501c3 and Pre-501c3 onboarding links)
   - 4 informational links in onboarding documentation (domain management and contact references)
 - Contact sections are informational only (no form submission backend)
-- Footer includes a Google+ social media link (service shut down in April 2019 - link should be removed or replaced)
 
 ## Overview
 
-This is a single-page website with **100+ component files** organized into multiple sections that showcase Free For Charity's programs, services, and resources. The homepage is composed of scrollable sections (Hero, Mission, Programs, Team, FAQ, etc.), with 7 additional policy pages for legal content. The site includes a global popup system for donations and volunteer signups (codebase includes the infrastructure, though the popups are currently commented out in `layout.tsx`).
+This is a single-page website whose components (under `src/components/`) are organized into multiple sections that showcase Free For Charity's programs, services, and resources. The homepage is composed of scrollable sections (Hero, Mission, Programs, Team, FAQ, etc.), with 7 additional policy pages for legal content.
 
 ### Site Structure
 
@@ -321,6 +324,7 @@ The main page (`/`) is a single-page application composed of scrollable sections
 - 2023 Results
 - Testimonials
 - Volunteer call-to-action
+- Events
 - Support/Donate section
 - Endowment Fund features
 - Programs overview
@@ -379,9 +383,10 @@ pnpm run build
 pnpm exec playwright install chromium
 
 # Run tests
-pnpm test              # Headless mode
-pnpm run test:headed   # With browser visible
-pnpm run test:ui       # Interactive UI mode
+pnpm test                  # Jest unit tests (__tests__/)
+pnpm run test:e2e          # Playwright E2E tests, headless
+pnpm run test:e2e:headed   # Playwright with browser visible
+pnpm run test:e2e:ui       # Playwright interactive UI mode
 ```
 
 ### Current Test Coverage
@@ -394,11 +399,7 @@ pnpm run test:ui       # Interactive UI mode
 - ✅ **Hero Section Logo Visibility**: Verifies logo appears in hero section with correct src and alt text
 - ✅ **Logo Consistency**: Confirms both logos are present simultaneously and use the same image source
 
-**GitHub Pages Deployment Tests** (`tests/github-pages.spec.ts`)
-
-- ✅ **Image Path Compatibility**: Validates logo image paths work for both custom domain and GitHub Pages basePath
-- ✅ **Image HTTP Status**: Verifies logo images return 200 OK status codes
-- ⏭️ **Image Natural Dimensions** (skipped): Checks image dimensions after load (disabled in CI due to timing issues)
+Further Playwright specs live in `tests/` (see `tests/README.md`).
 
 **Test Configuration** (`playwright.config.ts`)
 
@@ -414,43 +415,8 @@ Tests run automatically on every push to main via GitHub Actions before deployme
 **ESLint** (`eslint.config.mjs`)
 
 - ✅ Next.js core-web-vitals and TypeScript rules enabled
-- ✅ Runs automatically during build process
-- ⚠️ Currently reports 16 warnings - see details below
-
-**ESLint Warning Details:**
-
-The ESLint warnings fall into three categories:
-
-1. **`@next/next/no-img-element` warnings (6 occurrences)** - ⚠️ ACCEPTABLE for this project
-   - Files: `header/index.tsx`, `footer/index.tsx`, `endowment-fund/Hero/index.tsx`, `free-charity-web-hosting/About-FFC-Hosting/index.tsx`, `ui/General-Donation-Card.tsx`, `ui/trainingcard.tsx`
-   - Issue: Using `<img>` tags instead of Next.js `<Image />` component
-   - Why acceptable: This project uses static export (`output: "export"` in `next.config.ts`), which is incompatible with Next.js Image Optimization. We use the `assetPath()` helper to ensure images work correctly on both custom domain and GitHub Pages basePath.
-   - Alternative fix: Could suppress these specific warnings or migrate to a custom image component
-   - Website impact: Images load correctly but without automatic optimization (WebP conversion, lazy loading). For a static nonprofit site with modest image usage, this is an acceptable tradeoff.
-
-2. **React Hooks warnings - `react-hooks/set-state-in-effect` (6 occurrences)** - ⚠️ ACCEPTABLE but could be improved
-   - Files: Various accordion components (`Accordion.tsx`, `AccordionBold.tsx`, `Frequently-Asked-Questions.tsx`, `OrangeFaqItem.tsx`, `free-charity-web-hosting/FAQs/index.tsx`) and `cookie-consent/index.tsx`
-   - Issue: Calling `setState` synchronously within `useEffect` when animating accordion height or loading preferences
-   - Why acceptable: These components work correctly and don't cause performance issues in practice
-   - Recommended fix: Use `useLayoutEffect` instead of `useEffect` for DOM measurements, or use CSS transitions with `max-height`
-   - Website impact: Accordion animations work correctly. May cause minor cascading renders but not noticeable to users.
-
-3. **React Hooks warnings - Other (4 occurrences)** - ⚠️ ACCEPTABLE but could be improved
-   - `react-hooks/exhaustive-deps` (2 occurrences): Missing dependencies in `useEffect`
-     - Files: `free-charity-web-hosting/ClientTestimonials/index.tsx`, `ui/CallToActionCard.tsx`
-     - Impact: Effects may not re-run when dependencies change, but current implementation works as intended
-   - `react-hooks/immutability` (2 occurrences): Direct mutation of state values
-     - Files: `free-charity-web-hosting/ClientTestimonials/index.tsx`, `home/Testimonials/index.tsx`
-     - Issue: Modifying Swiper navigation params directly instead of using setter
-     - Impact: Works correctly but violates React best practices
-   - These are technical debt items that don't affect functionality but should be addressed in future refactoring
-
-**Summary:**
-
-- 6 warnings are acceptable by design (static export constraint)
-- 10 warnings are technical debt that don't affect functionality
-- All warnings have been reviewed and determined to be non-blocking
-- Website functions correctly despite these warnings
+- ✅ Runs in CI as a separate `pnpm run lint` step (Next.js 16 no longer runs ESLint during `next build`)
+- Run `pnpm run lint` locally to see current warnings
 
 **For detailed technical debt tracking:** See [TECHNICAL_DEBT.md](./TECHNICAL_DEBT.md) for comprehensive documentation of all technical debt items, including these React Hooks warnings, security vulnerabilities, and future refactoring plans.
 
@@ -509,13 +475,8 @@ per repository:
 
 - All dependencies are checked for security vulnerabilities
 - Run `pnpm audit` locally to check for known security issues
-- ⚠️ **Known Issues**: As of December 2025, there are 4 low severity vulnerabilities
-  - Low: tmp package vulnerabilities affecting Lighthouse CI dev dependency only
-  - Impact: Limited to development environment, does not affect production site
-  - Fix available via `pnpm audit --fix` (may involve breaking changes)
-  - These are being monitored and will be addressed through regular Dependabot updates
-  - See [TECHNICAL_DEBT.md](./TECHNICAL_DEBT.md) for tracking and prioritization
-  - See [SECURITY.md](./SECURITY.md) for detailed information and mitigation steps
+- ✅ `.github/workflows/security-audit.yml` runs `pnpm run audit:high` (high-severity production deps) daily and on dependency changes
+- Current advisories are tracked in the repository's **Security** tab
 
 ### CI/CD Integration
 
@@ -532,7 +493,7 @@ The project uses separate workflows for better separation of concerns:
 - ✅ Linting (ESLint)
 - ✅ Unit tests (Jest)
 - ✅ Playwright browser installation
-- ✅ Next.js build with GitHub Pages basePath
+- ✅ Next.js build (without a basePath, so E2E tests can serve `out/` at the root)
 - ✅ E2E tests (Playwright)
 - ✅ Fast feedback for PRs (no deployment overhead)
 
@@ -553,11 +514,11 @@ The following quality improvements have been successfully implemented:
 
 #### ✅ Testing Infrastructure (Phases 2 & 4)
 
-- ✅ **Unit Testing**: Jest + React Testing Library with 26 tests passing (4 test suites)
+- ✅ **Unit Testing**: Jest + React Testing Library (tests in `__tests__/`; run `pnpm test`)
 - ✅ **Accessibility Testing**: jest-axe for WCAG compliance checks (3 components tested)
 - ✅ **E2E Testing**: Playwright for critical user paths
 - ✅ **Performance Testing**: Lighthouse CI monitoring Core Web Vitals
-- ✅ **Test Coverage**: ~5% baseline established with coverage thresholds
+- ✅ **Test Coverage**: coverage thresholds enforced in `jest.config.js`
 
 #### ✅ Code Quality Automation (Phase 1)
 
@@ -599,7 +560,7 @@ The following enhancements could further improve the test suite:
 - **Increased Test Coverage**: Target 25-50% coverage for critical components
 - **TypeScript Strict Mode**: Enable additional strict flags
 - **Import Organization**: Add eslint-plugin-import for import sorting
-- **pnpm audit**: Add automated pnpm audit checks to CI with failure threshold
+- ✅ **pnpm audit**: Done — `.github/workflows/security-audit.yml` fails on high-severity production advisories
 
 #### Build Quality Gates
 
@@ -774,7 +735,6 @@ Vercel automatically enables PR preview deployments and comments.
 **Note:**
 
 - This is a single-page application where all main content is displayed on one scrollable page with navigation anchors
-- Global Donate/Volunteer popup system is present in codebase but currently commented out in `layout.tsx`
 - Components are organized by feature/section but rendered within the single homepage
 
 ## Project Structure
@@ -809,9 +769,10 @@ src/
 │   ├── faqs/                                  # FAQ JSON files
 │   ├── team/                                  # Team member data
 │   └── testimonials/                          # Testimonial data
-├── lib/                                       # Utility functions
-│   └── assetPath.ts                           # Helper for GitHub Pages basePath support
-└── public/                                    # Static assets (icons, images, fonts)
+└── lib/                                       # Utility functions
+    └── assetPath.ts                           # Helper for GitHub Pages basePath support
+
+public/                                        # Static assets at the repo root (icons, images)
 ```
 
 ## Site Improvements & Capability Gaps
