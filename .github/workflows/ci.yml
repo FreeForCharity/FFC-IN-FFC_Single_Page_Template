@@ -51,10 +51,19 @@ jobs:
       - name: Run linting
         run: pnpm run lint
 
-      - name: Run unit tests
-        run: pnpm test
+      - name: Run unit tests with coverage
+        id: coverage
+        run: pnpm run test:coverage
         env:
           CI: true
+
+      - name: Upload unit coverage
+        if: ${{ always() && steps.coverage.outcome != 'skipped' }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: unit-coverage
+          path: coverage/
+          retention-days: 7
 
       - name: Install Playwright browsers
         run: pnpm exec playwright install --with-deps chromium
