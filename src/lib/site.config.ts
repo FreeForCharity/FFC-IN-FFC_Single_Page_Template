@@ -256,7 +256,7 @@ export const siteConfig: SiteConfig = {
   // A fork with a custom domain sets its own origin here (and no basePath).
   url: 'https://freeforcharity.github.io',
   twitterHandle: '@freeforcharity',
-  contactEmail: 'security@freeforcharity.org',
+  contactEmail: 'clarkemoyer@freeforcharity.org',
   keywords: [
     'nonprofit',
     'charity',
@@ -303,7 +303,7 @@ export const siteConfig: SiteConfig = {
     hubUrl: 'https://freeforcharity.org/hub/',
     legalContactName: 'Clarke Moyer',
     legalContactEmail: 'clarkemoyer@freeforcharity.org',
-    cookieContactEmail: 'privacy@freeforcharity.org',
+    cookieContactEmail: 'clarkemoyer@freeforcharity.org',
   },
   parentOrg: {
     name: 'Free For Charity',
