@@ -32,7 +32,7 @@ describe('supportedBy (FFC footer standard)', () => {
       // FFC's own legal contacts, rendered only on FFC's own site (legalContact()).
       legalContactName: 'Clarke Moyer',
       legalContactEmail: 'clarkemoyer@freeforcharity.org',
-      cookieContactEmail: 'privacy@freeforcharity.org',
+      cookieContactEmail: 'clarkemoyer@freeforcharity.org',
     })
   })
 })
