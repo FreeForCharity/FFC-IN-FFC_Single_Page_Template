@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test'
+import { test, expect, type Page } from '@playwright/test'
 import { testConfig } from './test.config'
 
 /**
@@ -15,6 +15,22 @@ import { testConfig } from './test.config'
  *
  * Note: Test expectations use values from test.config.ts for easy customization
  */
+
+// Control the iframe response so loading assertions never depend on Microsoft
+// Forms or its network timing. Release it with a local fixture after asserting.
+async function holdApplicationForm(page: Page): Promise<() => void> {
+  let release: () => void = () => {}
+  const gate = new Promise<void>((resolve) => {
+    release = resolve
+  })
+  await page.route('**/forms.office.com/**', async (route) => {
+    await gate
+    await route
+      .fulfill({ contentType: 'text/html', body: '<!doctype html><p>Application form fixture</p>' })
+      .catch(() => {}) // The page may have closed after an assertion failed.
+  })
+  return release
+}
 
 test.describe('Application Form Button', () => {
   test.beforeEach(async ({ page }) => {
@@ -43,12 +59,15 @@ test.describe('Application Form Button', () => {
   })
 
   test('should display loading indicator before iframe loads', async ({ page }) => {
-    // Click the button
-    await page.getByRole('button', { name: testConfig.applicationForm.buttonText }).click()
-
-    // Loading indicator should be visible initially
+    const release = await holdApplicationForm(page)
     const loadingIndicator = page.getByText(testConfig.applicationForm.loadingText)
-    await expect(loadingIndicator).toBeVisible()
+    try {
+      await page.getByRole('button', { name: testConfig.applicationForm.buttonText }).click()
+      await expect(loadingIndicator).toBeVisible()
+    } finally {
+      release()
+    }
+    await expect(loadingIndicator).toBeHidden()
   })
 
   test('should display close button in modal', async ({ page }) => {
@@ -252,23 +271,19 @@ test.describe('Application Form Iframe Loading', () => {
   })
 
   test('should display loading indicator and iframe elements', async ({ page }) => {
-    // Open modal
-    await page.getByRole('button', { name: testConfig.applicationForm.buttonText }).click()
-
-    const modal = page.locator('[role="dialog"][aria-modal="true"]')
-    await expect(modal).toBeVisible()
-
-    // Loading indicator should be visible initially
+    const release = await holdApplicationForm(page)
     const loadingIndicator = page.getByText(testConfig.applicationForm.loadingText)
-    await expect(loadingIndicator).toBeVisible()
-
-    // Verify iframe element exists
     const iframe = page.locator(`iframe[title="${testConfig.applicationForm.modalTitle}"]`)
+    try {
+      await page.getByRole('button', { name: testConfig.applicationForm.buttonText }).click()
+      const modal = page.locator('[role="dialog"][aria-modal="true"]')
+      await expect(modal).toBeVisible()
+      await expect(loadingIndicator).toBeVisible()
+      await expect(iframe).toBeVisible()
+    } finally {
+      release()
+    }
+    await expect(loadingIndicator).toBeHidden()
     await expect(iframe).toBeVisible()
-
-    // Note: The loading indicator behavior is environment-dependent.
-    // In some environments (especially CI), external iframes may be blocked by privacy settings,
-    // causing the loading indicator to remain visible. This test verifies the component structure
-    // is correct (both loading indicator and iframe are present), not the iframe loading behavior.
   })
 })

@@ -1,11 +1,10 @@
 'use client'
 
-import React, { useState, useRef } from 'react'
+import React, { useState } from 'react'
 import { Swiper, SwiperSlide } from 'swiper/react'
-import { Navigation, Autoplay } from 'swiper/modules'
+import { Autoplay } from 'swiper/modules'
 import type { Swiper as SwiperInstance } from 'swiper'
 import 'swiper/css'
-import 'swiper/css/navigation'
 import { MdOutlineArrowBackIos, MdOutlineArrowForwardIos } from 'react-icons/md'
 import Image from 'next/image'
 import QuoteLeft from '../../../../public/Svgs/quote-left.svg'
@@ -19,28 +18,12 @@ import { configuredTestimonials } from '@/data/testimonials'
 const TestimonialSlider: React.FC = () => {
   const [swiperInstance, setSwiperInstance] = useState<SwiperInstance | null>(null)
   const [activeIndex, setActiveIndex] = useState(0)
-  const prevRef = useRef<HTMLButtonElement>(null)
-  const nextRef = useRef<HTMLButtonElement>(null)
-
-  // Wire the external prev/next buttons to Swiper navigation. Done in
-  // onBeforeInit (which receives Swiper's own instance) rather than mutating
-  // the swiperInstance held in state — the latter trips the React Compiler
-  // immutability rule and is the documented Swiper-for-React pattern for
-  // custom navigation elements.
-  const handleBeforeInit = (swiper: SwiperInstance) => {
-    const nav = swiper.params.navigation
-    if (nav && typeof nav !== 'boolean') {
-      nav.prevEl = prevRef.current
-      nav.nextEl = nextRef.current
-    }
-  }
-
   const handleSlideChange = (swiper: SwiperInstance) => {
-    setActiveIndex(swiper.activeIndex)
+    setActiveIndex(swiper.realIndex)
   }
 
   const handleDotClick = (index: number) => {
-    swiperInstance?.slideTo(index)
+    swiperInstance?.slideToLoop(index)
   }
 
   if (configuredTestimonials.length === 0) return null
@@ -62,11 +45,9 @@ const TestimonialSlider: React.FC = () => {
           aria-label="Testimonials"
         >
           <Swiper
-            modules={[Navigation, Autoplay]}
+            modules={[Autoplay]}
             onSwiper={setSwiperInstance}
             onSlideChange={handleSlideChange}
-            onBeforeInit={handleBeforeInit}
-            navigation={{ enabled: true }}
             spaceBetween={30}
             slidesPerView={1}
             loop={true}
@@ -122,7 +103,7 @@ const TestimonialSlider: React.FC = () => {
           {/* Left Arrow */}
           <button
             type="button"
-            ref={prevRef}
+            onClick={() => swiperInstance?.slidePrev()}
             disabled={activeIndex === 0}
             className="absolute left-2 md:left-4 top-1/2 -translate-y-1/2 z-10 flex items-center justify-center text-gray-600 hover:text-gray-800 transition-all disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer"
             aria-label="Previous testimonial"
@@ -133,7 +114,7 @@ const TestimonialSlider: React.FC = () => {
           {/* Right Arrow */}
           <button
             type="button"
-            ref={nextRef}
+            onClick={() => swiperInstance?.slideNext()}
             disabled={activeIndex === configuredTestimonials.length - 1}
             className="absolute right-2 md:right-4 top-1/2 -translate-y-1/2 z-10 flex items-center justify-center text-gray-600 hover:text-gray-800 transition-all disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer"
             aria-label="Next testimonial"

@@ -6,6 +6,9 @@ updates:
   # Keep npm dependencies up to date
   - package-ecosystem: 'npm'
     directory: '/'
+    # Match pnpm's minimumReleaseAge: 10080 for version updates.
+    cooldown:
+      default-days: 7
     schedule:
       interval: 'weekly'
       day: 'monday'
@@ -38,6 +41,8 @@ updates:
   # Keep GitHub Actions up to date
   - package-ecosystem: 'github-actions'
     directory: '/'
+    cooldown:
+      default-days: 7
     schedule:
       interval: 'weekly'
       day: 'monday'

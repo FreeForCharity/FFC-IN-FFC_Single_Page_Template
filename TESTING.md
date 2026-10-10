@@ -87,7 +87,7 @@ All tests run automatically in CI before deployment.
 
 - **Jest**: v30.x - JavaScript testing framework
 - **React Testing Library**: v16.x - React component testing utilities
-- **@testing-library/jest-dom**: v6.x - Custom Jest matchers for DOM
+- **@testing-library/jest-dom**: v7.x - Custom Jest matchers for DOM
 - **jest-environment-jsdom**: Simulates browser environment for tests
 
 ### Running Unit Tests
@@ -831,3 +831,16 @@ FFC-IN-FFC_Single_Page_Template/
 **Test Suite Status**: ✅ Jest unit tests in `__tests__/` (`pnpm test`) and Playwright E2E tests in `tests/` (`pnpm run test:e2e`)  
 **Integration Status**: ✅ Complete  
 **Last Tested**: December 2025
+
+## Coverage enforced in CI
+
+CI runs `pnpm run test:coverage` and retains the `unit-coverage` artifact for seven days, including on a failed coverage run. Jest fails when any global floor in `jest.config.js` is missed.
+
+| Metric     | Minimum |
+| ---------- | ------- |
+| Branches   | 68%     |
+| Functions  | 75%     |
+| Lines      | 80%     |
+| Statements | 78%     |
+
+The floors leave margin below the measured suite. Add behavioral tests for new code instead of lowering the floors to land a change.
