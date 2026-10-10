@@ -21,7 +21,7 @@ export function getSiteTrustProfile() {
     },
     contacts: {
       primaryEmail: isPending('email') ? null : siteConfig.contactEmail.trim() || null,
-      vulnerabilityDisclosurePath: siteUrl(siteConfig.vulnerabilityDisclosurePath),
+      vulnerabilityDisclosureUrl: siteUrl(siteConfig.vulnerabilityDisclosurePath),
     },
     profileEndpoints: {
       siteProfile: siteUrl('/site-profile.json'),
@@ -39,11 +39,13 @@ export function getSiteTrustProfile() {
         'pnpm run format:check',
         'pnpm run lint',
         'pnpm run check:drift',
+        'pnpm run check:site-config',
         'pnpm run test:coverage',
         'pnpm run build',
         'pnpm run verify:build',
         'pnpm run check:bundle',
         'pnpm run test:e2e',
+        'pnpm run audit:high',
       ],
     },
   }

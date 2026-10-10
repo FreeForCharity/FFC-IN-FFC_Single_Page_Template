@@ -60,6 +60,10 @@ describe('public site trust profile', () => {
       for (const url of Object.values(profile.profileEndpoints)) {
         expect(url.startsWith(profile.canonicalUrl + '/')).toBe(true)
       }
+      expect(profile.contacts.vulnerabilityDisclosureUrl).toBe(
+        profile.canonicalUrl + siteConfig.vulnerabilityDisclosurePath
+      )
+      expect(profile.contacts).not.toHaveProperty('vulnerabilityDisclosurePath')
     }
   )
   it('reflects rebranding after an earlier read rather than caching stale identity', () => {
@@ -86,9 +90,18 @@ describe('public site trust profile', () => {
         'trust',
       ].sort()
     )
-    expect(profile.trust.requiredChecks).toContain('pnpm run test:coverage')
-    expect(profile.trust.requiredChecks).toContain('pnpm run verify:build')
-    expect(profile.trust.requiredChecks).toContain('pnpm run check:bundle')
+    expect(profile.trust.requiredChecks).toEqual([
+      'pnpm run format:check',
+      'pnpm run lint',
+      'pnpm run check:drift',
+      'pnpm run check:site-config',
+      'pnpm run test:coverage',
+      'pnpm run build',
+      'pnpm run verify:build',
+      'pnpm run check:bundle',
+      'pnpm run test:e2e',
+      'pnpm run audit:high',
+    ])
     expect(profile.profileEndpoints.securityTxt).toBe(profile.canonicalUrl + '/security.txt')
     expect(JSON.stringify(profile)).not.toContain('integrations')
   })

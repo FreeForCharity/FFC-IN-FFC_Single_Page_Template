@@ -15,6 +15,12 @@ test('static export publishes the current charity profile at its declared endpoi
   expect(profile.trust.requiredChecks).toContain('pnpm run test:coverage')
   expect(profile.trust.requiredChecks).toContain('pnpm run verify:build')
   expect(profile.trust.requiredChecks).toContain('pnpm run check:bundle')
+  expect(profile.trust.requiredChecks).toContain('pnpm run check:site-config')
+  expect(profile.trust.requiredChecks).toContain('pnpm run audit:high')
+  expect(profile.contacts.vulnerabilityDisclosureUrl).toBe(
+    profile.canonicalUrl + siteConfig.vulnerabilityDisclosurePath
+  )
+  expect(profile.contacts).not.toHaveProperty('vulnerabilityDisclosurePath')
   expect(profile.profileEndpoints.securityTxt).toBe(profile.canonicalUrl + '/security.txt')
   const security = await request.get(new URL(profile.profileEndpoints.securityTxt).pathname)
   expect(security.ok()).toBe(true)

@@ -16,6 +16,7 @@ null. It does not infer a legal name, country or tax status. `supportedBy` is
 separate FFC attribution, never the owning charity's EIN or legal identity.
 
 `contacts.primaryEmail` is the configured public contact (null when pending).
+`contacts.vulnerabilityDisclosureUrl` is a full URL using the deployed basePath.
 The profile links to security.txt; it does not claim that its primary email is
 the security reporting address. The security.txt contact remains managed there.
 

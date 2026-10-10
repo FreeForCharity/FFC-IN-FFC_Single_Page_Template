@@ -19,7 +19,7 @@
   },
   "contacts": {
     "primaryEmail": "clarkemoyer@freeforcharity.org",
-    "vulnerabilityDisclosurePath": "https://freeforcharity.github.io/vulnerability-disclosure-policy"
+    "vulnerabilityDisclosureUrl": "https://freeforcharity.github.io/vulnerability-disclosure-policy"
   },
   "profileEndpoints": {
     "siteProfile": "https://freeforcharity.github.io/site-profile.json",
@@ -37,11 +37,13 @@
       "pnpm run format:check",
       "pnpm run lint",
       "pnpm run check:drift",
+      "pnpm run check:site-config",
       "pnpm run test:coverage",
       "pnpm run build",
       "pnpm run verify:build",
       "pnpm run check:bundle",
-      "pnpm run test:e2e"
+      "pnpm run test:e2e",
+      "pnpm run audit:high"
     ]
   }
 }
