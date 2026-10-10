@@ -1,5 +1,7 @@
 # Site Improvements - User Experience & Feature Enhancements
 
+> **Snapshot:** This document is a dated snapshot. Some files, versions, and counts it names may have changed since; check `package.json`, the lockfile, and the current code before acting on it.
+
 **Document Purpose:** This document tracks user-facing improvements and features - UI/UX enhancements, graphics, external integrations, and capabilities that users will directly see and interact with. It originally identified capability gaps compared to sister repositories (freeforcharity-web, ffcadmin.org, KCCF-web) and has been updated to reflect Phase 5 completion plus future user-facing enhancements.
 
 **Scope:** This document covers improvements that enhance the **user experience**. For backend/technical improvements (ESLint warnings, security, React internals), see [TECHNICAL_DEBT.md](./TECHNICAL_DEBT.md).
@@ -78,23 +80,23 @@ This analysis compares FFC-IN-FFC_Single_Page_Template against three sister repo
 
 | Feature             | FFC-IN-FFC_Single_Page_Template | freeforcharity-web | ffcadmin.org | KCCF-web |
 | ------------------- | ------------------------------- | ------------------ | ------------ | -------- |
-| **Next.js Version** | 16.0.7                          | 15.5.2             | 16.0.3       | 15.4.6   |
-| **React Version**   | 19.1.0                          | 19.1.0             | 19.2.0       | 19.1.0   |
+| **Next.js Version** | 16.3.4                          | 15.5.2             | 16.0.3       | 15.4.6   |
+| **React Version**   | 19.2.7                          | 19.1.0             | 19.2.0       | 19.1.0   |
 | **Node.js Target**  | 24.x                            | 20.x               | 20.x         | 20.x     |
-| **Package Manager** | npm                             | npm                | pnpm         | npm      |
+| **Package Manager** | pnpm                            | npm                | pnpm         | npm      |
 | **Static Export**   | ✅                              | ✅                 | ✅           | ✅       |
 | **TypeScript**      | ✅                              | ✅                 | ✅           | ✅       |
-| **Tailwind CSS**    | ✅ v4.1.12                      | ✅ v4.1.12         | ✅ v4.1.17   | ✅ v4    |
+| **Tailwind CSS**    | ✅ v4.3.3                       | ✅ v4.1.12         | ✅ v4.1.17   | ✅ v4    |
 
 ### Dependency Comparison
 
 | Library/Tool         | FFC-IN-FFC_Single_Page_Template | freeforcharity-web | ffcadmin.org | KCCF-web |
 | -------------------- | ------------------------------- | ------------------ | ------------ | -------- |
-| **framer-motion**    | ✅ 12.23.24                     | ✅ 12.23.24        | ❌           | ❌       |
+| **framer-motion**    | ❌ not a dependency             | ✅ 12.23.24        | ❌           | ❌       |
 | **lucide-react**     | ❌ removed (use react-icons)    | ✅ 0.469.0         | ❌           | ❌       |
 | **react-icons**      | ✅ 5.5.0                        | ✅ 5.5.0           | ❌           | ❌       |
 | **swiper**           | ✅ 12.0.3                       | ✅ 12.0.3          | ❌           | ❌       |
-| **@playwright/test** | ✅ 1.56.0                       | ✅ 1.56.0          | ❌           | ❌       |
+| **@playwright/test** | ✅ 1.62.1                       | ✅ 1.56.0          | ❌           | ❌       |
 
 **Observation:** FFC-IN-FFC_Single_Page_Template and freeforcharity-web are nearly identical in their dependency stacks, suggesting they share similar feature sets.
 
@@ -1745,7 +1747,7 @@ trim_trailing_whitespace = false
 - **Risk:** Low (may reveal existing issues)
 - **Dependencies:** None
 - **Rationale:** Critical for security, free, easy to implement
-- **Status:** Implemented in `.github/workflows/codeql.yml`
+- **Status:** Implemented via GitHub code scanning default setup (no `codeql.yml` workflow file)
 
 **GAP-1: Prettier Code Formatting** ⭐⭐⭐⭐ ✅ **COMPLETED**
 
@@ -2139,7 +2141,7 @@ trim_trailing_whitespace = false
 | **Commitlint**      | ✅ 20.1.0                       | ❌                 | ✅ 20.0.1    | ❌       |
 | **.editorconfig**   | ✅ Added                        | ❌                 | ✅           | ❌       |
 | **Linkinator**      | ✅ Latest                       | ❌                 | ✅ 7.4.6     | ❌       |
-| **Bundle Analyzer** | ⚠️ Config only                  | ⚠️ Config only     | ✅ Active    | ❌       |
+| **Bundle Analyzer** | ✅ `pnpm run analyze` script    | ⚠️ Config only     | ✅ Active    | ❌       |
 
 ### Testing Infrastructure Status
 
@@ -2148,7 +2150,7 @@ trim_trailing_whitespace = false
 | **Jest**                     | ✅ 30.2.0                       | ❌                 | ✅ 30.2.0    | ❌       |
 | **React Testing Library**    | ✅ 16.3.0                       | ❌                 | ✅ 16.3.0    | ❌       |
 | **jest-axe (Accessibility)** | ✅ 10.0.0                       | ❌                 | ✅           | ❌       |
-| **Playwright (E2E)**         | ✅ 1.56.0                       | ✅ 1.56.0          | ❌           | ❌       |
+| **Playwright (E2E)**         | ✅ 1.62.1                       | ✅ 1.56.0          | ❌           | ❌       |
 | **Test Coverage**            | ✅ ~5% (25 tests)               | ❌                 | ✅ ~15%      | ❌       |
 | **Coverage Thresholds**      | ✅ Configured                   | ❌                 | ✅           | ❌       |
 
@@ -2207,7 +2209,7 @@ These features are present in sister repositories but **intentionally not implem
 
 These could be implemented in future iterations if needed:
 
-1. **Bundle Analyzer** (GAP-4) - Config exists but not actively used
+1. **Bundle Analyzer** (GAP-4) - Wired as the `analyze` script (`pnpm run analyze`); not run in CI
 2. **Dark Mode** (GAP-12) - User experience enhancement (6-8 hours)
 3. **Enhanced Cookie Consent** (GAP-14) - Better privacy controls (6-8 hours)
 4. **Environment Variable Documentation** (GAP-17) - Simple addition (1-2 hours)

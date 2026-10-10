@@ -22,7 +22,7 @@ Before starting implementation, ensure you have:
 - [x] Read and understood `FACEBOOK_EVENTS_REQUIREMENTS.md`
 - [x] Confirmed Free For Charity Facebook page URL: `https://www.facebook.com/freeforcharity`
 - [x] Verified Facebook page has upcoming events posted
-- [x] Development environment set up (Node.js 24.x, npm)
+- [x] Development environment set up (Node.js 24.x, pnpm)
 - [x] Access to repository: `FreeForCharity/FFC-IN-FFC_Single_Page_Template`
 - [x] Reviewed existing cookie consent implementation in `src/components/cookie-consent/index.tsx`
 
@@ -957,10 +957,7 @@ pnpm run test:e2e:ui
 
 ```bash
 pnpm run build
-pnpm run preview
-
-# In another terminal
-pnpm run lighthouse
+pnpm exec lhci autorun   # uses lighthouserc.json; serves ./out itself (same as the lighthouse workflow)
 ```
 
 **Acceptance criteria:**

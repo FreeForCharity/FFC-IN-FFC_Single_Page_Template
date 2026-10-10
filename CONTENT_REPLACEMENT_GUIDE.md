@@ -433,7 +433,7 @@ _Edit location: `src/lib/site.config.ts` — `contactEmail`, `phone.display` / `
 | ------- | ---------------------------------- | --------------------------------------------------------------------------------------------------- | ---------------------------------------------------- |
 | Footer  | Column 3 Heading                   | "Contact Us"                                                                                        |                                                      |
 | Footer  | Email Label                        | "E-mail"                                                                                            |                                                      |
-| Footer  | Email Address (`contactEmail`)     | "clarkemoyer@freeforcharity.org"                                                                    | _(Your charity's contact email)_                     |
+| Footer  | Email Address (`contactEmail`)     | "security@freeforcharity.org"                                                                       | _(Your charity's contact email)_                     |
 | Footer  | Phone Label                        | "Call Us Today"                                                                                     |                                                      |
 | Footer  | Phone Number (`phone.display`)     | "(520) 222-8104"                                                                                    | _(Your charity's phone number)_                      |
 | Footer  | Phone Number (`phone.tel`)         | "5202228104"                                                                                        | _(Numbers only, no spaces or dashes)_                |
@@ -509,17 +509,17 @@ This information helps your website appear correctly in search results and socia
 When implementing these changes:
 
 - **Logo files**: Located in the `src/components/header/index.tsx` file
-- **Hero section**: Edit `src/components/home-page/hero/index.tsx`
-- **Mission section**: Edit `src/components/home-page/mission/index.tsx`
-- **Results section**: Edit `src/components/home-page/results-2023/index.tsx`
-- **Testimonials**: Edit `src/components/home/testimonials/index.tsx` (data stored inline)
-- **Volunteer section**: Edit `src/components/home-page/volunteer-with-us/index.tsx`
-- **Events section**: Edit `src/components/home-page/events/index.tsx`
-- **Donate section**: Edit `src/components/home-page/support-free-for-charity/index.tsx`
-- **Endowment section**: Edit `src/components/home-page/endowment-features/index.tsx`
-- **Programs section**: Edit `src/components/home-page/our-programs/index.tsx`
-- **FAQ section**: Edit `src/components/home-page/frequently-asked-questions/index.tsx`
-- **Team section**: Edit `src/components/home-page/the-free-for-charity-team/index.tsx`
+- **Hero section**: Edit `src/components/home-page/Hero/index.tsx`
+- **Mission section**: Edit `src/components/home-page/Mission/index.tsx`
+- **Results section**: Edit `src/components/home-page/Results-2023/index.tsx`
+- **Testimonials**: Edit `src/components/home-page/Testimonials/index.tsx` (data in `src/data/testimonials/*.json`)
+- **Volunteer section**: Edit `src/components/home-page/Volunteer-with-Us/index.tsx`
+- **Events section**: Edit `src/components/home-page/Events/index.tsx`
+- **Donate section**: Edit `src/components/home-page/SupportFreeForCharity/index.tsx`
+- **Endowment section**: Edit `src/components/home-page/Endowment-Features/index.tsx`
+- **Programs section**: Edit `src/components/home-page/Our-Programs/index.tsx`
+- **FAQ section**: Edit `src/components/home-page/FrequentlyAskedQuestions/index.tsx`
+- **Team section**: Edit `src/components/home-page/TheFreeForCharityTeam/index.tsx`
 - **Footer**: The footer's per-charity values (EIN, phone, addresses, GuideStar links, social, email) come from `src/lib/site.config.ts`. Edit `src/components/footer/index.tsx` only for structural/markup changes (e.g. the endorsement seal image).
 - **Metadata**: Edit `src/app/layout.tsx`
 - **Navigation menu**: Edit `src/components/header/index.tsx`

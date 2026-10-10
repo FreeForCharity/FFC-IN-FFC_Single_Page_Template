@@ -104,7 +104,7 @@ Repository Actions workflows, plus GitHub-managed CodeQL code scanning (default 
 ✅ pnpm run format:check # Formatting verified
 
 # Testing
-✅ pnpm test            # 26 unit tests passing
+✅ pnpm test            # Jest unit tests in __tests__/ passing
 ✅ pnpm run test:e2e    # E2E tests passing (after build)
 ```
 

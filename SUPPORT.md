@@ -33,7 +33,7 @@ Please follow our [Security Policy](./SECURITY.md) and report vulnerabilities pr
 - **Email**: clarkemoyer@freeforcharity.org
 - **Subject**: "SECURITY: [Brief Description]"
 
-We will respond within 48 hours and work with you to address the issue.
+We will acknowledge your report within 2 business days and work with you to address the issue.
 
 ## 📚 Documentation
 

@@ -46,6 +46,7 @@ Dependabot automatically checks for newer versions of dependencies and creates p
 
 - **npm**: All JavaScript/Node.js dependencies in `package.json`
 - **GitHub Actions**: All actions used in `.github/workflows/` files
+- **Docker**: Base images in `.oss-scanner/Dockerfile`
 
 ### 2. Security Updates
 

@@ -25,16 +25,16 @@ Lighthouse CI is integrated into our CI/CD pipeline to automatically audit the w
 
 ### Current Thresholds
 
-Our Lighthouse CI is configured with the following warning thresholds:
+Our Lighthouse CI thresholds are defined in `lighthouserc.json` (the source of truth):
 
-| Category           | Threshold | Priority |
-| ------------------ | --------- | -------- |
-| **Performance**    | 55%       | Medium   |
-| **Accessibility**  | 90%       | High     |
-| **Best Practices** | 65%       | Medium   |
-| **SEO**            | 95%       | High     |
+| Category           | Threshold | Level |
+| ------------------ | --------- | ----- |
+| **Performance**    | 90%       | warn  |
+| **Accessibility**  | 98%       | error |
+| **Best Practices** | 96%       | warn  |
+| **SEO**            | 98%       | error |
 
-These are **warning** levels, not hard failures. They help identify areas for improvement without blocking deployments. Thresholds are set just below current performance levels to catch regressions while allowing for normal score variations.
+**warn** levels flag regressions without failing the run; **error** levels (Accessibility, SEO) fail the Lighthouse CI run. `lighthouserc.json` also sets resource-size budgets.
 
 ---
 

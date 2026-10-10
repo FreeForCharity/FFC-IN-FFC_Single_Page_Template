@@ -24,7 +24,7 @@ The Free For Charity website is a static Next.js application deployed to GitHub 
 
 ### Technology Stack
 
-- **Framework**: Next.js 16.0.7 with static export
+- **Framework**: Next.js 16 with static export (exact version in `package.json`)
 - **Hosting**: GitHub Pages
 - **CI/CD**: GitHub Actions
 - **Node.js**: Version 24.x
@@ -100,22 +100,26 @@ Triggered automatically after the CI workflow completes successfully on push to 
 The actual steps performed by the deploy workflow are:
 
 1. **Checkout code**: Retrieves the tested code from the repository
-2. **Setup Node.js**: Installs Node.js 24.x
-3. **Setup Pages**: Configures GitHub Pages settings
-4. **Restore Next.js cache**: Restores build cache for faster builds
-5. **Install dependencies**: Runs `pnpm install --frozen-lockfile` for a clean installation
-6. **Build site**: Runs `next build` with basePath for GitHub Pages
-7. **Upload artifact**: Packages the `./out` directory
-8. **Deploy to GitHub Pages**: Publishes the site to GitHub Pages (separate job)
+2. **Setup pnpm**: Installs pnpm (version from `packageManager` in `package.json`)
+3. **Setup Node.js**: Installs Node.js 24.x
+4. **Setup Pages**: Configures GitHub Pages settings
+5. **Restore Next.js cache**: Restores build cache for faster builds
+6. **Install dependencies**: Runs `pnpm install --frozen-lockfile` for a clean installation
+7. **Determine base path**: Computes `NEXT_PUBLIC_BASE_PATH` — empty if `public/CNAME` exists, otherwise `/<repo-name>`
+8. **Build site**: Runs `pnpm run build` with that basePath
+9. **Upload artifact**: Packages the `./out` directory
+10. **Deploy to GitHub Pages**: Publishes the site with `actions/deploy-pages` (separate job)
+11. **Post-deploy smoke check**: Runs `scripts/smoke-check.mjs` against the deployed URL
+12. **Notify on failure**: If the deploy job fails on `main`, opens (or comments on) an `incident` issue
 
 #### Environment Variables in CI
 
 ```yaml
 env:
-  NEXT_PUBLIC_BASE_PATH: /FFC-IN-FFC_Single_Page_Template
+  NEXT_PUBLIC_BASE_PATH: ${{ steps.basepath.outputs.value }}
 ```
 
-This ensures images and assets work correctly at the GitHub Pages subpath.
+The value is computed by the "Determine base path" step (no manual edit), so images and assets work correctly at the GitHub Pages subpath or at the root of a custom domain. The CI workflow (`ci.yml`) builds without a basePath.
 
 ### Viewing Deployment Status
 
@@ -196,9 +200,8 @@ The site will be built without a base path, making all assets available at the r
 ### GitHub Pages Configuration
 
 1. **Go to repository Settings** → **Pages**
-2. **Source**: Select "Deploy from a branch"
-3. **Branch**: Select `gh-pages` or the branch created by the workflow
-4. **Folder**: Select `/ (root)`
+2. **Source**: Select "GitHub Actions"
+3. No branch or folder is needed — `deploy.yml` publishes with `actions/deploy-pages`
 
 ### Custom Domain Setup
 
@@ -218,8 +221,7 @@ If using a custom domain:
 3. **Enable HTTPS** in GitHub Pages settings (automatic with custom domain)
 
 4. **Update environment variables** if needed:
-   - Remove or leave empty `NEXT_PUBLIC_BASE_PATH` for custom domains
-   - GitHub Actions should detect custom domain and adjust automatically
+   - None needed: the "Determine base path" step sees `public/CNAME` and builds with an empty `NEXT_PUBLIC_BASE_PATH`
 
 ### DNS Propagation
 
@@ -247,13 +249,13 @@ below.
 
 ### Setting Environment Variables in GitHub Actions
 
-Environment variables are set in the workflow file:
+Environment variables are set in the workflow file; the basePath comes from the "Determine base path" step:
 
 ```yaml
 - name: Build with Next.js
   run: pnpm run build
   env:
-    NEXT_PUBLIC_BASE_PATH: /FFC-IN-FFC_Single_Page_Template
+    NEXT_PUBLIC_BASE_PATH: ${{ steps.basepath.outputs.value }}
 ```
 
 ### Local Development
