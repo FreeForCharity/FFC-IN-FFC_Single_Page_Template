@@ -607,9 +607,7 @@ Run Lighthouse before and after implementation:
 
 ```bash
 pnpm run build
-pnpm run preview
-# In another terminal
-pnpm run lighthouse
+pnpm exec lhci autorun   # uses lighthouserc.json; serves ./out itself (same as the lighthouse workflow)
 ```
 
 **Acceptance Criteria:**

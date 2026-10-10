@@ -150,16 +150,16 @@ Error: Cannot find module '@/components/Header'
 
    ```tsx
    // Correct
-   import Header from '@/components/Header'
+   import Header from '@/components/header'
 
    // Wrong
-   import Header from '@/components/header' // Case sensitivity!
+   import Header from '@/components/Header' // Case sensitivity!
    ```
 
 2. **Verify the file exists**:
 
    ```bash
-   ls -la src/components/Header
+   ls -la src/components/header
    ```
 
 3. **Check tsconfig.json paths**:
@@ -404,9 +404,7 @@ pnpm run test:e2e
 
 1. **Check GitHub Pages settings**:
    - Go to Settings → Pages
-   - Source should be "Deploy from a branch"
-   - Branch should be set to `gh-pages` or correct branch
-   - Folder should be `/ (root)`
+   - Source should be "GitHub Actions" (the deploy workflow publishes with `actions/deploy-pages`)
 
 2. **Verify base path configuration**:
 
@@ -414,8 +412,8 @@ pnpm run test:e2e
    // next.config.ts should have:
    output: 'export'
 
-   // Build should use:
-   NEXT_PUBLIC_BASE_PATH=/FFC-IN-FFC_Single_Page_Template
+   // deploy.yml computes NEXT_PUBLIC_BASE_PATH automatically ("Determine base path"):
+   // /<repo-name> without public/CNAME, empty with a custom domain
    ```
 
 3. **Check CNAME file** (if using custom domain):
@@ -544,13 +542,11 @@ if (typeof window !== 'undefined') {
    ls -la out/_next/static/css/
    ```
 
-2. **Verify Tailwind config**:
+2. **Verify Tailwind config** (Tailwind v4 has no `tailwind.config.js`; it is configured in CSS):
 
-   ```javascript
-   // tailwind.config.js
-   module.exports = {
-     content: ['./src/**/*.{js,ts,jsx,tsx}'],
-   }
+   ```css
+   /* src/app/globals.css */
+   @import 'tailwindcss';
    ```
 
 3. **Check globals.css is imported**:

@@ -10,13 +10,15 @@ The application button is currently configured to use the Microsoft Form at `htt
 
 If you need to change the form URL, you can configure it in two ways:
 
-### Option 1: Update Default in Component
+### Option 1: Update the Default in Site Config
 
-Edit `src/components/ui/ApplicationFormButton.tsx` and update the form URL on line 23:
+The default comes from `siteConfig.integrations.microsoftFormUrl` in `src/lib/site.config.ts`; `src/components/ui/ApplicationFormButton.tsx` reads it:
 
 ```typescript
-const microsoftFormUrl = formUrl || 'https://forms.office.com/r/vePxGq6JqG'
+const microsoftFormUrl = formUrl || siteConfig.integrations.microsoftFormUrl
 ```
+
+Update `microsoftFormUrl` in `src/lib/site.config.ts` to change it.
 
 ### Option 2: Pass as Component Prop (Optional - for testing or multiple forms)
 

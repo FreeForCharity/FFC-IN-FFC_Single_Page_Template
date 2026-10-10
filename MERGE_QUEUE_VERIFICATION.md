@@ -1,5 +1,7 @@
 # GitHub Merge Queue Verification Report
 
+> **Snapshot:** This report is a dated snapshot (December 2024). Some files, workflows, and versions it names may have changed since.
+
 **Date:** December 7, 2024  
 **PR Analyzed:** #83 - "Update README documentation"  
 **Commit:** 038851c79adc2a42ac7fe1616a35862b475de729
