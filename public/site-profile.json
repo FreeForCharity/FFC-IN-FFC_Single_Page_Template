@@ -18,7 +18,7 @@
     "branch": "main"
   },
   "contacts": {
-    "primaryEmail": "security@freeforcharity.org",
+    "primaryEmail": "clarkemoyer@freeforcharity.org",
     "vulnerabilityDisclosurePath": "https://freeforcharity.github.io/vulnerability-disclosure-policy"
   },
   "profileEndpoints": {
