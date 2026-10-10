@@ -6,18 +6,32 @@ import { test, expect } from '@playwright/test'
  * AnimatedNumber is the canonical case — under reduced motion it should
  * render its final value immediately rather than counting up.
  *
- * NOTE: this spec calls `page.emulateMedia` explicitly *before* navigating
- * rather than relying on the `reducedMotion` test-fixture option. The
- * fixture is applied per-context but framer-motion's `useReducedMotion`
- * subscribes to the live media-query at mount time, so we set it before
- * the first paint so the component's `prefersReducedMotion` value is
- * `true` from the very first render.
+ * Apply the preference to the whole browser context so it remains active
+ * when third-party frames attach during navigation, and before the native
+ * useReducedMotion hook mounts.
  */
 
 test.describe('prefers-reduced-motion', () => {
+  test.use({ reducedMotion: 'reduce' })
+
   test('Results-2023 stat numbers settle without a multi-frame animation', async ({ page }) => {
-    await page.emulateMedia({ reducedMotion: 'reduce' })
+    // Test local animation behavior with deterministic external frames. The
+    // donation provider's availability is covered separately by smoke checks.
+    await page.route('**/*', (route) => {
+      const url = new URL(route.request().url())
+      if (['localhost', '127.0.0.1'].includes(url.hostname)) return route.continue()
+      return route.request().resourceType() === 'document'
+        ? route.fulfill({
+            status: 200,
+            contentType: 'text/html',
+            body: '<!doctype html><html></html>',
+          })
+        : route.fulfill({ status: 204, body: '' })
+    })
     await page.goto('/')
+    expect(await page.evaluate(() => matchMedia('(prefers-reduced-motion: reduce)').matches)).toBe(
+      true
+    )
 
     // Scroll Results-2023 into view so AnimatedNumber's useInView fires.
     await page.locator('#results').scrollIntoViewIfNeeded()

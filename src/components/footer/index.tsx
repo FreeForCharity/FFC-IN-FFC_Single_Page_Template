@@ -7,6 +7,7 @@ import { FiMail, FiPhone, FiMapPin, FiArrowRight, FiLink2 } from 'react-icons/fi
 import { FaFacebookF, FaLinkedinIn, FaGithub } from 'react-icons/fa'
 import { FaXTwitter } from 'react-icons/fa6'
 import type { IconType } from 'react-icons'
+import { SaleShareOptOut } from '@/components/sale-share-opt-out'
 
 import { isPending, mailtoHref, publishedPhone, siteConfig } from '@/lib/site.config'
 import { assetPath } from '@/lib/assetPath'
@@ -209,6 +210,13 @@ const Footer: React.FC = () => {
                   >
                     Cookie Preferences
                   </button>
+                </li>
+                <li>
+                  {/* Statutory opt-out of advertising data sharing (CCPA/CPRA
+                      and the Colorado / Connecticut equivalents). Required to
+                      be reachable from every page, which is why it lives here
+                      rather than only inside the preferences modal. */}
+                  <SaleShareOptOut className="hover:text-[#F58C23] hover:tracking-widest transition-all text-[16px] font-[500] text-left" />
                 </li>
               </ul>
             </nav>
