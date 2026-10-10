@@ -105,7 +105,7 @@ pnpm run test:watch
 
 **Coverage Requirements**:
 
-- **Current Minimum** (enforced in `jest.config.js`): 68% branches, 75% functions, 80% lines, 78% statements
+- **Current Minimum** (enforced in `jest.config.js`, checked in CI by `pnpm run test:coverage`): 68% branches, 75% functions, 80% lines, 78% statements
 - **Long-term Goal**: raise these thresholds as coverage grows
 
 ### Playwright
