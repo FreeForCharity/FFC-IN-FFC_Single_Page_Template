@@ -1,31 +1,31 @@
 {
   "schemaVersion": "ffc.site-profile.v1",
-  "siteId": "ffc-working-site-1",
+  "siteId": "https://freeforcharity.github.io",
   "siteName": "Free For Charity",
-  "canonicalUrl": "https://ffcworkingsite1.org",
+  "canonicalUrl": "https://freeforcharity.github.io",
   "organization": {
     "name": "Free For Charity",
-    "legalName": "Free For Charity",
     "ein": "46-2471893",
-    "nonprofitStatus": "us-501c3",
-    "country": "US"
+    "nonprofitStatus": "https://schema.org/Nonprofit501c3"
+  },
+  "supportedBy": {
+    "name": "Free For Charity",
+    "url": "https://freeforcharity.org"
   },
   "template": {
     "family": "ffc-single-page-template",
     "repository": "FreeForCharity/FFC-IN-FFC_Single_Page_Template",
-    "branch": "main",
-    "issue": "https://github.com/FreeForCharity/FFC-IN-FFC_Single_Page_Template/issues/195"
+    "branch": "main"
   },
   "contacts": {
     "primaryEmail": "security@freeforcharity.org",
-    "securityEmail": "security@freeforcharity.org",
-    "vulnerabilityDisclosurePath": "/vulnerability-disclosure-policy"
+    "vulnerabilityDisclosurePath": "https://freeforcharity.github.io/vulnerability-disclosure-policy"
   },
   "profileEndpoints": {
-    "siteProfile": "/site-profile.json",
-    "securityTxt": "/.well-known/security.txt",
-    "sitemap": "/sitemap.xml",
-    "robots": "/robots.txt"
+    "siteProfile": "https://freeforcharity.github.io/site-profile.json",
+    "securityTxt": "https://freeforcharity.github.io/.well-known/security.txt",
+    "sitemap": "https://freeforcharity.github.io/sitemap.xml",
+    "robots": "https://freeforcharity.github.io/robots.txt"
   },
   "trust": {
     "generatedBy": "Free For Charity template factory",
@@ -34,12 +34,12 @@
     "managesSecrets": false,
     "productionDnsManagedHere": false,
     "requiredChecks": [
-      "npm run format:check",
-      "npm run lint",
-      "npm test",
-      "npm run build",
-      "npm run test:e2e",
-      "npm run check:drift"
+      "pnpm run format:check",
+      "pnpm run lint",
+      "pnpm run check:drift",
+      "pnpm run test:coverage",
+      "pnpm run build",
+      "pnpm run test:e2e"
     ]
   }
 }

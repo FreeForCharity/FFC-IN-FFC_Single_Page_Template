@@ -1,14 +1,14 @@
 blank_issues_enabled: true
 contact_links:
   - name: 💬 Get Support
-    url: https://github.com/FreeForCharity/FFC_Single_Page_Template/blob/main/SUPPORT.md
+    url: https://github.com/FreeForCharity/FFC-IN-FFC_Single_Page_Template/blob/main/SUPPORT.md
     about: Need help? Check our support resources
   - name: 🔒 Report Security Vulnerability
-    url: https://github.com/FreeForCharity/FFC_Single_Page_Template/blob/main/SECURITY.md
+    url: https://github.com/FreeForCharity/FFC-IN-FFC_Single_Page_Template/blob/main/SECURITY.md
     about: Report security issues privately following our security policy
   - name: 🤝 Contributing Guidelines
-    url: https://github.com/FreeForCharity/FFC_Single_Page_Template/blob/main/CONTRIBUTING.md
+    url: https://github.com/FreeForCharity/FFC-IN-FFC_Single_Page_Template/blob/main/CONTRIBUTING.md
     about: Learn how to contribute to the project
   - name: 🌐 Free For Charity Website
-    url: https://ffcworkingsite1.org
+    url: https://freeforcharity.github.io/FFC-IN-FFC_Single_Page_Template
     about: Visit the Free For Charity website

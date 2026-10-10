@@ -1,5 +1,7 @@
 # Facebook Events Integration Requirements
 
+> ⚠️ **Superseded.** This document describes the original Facebook-only approach. The current implementation aggregates events from Google Calendar, Microsoft 365, and Facebook in a single section. See **[EVENTS_SETUP.md](./EVENTS_SETUP.md)** for the up-to-date setup guide. This file is kept for historical context only.
+
 **Last Updated:** December 9, 2024
 
 This document outlines the technical and functional requirements for integrating Free For Charity's Facebook events into a new Events section on the homepage.
@@ -478,7 +480,7 @@ When user has not consented to marketing cookies:
 
 3. **Build Process**
    - No changes to existing build process
-   - No impact on `npm run build` timing
+   - No impact on `pnpm run build` timing
    - Works with GitHub Pages deployment
 
 ### SEO Considerations
@@ -604,10 +606,10 @@ test.describe('Facebook Events Section', () => {
 Run Lighthouse before and after implementation:
 
 ```bash
-npm run build
-npm run preview
+pnpm run build
+pnpm run preview
 # In another terminal
-npm run lighthouse
+pnpm run lighthouse
 ```
 
 **Acceptance Criteria:**

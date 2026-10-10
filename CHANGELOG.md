@@ -83,5 +83,5 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Automated testing in CI
 - Merge queue verification
 
-[unreleased]: https://github.com/FreeForCharity/FFC_Single_Page_Template/compare/v0.1.0...HEAD
-[0.1.0]: https://github.com/FreeForCharity/FFC_Single_Page_Template/releases/tag/v0.1.0
+[unreleased]: https://github.com/FreeForCharity/FFC-IN-FFC_Single_Page_Template/compare/v0.1.0...HEAD
+[0.1.0]: https://github.com/FreeForCharity/FFC-IN-FFC_Single_Page_Template/releases/tag/v0.1.0

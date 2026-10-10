@@ -46,10 +46,10 @@ Fixes #
 
 ### Automated Testing
 
-- [ ] `npm run lint` - All linting checks pass
-- [ ] `npm test` - All unit tests pass
-- [ ] `npm run build` - Build completes successfully
-- [ ] `npm run test:e2e` - All E2E tests pass (if applicable)
+- [ ] `pnpm run lint` - All linting checks pass
+- [ ] `pnpm test` - All unit tests pass
+- [ ] `pnpm run build` - Build completes successfully
+- [ ] `pnpm run test:e2e` - All E2E tests pass (if applicable)
 
 ### Accessibility
 

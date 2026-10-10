@@ -169,7 +169,7 @@ Test the following on each major component change:
 Run responsive tests:
 
 ```bash
-npm run test:e2e
+pnpm run test:e2e
 ```
 
 Tests include:
@@ -185,8 +185,8 @@ Tests include:
 Lighthouse CI automatically tests mobile and desktop performance:
 
 ```bash
-npm run build
-npx lhci autorun
+pnpm run build
+pnpm exec lhci autorun
 ```
 
 **Key Metrics**:
@@ -427,7 +427,7 @@ When adding new components or modifying existing ones:
 
 ---
 
-**Last Updated**: 2025-12-03  
-**Repository**: FreeForCharity/FFC_Single_Page_Template  
-**Node.js**: 20.x (validated with v20.19.6)  
+**Last Updated**: 2026-07-18  
+**Repository**: FreeForCharity/FFC-IN-FFC_Single_Page_Template  
+**Node.js**: 24.x (validated with v24.18.0)  
 **Maintainer**: FreeForCharity Development Team

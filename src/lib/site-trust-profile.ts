@@ -1,0 +1,50 @@
+import { siteConfig, siteUrl, isPending } from './site.config.ts'
+
+/** Public identity for tooling; never borrows the supporting organization's identity. */
+export function getSiteTrustProfile() {
+  const canonicalUrl = siteUrl('/').replace(/\/$/, '')
+  return {
+    schemaVersion: 'ffc.site-profile.v1' as const,
+    siteId: canonicalUrl,
+    siteName: siteConfig.name,
+    canonicalUrl,
+    organization: {
+      name: siteConfig.name,
+      ein: isPending('ein') ? null : siteConfig.ein.trim() || null,
+      nonprofitStatus: siteConfig.nonprofitStatus?.trim() || null,
+    },
+    supportedBy: { name: siteConfig.supportedBy.name, url: siteConfig.supportedBy.url },
+    template: {
+      family: 'ffc-single-page-template',
+      repository: 'FreeForCharity/FFC-IN-FFC_Single_Page_Template',
+      branch: 'main',
+    },
+    contacts: {
+      primaryEmail: isPending('email') ? null : siteConfig.contactEmail.trim() || null,
+      vulnerabilityDisclosurePath: siteUrl(siteConfig.vulnerabilityDisclosurePath),
+    },
+    profileEndpoints: {
+      siteProfile: siteUrl('/site-profile.json'),
+      securityTxt: siteUrl('/.well-known/security.txt'),
+      sitemap: siteUrl('/sitemap.xml'),
+      robots: siteUrl('/robots.txt'),
+    },
+    trust: {
+      generatedBy: 'Free For Charity template factory',
+      hosting: 'github-pages-static-export',
+      requiresHttps: true,
+      managesSecrets: false,
+      productionDnsManagedHere: false,
+      requiredChecks: [
+        'pnpm run format:check',
+        'pnpm run lint',
+        'pnpm run check:drift',
+        'pnpm run test:coverage',
+        'pnpm run build',
+        'pnpm run test:e2e',
+      ],
+    },
+  }
+}
+
+export type SiteTrustProfile = ReturnType<typeof getSiteTrustProfile>

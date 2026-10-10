@@ -16,27 +16,31 @@ Google Tag Manager (GTM) is a tag management system that allows you to manage an
 ### Features
 
 - ✅ Standard GTM implementation following Google's guidelines
+- ✅ Consent Mode v2 defaults are set BEFORE GTM loads (inline bootstrap in the root layout — see `src/lib/consent-mode.ts`)
 - ✅ Initializes `dataLayer` before GTM loads
-- ✅ Uses Next.js Script component with `afterInteractive` strategy
+- ✅ Uses Next.js Script component with `lazyOnload` strategy
 - ✅ Includes noscript fallback for accessibility
 - ✅ Integrates with existing cookie consent system
-- ✅ GTM ID hardcoded directly in component (no environment variable needed)
+- ✅ GTM ID read from `src/lib/analytics.config.ts` (one place for all analytics IDs)
 
 ## Configuration
 
 ### Setting Your GTM ID
 
-The GTM container ID is hardcoded directly in the component file. To update it:
+The GTM container ID lives in `src/lib/analytics.config.ts` alongside the other
+analytics IDs. To update it:
 
-1. Open `src/components/GoogleTagManager/index.tsx`
-2. Update the `GTM_ID` constant with your actual GTM container ID:
+1. Open `src/lib/analytics.config.ts`
+2. Set the `gtmId` field to your actual GTM container ID:
 
-```tsx
-// Google Tag Manager ID - Update this with your actual GTM container ID
-const GTM_ID = 'GTM-XXXXXXX' // Replace with your actual GTM ID
+```ts
+export const analyticsConfig = {
+  gtmId: 'GTM-ABC1234', // your GTM container ID
+  // ...
+}
 ```
 
-Replace `GTM-XXXXXXX` with your actual GTM container ID from Google Tag Manager (e.g., `GTM-ABC1234`).
+Replace the value with your actual GTM container ID from Google Tag Manager (e.g., `GTM-ABC1234`).
 
 ## Usage
 
@@ -64,11 +68,13 @@ export default function RootLayout({ children }) {
 
 ### 1. Script Injection
 
-The GTM script is loaded using Next.js's `Script` component with the `afterInteractive` strategy, which means:
+The GTM script is loaded using Next.js's `Script` component with the `lazyOnload` strategy, which means:
 
-- The script loads after the page becomes interactive
+- The script loads during browser idle time, after the page becomes interactive
 - It doesn't block the initial page load
 - It's optimal for analytics and marketing tags
+
+The root layout emits the Google Consent Mode v2 bootstrap (`CONSENT_MODE_BOOTSTRAP` from `src/lib/consent-mode.ts`) as an inline `<head>` script placed **before** `<GoogleTagManager />`, so the consent defaults are already in the `dataLayer` by the time GTM initializes.
 
 ### 2. DataLayer Initialization
 
@@ -79,14 +85,15 @@ The GTM script automatically initializes the `window.dataLayer` array with:
 
 This ensures the dataLayer is ready to receive events as soon as the page loads.
 
-### 3. Cookie Consent Integration
+### 3. Cookie Consent Integration (Google Consent Mode v2)
 
-GTM works as a **functional script** and is always active. The existing `CookieConsent` component manages:
+GTM loads on **every pageview**. Consent gates what its Google tags may **store**, not whether they load:
 
-- Analytics scripts (Google Analytics, Microsoft Clarity)
-- Marketing scripts (Meta Pixel)
+- The inline bootstrap in the root layout sets two `gtag('consent', 'default', ...)` calls before GTM loads: a region-scoped **denial** for the EEA, the UK, and Switzerland (with `wait_for_update: 500`), then an unscoped **grant** for everyone else. Google determines which default applies from the visitor's IP address.
+- In denied regions, GA4 (whether delivered by GTM or by the direct loader) sends cookieless pings until the visitor accepts; everywhere else it uses cookies from the first pageview.
+- Every banner interaction AND every stored-choice restore pushes `gtag('consent', 'update', ...)` (via `updateGoogleConsent` in `src/lib/consent-mode.ts`) plus a `consent_update` dataLayer event that GTM triggers can use.
 
-When users accept cookies, the `CookieConsent` component pushes a `consent_update` event to the dataLayer, which GTM can use to conditionally fire tags based on consent status.
+Non-Google scripts do **not** speak Consent Mode, so the `CookieConsent` component keeps them strictly opt-in everywhere: Microsoft Clarity loads only on an explicit analytics grant, and the Meta Pixel only on an explicit marketing grant. Withdrawing consent deletes the third-party cookies those services set.
 
 ### 4. Noscript Fallback
 
@@ -98,7 +105,7 @@ Comprehensive tests are available in `tests/google-tag-manager.spec.ts`:
 
 ```bash
 # Run GTM tests
-npm run test:e2e -- tests/google-tag-manager.spec.ts
+pnpm run test:e2e tests/google-tag-manager.spec.ts
 ```
 
 Test coverage includes:
@@ -115,8 +122,8 @@ Test coverage includes:
 
 The site automatically deploys to GitHub Pages via `.github/workflows/nextjs.yml`. The GTM implementation works on both:
 
-1. **Custom domain**: https://www.ffcworkingsite1.org
-2. **GitHub Pages**: https://freeforcharity.github.io/FFC_Single_Page_Template/
+1. **GitHub Pages (default)**: https://freeforcharity.github.io/FFC-IN-FFC_Single_Page_Template/
+2. **Custom domain** (only if a fork configures one via `public/CNAME`)
 
 The GTM ID is hardcoded in the component, so no additional configuration is needed for deployment.
 
@@ -126,7 +133,7 @@ To test GTM locally:
 
 ```bash
 # Start development server
-npm run dev
+pnpm run dev
 ```
 
 The GTM script will load automatically with the configured GTM ID.
@@ -209,10 +216,10 @@ Note: Ad blockers may prevent GTM from loading. This is expected behavior and af
 
 To change the GTM container ID:
 
-1. Open `src/components/GoogleTagManager/index.tsx`
-2. Update the `GTM_ID` constant:
-   ```tsx
-   const GTM_ID = 'GTM-NEW1234' // Your new GTM ID
+1. Open `src/lib/analytics.config.ts`
+2. Update the `gtmId` field:
+   ```ts
+   gtmId: 'GTM-NEW1234', // Your new GTM ID
    ```
 3. Commit and push the changes
 4. The changes will be deployed automatically via GitHub Actions

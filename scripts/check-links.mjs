@@ -16,10 +16,35 @@
 import { createServer } from 'node:http'
 import { spawn } from 'node:child_process'
 import { readFile, stat } from 'node:fs/promises'
+import { readFileSync, writeFileSync, mkdtempSync } from 'node:fs'
+import { tmpdir } from 'node:os'
 import { join, normalize, extname, resolve, sep } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 const ROOT = fileURLToPath(new URL('../out', import.meta.url))
+
+// The site's canonical origin (siteConfig.url). Absolute self-URLs baked into
+// the build — og:image, twitter:image, JSON-LD logo, rel=canonical — point at
+// this PRODUCTION origin. Below we rewrite that origin to the local preview
+// server so the checker validates THIS build's own assets instead of whatever
+// is currently deployed. Without this, any brand-new asset (e.g. a fresh OG
+// image) 404s in the link check until it ships — a false failure.
+function canonicalOrigin() {
+  try {
+    const cfg = readFileSync(
+      fileURLToPath(new URL('../src/lib/site.config.ts', import.meta.url)),
+      'utf8'
+    )
+    const m = cfg.match(/url:\s*['"]([^'"]+)['"]/)
+    return m ? new URL(m[1]).origin : null
+  } catch {
+    return null
+  }
+}
+
+function escapeRegExp(s) {
+  return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+}
 
 const CONTENT_TYPES = {
   '.html': 'text/html; charset=utf-8',
@@ -109,12 +134,23 @@ function shutdown(code) {
 server.listen(0, '127.0.0.1', () => {
   const { port } = server.address()
   const target = `http://127.0.0.1:${port}`
-  const args = [
-    target,
-    '--recurse',
-    '--config',
-    fileURLToPath(new URL('../.linkinatorrc.json', import.meta.url)),
-  ]
+
+  // Extend the committed config with a URL rewrite mapping the site's
+  // canonical origin to this local server. We go through a generated config
+  // file (rather than linkinator's --url-rewrite-* CLI flags, which are broken
+  // by a casing bug in v7.6.1) because the config-file keys are honored.
+  const baseConfig = JSON.parse(
+    readFileSync(fileURLToPath(new URL('../.linkinatorrc.json', import.meta.url)), 'utf8')
+  )
+  const origin = canonicalOrigin()
+  if (origin) {
+    baseConfig.urlRewriteSearch = `^${escapeRegExp(origin)}`
+    baseConfig.urlRewriteReplace = target
+  }
+  const runtimeConfigPath = join(mkdtempSync(join(tmpdir(), 'linkinator-')), 'config.json')
+  writeFileSync(runtimeConfigPath, JSON.stringify(baseConfig))
+
+  const args = [target, '--recurse', '--config', runtimeConfigPath]
   // Spawn linkinator from PATH — npm puts node_modules/.bin on PATH for
   // scripts, so `npm run check-links` resolves it cross-platform. shell:true
   // on Windows lets the `linkinator.cmd` shim resolve.

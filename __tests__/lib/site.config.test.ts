@@ -1,94 +1,39 @@
-import { readFileSync } from 'node:fs'
-import { join } from 'node:path'
-
 import {
   siteConfig,
-  siteTrustProfile,
   siteUrl,
   twitterSite,
   cardDescription,
-  getSiteTrustProfile,
+  isSupportingOrgSite,
+  mailtoHref,
+  publishedPhone,
+  eventsFacebookPageUrl,
+  donationEmbedUrl,
+  isPending,
+  PENDING_TEXT,
+  type PendingField,
 } from '../../src/lib/site.config'
+import { configuredTeam } from '../../src/data/team'
+import {
+  asCharitySite,
+  asSupporterSite,
+  restoreSiteConfig,
+  withFooterFieldsPending,
+} from '../helpers/site-identity'
 
-describe('site trust profile contract', () => {
-  it('exposes the stable v1 machine-readable contract shape', () => {
-    expect(siteTrustProfile.schemaVersion).toBe('ffc.site-profile.v1')
-    expect(siteTrustProfile.profileEndpoints).toEqual({
-      siteProfile: '/site-profile.json',
-      securityTxt: '/.well-known/security.txt',
-      sitemap: '/sitemap.xml',
-      robots: '/robots.txt',
+describe('supportedBy (FFC footer standard)', () => {
+  // The permanent "Supported by" attribution is required on every FFC-supported
+  // charity site. These assertions guard against a fork (or refactor) removing
+  // or repointing it — the values are intentionally FFC's, forever.
+  it('is present and points at Free For Charity', () => {
+    expect(siteConfig.supportedBy).toEqual({
+      name: 'Free For Charity',
+      url: 'https://freeforcharity.org',
+      hubUrl: 'https://freeforcharity.org/hub/',
+      // FFC's own legal contacts, rendered only on FFC's own site (legalContact()).
+      legalContactName: 'Clarke Moyer',
+      legalContactEmail: 'clarkemoyer@freeforcharity.org',
+      cookieContactEmail: 'privacy@freeforcharity.org',
     })
-    expect(siteTrustProfile.trust).toMatchObject({
-      hosting: 'github-pages-static-export',
-      requiresHttps: true,
-      managesSecrets: false,
-      productionDnsManagedHere: false,
-    })
-    expect(siteTrustProfile.trust.requiredChecks).toEqual([
-      'npm run format:check',
-      'npm run lint',
-      'npm test',
-      'npm run build',
-      'npm run test:e2e',
-      'npm run check:drift',
-    ])
-  })
-
-  it('keeps the static public JSON endpoint in sync with the typed profile', () => {
-    const publicProfile = JSON.parse(
-      readFileSync(join(process.cwd(), 'public/site-profile.json'), 'utf8')
-    )
-
-    expect(publicProfile).toEqual(siteTrustProfile)
-  })
-
-  it('returns JSON-serializable public data only', () => {
-    const profile = getSiteTrustProfile()
-    expect(() => JSON.stringify(profile)).not.toThrow()
-    expect(JSON.parse(JSON.stringify(profile))).toEqual(profile)
-    const serialized = JSON.stringify(profile).toLowerCase()
-    expect(serialized).not.toContain('apikey')
-    expect(serialized).not.toContain('token')
-    expect(profile.canonicalUrl).toBe(siteConfig.url.replace(/\/$/, ''))
-    expect(profile.contacts.primaryEmail).toBe(siteConfig.contactEmail)
-  })
-
-  it('reflects siteConfig edits used by generated-site automation', () => {
-    const originalName = siteConfig.name
-    const originalUrl = siteConfig.url
-    const originalEmail = siteConfig.contactEmail
-
-    try {
-      siteConfig.name = 'Example Nonprofit'
-      siteConfig.url = 'https://example.org/'
-      siteConfig.contactEmail = 'hello@example.org'
-
-      expect(getSiteTrustProfile()).toMatchObject({
-        siteName: 'Example Nonprofit',
-        canonicalUrl: 'https://example.org',
-        contacts: {
-          primaryEmail: 'hello@example.org',
-          securityEmail: 'hello@example.org',
-        },
-      })
-    } finally {
-      siteConfig.name = originalName
-      siteConfig.url = originalUrl
-      siteConfig.contactEmail = originalEmail
-    }
-  })
-
-  it('normalizes canonicalUrl when siteConfig.url has a trailing slash', () => {
-    const originalUrl = siteConfig.url
-
-    try {
-      siteConfig.url = 'https://example.org/'
-
-      expect(getSiteTrustProfile().canonicalUrl).toBe('https://example.org')
-    } finally {
-      siteConfig.url = originalUrl
-    }
   })
 })
 
@@ -191,5 +136,234 @@ describe('cardDescription', () => {
   it('falls back when shortDescription is whitespace only', () => {
     siteConfig.shortDescription = '   '
     expect(cardDescription()).toBe(siteConfig.description)
+  })
+})
+
+describe('isSupportingOrgSite', () => {
+  afterEach(restoreSiteConfig)
+
+  it("is true on the supporting organization's own site", () => {
+    asSupporterSite()
+    expect(isSupportingOrgSite()).toBe(true)
+  })
+
+  it("is false on a charity's site — setting the name is enough", () => {
+    asCharitySite()
+    expect(isSupportingOrgSite()).toBe(false)
+  })
+})
+
+describe('mailtoHref', () => {
+  afterEach(restoreSiteConfig)
+
+  it('links to contactEmail', () => {
+    asCharitySite({ contactEmail: ' hello@pantry.example ' })
+    expect(mailtoHref()).toBe('mailto:hello@pantry.example')
+  })
+
+  it('encodes characters that would add a recipient or a header', () => {
+    asCharitySite({ contactEmail: 'a@b.example,c@d.example?bcc=e@f.example' })
+    expect(mailtoHref()).toBe('mailto:a@b.example%2Cc@d.example%3Fbcc=e@f.example')
+  })
+
+  it('removes whitespace inside the address instead of encoding it', () => {
+    asCharitySite({ contactEmail: 'hello @pantry.\nexample' })
+    expect(mailtoHref()).toBe('mailto:hello@pantry.example')
+  })
+
+  it('appends an encoded subject', () => {
+    asCharitySite()
+    expect(mailtoHref('Hi & bye')).toMatch(/\?subject=Hi%20%26%20bye$/)
+  })
+})
+
+describe("the supporting organization's integrations render only on its own site", () => {
+  afterEach(restoreSiteConfig)
+
+  it('embeds its donation form and links its Facebook page on its own site', () => {
+    asSupporterSite()
+    expect(donationEmbedUrl()).toBe(siteConfig.integrations.zeffyDonationUrl)
+    expect(eventsFacebookPageUrl()).toBe(siteConfig.integrations.eventsFacebookPageUrl)
+  })
+
+  it("uses a charity's own Facebook link, and never embeds the supporter's form", () => {
+    asCharitySite({
+      social: [
+        { label: 'LinkedIn', href: 'https://www.linkedin.com/company/riverbend-test' },
+        { label: 'Facebook', href: ' https://www.facebook.com/riverbend-test ' },
+      ],
+    })
+    expect(donationEmbedUrl()).toBeNull()
+    expect(eventsFacebookPageUrl()).toBe('https://www.facebook.com/riverbend-test')
+  })
+
+  it("hides the Events Facebook link when a charity has none, rather than use the supporter's", () => {
+    asCharitySite({ social: [{ label: 'X', href: 'https://x.com/riverbend-test' }] })
+    expect(eventsFacebookPageUrl()).toBe('')
+  })
+})
+
+describe('publishedPhone', () => {
+  afterEach(restoreSiteConfig)
+
+  it('returns the trimmed number when both halves are set', () => {
+    asCharitySite({ phone: { display: ' (555) 010-0101 ', tel: ' 15550100101 ' } })
+    expect(publishedPhone()).toEqual({ display: '(555) 010-0101', tel: '15550100101' })
+  })
+
+  it.each([
+    [{ display: '', tel: '' }],
+    [{ display: '(555) 010-0101', tel: '' }],
+    [{ display: '', tel: '15550100101' }],
+  ])('returns null unless both halves are set (%j)', (phone) => {
+    asCharitySite({ phone })
+    expect(publishedPhone()).toBeNull()
+  })
+})
+
+// FreeForCharity/FFC-IN-FFC_Single_Page_Template#482: the `pending` convention.
+// Every PendingField, mapped to "its value is empty". A pending field must carry
+// no value, so no placeholder or borrowed (template / FFC) value can ship behind
+// the "awaiting information" notice.
+const PENDING_IS_EMPTY: Record<PendingField, () => boolean> = {
+  email: () => siteConfig.contactEmail.trim() === '',
+  phone: () => siteConfig.phone.display.trim() === '' && siteConfig.phone.tel.trim() === '',
+  address: () => siteConfig.addresses.length === 0,
+  ein: () => siteConfig.ein.trim() === '',
+  guidestar: () =>
+    siteConfig.guidestar.profileUrl.trim() === '' &&
+    siteConfig.guidestar.directProfileUrl.trim() === '',
+  social: () => siteConfig.social.every((s) => s.href.trim() === ''),
+  team: () => configuredTeam.length === 0,
+  donationUrl: () => siteConfig.donationUrl.trim() === '',
+  volunteerUrl: () => siteConfig.volunteerUrl.trim() === '',
+}
+
+/** Every way the current config breaks the pending contract (empty = none). */
+function pendingViolations(): string[] {
+  const pending = siteConfig.pending ?? []
+  const known = Object.keys(PENDING_IS_EMPTY)
+  const violations: string[] = []
+  for (const field of pending) {
+    if (!known.includes(field)) violations.push(`unknown pending field "${field}"`)
+    else if (!PENDING_IS_EMPTY[field]()) violations.push(`pending ${field} has a value`)
+  }
+  if (new Set(pending).size !== pending.length) violations.push('pending lists a field twice')
+  return violations
+}
+
+describe('siteConfig contract', () => {
+  afterEach(restoreSiteConfig)
+
+  it('the checked-in config satisfies the pending contract', () => {
+    // The template itself sets no `pending`; a provisioned fork may. Either
+    // way every listed field is known, listed once, and has an empty value.
+    expect(pendingViolations()).toEqual([])
+  })
+
+  // The shared schema lets `ein` and `contactEmail` be empty; these checks are
+  // what hold them to "empty ONLY while pending".
+  const EIN = /^\d{2}-\d{7}$/ // IRS EIN format: two digits, hyphen, seven digits.
+  const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+  function expectEinAndEmailContract(): void {
+    expect(siteConfig.ein).toMatch(isPending('ein') ? /^$/ : EIN)
+    expect(siteConfig.contactEmail).toMatch(isPending('email') ? /^$/ : EMAIL)
+  }
+
+  it('carries a well-formed EIN and email, or empty ones while they are pending', () => {
+    expectEinAndEmailContract()
+  })
+
+  it('a pending EIN / email relaxes the format checks to "empty"', () => {
+    withFooterFieldsPending()
+    expectEinAndEmailContract()
+    expect(pendingViolations()).toEqual([])
+  })
+
+  it('an empty EIN or email that is NOT pending breaks the contract', () => {
+    asCharitySite({ ein: '' })
+    expect(siteConfig.ein).not.toMatch(EIN)
+    asCharitySite({ contactEmail: '' })
+    expect(siteConfig.contactEmail).not.toMatch(EMAIL)
+    asCharitySite()
+    expectEinAndEmailContract()
+  })
+
+  it('carries https GuideStar URLs, or empty ones for "no profile yet"', () => {
+    for (const url of [siteConfig.guidestar.profileUrl, siteConfig.guidestar.directProfileUrl]) {
+      expect(url).toMatch(/^(https:\/\/\S+)?$/)
+    }
+  })
+})
+
+describe('siteConfig.pending contract', () => {
+  afterEach(restoreSiteConfig)
+
+  // About the template as shipped: a provisioned charity may legitimately
+  // list pending fields, so this is skipped once the site is rebranded.
+  ;(isSupportingOrgSite() ? it : it.skip)('is not set by the template itself', () => {
+    expect(siteConfig.pending).toBeUndefined()
+    expect(isPending('email')).toBe(false)
+  })
+
+  it('isPending reports exactly the listed fields', () => {
+    siteConfig.pending = ['phone', 'guidestar']
+    expect(isPending('phone')).toBe(true)
+    expect(isPending('guidestar')).toBe(true)
+    expect(isPending('email')).toBe(false)
+    expect(isPending('team')).toBe(false)
+  })
+
+  it('exposes the visible placeholder text', () => {
+    expect(PENDING_TEXT).toBe('Awaiting information from the charity')
+  })
+
+  it('accepts every footer field pending with an empty value', () => {
+    withFooterFieldsPending()
+    expect(siteConfig.pending?.length).toBe(8)
+    expect(pendingViolations()).toEqual([])
+  })
+
+  it.each([
+    ['email', { contactEmail: 'hello@pantry.example' }],
+    ['phone', { phone: { display: '(555) 010-0101', tel: '15550100101' } }],
+    [
+      'address',
+      { addresses: [{ label: 'Office', lines: ['1 Main St'], mapUrl: 'https://maps.example' }] },
+    ],
+    ['ein', { ein: '12-3456789' }],
+    [
+      'guidestar',
+      {
+        guidestar: {
+          profileUrl: 'https://www.guidestar.org/profile/12-3456789',
+          directProfileUrl: '',
+        },
+      },
+    ],
+    ['social', { social: [{ label: 'LinkedIn', href: 'https://www.linkedin.com/company/x' }] }],
+    ['donationUrl', { donationUrl: 'https://www.zeffy.com/x' }],
+    ['volunteerUrl', { volunteerUrl: 'https://www.idealist.org/x' }],
+  ] as const)('flags a pending %s that still carries a value', (field, value) => {
+    withFooterFieldsPending()
+    Object.assign(siteConfig, value)
+    expect(pendingViolations()).toEqual([`pending ${field} has a value`])
+  })
+
+  it('flags a pending team while team members are configured', () => {
+    // The checked-in team data is populated, so a pending team is a violation.
+    siteConfig.pending = ['team']
+    expect(pendingViolations()).toEqual(
+      configuredTeam.length > 0 ? ['pending team has a value'] : []
+    )
+  })
+
+  it('flags unknown and duplicated fields', () => {
+    withFooterFieldsPending()
+    siteConfig.pending = ['phone', 'phone', 'fax' as PendingField]
+    expect(pendingViolations()).toEqual([
+      'unknown pending field "fax"',
+      'pending lists a field twice',
+    ])
   })
 })

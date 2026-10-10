@@ -16,7 +16,7 @@ ls -la src/data/testimonials/
 ### 2. Test Development Server
 
 ```bash
-npm run dev
+pnpm run dev
 ```
 
 Then visit http://localhost:3000
@@ -24,7 +24,7 @@ Then visit http://localhost:3000
 ### 3. Test Build
 
 ```bash
-npm run build
+pnpm run build
 ```
 
 Should complete successfully
@@ -32,7 +32,7 @@ Should complete successfully
 ### 4. Test Preview
 
 ```bash
-npm run preview
+pnpm run preview
 ```
 
 Visit http://localhost:3000 to see the built site
@@ -43,29 +43,29 @@ Visit http://localhost:3000 to see the built site
 
 ```bash
 # Run all unit tests
-npm test
+pnpm test
 
 # Run with coverage report
-npm run test:coverage
+pnpm run test:coverage
 
 # Run in watch mode (for development)
-npm run test:watch
+pnpm run test:watch
 ```
 
 **E2E Tests (Playwright)**:
 
 ```bash
 # First, ensure the site is built
-npm run build
+pnpm run build
 
 # Install Playwright browsers (first time only)
-npx playwright install chromium
+pnpm exec playwright install chromium
 
 # Run E2E tests
-npm run test:e2e
+pnpm run test:e2e
 
 # Run with UI
-npm run test:e2e:ui
+pnpm run test:e2e:ui
 ```
 
 ## Automated Test Suite
@@ -87,26 +87,26 @@ All tests run automatically in CI before deployment.
 
 - **Jest**: v30.x - JavaScript testing framework
 - **React Testing Library**: v16.x - React component testing utilities
-- **@testing-library/jest-dom**: v6.x - Custom Jest matchers for DOM
+- **@testing-library/jest-dom**: v7.x - Custom Jest matchers for DOM
 - **jest-environment-jsdom**: Simulates browser environment for tests
 
 ### Running Unit Tests
 
 ```bash
 # Run all unit tests
-npm test
+pnpm test
 
 # Run with coverage report
-npm run test:coverage
+pnpm run test:coverage
 
 # Run in watch mode for development
-npm run test:watch
+pnpm run test:watch
 
 # Run specific test file
-npm test -- __tests__/components/Header.test.tsx
+pnpm test __tests__/components/Header.test.tsx
 
 # Run tests matching a pattern
-npm test -- -t "Header"
+pnpm test -t "Header"
 ```
 
 ### Test File Structure
@@ -223,10 +223,10 @@ describe('MyComponent', () => {
 
 ```bash
 # All tests include accessibility checks by default
-npm test
+pnpm test
 
 # Run specific component accessibility test
-npm test -- -t "should not have accessibility violations"
+pnpm test -t "should not have accessibility violations"
 ```
 
 ### Test Configuration
@@ -301,7 +301,7 @@ Tests that verify image loading works correctly for both custom domain and GitHu
      - Both logos use identical path
    - **Deployment Compatibility**:
      - Custom domain: `/web-app-manifest-512x512.png`
-   - GitHub Pages: `/FFC_Single_Page_Template/web-app-manifest-512x512.png`
+   - GitHub Pages: `/FFC-IN-FFC_Single_Page_Template/web-app-manifest-512x512.png`
 
 5. **`images should return 200 status code`**
    - **Purpose**: Verifies images load successfully via HTTP
@@ -324,15 +324,15 @@ Tests that verify image loading works correctly for both custom domain and GitHu
 
 ```bash
 # Build the site first
-npm run build
+pnpm run build
 
 # Install Playwright browsers (first time only)
-npx playwright install chromium
+pnpm exec playwright install chromium
 
 # Run tests in different modes
-npm test              # Headless mode (default)
-npm run test:headed   # With browser visible
-npm run test:ui       # Interactive Playwright UI
+pnpm test              # Headless mode (default)
+pnpm run test:headed   # With browser visible
+pnpm run test:ui       # Interactive Playwright UI
 ```
 
 #### CI/CD Environment
@@ -340,9 +340,9 @@ npm run test:ui       # Interactive Playwright UI
 Tests run automatically in GitHub Actions with the following configuration:
 
 - **Trigger**: Every push to main branch
-- **Environment**: Ubuntu latest with Node.js 20
-- **Browser Setup**: `npx playwright install --with-deps chromium`
-- **Build**: Built with `NEXT_PUBLIC_BASE_PATH=/FFC_Single_Page_Template`
+- **Environment**: Ubuntu latest with Node.js 24
+- **Browser Setup**: `pnpm exec playwright install --with-deps chromium`
+- **Build**: Built with `NEXT_PUBLIC_BASE_PATH=/FFC-IN-FFC_Single_Page_Template`
 - **Retry Logic**: Failed tests retry 2 times
 - **Failure Handling**: Deployment blocked if tests fail
 
@@ -356,7 +356,7 @@ Key settings:
 - **Base URL**: `http://localhost:3000`
 - **Parallel Execution**: Enabled (disabled in CI for stability)
 - **Retries**: 2 in CI, 0 locally
-- **Web Server**: Auto-starts `npm run preview` before tests
+- **Web Server**: Auto-starts `pnpm run preview` before tests
 - **Browser**: System Chromium (fallback to Playwright's if unavailable)
 - **Trace Collection**: On first retry for debugging
 - **Reporter**: HTML report
@@ -411,11 +411,11 @@ Tests run automatically in GitHub Actions with the following workflows:
   6. Post results comment on PR (if applicable)
 - Runs independently after deployment
 - Provides performance metrics without blocking deployment
-- Warning thresholds (not hard failures):
-  - Performance: ≥60%
-  - Accessibility: ≥80%
-  - Best Practices: ≥80%
-  - SEO: ≥90%
+- Thresholds (from `lighthouserc.json`, the single source of truth):
+  - Performance: ≥90% (warn — does not fail CI)
+  - Accessibility: ≥98% (**error** — fails the workflow)
+  - Best Practices: ≥96% (warn — does not fail CI)
+  - SEO: ≥98% (**error** — fails the workflow)
 
 ### Result Reporting
 
@@ -435,7 +435,7 @@ Tests run automatically in GitHub Actions with the following workflows:
 
 - **Rules**: Next.js core-web-vitals + TypeScript
 - **Ignored Paths**: node_modules, .next, out, build, test-results, playwright-report
-- **Integration**: Runs automatically during `npm run build`
+- **Integration**: Runs automatically during `pnpm run build`
 
 **Current Warnings**:
 
@@ -457,10 +457,10 @@ Tests run automatically in GitHub Actions with the following workflows:
 
 ```bash
 # Run linter
-npm run lint
+pnpm run lint
 
 # Type checking (part of build)
-npm run build
+pnpm run build
 ```
 
 ### Bundle Analysis
@@ -468,7 +468,7 @@ npm run build
 When evaluating dependency changes or hunting for unexpected bundle growth, run the analyzer:
 
 ```bash
-npm run analyze
+pnpm run analyze
 ```
 
 This sets `ANALYZE=true` and runs `next build --webpack` (the `--webpack` flag is required because `@next/bundle-analyzer` is not yet compatible with the default Turbopack build). The script writes three interactive HTML treemap reports:
@@ -477,7 +477,7 @@ This sets `ANALYZE=true` and runs `next build --webpack` (the `--webpack` flag i
 - `.next/analyze/nodejs.html` — Node runtime chunks
 - `.next/analyze/edge.html` — edge runtime chunks
 
-Open `client.html` first — that's the bundle visitors actually download. The default `npm run build` is unchanged and does not invoke the analyzer; the analyzer is opt-in, developer-local only, and is not wired into CI.
+Open `client.html` first — that's the bundle visitors actually download. The default `pnpm run build` is unchanged and does not invoke the analyzer; the analyzer is opt-in, developer-local only, and is not wired into CI.
 
 ## Security Testing
 
@@ -629,18 +629,18 @@ GitHub Dependabot provides automated dependency management and security updates 
 
 - Repository → Security → Code scanning alerts
 
-### npm audit
+### pnpm audit
 
 Current security status:
 
 ```bash
-npm audit
+pnpm audit
 ```
 
 **Known Issues**:
 
 - Check for any security vulnerabilities and address them promptly
-- Use `npm audit fix` to automatically fix vulnerabilities when possible
+- Use `pnpm audit --fix` to automatically fix vulnerabilities when possible
 
 ## What to Verify
 
@@ -693,8 +693,8 @@ npm audit
 
 ### Issue: Build fails
 
-**Cause**: Google Fonts network access (per project instructions)  
-**Solution**: Temporarily comment out font imports in layout.tsx
+**Cause**: Not fonts — they are self-hosted via `next/font/local` and the build does not contact Google.  
+**Solution**: Read the first error in the build output; `pnpm run check:drift` and `pnpm exec tsc --noEmit` catch most causes earlier
 
 ### Issue: Content not showing
 
@@ -714,7 +714,7 @@ npm audit
 ## File Structure Reference
 
 ```
-FFC_Single_Page_Template/
+FFC-IN-FFC_Single_Page_Template/
 ├── tests/                          # Test suite
 │   ├── logo.spec.ts               # Logo visibility tests (3 tests)
 │   ├── github-pages.spec.ts       # Deployment compatibility tests (3 tests)
@@ -853,3 +853,16 @@ FFC_Single_Page_Template/
 **Test Suite Status**: ✅ 26 unit tests passing (4 test suites), 5 E2E passing, 1 E2E skipped  
 **Integration Status**: ✅ Complete  
 **Last Tested**: December 2025
+
+## Coverage enforced in CI
+
+CI runs `pnpm run test:coverage` and retains the `unit-coverage` artifact for seven days, including on a failed coverage run. Jest fails when any global floor in `jest.config.js` is missed.
+
+| Metric     | Minimum |
+| ---------- | ------- |
+| Branches   | 68%     |
+| Functions  | 75%     |
+| Lines      | 80%     |
+| Statements | 78%     |
+
+The floors leave margin below the measured suite. Add behavioral tests for new code instead of lowering the floors to land a change.

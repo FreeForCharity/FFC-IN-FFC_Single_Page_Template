@@ -10,8 +10,9 @@
  *     tag, theme-color, OG / Twitter cards, and a <link rel="manifest">
  *   - /robots.txt is 200 and lists Sitemap:
  *   - /sitemap.xml is 200 and contains <urlset>
- *   - /.well-known/security.txt is 200 with a Contact: line and a
- *     future RFC 3339 Expires: date
+ *   - /.well-known/security.txt is 200 with a Contact: line (unless the
+ *     email is listed in siteConfig.pending, see scripts/security-contact.mjs)
+ *     and a future RFC 3339 Expires: date
  *   - /manifest.webmanifest (current) or /site.webmanifest (legacy)
  *     returns 200 JSON with name + icons
  *   - 404 page returns the branded heading
@@ -25,6 +26,12 @@
  *   1  one or more checks failed (details on stderr)
  *   2  invalid usage
  */
+
+import path from 'node:path'
+import { fileURLToPath } from 'node:url'
+import { contactCheck, readPendingFields } from './security-contact.mjs'
+
+const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..')
 
 const baseArg = process.argv[2]
 if (!baseArg) {
@@ -146,8 +153,17 @@ async function smoke() {
     record('security.txt served at /.well-known/security.txt or /security.txt', false)
   } else {
     record(`security.txt served at ${secFile.path}`, true)
-    const contactMatch = /^Contact:\s*(.+)$/im.exec(secFile.body)
-    record('security.txt has Contact:', !!contactMatch, contactMatch?.[1]?.trim() || '')
+    const { pending, error } = await readPendingFields(
+      path.join(ROOT, 'src', 'lib', 'site.config.ts')
+    )
+    if (error) {
+      console.log(
+        `notice: could not read siteConfig.pending (${error}); nothing treated as pending`
+      )
+    }
+    const contact = contactCheck(secFile.body, pending)
+    record('security.txt has Contact:', contact.ok, contact.detail)
+    if (contact.notice) console.log(`notice: ${contact.notice}`)
     const expiresMatch = /^Expires:\s*(.+)$/im.exec(secFile.body)
     if (expiresMatch) {
       const expires = new Date(expiresMatch[1].trim())
@@ -196,12 +212,30 @@ async function smoke() {
       if (Array.isArray(manifest.icons)) {
         for (const icon of manifest.icons) {
           if (!icon?.src) continue
-          const iconUrl = icon.src.startsWith('http')
-            ? icon.src
-            : icon.src.startsWith('/')
-              ? icon.src
-              : `/${icon.src}`
-          const iconPath = iconUrl.startsWith('http') ? iconUrl.replace(BASE, '') : iconUrl
+          // Resolve the src the way a browser resolves manifest members:
+          // against the manifest's own URL. On a subpath deploy the manifest
+          // advertises origin-absolute srcs like /<repo>/android-chrome-*.png;
+          // naively re-prefixing those with a BASE that already carries the
+          // subpath doubled the path and 404'd a healthy deploy. The #319
+          // case — a custom-domain deploy advertising /repo/... — still
+          // resolves to a real 404 under this rule and stays caught.
+          // A malformed src must fail its own check line, not crash the run.
+          let abs
+          try {
+            abs = new URL(icon.src, `${BASE}${manifestPath}`).toString()
+          } catch {
+            record(`manifest icon ${icon.src} resolves`, false, 'src is not a resolvable URL')
+            continue
+          }
+          if (!abs.startsWith(`${BASE}/`) && abs !== BASE) {
+            record(
+              `manifest icon ${icon.src} resolves`,
+              false,
+              `resolves outside the deployment base: ${abs}`
+            )
+            continue
+          }
+          const iconPath = abs.slice(BASE.length)
           const r = await fetchWithRetry(iconPath).catch(() => null)
           const ok = r && r.status === 200
           record(`manifest icon ${icon.src} resolves`, ok, r ? `HTTP ${r.status}` : 'fetch failed')

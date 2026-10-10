@@ -1,13 +1,41 @@
 import type { Metadata } from 'next'
+import BreadcrumbSchema from '@/components/seo/BreadcrumbSchema'
+import { pageMetadata } from '@/lib/page-metadata'
+import {
+  PENDING_TEXT,
+  isPending,
+  legalContact,
+  publishedPhone,
+  siteConfig,
+} from '@/lib/site.config'
+import ContactEmail from '@/components/ui/ContactEmail'
 
-export const metadata: Metadata = {
-  title: 'Donation Policy | Free For Charity',
-  description: 'Donation Policy for Free For Charity website',
-}
+const PAGE_NAME = 'Donation Policy'
+const CANONICAL_PATH = '/donation-policy'
+
+// Bare page name as title (the root layout template appends the brand);
+// per-page OG/Twitter handling is documented in src/lib/page-metadata.ts.
+export const metadata: Metadata = pageMetadata({
+  title: PAGE_NAME,
+  description: `Donation Policy for the ${siteConfig.name} website`,
+  canonical: CANONICAL_PATH,
+})
 
 export default function DonationPolicy() {
+  const legal = legalContact()
+  // A legal claim, made only when siteConfig.taxStatusLabel says the
+  // organization holds IRS 501(c)(3) recognition. Provisioning writes '' for an
+  // organization without it, and then neither the footer clause nor this page
+  // may call a donation tax-deductible.
+  const taxExempt = siteConfig.taxStatusLabel.trim() !== ''
+  const phone = publishedPhone()
+  // The EIN clause: the EIN itself, the pending placeholder while the charity
+  // has not supplied it, or nothing when it has none (see PendingField).
+  const ein = siteConfig.ein.trim()
+  const einClause = isPending('ein') ? ` (EIN: ${PENDING_TEXT})` : ein ? ` (EIN: ${ein})` : ''
   return (
     <div className="ffc-container py-16">
+      <BreadcrumbSchema name={PAGE_NAME} path={CANONICAL_PATH} />
       <div className="max-w-4xl mx-auto">
         <h1 className="font-[var(--font-faustina)] text-[48px] leading-[60px] mb-8">
           Donation Policy
@@ -21,31 +49,38 @@ export default function DonationPolicy() {
           <h2 className="font-[var(--font-faustina)] text-[32px] leading-[40px] mt-8 mb-4">
             Tax Deductibility
           </h2>
-          <p>
-            Free For Charity is a qualified 501(c)(3) nonprofit organization (EIN: 46-2471893).
-            Donations are tax-deductible to the full extent allowed by law.
-          </p>
+          {taxExempt ? (
+            <p>
+              {siteConfig.name} is a qualified 501(c)(3) nonprofit organization{einClause}.
+              Donations are tax-deductible to the full extent allowed by law.
+            </p>
+          ) : (
+            <p>
+              {siteConfig.name}
+              {einClause} has not yet received IRS recognition as a 501(c)(3) organization, so
+              donations may not be tax-deductible. Please consult a tax advisor before claiming a
+              deduction.
+            </p>
+          )}
 
           <h2 className="font-[var(--font-faustina)] text-[32px] leading-[40px] mt-8 mb-4">
             Use of Donations
           </h2>
+          {/* The organization's own description, not a fixed list of services:
+              the template's list described the supporting organization's
+              programs, which no other organization provides. */}
           <p>
-            Donations support our mission to reduce costs and increase revenues for nonprofits by
-            providing:
+            Donations support {siteConfig.name}&apos;s mission and the administrative costs
+            necessary to carry it out: {siteConfig.description}
           </p>
-          <ul>
-            <li>Free domain registration and hosting services</li>
-            <li>Technology consultation and support</li>
-            <li>Volunteer coordination and training</li>
-            <li>Administrative costs necessary to operate our programs</li>
-          </ul>
 
           <h2 className="font-[var(--font-faustina)] text-[32px] leading-[40px] mt-8 mb-4">
             Donation Processing
           </h2>
           <p>
             Donations are processed securely through our payment partners. You will receive a
-            receipt for tax purposes via email after your donation is processed.
+            {taxExempt ? ' receipt for tax purposes' : ' receipt'} via email after your donation is
+            processed.
           </p>
 
           <h2 className="font-[var(--font-faustina)] text-[32px] leading-[40px] mt-8 mb-4">
@@ -69,15 +104,14 @@ export default function DonationPolicy() {
           </h2>
           <p>For questions about donations or this policy, please contact us at:</p>
           <p>
-            Email:{' '}
-            <a
-              href="mailto:clarkemoyer@freeforcharity.org"
-              className="text-primary hover:underline"
-            >
-              clarkemoyer@freeforcharity.org
-            </a>
-            <br />
-            Phone: (520) 222-8104
+            Email: <ContactEmail email={legal.email} className="text-primary underline" />
+            {/* Only a configured number is shown, matching the footer's phone guard. */}
+            {phone && (
+              <>
+                <br />
+                Phone: {phone.display}
+              </>
+            )}
           </p>
         </div>
       </div>

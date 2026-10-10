@@ -1,39 +1,15 @@
 import React from 'react'
 import { render, screen } from '@testing-library/react'
 
-// Results-2023 renders four ResultCards, each of which uses framer-motion's
-// IntersectionObserver-backed useInView via AnimatedNumber. Mock framer-motion
-// so the static render path is taken (same shape as the AnimatedNumber and
-// ResultCard suite mocks).
-jest.mock('framer-motion', () => {
-  return {
-    useReducedMotion: () => true,
-    useInView: () => true,
-    useMotionValue: (initial: number) => ({
-      set: jest.fn(),
-      get: () => initial,
-      on: () => () => undefined,
-    }),
-    useSpring: (mv: { on: (event: string, cb: (latest: number) => void) => () => void }) => mv,
-    motion: new Proxy(
-      {},
-      {
-        get: () => {
-          const Pass = ({ children, ...rest }: React.PropsWithChildren<Record<string, unknown>>) =>
-            React.createElement('span', rest, children)
-          return Pass
-        },
-      }
-    ),
-  }
-})
-
+// Results-2023 renders four ResultCards → AnimatedNumber, which now uses native
+// IntersectionObserver + matchMedia (stubbed in jest.setup.js to report
+// prefers-reduced-motion: reduce), so the static value path is taken here.
 import Results from '../../../src/components/home-page/Results-2023'
 
 describe('Results-2023', () => {
   it('renders the section heading', () => {
     render(<Results />)
-    expect(screen.getByRole('heading', { level: 1, name: /Results - 2023/i })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { level: 2, name: /Results - 2023/i })).toBeInTheDocument()
   })
 
   it('mounts under the #results section landmark id', () => {
@@ -43,9 +19,9 @@ describe('Results-2023', () => {
 
   it('renders four stat cards', () => {
     const { container } = render(<Results />)
-    // Each ResultCard wraps a value in <h1>; the section heading is also <h1>,
-    // so the count is 1 (heading) + 4 (cards) = 5.
-    const headings = container.querySelectorAll('h1')
-    expect(headings.length).toBe(5)
+    // The section heading is an <h2>; each ResultCard wraps its value in an
+    // <h3> (one level below the section), so there are 1 <h2> and 4 <h3>s.
+    expect(container.querySelectorAll('h2').length).toBe(1)
+    expect(container.querySelectorAll('h3').length).toBe(4)
   })
 })

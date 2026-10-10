@@ -32,42 +32,60 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v6
 
       - name: Setup Node.js
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@v7
         with:
-          node-version: '20'
-          cache: 'npm'
+          node-version: '24'
+          cache: 'pnpm'
 
       - name: Setup Pages
-        uses: actions/configure-pages@v5
-        with:
-          # Automatically inject basePath in your Next.js configuration file and disable
-          # server side image optimization (https://nextjs.org/docs/api-reference/next/image#unoptimized).
-          static_site_generator: next
+        uses: actions/configure-pages@v6
+        # `static_site_generator: next` is deliberately NOT set. It only understands
+        # next.config.js/.mjs; this repo uses next.config.ts, so the action logged
+        # "Using default blank configuration" and WROTE ITS OWN next.config.js
+        # containing only {output, basePath, images.unoptimized}. Next prefers .js
+        # over .ts, so every deploy built with this repo's real config discarded:
+        # images.remotePatterns and the bundle-analyzer wrapper are simply gone from
+        # the config Next actually reads.
+        #
+        # Measured, not inferred: two consecutive deploys of Footer_Only_Template
+        # differing ONLY by this input flipped /privacy-policy/ from 404 to 200 and
+        # /privacy-policy.html from 200 to 404 — the shape its trailingSlash setting
+        # specifies.
+        #
+        # The basePath the action injects is NOT wrong — it derives from the Pages API
+        # and so honours a custom domain (measured while this repo still served a custom domain with
+        # unprefixed assets while the input was still set). It agrees with the
+        # CNAME-aware value the step below computes. Removing the input is safe
+        # precisely because that step already produces the same answer.
+        # See FFC-Cloudflare-Automation#880.
 
       - name: Restore Next.js cache
-        uses: actions/cache@v5
+        uses: actions/cache@v6
         with:
           path: |
             .next/cache
           # Generate a new cache whenever packages or source files change.
-          key: ${{ runner.os }}-nextjs-${{ hashFiles('**/package-lock.json') }}-${{ hashFiles('**.[jt]s', '**.[jt]sx') }}
+          key: ${{ runner.os }}-nextjs-${{ hashFiles('**/pnpm-lock.yaml') }}-${{ hashFiles('**.[jt]s', '**.[jt]sx') }}
           # If source files changed but packages didn't, rebuild from a prior cache.
           restore-keys: |
-            ${{ runner.os }}-nextjs-${{ hashFiles('**/package-lock.json') }}-
+            ${{ runner.os }}-nextjs-${{ hashFiles('**/pnpm-lock.yaml') }}-
 
       - name: Install dependencies
-        run: npm ci
+        run: pnpm install --frozen-lockfile
 
       - name: Determine base path
         id: basepath
         # Custom-domain deploys serve from the origin root (no subpath), so
         # NEXT_PUBLIC_BASE_PATH must be empty. Subpath-only deploys (no
         # CNAME) need /<repo-name>. Empirically the live site at
-        # ffcworkingsite1.org/manifest.webmanifest referenced
-        # /FFC_Single_Page_Template/android-chrome-*.png because the build
+        # the then-custom-domain's /manifest.webmanifest referenced
+        # /FFC-IN-FFC_Single_Page_Template/android-chrome-*.png because the build
         # always set the subpath, but those paths 404 on the custom domain.
         # This step picks the right value based on whether public/CNAME
         # exists.
@@ -82,16 +100,21 @@ jobs:
           fi
 
       - name: Build with Next.js
-        run: npm run build
+        run: pnpm run build
         env:
           # See "Determine base path" above. Set automatically based on
           # whether public/CNAME exists.
           NEXT_PUBLIC_BASE_PATH: ${{ steps.basepath.outputs.value }}
 
       - name: Upload artifact for Pages
-        uses: actions/upload-pages-artifact@v4
+        uses: actions/upload-pages-artifact@v5
         with:
           path: ./out
+          # Keep dot-entries (.well-known/, .nojekyll) in the Pages artifact.
+          # upload-pages-artifact@v5 defaults include-hidden-files to false,
+          # which drops public/.well-known/security.txt and 404s the canonical
+          # RFC 9116 path. See FFC-Cloudflare-Automation#788.
+          include-hidden-files: true
 
   deploy:
     name: Deploy to GitHub Pages
@@ -104,15 +127,18 @@ jobs:
     steps:
       - name: Deploy to GitHub Pages
         id: deployment
-        uses: actions/deploy-pages@v4
+        uses: actions/deploy-pages@v5
 
       - name: Checkout (for smoke-check script)
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v6
 
       - name: Setup Node.js
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@v7
         with:
-          node-version: '20'
+          node-version: '24'
 
       - name: Post-deploy smoke check
         env:

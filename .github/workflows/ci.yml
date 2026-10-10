@@ -12,10 +12,15 @@ on:
   # Allows manual trigger from Actions tab
   workflow_dispatch:
 
-# Cancel in-progress CI runs for the same PR/branch
+# Cancel in-progress CI runs ONLY for pull requests (a new push to a PR
+# supersedes the old run). NEVER cancel on main pushes: deploy.yml fires
+# via `workflow_run` only when this workflow concludes `success`, so a
+# cancelled main run (which concludes `cancelled`) silently skips the
+# deploy. A rapid merge train would otherwise cancel each commit's CI
+# and leave production stuck on a stale build.
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
   test-and-build:
@@ -24,40 +29,68 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
+
+      - name: Check for prohibited lockfiles
+        run: |
+          if [ -f package-lock.json ] || [ -f yarn.lock ]; then
+            echo "::error::Prohibited lockfile detected (package-lock.json or yarn.lock). Only pnpm-lock.yaml is permitted."
+            exit 1
+          fi
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v6
 
       - name: Setup Node.js
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@v7
         with:
-          node-version: '20'
-          cache: 'npm'
+          node-version: '24'
+          cache: 'pnpm'
 
       - name: Install dependencies
-        run: npm ci
+        run: pnpm install --frozen-lockfile
 
       - name: Check formatting
-        run: npm run format:check
+        run: pnpm run format:check
 
       - name: Run linting
-        run: npm run lint
+        run: pnpm run lint
 
-      - name: Run unit tests
-        run: npm test
+      - name: Run unit tests with coverage
+        id: coverage
+        run: pnpm run test:coverage
         env:
           CI: true
 
+      - name: Upload unit coverage
+        if: ${{ always() && steps.coverage.outcome != 'skipped' }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: unit-coverage
+          path: coverage/
+          retention-days: 7
+
       - name: Install Playwright browsers
-        run: npx playwright install --with-deps chromium
+        run: pnpm exec playwright install --with-deps chromium
 
       - name: Build Next.js site
-        run: npm run build
+        run: pnpm run build
         # Note: Do NOT set NEXT_PUBLIC_BASE_PATH here
         # The basePath is only needed for actual GitHub Pages deployment (in deploy.yml)
         # E2E tests need to run against a build without basePath since the test server
         # (serve -s out) doesn't understand basePath routing
 
+      - name: Verify build output
+        # Fails the build if any indexable page is missing its single <h1> or a
+        # per-page canonical (invariants a rebrand often breaks in rendered HTML).
+        run: pnpm run verify:build
+
+      - name: Check bundle size
+        # Reuses the build above — fails if shipped JS exceeds the gzipped budget.
+        run: pnpm run check:bundle
+
       - name: Run E2E tests
-        run: npm run test:e2e
+        run: pnpm run test:e2e
         env:
           CI: true
 
@@ -83,19 +116,22 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v6
 
       - name: Setup Node.js
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@v7
         with:
-          node-version: '20'
-          cache: 'npm'
+          node-version: '24'
+          cache: 'pnpm'
 
       - name: Install dependencies
-        run: npm ci
+        run: pnpm install --frozen-lockfile
 
       - name: Build Next.js site
-        run: npm run build
+        run: pnpm run build
 
       - name: Check for broken links
-        run: npm run check-links
+        run: pnpm run check-links

@@ -27,7 +27,7 @@ These are services we directly integrate into our application code.
 #### 1. Google Tag Manager (GTM)
 
 - **Purpose:** Tag management system for analytics and marketing pixels
-- **GTM ID:** `GTM-TQ5H8HPR`
+- **GTM ID:** `GTM-TQ5H8HPR` (configured in `src/lib/analytics.config.ts`)
 - **Implementation:** `src/components/google-tag-manager/index.tsx`
 - **Load Strategy:** `lazyOnload` for better performance
 - **Data Collected:** Page views, user interactions, custom events
@@ -63,23 +63,21 @@ These are services we directly integrate into our application code.
 - **Privacy Policy:** https://www.facebook.com/privacy/policy/
 - **Opt-out:** https://www.facebook.com/settings/?tab=ads
 
-#### 5. SociableKit Facebook Events Widget
+#### 5. Events Aggregation (Google Calendar / Microsoft 365 / Facebook Graph)
 
-- **Purpose:** Display Facebook events via third-party widget
-- **Implementation:** SociableKit iframe widget embedded in the site
-- **Domain:** `widgets.sociablekit.com`
-- **Load Strategy:** Lazy-loaded iframe (loaded only when the events section is visible)
-- **Data Collected:** User interactions, page views, browser/device information (as determined by SociableKit)
-- **User Control:** Requires explicit user consent via cookie banner before loading
-- **Privacy Policy:** https://www.sociablekit.com/privacy-policy/
-- **Opt-out:** See SociableKit privacy policy for data subject rights
-- **Status:** Documented - Implementation complete
+- **Purpose:** Display upcoming charity events from any combination of Google Calendar, Microsoft 365, and Facebook in a single unified section (`#events`).
+- **Implementation:** Build-time aggregation only. `scripts/fetch-events.mjs` runs in CI (or via `prebuild`), pulls each source server-side, normalizes the results, and writes `src/data/events.generated.json`. The React component renders that static JSON.
+- **Runtime domains contacted from the browser:** _None._ All sources are fetched from Node during the build/refresh workflow, not from the client.
+- **Build-time domains contacted:**
+  - `calendar.google.com` (public iCal feed)
+  - `outlook.live.com` / `outlook.office365.com` (published Microsoft 365 ICS feed)
+  - `graph.facebook.com` (Facebook Graph API)
+- **Data Collected:** None at runtime. The browser never speaks to these origins because no iframe or client-side fetch is used.
+- **Tokens / Secrets:** `EVENTS_GOOGLE_ICS_URL`, `EVENTS_MICROSOFT_ICS_URL`, `EVENTS_FACEBOOK_PAGE_ID`, `EVENTS_FACEBOOK_ACCESS_TOKEN` (all optional, all stored as GitHub Secrets, never bundled).
+- **Setup guide:** [`EVENTS_SETUP.md`](./EVENTS_SETUP.md)
+- **Status:** Active
 
-**Technical Details:**
-
-- Integration: Embedded via iframe from SociableKit
-- No Facebook SDK or direct Facebook domain requests are made; all event data is proxied through SociableKit
-- Privacy Considerations: Loading the widget may send user data (IP address, browser info, etc.) to SociableKit. Users should review SociableKit's privacy policy for details. Widget is only loaded after user consents to marketing cookies.
+**Pointing it at your own events:** Configure any combination of the `EVENTS_*` GitHub Secrets per [`EVENTS_SETUP.md`](./EVENTS_SETUP.md), and set your public Facebook page in `siteConfig.integrations.eventsFacebookPageUrl` (`src/lib/site.config.ts`) — it drives the "View all events on Facebook" link and the empty-state follow button.
 
 ### Forms & User Input
 
@@ -106,6 +104,8 @@ These are services we directly integrate into our application code.
 - **Data Collected:** Donation transaction data
 - **Privacy Policy:** https://support.zeffy.com/legal-data-privacy-security
 
+**Getting your own donation URL:** Sign up free at https://www.zeffy.com (or use PayPal or any other https donation page), then set `siteConfig.donationUrl` in `src/lib/site.config.ts` to your donation page's URL. The Donate section links to it, and emails `contactEmail` when it is empty. The embedded form driven by `siteConfig.integrations.zeffyDonationUrl` is Free For Charity's own endowment fund and renders only on Free For Charity's own site, so a charity site never collects donations for another organization.
+
 ### Transparency & Validation
 
 #### 8. GuideStar (Candid)
@@ -117,6 +117,8 @@ These are services we directly integrate into our application code.
 - **Data Collected:** Minimal (widget display only)
 - **Privacy Policy:** https://www.guidestar.org/privacy
 
+**Getting your own profile links:** Claim or look up your nonprofit's profile at https://www.guidestar.org (now Candid). Copy the public profile URL into `siteConfig.guidestar.profileUrl` and the shared-seal URL into `siteConfig.guidestar.directProfileUrl` in `src/lib/site.config.ts`. These are ordinary outbound links (to `www.guidestar.org`), so no CSP change is needed. The CSP already allow-lists the `widgets.guidestar.org` origin separately — that only matters if you later embed an interactive GuideStar/Candid widget rather than the static seal.
+
 ### External Volunteer Platforms
 
 #### 9. Idealist.org
@@ -126,6 +128,8 @@ These are services we directly integrate into our application code.
 - **URL:** `https://www.idealist.org/en/nonprofit/356bfc8e2ae64f83beea4a4e677e99d7-free-for-charity-state-college#opportunities`
 - **Data Collected:** None (external link only)
 - **Privacy Policy:** https://www.idealist.org/en/privacy
+
+**Getting your own profile URL:** Create your nonprofit's profile at https://www.idealist.org, then copy your volunteer-opportunities URL into `siteConfig.volunteerUrl` in `src/lib/site.config.ts`. The Volunteer button links to it, and emails `contactEmail` when it is empty. `siteConfig.integrations.idealistUrl` is Free For Charity's own listing and is used only on Free For Charity's own site.
 
 ## Transitive Dependencies
 
@@ -269,8 +273,8 @@ To improve performance, we preconnect to frequently used domains:
 
 - **Dependabot:** Automated dependency updates
 - **Security Advisories:** GitHub Advanced Security enabled
-- **Vulnerability Scanning:** Regular npm audit runs
-- **Version Pinning:** Exact versions in package-lock.json
+- **Vulnerability Scanning:** Regular pnpm audit runs
+- **Version Pinning:** Exact versions in pnpm-lock.yaml
 
 ## Monitoring and Compliance
 
@@ -304,11 +308,12 @@ For questions about our external dependencies or privacy practices:
 
 ## Updates to This Document
 
-| Date       | Changes                                                             |
-| ---------- | ------------------------------------------------------------------- |
-| 2024-12-11 | Added SociableKit Facebook Events Widget - implementation complete  |
-| 2024-12-09 | Added Facebook Events integration documentation                     |
-| 2024-12-07 | Initial documentation of all external dependencies and integrations |
+| Date       | Changes                                                                                                 |
+| ---------- | ------------------------------------------------------------------------------------------------------- |
+| 2026-05-24 | Replaced SociableKit iframe with unified build-time Google / Microsoft 365 / Facebook events aggregator |
+| 2024-12-11 | Added SociableKit Facebook Events Widget - implementation complete                                      |
+| 2024-12-09 | Added Facebook Events integration documentation                                                         |
+| 2024-12-07 | Initial documentation of all external dependencies and integrations                                     |
 
 ---
 

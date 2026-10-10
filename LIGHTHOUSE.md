@@ -152,9 +152,9 @@ The Lighthouse CI configuration is in `lighthouserc.json`:
 }
 ```
 
-**Important**: URLs should point to the actual `.html` files in the `out` directory. Next.js static export generates flat HTML files at the root level. This site has a single homepage with sections (About Us, Donate, Volunteer) rather than separate pages for those features. However, the policy pages are separate routes that generate individual HTML files.
+**Important**: the URLs must match what the export writes. This site leaves `trailingSlash` unset, so each route is written as a flat `out/<route>.html` — audited above as `/cookie-policy.html`. The home page is `out/index.html`. Getting this wrong is not a partial failure: `lhci autorun` aborts the entire run on the first URL that 404s.
 
-You can add more pages to audit by adding URLs to the `url` array. To see which pages are generated, check the `out/` directory after running `npm run build`.
+You can add more pages to audit by adding URLs to the `url` array. To see which pages are generated, check the `out/` directory after running `pnpm run build`.
 
 ---
 
@@ -162,20 +162,18 @@ You can add more pages to audit by adding URLs to the `url` array. To see which 
 
 ### Prerequisites
 
-- Node.js 20.x installed
+- Node.js 24.x installed
 - Site built and ready to serve
 
 ### Quick Start
 
 ```bash
 # Build the site
-npm run build
+pnpm run build
 
-# Install Lighthouse CI globally (if not already installed)
-npm install -g @lhci/cli
-
-# Run Lighthouse CI
-lhci autorun
+# @lhci/cli is a devDependency — run the locally installed copy
+# (a global install would also require PNPM_HOME on PATH)
+pnpm exec lhci autorun
 ```
 
 ### Running on Specific Pages
@@ -185,7 +183,7 @@ To audit specific pages only:
 ```bash
 # Edit lighthouserc.json to include only the pages you want
 # Then run
-lhci autorun
+pnpm exec lhci autorun
 ```
 
 ### Using Chrome DevTools
@@ -337,8 +335,8 @@ identify image.webp
 Before making image optimizations, run Lighthouse to establish a baseline:
 
 ```bash
-npm run build
-lhci autorun
+pnpm run build
+pnpm exec lhci autorun
 ```
 
 Check the "Opportunities" section in the report for:
@@ -506,7 +504,7 @@ The Lighthouse CI is integrated into the deployment pipeline with the following 
    - Format check with Prettier
    - Linting with ESLint
    - Unit tests run with Jest
-   - Site is built with `npm run build`
+   - Site is built with `pnpm run build`
    - E2E tests run with Playwright
 
 2. **Deploy Workflow** (deploy.yml)
