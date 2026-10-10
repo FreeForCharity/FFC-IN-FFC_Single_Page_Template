@@ -32,13 +32,13 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v6
 
       - name: Setup Node.js
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@v7
         with:
           node-version: '24'
           cache: 'pnpm'
@@ -66,7 +66,7 @@ jobs:
         # See FFC-Cloudflare-Automation#880.
 
       - name: Restore Next.js cache
-        uses: actions/cache@v5
+        uses: actions/cache@v6
         with:
           path: |
             .next/cache
@@ -130,13 +130,13 @@ jobs:
         uses: actions/deploy-pages@v5
 
       - name: Checkout (for smoke-check script)
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v6
 
       - name: Setup Node.js
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@v7
         with:
           node-version: '24'
 
