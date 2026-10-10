@@ -3,7 +3,7 @@ import './globals.css'
 import Header from './../components/header'
 import Footer from './../components/footer'
 import CookieConsent from './../components/cookie-consent'
-import GoogleTagManager, { GoogleTagManagerNoScript } from './../components/google-tag-manager'
+import GoogleTagManager from './../components/google-tag-manager'
 import { siteConfig, siteUrl, twitterSite, cardDescription } from '@/lib/site.config'
 import { assetPath } from '@/lib/assetPath'
 import { openSans, lato, faustina } from '@/lib/fonts'
@@ -117,10 +117,12 @@ export default function RootLayout({
             tag loads, which is why it is an inline <head> script placed
             above the GoogleTagManager component rather than a next/script:
             the consent state has to already be in the dataLayer when GTM/GA4
-            initialise. Granted worldwide, denied (cookieless pings) only
-            where Google's EU User Consent Policy requires opt-in — Google
-            picks the default from the visitor's IP address. See
-            src/lib/consent-mode.ts. */}
+            initialise. Regional: a region-scoped default denies
+            everything for EEA/UK/CH visitors, and an unscoped one grants
+            analytics and Ad Grants conversion signals to everyone else.
+            Google resolves the most specific matching region from the
+            visitor's IP. A universal opt-out signal (GPC) or the footer
+            control denies advertising everywhere, and can only tighten. See src/lib/consent-mode.ts. */}
         <script dangerouslySetInnerHTML={{ __html: CONSENT_MODE_BOOTSTRAP }} />
         <GoogleTagManager />
       </head>
@@ -128,7 +130,19 @@ export default function RootLayout({
         className={['antialiased', openSans.variable, lato.variable, faustina.variable].join(' ')}
         suppressHydrationWarning={true}
       >
-        <GoogleTagManagerNoScript />
+        {/* The GTM <noscript> iframe is DELIBERATELY NOT MOUNTED.
+            It is the one path consent cannot reach: with JavaScript disabled
+            the consent bootstrap above never executes, the cookie banner
+            never renders, and the footer opt-out control does not exist — yet
+            the iframe would still request the GTM container. Consent Mode is
+            a JavaScript API, so that request carries no consent signal at
+            all, and a visitor sending GPC has no way to stop it.
+            It also bought nothing: GA4 cannot run without JavaScript, so the
+            iframe measures essentially nothing while contradicting the
+            privacy policy's claim that the consent check runs before any
+            Google tag loads. Removing it is what makes that claim true.
+            Re-mounting it re-opens an unconsented, un-opt-out-able request to
+            Google on every JS-disabled visit. */}
         {/* Skip-to-content link (WCAG 2.4.1). First focusable element in the
             body so keyboard users tabbing in can jump past the header
             navigation. Visually hidden until focused — see .skip-to-content

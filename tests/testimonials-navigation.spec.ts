@@ -18,6 +18,15 @@ for (const viewport of [
       })
       await carousel.hover()
       await page.getByRole('button', { name: 'Go to testimonial 1', exact: true }).click()
+      // Swiper ignores another navigation while the preceding transition is active.
+      await expect
+        .poll(() =>
+          carousel.locator('.swiper').evaluate((element) => {
+            const swiper = (element as HTMLElement & { swiper?: { animating: boolean } }).swiper
+            return swiper?.animating
+          })
+        )
+        .toBe(false)
       const heading = carousel.locator('.swiper-slide-active h3')
       const first = await heading.innerText()
       await carousel.getByRole('button', { name: 'Next testimonial', exact: true }).click()

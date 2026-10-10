@@ -18,7 +18,7 @@ test.describe('Results 2023 Animated Numbers', () => {
 
   test('should display the Results section with all statistics', async ({ page }) => {
     // Navigate to the homepage
-    await page.goto('/')
+    await page.goto('/', { waitUntil: 'domcontentloaded' })
 
     // Find the Results section heading
     const resultsHeading = page.locator(
@@ -39,7 +39,7 @@ test.describe('Results 2023 Animated Numbers', () => {
 
   test('should start with numbers at 0 before scrolling into view', async ({ page }) => {
     // Navigate to the homepage without scrolling
-    await page.goto('/')
+    await page.goto('/', { waitUntil: 'domcontentloaded' })
 
     // Verify the numbers start at 0 before scrolling into view
     const firstStat = testConfig.animatedNumbers.statistics[0]
@@ -54,7 +54,7 @@ test.describe('Results 2023 Animated Numbers', () => {
 
   test('should animate numbers only once when scrolled into view', async ({ page }) => {
     // Navigate to the homepage
-    await page.goto('/')
+    await page.goto('/', { waitUntil: 'domcontentloaded' })
 
     // Find and scroll to the Results section
     const resultsHeading = page.locator(
@@ -77,7 +77,7 @@ test.describe('Results 2023 Animated Numbers', () => {
 
   test('should display correct descriptions for each statistic', async ({ page }) => {
     // Navigate to the homepage
-    await page.goto('/')
+    await page.goto('/', { waitUntil: 'domcontentloaded' })
 
     // Verify all descriptions are present
     for (const stat of testConfig.animatedNumbers.statistics) {
@@ -92,7 +92,7 @@ test.describe('Results 2023 Animated Numbers', () => {
     })
     const page = await context.newPage()
 
-    await page.goto('/')
+    await page.goto('/', { waitUntil: 'domcontentloaded' })
     const resultsHeading = page.locator(
       `h2:has-text("${testConfig.animatedNumbers.sectionHeading}")`
     )
