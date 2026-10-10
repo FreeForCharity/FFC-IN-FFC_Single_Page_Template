@@ -131,3 +131,37 @@ describe('the Do Not Sell or Share control', () => {
     expect(screen.getByTestId('sale-share-opt-out')).toBeInTheDocument()
   })
 })
+
+describe('cross-tab advertising opt-out', () => {
+  function storageChange(key: string, newValue: string | null, storageArea = window.localStorage) {
+    const event = new Event('storage')
+    Object.defineProperties(event, {
+      key: { value: key },
+      newValue: { value: newValue },
+      storageArea: { value: storageArea },
+    })
+    fireEvent(window, event)
+  }
+
+  it('updates the mounted footer control when another tab opts out', () => {
+    render(<SaleShareOptOut />)
+    localStorageMock.setItem(SALE_SHARE_OPT_OUT_KEY, 'true')
+    storageChange(SALE_SHARE_OPT_OUT_KEY, 'true')
+    expect(screen.getByTestId('sale-share-opted-out')).toBeInTheDocument()
+  })
+
+  it('ignores unrelated keys and sessionStorage events', () => {
+    render(<SaleShareOptOut />)
+    storageChange('unrelated-choice', 'true')
+    storageChange(SALE_SHARE_OPT_OUT_KEY, 'true', window.sessionStorage)
+    expect(screen.getByTestId('sale-share-opt-out')).toBeInTheDocument()
+  })
+
+  it('does not grant advertising when another tab removes an opt-out', () => {
+    render(<SaleShareOptOut />)
+    fireEvent.click(screen.getByTestId('sale-share-opt-out'))
+    localStorageMock.removeItem(SALE_SHARE_OPT_OUT_KEY)
+    storageChange(SALE_SHARE_OPT_OUT_KEY, null)
+    expect(screen.getByTestId('sale-share-opted-out')).toBeInTheDocument()
+  })
+})

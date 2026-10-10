@@ -301,7 +301,7 @@ test.describe('Google Consent Mode bootstrap', () => {
     await page.goto('/')
 
     // The bootstrap is an inline <head> script, so the consent default is
-    // in the dataLayer synchronously — no waiting on lazyOnload GTM.
+    // in the dataLayer synchronously â€” no waiting on lazyOnload GTM.
     const defaults = await page.evaluate(() => {
       const dl = (window as unknown as { dataLayer?: unknown[] }).dataLayer || []
       return dl
@@ -314,7 +314,7 @@ test.describe('Google Consent Mode bootstrap', () => {
     // one for everyone else. Google resolves the most specific matching
     // region, so an EEA visitor gets the denial and the rest fall through.
     //
-    // This case previously asserted a SINGLE unscoped denial — the global
+    // This case previously asserted a SINGLE unscoped denial â€” the global
     // opt-in model this branch reverses. It is asserted positively AND by
     // absence below, because the failure that matters is the region-scoped
     // call quietly losing its region and starting to apply to everyone.
@@ -419,4 +419,43 @@ test.describe('Cookie Consent Accessibility', () => {
     const banner = page.locator('[role="region"][aria-label="Cookie consent notice"]')
     await expect(banner).toHaveAttribute('aria-label', 'Cookie consent notice')
   })
+})
+
+test('an advertising opt-out reaches another open tab without navigation', async ({
+  context,
+  page,
+}) => {
+  await page.goto('/', { waitUntil: 'domcontentloaded' })
+  await page.getByRole('button', { name: 'Accept All', exact: true }).click()
+  const other = await context.newPage()
+  await other.goto('/', { waitUntil: 'domcontentloaded' })
+  await expect(other.getByTestId('sale-share-opt-out')).toBeVisible()
+  await context.addCookies([{ name: '_fbp', value: 'previous-ad-cookie', url: other.url() }])
+  await page.getByTestId('sale-share-opt-out').click()
+  await expect(other.getByTestId('sale-share-opted-out')).toBeVisible()
+  await expect
+    .poll(() =>
+      other.evaluate(() => {
+        const entries = window.dataLayer.map((entry) =>
+          Array.from(entry as unknown as ArrayLike<unknown>)
+        )
+        return entries.some(
+          (entry) =>
+            entry[0] === 'consent' &&
+            entry[1] === 'update' &&
+            (entry[2] as Record<string, string>)?.ad_storage === 'denied' &&
+            (entry[2] as Record<string, string>)?.ad_user_data === 'denied'
+        )
+      })
+    )
+    .toBe(true)
+  await expect
+    .poll(() =>
+      other.evaluate(() =>
+        window.dataLayer.some((entry) => entry.marketing_consent === 'denied' && !entry.event)
+      )
+    )
+    .toBe(true)
+  expect((await context.cookies()).some((cookie) => cookie.name === '_fbp')).toBe(false)
+  await other.close()
 })
