@@ -403,7 +403,7 @@ The Facebook Events integration will significantly increase visibility of Free F
 **Questions about this integration:**
 
 - Technical: Repository issues or clarkemoyer@freeforcharity.org
-- Privacy/Legal: privacy@freeforcharity.org
+- Privacy/Legal: clarkemoyer@freeforcharity.org
 - General: clarkemoyer@freeforcharity.org | (520) 222-8104
 
 ---

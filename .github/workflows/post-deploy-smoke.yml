@@ -781,8 +781,13 @@ jobs:
               if (s.kind === 'page') { donationChecks.push({ ...s, status: 200 }); continue; }
               try {
                 const r = await fetch(s.url.startsWith('http') ? s.url : 'https:' + s.url, { method: 'GET', redirect: 'follow' });
-                donationChecks.push({ ...s, status: r.status });
-                if (r.status >= 400) {
+                const { classifyDonationResponse } = require(process.env.GITHUB_WORKSPACE + '/scripts/classify-donation-response.cjs');
+                const providerBody = r.status === 403 ? await r.text() : '';
+                const verification = classifyDonationResponse({ provider: s.provider, status: r.status, server: r.headers.get('server') || '', body: providerBody });
+                donationChecks.push({ ...s, status: r.status, verification });
+                if (verification === 'automation-blocked') {
+                  console.warn(`::warning::Zeffy blocked the automated donation probe with a Cloudflare challenge. Donation availability is UNVERIFIED by this run: ${s.url}`);
+                } else if (verification === 'unreachable') {
                   complianceFailures.push(`${s.provider} donation ${s.kind} unreachable (${r.status}): ${s.url}`);
                 }
               } catch (e) {
@@ -804,7 +809,7 @@ jobs:
               placeholder,
               footer: footer ? { tag: footer.tag, hrefCount: footer.hrefs.length, hrefs: footer.hrefs } : null,
               cookieConsent: cookieConsent ? { selector: cookieConsent.selector, textSnippet: cookieConsent.text } : null,
-              donations: { scope: donationScope || 'undeclared', surfaces: donationChecks },
+              donations: { scope: donationScope || 'undeclared', surfaces: donationChecks, verification: donationChecks.some(s => s.verification === 'automation-blocked') ? 'automation-blocked' : 'checked' },
               complianceFailures,
             };
             require('fs').writeFileSync(artifactsDir + '/visual-summary.json', JSON.stringify(summary, null, 2));

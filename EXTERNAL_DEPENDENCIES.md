@@ -237,7 +237,7 @@ Users have the right to:
 - Opt-out of analytics and marketing
 - Withdraw consent at any time
 
-Contact: privacy@freeforcharity.org or 520-222-8104
+Contact: clarkemoyer@freeforcharity.org or 520-222-8104
 
 ## Performance Optimization
 
@@ -297,7 +297,7 @@ For questions about our external dependencies or privacy practices:
 
 - **Email:** clarkemoyer@freeforcharity.org
 - **Phone:** 520-222-8104
-- **Privacy Contact:** privacy@freeforcharity.org
+- **Privacy Contact:** clarkemoyer@freeforcharity.org
 
 ## Related Documentation
 
