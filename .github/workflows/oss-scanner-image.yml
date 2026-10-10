@@ -48,4 +48,4 @@ jobs:
         run: docker run --rm --network none oss-scanner-image pnpm test
 
       - name: Playwright browser is available with no network
-        run: docker run --rm --network none oss-scanner-image pnpm exec playwright --version
+        run: docker run --rm --network none oss-scanner-image node scripts/check-scanner-browser.mjs

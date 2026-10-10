@@ -39,8 +39,8 @@ RUN pnpm exec playwright install --with-deps chromium
 # keeps the committed src/data/events.generated.json snapshot and exits 0.
 RUN pnpm run build
 
-# Cheap checks that prove the image works; reported, never fatal.
-RUN pnpm test || echo "WARNING: unit tests reported failures"
+# Unit test failures must fail image preparation rather than be hidden.
+RUN pnpm test
 
 # Where things are, for the audit agent (also described in threat_model.md):
 #   src/            the Next.js app (App Router, static export)

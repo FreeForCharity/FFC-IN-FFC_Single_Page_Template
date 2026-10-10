@@ -99,10 +99,10 @@ Ranked by how much we care:
 - `pnpm run build` writes the static site to `out/`, which is exactly what
   ships. `pnpm run verify:build` checks it.
 - `pnpm run test:e2e` runs Playwright (`tests/`, including `events.spec.ts`)
-  against `out/`, served locally. Chromium is installed in the image. With no
-  network, two `application-form.spec.ts` cases that wait for the Microsoft
-  Forms iframe's loading indicator fail, because the iframe errors instantly
-  offline. That is expected and is not a finding. All other cases pass offline.
+  against `out/`, served locally. Chromium is installed in the image. The Microsoft Forms
+  loading-indicator tests intercept the iframe with a controlled local response;
+  they do not depend on the remote form loading or on fixed delays. External
+  service availability is checked separately by the deployed smoke workflow.
 
 ## How we rate severity
 
