@@ -372,11 +372,15 @@ test.describe('Google Consent Mode bootstrap', () => {
     //
     // which could never be true — `functionality_storage` is itself 'granted'
     // here, so every granted value hit 'granted' !== 'granted' and the
-    // `.some()` was false whatever else had been flipped. It was then narrowed
-    // to the four signals named below, which is honest but adds no coverage:
-    // those exact four are already asserted 'denied' individually above, and
-    // the two signals nothing covers — `personalization_storage` today, plus
-    // any Consent Mode signal Google adds later — stayed uncovered.
+    // `.some()` was false whatever else had been flipped.
+    //
+    // It was then narrowed to an allow-list of four: `analytics_storage`,
+    // `ad_storage`, `ad_user_data` and `ad_personalization`. Honest, but it
+    // added no coverage — those same four are each asserted 'denied'
+    // individually above, so the filter only repeated them. What stayed
+    // uncovered was everything NOT on that list: `personalization_storage`,
+    // which is in the scoped call and is asserted nowhere else, and any
+    // Consent Mode signal Google adds in future.
     //
     // Naming what MAY be granted inverts that: a new signal is caught by
     // default, and the list only grows when a grant is genuinely intended.
