@@ -301,7 +301,7 @@ test.describe('Google Consent Mode bootstrap', () => {
     await page.goto('/')
 
     // The bootstrap is an inline <head> script, so the consent default is
-    // in the dataLayer synchronously â€” no waiting on lazyOnload GTM.
+    // in the dataLayer synchronously — no waiting on lazyOnload GTM.
     const defaults = await page.evaluate(() => {
       const dl = (window as unknown as { dataLayer?: unknown[] }).dataLayer || []
       return dl
@@ -314,7 +314,7 @@ test.describe('Google Consent Mode bootstrap', () => {
     // one for everyone else. Google resolves the most specific matching
     // region, so an EEA visitor gets the denial and the rest fall through.
     //
-    // This case previously asserted a SINGLE unscoped denial â€” the global
+    // This case previously asserted a SINGLE unscoped denial — the global
     // opt-in model this branch reverses. It is asserted positively AND by
     // absence below, because the failure that matters is the region-scoped
     // call quietly losing its region and starting to apply to everyone.
@@ -360,13 +360,15 @@ test.describe('Google Consent Mode bootstrap', () => {
     // regional model is the inverse of the global one. Analytics IS granted
     // outside the EEA/UK/CH by design, so asserting "nothing grants
     // analytics" would now be asserting the bug. What must never happen is a
-    // REGION-SCOPED call granting anything: that is the single edit which
+    // REGION-SCOPED call granting a tracking signal: that is the single edit which
     // would start measuring EEA visitors before they consent, and every
     // positive assertion above would still pass with it in place.
     const scopedGrants = defaults.filter(
       (d) =>
         d.region !== undefined &&
-        Object.values(d).some((v) => v === 'granted' && d.functionality_storage !== v)
+        ['analytics_storage', 'ad_storage', 'ad_user_data', 'ad_personalization'].some(
+          (key) => d[key] === 'granted'
+        )
     )
     expect(scopedGrants.map((d) => d.region)).toEqual([])
 
@@ -426,7 +428,9 @@ test('an advertising opt-out reaches another open tab without navigation', async
   page,
 }) => {
   await page.goto('/', { waitUntil: 'domcontentloaded' })
-  await page.getByRole('button', { name: 'Accept All', exact: true }).click()
+  await page
+    .getByRole('button', { name: testConfig.cookieConsent.buttons.acceptAll, exact: true })
+    .click()
   const other = await context.newPage()
   await other.goto('/', { waitUntil: 'domcontentloaded' })
   await expect(other.getByTestId('sale-share-opt-out')).toBeVisible()

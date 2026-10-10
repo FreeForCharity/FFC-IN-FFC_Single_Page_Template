@@ -9,7 +9,7 @@ import {
   subscribeSaleShareOptOut,
 } from '@/lib/consent-mode'
 
-// Tracking IDs live in src/lib/analytics.config.ts â€” edit them there.
+// Tracking IDs live in src/lib/analytics.config.ts — edit them there.
 const GA_MEASUREMENT_ID = analyticsConfig.gaMeasurementId
 const META_PIXEL_ID = analyticsConfig.metaPixelId
 const CLARITY_PROJECT_ID = analyticsConfig.clarityProjectId
@@ -83,7 +83,7 @@ export default function CookieConsent() {
   // gates their cookie STORAGE by region while the script itself loads on
   // every pageview (a visitor who has not opted in is measured via
   // cookieless pings only, in the EEA/UK/CH). With the shipped placeholder
-  // ID this loader is inert â€” GTM delivers GA4 for fleet sites.
+  // ID this loader is inert — GTM delivers GA4 for fleet sites.
   const loadGoogleAnalytics = useCallback(() => {
     if (
       typeof window !== 'undefined' &&
@@ -112,7 +112,7 @@ export default function CookieConsent() {
   }, [])
 
   // The Meta Pixel does not speak Consent Mode, so it loads ONLY on an
-  // explicit marketing grant â€” everywhere in the world.
+  // explicit marketing grant — everywhere in the world.
   const loadMetaPixel = useCallback(() => {
     if (
       typeof window !== 'undefined' &&
@@ -146,7 +146,7 @@ export default function CookieConsent() {
   }, [])
 
   // Microsoft Clarity records sessions and does not speak Consent Mode, so
-  // it loads ONLY on an explicit analytics grant â€” everywhere in the world.
+  // it loads ONLY on an explicit analytics grant — everywhere in the world.
   const loadMicrosoftClarity = useCallback(() => {
     if (
       typeof window !== 'undefined' &&
@@ -167,7 +167,7 @@ export default function CookieConsent() {
 
   // A cookie can only be deleted by a request whose domain attribute
   // MATCHES the one it was set with. GA4 scopes `_ga` to the registrable
-  // domain (e.g. `.example.org`) so it is readable across subdomains â€” on
+  // domain (e.g. `.example.org`) so it is readable across subdomains — on
   // `www.example.org`, expiring it with `domain=www.example.org` silently
   // does nothing and the visitor keeps the identifier they just asked us
   // to drop. Try every scope the cookie could plausibly hold: host-only,
@@ -175,7 +175,7 @@ export default function CookieConsent() {
   // without a leading dot (a www-strip alone misses higher-level scopes
   // on subdomain-hosted deployments like app.charity.example.org).
   // Candidates that land on a public suffix (e.g. `co.uk`) are harmless
-  // no-ops â€” browsers reject setting or expiring cookies there.
+  // no-ops — browsers reject setting or expiring cookies there.
   const expireCookies = useCallback((names: string[]) => {
     const labels = window.location.hostname.split('.')
     const domains: string[] = []
@@ -235,7 +235,7 @@ export default function CookieConsent() {
   // previously stored grant: this site granted storage outside the
   // EEA/UK/CH until recently, so a returning visitor may still carry a
   // `_ga` set under that permissive default and have no stored choice
-  // to withdraw â€” and
+  // to withdraw — and
   // a visitor who keeps analytics but drops marketing must not have their
   // `_ga` client id wiped on every pageview.
   const deleteTrackingCookies = useCallback(
@@ -277,7 +277,7 @@ export default function CookieConsent() {
         typeof window !== 'undefined' && window.location.protocol === 'https:' ? '; Secure' : ''
       document.cookie = `cookie-consent=${encodeURIComponent(cookieValue)}; path=/; max-age=31536000; SameSite=Lax${secureFlag}`
 
-      // Delete each non-granted category's cookies on EVERY apply â€” not
+      // Delete each non-granted category's cookies on EVERY apply — not
       // only on withdrawal of a stored grant, because cookies set under
       // this site's earlier permissive default outlive that default.
       // `adsDenied` is in the CONDITION, not only inside
@@ -285,7 +285,7 @@ export default function CookieConsent() {
       // stored choice is accept-everything has both categories granted, so
       // without it this branch never runs and the Pixel keeps its cookies.
       // The clause was first added inside the helper alone, where it was
-      // unreachable for exactly that visitor â€” a mutation run found it inert.
+      // unreachable for exactly that visitor — a mutation run found it inert.
       // The opt-out, read once for the value this apply publishes.
       //
       // It is NOT the only read: deleteTrackingCookies and the Meta loader
@@ -304,7 +304,7 @@ export default function CookieConsent() {
 
       // Google Consent Mode `update`: runs on every banner interaction AND
       // every stored-choice restore. This is what gates the Google tags'
-      // cookie storage â€” the tags themselves load regardless (see
+      // cookie storage — the tags themselves load regardless (see
       // src/lib/consent-mode.ts for the regional defaults they start from:
       // denied in the EEA/UK/CH, analytics and Ad Grants signals granted
       // elsewhere unless the visitor has opted out of sale/sharing).
@@ -341,7 +341,7 @@ export default function CookieConsent() {
       }
 
       // The direct GA4 tag loads regardless of the choice (Consent Mode
-      // gates its storage, not its loading) â€” but only AFTER the consent
+      // gates its storage, not its loading) — but only AFTER the consent
       // update above, so a stored choice is already in the dataLayer when
       // the GA queue replays. The bootstrap denies in the EEA/UK/CH, so
       // loading first no longer risks a cookie-based hit ahead of a stored
@@ -350,7 +350,7 @@ export default function CookieConsent() {
       loadGoogleAnalytics()
 
       // Non-Google scripts do not speak Consent Mode, so they stay gated
-      // on an explicit grant â€” the same standard the bootstrap already
+      // on an explicit grant — the same standard the bootstrap already
       // applies to the Google tags.
       if (prefs.analytics) {
         loadMicrosoftClarity()
@@ -469,17 +469,17 @@ export default function CookieConsent() {
     // ORDER MATTERS: a stored choice is restored and applied FIRST (its
     // gtag consent update lands in the dataLayer inside applyConsent,
     // which then loads GA itself), and only THEN is the GA4 loader called
-    // directly â€” that call is for the no-stored-choice case and is an
+    // directly — that call is for the no-stored-choice case and is an
     // idempotent no-op when applyConsent already ran. With the bootstrap
     // denying regionally, loading GA before the restore no longer risks a
-    // cookie-based hit ahead of a stored denial â€” it would cost a
+    // cookie-based hit ahead of a stored denial — it would cost a
     // returning GRANTER their opening hit, sent cookieless before the
     // stored grant applied.
     // eslint-disable-next-line react-hooks/set-state-in-effect
     loadPreferencesFromLocalStorage(true)
 
-    // The Google tags load on EVERY pageview â€” including a first visit
-    // where the banner is still showing â€” because Consent Mode gates their
+    // The Google tags load on EVERY pageview — including a first visit
+    // where the banner is still showing — because Consent Mode gates their
     // cookie use, not their loading. GTM loads unconditionally from the
     // root layout; the direct GA4 loader is inert until a real measurement
     // ID replaces the placeholder in src/lib/analytics.config.ts.
