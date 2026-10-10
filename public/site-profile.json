@@ -23,7 +23,7 @@
   },
   "profileEndpoints": {
     "siteProfile": "https://freeforcharity.github.io/site-profile.json",
-    "securityTxt": "https://freeforcharity.github.io/.well-known/security.txt",
+    "securityTxt": "https://freeforcharity.github.io/security.txt",
     "sitemap": "https://freeforcharity.github.io/sitemap.xml",
     "robots": "https://freeforcharity.github.io/robots.txt"
   },
@@ -39,6 +39,8 @@
       "pnpm run check:drift",
       "pnpm run test:coverage",
       "pnpm run build",
+      "pnpm run verify:build",
+      "pnpm run check:bundle",
       "pnpm run test:e2e"
     ]
   }

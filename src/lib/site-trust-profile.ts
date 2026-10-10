@@ -25,7 +25,7 @@ export function getSiteTrustProfile() {
     },
     profileEndpoints: {
       siteProfile: siteUrl('/site-profile.json'),
-      securityTxt: siteUrl('/.well-known/security.txt'),
+      securityTxt: siteUrl('/security.txt'),
       sitemap: siteUrl('/sitemap.xml'),
       robots: siteUrl('/robots.txt'),
     },
@@ -41,6 +41,8 @@ export function getSiteTrustProfile() {
         'pnpm run check:drift',
         'pnpm run test:coverage',
         'pnpm run build',
+        'pnpm run verify:build',
+        'pnpm run check:bundle',
         'pnpm run test:e2e',
       ],
     },
