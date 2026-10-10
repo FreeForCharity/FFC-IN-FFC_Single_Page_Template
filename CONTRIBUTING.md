@@ -348,7 +348,7 @@ Starting your contribution journey with a fresh review:
 ### Prerequisites
 
 - **Node.js**: Version 24.x (validated with v24.18.0)
-- **npm**: Package manager (comes with Node.js)
+- **pnpm**: Package manager (via Corepack; version pinned by `packageManager` in package.json)
 - **Git**: Version control
 - **Code Editor**: We recommend VS Code with the following extensions:
   - ESLint
@@ -633,7 +633,8 @@ git commit -m "feat: implement user authentication
 - **Pre-commit hook**: Runs before every commit
   - Checks code formatting with Prettier
   - Runs ESLint to catch errors
-  - Prevents commits with formatting or linting issues
+  - Runs the FFC drift check (`pnpm run check:drift`)
+  - Prevents commits with formatting, linting, or drift issues
 - **Commit-msg hook**: Validates commit message format
   - Enforces conventional commit format
   - Ensures commit messages follow the type format above

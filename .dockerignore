@@ -1,0 +1,12 @@
+# Build context for .oss-scanner/Dockerfile. The scanner builds from a clean
+# checkout; these entries keep a local `docker build` / `tools/check` from
+# copying host build output into the image.
+node_modules
+.next
+out
+coverage
+test-results
+playwright-report
+.lighthouseci
+.env
+.env.*

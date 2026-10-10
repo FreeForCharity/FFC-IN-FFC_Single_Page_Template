@@ -159,6 +159,7 @@ Our issue templates:
 - **feature_request.md** - For suggesting features
 - **documentation.md** - For documentation issues
 - **reviewer-onboarding.md** - For new reviewer onboarding
+- **rebrand-template.md** - Checklist for rebranding the template to a new nonprofit
 - **config.yml** - Configuration with support links
 
 ### Additional Documentation Files

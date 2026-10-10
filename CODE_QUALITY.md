@@ -105,9 +105,8 @@ pnpm run test:watch
 
 **Coverage Requirements**:
 
-- **Current Minimum**: 5% (initial baseline)
-- **Target**: 15-20% for Phase 2
-- **Long-term Goal**: 50%+
+- **Current Minimum** (enforced in `jest.config.js`, checked in CI by `pnpm run test:coverage`): 68% branches, 75% functions, 80% lines, 78% statements
+- **Long-term Goal**: raise these thresholds as coverage grows
 
 ### Playwright
 

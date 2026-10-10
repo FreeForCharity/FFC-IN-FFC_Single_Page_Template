@@ -2,7 +2,7 @@
 
 ## Overview
 
-This document outlines the responsive design principles, breakpoints, and testing strategies used in the FFC Single Page Template. The site is built with a mobile-first approach using Tailwind CSS v4.1.12.
+This document outlines the responsive design principles, breakpoints, and testing strategies used in the FFC Single Page Template. The site is built with a mobile-first approach using Tailwind CSS v4 (exact version in `package.json`).
 
 ## Design Philosophy
 
@@ -75,7 +75,7 @@ The project uses Tailwind CSS's default breakpoint system:
 - Logo and nav items in single row
 - Expanded spacing
 
-**Implementation**: `src/components/Header/index.tsx`
+**Implementation**: `src/components/header/index.tsx`
 
 ### Footer
 
@@ -91,7 +91,7 @@ The project uses Tailwind CSS's default breakpoint system:
 - Horizontal sections
 - Expanded spacing
 
-**Implementation**: `src/components/Footer/index.tsx`
+**Implementation**: `src/components/footer/index.tsx`
 
 ### Hero Section
 

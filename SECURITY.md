@@ -2,6 +2,26 @@
 
 This document outlines the security measures implemented in the Free For Charity web application repository to protect code quality, maintain integrity, and ensure safe collaboration.
 
+## Reporting a Vulnerability
+
+**Do not open a public issue for a security problem.** This repository is a template that Free For Charity charity websites are created from, so an issue here can affect many live nonprofit sites.
+
+Report privately, by either of these routes:
+
+- **Preferred:** [open a private security advisory](https://github.com/FreeForCharity/FFC-IN-FFC_Single_Page_Template/security/advisories/new) (GitHub private vulnerability reporting is enabled on this repository).
+- **Email:** clarkemoyer@freeforcharity.org, subject line `Security Vulnerability Report`.
+
+Please include a description, steps to reproduce (a feed payload, config value, URL, or input plus the resulting behavior), the potential impact, and a suggested fix if you have one. Response times are under [Response Timeline](#response-timeline) below. The scope and severity rubric are in [THREAT-MODEL.md](./THREAT-MODEL.md).
+
+> Note: the template's own `security.txt` and `siteConfig.contactEmail` use `security@freeforcharity.org`, the sample FFC contact that each charity's fork replaces with its own. Security reports about this template itself should use the routes above.
+
+### Automated vulnerability scanning
+
+- **CodeQL** (GitHub code scanning default setup) analyzes `javascript-typescript` and `actions` on every PR and on `main`.
+- **OpenSSF Scorecard** (`.github/workflows/scorecard.yml`) runs weekly and on `main`. Results go to code scanning and are published to the [OpenSSF Scorecard API](https://scorecard.dev/viewer/?uri=github.com/FreeForCharity/FFC-IN-FFC_Single_Page_Template).
+- **`pnpm audit`** (`.github/workflows/security-audit.yml`) runs daily and on dependency changes. **Dependabot** covers npm, GitHub Actions, and the scanner base image.
+- **Anthropic OSS Scanner**: enrollment is prepared in [`.oss-scanner/`](./.oss-scanner/README.md). Reports from it arrive privately by email and are triaged in private security advisories, never in public issues. Tracking: [FFC-Cloudflare-Automation#1582](https://github.com/FreeForCharity/FFC-Cloudflare-Automation/issues/1582).
+
 ## Branch Protection Rules
 
 The `main` branch is protected by a ruleset named **"Protect Main"** that enforces strict quality and security controls. These protections ensure that all code merged into the main branch meets our standards and has been properly reviewed and tested.
@@ -203,7 +223,7 @@ The repository uses automated quality checks to ensure code quality and security
   - Code formatting check (Prettier)
   - Linting (ESLint)
   - Unit tests (Jest)
-  - Static site build with proper basePath configuration
+  - Static site build (CI builds without a basePath; the deploy workflow computes it)
   - End-to-end tests (Playwright)
 - Must pass before merging
 
@@ -261,7 +281,7 @@ If you're new to this project, follow these security guidelines:
 
 3. **Keep dependencies updated**
    - Run `pnpm audit` to check for vulnerabilities
-   - Use `pnpm audit --audit-level=moderate` to set the CI exit threshold to moderate and higher severity issues
+   - CI runs `pnpm audit --prod --audit-level high` (`pnpm run audit:high`, in `security-audit.yml`); run it locally before changing dependencies
    - Update dependencies promptly when security patches are released
    - Review dependency changes in pull requests
 
@@ -279,22 +299,11 @@ If you're new to this project, follow these security guidelines:
 
 ### Reporting Security Vulnerabilities
 
-If you discover a security vulnerability in this repository:
-
-1. **Do NOT open a public issue** - this could put the live site at risk
-2. **Report privately** using one of these methods:
-   - **Preferred**: Use GitHub's [Security Advisories feature](https://github.com/FreeForCharity/FFC-IN-FFC_Single_Page_Template/security/advisories/new)
-   - **Alternative**: Email clarkemoyer@freeforcharity.org with subject line "Security Vulnerability Report"
-3. Include as much detail as possible:
-   - Description of the vulnerability
-   - Steps to reproduce
-   - Potential impact
-   - Affected versions (if known)
-   - Suggested fix (if you have one)
+See [Reporting a Vulnerability](#reporting-a-vulnerability) at the top of this document. In short: never in a public issue; use a [private security advisory](https://github.com/FreeForCharity/FFC-IN-FFC_Single_Page_Template/security/advisories/new) or email clarkemoyer@freeforcharity.org.
 
 #### Response Timeline
 
-- **Initial Response**: Within 48 hours of receipt
+- **Initial Response**: Within 2 business days of receipt (as published on the site's `/vulnerability-disclosure-policy`)
 - **Assessment**: Within 5 business days
 - **Fix Development**: Timeframe depends on severity
   - Critical: Within 7 days
@@ -305,19 +314,16 @@ If you discover a security vulnerability in this repository:
 
 #### Supported Versions
 
-We support security updates for:
+This template has no versioned releases. Only `main` is supported, and fixes land there.
 
-- **Current release**: Latest version deployed to production
-- **Previous release**: One version back (if applicable)
-
-Older versions may not receive security updates. We recommend always using the latest version.
+Charity sites (`FFC-EX-<domain>` repositories) are created as a **copy** of this template, so a fix on `main` does not reach them automatically. For each confirmed vulnerability, Free For Charity backports the fix to the affected charity sites it manages.
 
 #### Security Contact
 
 **Primary Contact**: Clarke Moyer, Founder  
 **Email**: clarkemoyer@freeforcharity.org  
 **Phone**: 520-222-8104 (text preferred)  
-**Response Window**: 48 hours for initial acknowledgment
+**Response Window**: 2 business days for initial acknowledgment
 
 ---
 
@@ -412,29 +418,24 @@ Beyond branch protection, this repository uses:
    - TypeScript strict mode for type safety
 
 3. **Automated Testing**
-   - Playwright end-to-end tests
-   - Tests run after merge to main as part of the deployment pipeline
+   - Jest unit tests and Playwright end-to-end tests run in `ci.yml` on every PR and on `main`
+   - The deploy workflow runs a post-deploy smoke check
 
 4. **Static Site Security**
    - No server-side code reduces attack surface
    - Static site generation eliminates many common vulnerabilities
-   - Content Security Policy headers (configured in hosting)
+   - Content Security Policy and Referrer-Policy delivered as `<meta>` tags in `src/app/layout.tsx`. GitHub Pages cannot send custom response headers; `public/_headers` carries the full header set for a future Cloudflare Pages deploy
 
 ---
 
 ## Known Security Vulnerabilities
 
-### Current Status (December 2025)
+### Current Status
 
-The project currently has **4 low severity vulnerabilities** identified by pnpm audit:
+This file does not keep a point-in-time vulnerability count, because a dated snapshot here went stale within weeks. For the live picture, see:
 
-- **4 low severity**: tmp package vulnerabilities
-  - Affects: @lhci/cli (Lighthouse CI - dev dependency only)
-  - Vulnerability: Arbitrary temporary file/directory write via symbolic link (GHSA-52f5-9888-hmc6)
-  - Impact: Limited to development environment, does not affect production site
-  - Fix available via `pnpm audit --fix` (may involve breaking changes to Lighthouse CI)
-
-**Good News**: The previously reported critical Next.js RCE vulnerability (GHSA-9qr9-h5gf-34mp) has been resolved. The project is now using next@16.0.7, which includes the security fix.
+- the repository's **Security** tab (Dependabot, CodeQL, and Scorecard alerts);
+- the latest run of **Security Audit** (`.github/workflows/security-audit.yml`), which fails on any production vulnerability rated high or above (`pnpm audit --prod --audit-level high`).
 
 ### Monitoring and Updates
 
@@ -481,5 +482,5 @@ If you have questions about these security measures or need help setting up your
 
 ---
 
-**Last Updated**: December 2025  
+**Last Updated**: October 2026  
 **Applies to**: All contributors with write access to the repository
