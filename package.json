@@ -5,7 +5,7 @@
   "packageManager": "pnpm@10.34.5",
   "scripts": {
     "dev": "next dev --turbopack",
-    "prebuild": "node scripts/fetch-events.mjs",
+    "prebuild": "node scripts/fetch-events.mjs && node scripts/generate-site-profile.cjs",
     "build": "next build",
     "analyze": "ANALYZE=true next build --webpack",
     "preview": "pnpm exec serve -s out -l 3000",
