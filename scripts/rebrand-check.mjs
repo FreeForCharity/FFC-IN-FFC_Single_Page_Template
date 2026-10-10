@@ -96,7 +96,7 @@ async function checkSiteConfig() {
     ['Site URL still the template default (freeforcharity.github.io)', 'freeforcharity.github.io'],
     ['EIN (tax ID) still 46-2471893', '46-2471893'],
     ['Phone still (520) 222-8104', '5202228104'],
-    ['Contact email still security@freeforcharity.org', 'security@freeforcharity.org'],
+    ['Contact email still clarkemoyer@freeforcharity.org', 'clarkemoyer@freeforcharity.org'],
     // Match the twitterHandle assignment specifically — a bare "freeforcharity"
     // needle also hits the email and the Facebook/LinkedIn/GitHub social URLs,
     // so it would mis-fire even after a fork updated the handle.
@@ -146,11 +146,11 @@ async function checkDeployment() {
   }
   const filesWith = (needle) => bodies.filter(([, b]) => b.includes(needle)).map(([rel]) => rel)
 
-  const withEmail = filesWith('security@freeforcharity.org')
+  const withEmail = filesWith('clarkemoyer@freeforcharity.org')
   if (withEmail.length) {
     flag(
       'Deployment',
-      `security.txt Contact still security@freeforcharity.org`,
+      `security.txt Contact still clarkemoyer@freeforcharity.org`,
       withEmail.join(', ')
     )
   }
