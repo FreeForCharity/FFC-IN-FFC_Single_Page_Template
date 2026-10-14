@@ -71,15 +71,33 @@ test.describe('axe-core homepage guardrail', () => {
  * category score may not dip below the CI threshold for a lone heading skip.
  * This spec pins the rule explicitly on every static page so a reintroduced
  * h2→h4 jump (fixed once in cookie-policy) fails with a pointer to the node.
+ *
+ * Each case first proves it is on the page it names: the preview server used
+ * to SPA-fall-back every direct policy URL to the home page (`serve -s`), so
+ * these checks audited the home page three extra times and never the policies.
+ * `h1` is the page's own title (null for the home page, whose title is the
+ * charity's hero copy and differs per site).
  */
-const STATIC_PAGES = ['/', '/cookie-policy', '/privacy-policy', '/terms-of-service']
+const STATIC_PAGES: { path: string; h1: RegExp | null }[] = [
+  { path: '/', h1: null },
+  { path: '/cookie-policy', h1: /Cookie Policy/ },
+  { path: '/privacy-policy', h1: /Privacy Policy/ },
+  { path: '/terms-of-service', h1: /Terms of Service/ },
+]
 
 test.describe('heading order on static pages', () => {
-  for (const path of STATIC_PAGES) {
+  for (const { path, h1 } of STATIC_PAGES) {
     test(`headings descend sequentially on ${path}`, async ({ page }) => {
-      await page.goto(path)
+      const response = await page.goto(path)
+      expect(response?.status()).toBe(200)
       await page.waitForLoadState('domcontentloaded')
       await page.locator('footer').waitFor({ state: 'visible' })
+
+      // On the page it names, not a fallback: the URL stayed put and the one
+      // <h1> is that page's title.
+      expect(new URL(page.url()).pathname.replace(/\/$/, '') || '/').toBe(path)
+      await expect(page.locator('h1')).toHaveCount(1)
+      if (h1) await expect(page.locator('h1')).toHaveText(h1)
 
       const results = await new AxeBuilder({ page })
         .include('body')
