@@ -243,6 +243,20 @@ describe('the one donation policy', () => {
     }
   )
 
+  it('leaves refunds to the charity’s discretion, with no fixed review window', () => {
+    asCharitySite()
+    const { container } = render(<DonationPolicyPage />)
+    const text = container.textContent ?? ''
+    expect(text).toContain('Donations are generally non-refundable.')
+    expect(text).toContain(`may be granted at the discretion of ${CHARITY.name}`)
+    expect(text).not.toMatch(/within 30 days/)
+    // The refund paragraph routes requests to the charity's own public email.
+    const refunds = Array.from(container.querySelectorAll('h2')).find(
+      (h) => h.textContent === 'Refunds'
+    )?.nextElementSibling
+    expect(refunds?.querySelector(`a[href="mailto:${CHARITY.contactEmail}"]`)).not.toBeNull()
+  })
+
   it('carries the gift-acceptance terms folded in from the retired FFC policy', () => {
     asCharitySite()
     const { container } = render(<DonationPolicyPage />)

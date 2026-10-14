@@ -116,10 +116,11 @@ export default function DonationPolicy() {
 
           <h2 className={h2}>Refunds</h2>
           <p>
-            Donations are generally non-refundable. If you believe a donation was made in error, for
-            example the wrong amount or a duplicate charge, please contact us within 30 days of the
-            donation and we will review your request. An approved refund is returned to the original
-            payment method, and any receipt issued for the refunded amount no longer applies.
+            Donations are generally non-refundable. Refund requests, for example for a donation made
+            in error, may be granted at the discretion of {name}; contact us at{' '}
+            <ContactEmail email={legal.email} className="text-primary underline" />. An approved
+            refund is returned to the original payment method, and any receipt issued for the
+            refunded amount no longer applies.
           </p>
 
           <h2 className={h2}>Donor Recognition</h2>
