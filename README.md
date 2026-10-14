@@ -293,7 +293,7 @@ The site is live and fully functional with the following features:
 - Core navigation and layout (mobile and desktop responsive)
 - SEO optimization (metadata, sitemap, robots.txt)
 - Static site generation and deployment pipeline
-- All 7 policy pages created and linked (Privacy Policy, Cookie Policy, Terms of Service, Donation Policy, Free For Charity Donation Policy, Vulnerability Disclosure Policy, Security Acknowledgements)
+- All 6 policy pages created and linked (Privacy Policy, Cookie Policy, Terms of Service, Donation Policy, Vulnerability Disclosure Policy, Security Acknowledgements). There is one donation policy, the site's own, branded from `siteConfig`
 - Social media links configured (Facebook, Twitter/X, LinkedIn, GitHub)
 - Footer links fully functional with proper destinations
 - Contact information complete (email, phone, addresses)
@@ -309,7 +309,7 @@ The site is live and fully functional with the following features:
 
 ## Overview
 
-This is a single-page website whose components (under `src/components/`) are organized into multiple sections that showcase Free For Charity's programs, services, and resources. The homepage is composed of scrollable sections (Hero, Mission, Programs, Team, FAQ, etc.), with 7 additional policy pages for legal content.
+This is a single-page website whose components (under `src/components/`) are organized into multiple sections that showcase Free For Charity's programs, services, and resources. The homepage is composed of scrollable sections (Hero, Mission, Programs, Team, FAQ, etc.), with 6 additional policy pages for legal content.
 
 ### Site Structure
 
@@ -331,13 +331,12 @@ The main page (`/`) is a single-page application composed of scrollable sections
 - Frequently Asked Questions
 - Team section
 
-**Legal & Policy Pages (7 Separate Routes):**
+**Legal & Policy Pages (6 Separate Routes):**
 
 - Privacy Policy (`/privacy-policy`)
 - Cookie Policy (`/cookie-policy`)
 - Terms of Service (`/terms-of-service`)
-- Donation Policy (`/donation-policy`)
-- Free For Charity Donation Policy (`/free-for-charity-donation-policy`)
+- Donation Policy (`/donation-policy`), the site's one donation policy: deductibility, receipts, refunds, gift acceptance, contact email and city/state
 - Vulnerability Disclosure Policy (`/vulnerability-disclosure-policy`)
 - Security Acknowledgements (`/security-acknowledgements`)
 
@@ -717,7 +716,7 @@ Vercel automatically enables PR preview deployments and comments.
 
 ## Key Features
 
-- **Single-Page Architecture:** One main scrollable page with multiple sections plus 7 policy pages
+- **Single-Page Architecture:** One main scrollable page with multiple sections plus 6 policy pages
 - **Component Library:** 23 component files organized by feature/section
 - **Responsive Navigation:** Mobile and desktop navigation with Header/Footer components
 - **Cookie Consent System:** GDPR-compliant cookie consent management
@@ -750,7 +749,6 @@ src/
 │   ├── home-page/                             # Homepage sections (single-page structure)
 │   ├── cookie-policy/                         # Cookie Policy page
 │   ├── donation-policy/                       # Donation Policy page
-│   ├── free-for-charity-donation-policy/      # Free For Charity Donation Policy page
 │   ├── privacy-policy/                        # Privacy Policy page
 │   ├── security-acknowledgements/             # Security Acknowledgements page
 │   ├── terms-of-service/                      # Terms of Service page

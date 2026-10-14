@@ -6,6 +6,7 @@ import {
   isSupportingOrgSite,
   mailtoHref,
   publishedPhone,
+  publishedCityState,
   eventsFacebookPageUrl,
   donationEmbedUrl,
   isPending,
@@ -218,6 +219,40 @@ describe('publishedPhone', () => {
   ])('returns null unless both halves are set (%j)', (phone) => {
     asCharitySite({ phone })
     expect(publishedPhone()).toBeNull()
+  })
+})
+
+describe('publishedCityState', () => {
+  afterEach(restoreSiteConfig)
+
+  const at = (...lines: string[]) =>
+    asCharitySite({ addresses: [{ label: 'Main Address', lines, mapUrl: '' }] })
+
+  it("returns the application's city and state as provisioned", () => {
+    at('Springfield, IL')
+    expect(publishedCityState()).toBe('Springfield, IL')
+  })
+
+  it('keeps only the last line of a fuller address and drops the ZIP', () => {
+    at('12 Elm Street', 'Suite 4', ' Springfield, IL 62701-1234 ')
+    expect(publishedCityState()).toBe('Springfield, IL')
+  })
+
+  it('reads only the first of several offices', () => {
+    asCharitySite({
+      addresses: [
+        { label: 'Main', lines: ['4030 Wake Forrest Road', 'Raleigh, NC 27609'], mapUrl: '' },
+        { label: 'Branch', lines: ['State College, PA 16803'], mapUrl: '' },
+      ],
+    })
+    expect(publishedCityState()).toBe('Raleigh, NC')
+  })
+
+  it('returns null with no address, or only blank lines', () => {
+    asCharitySite({ addresses: [] })
+    expect(publishedCityState()).toBeNull()
+    at('  ', '')
+    expect(publishedCityState()).toBeNull()
   })
 })
 

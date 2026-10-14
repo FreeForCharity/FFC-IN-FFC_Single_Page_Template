@@ -122,15 +122,33 @@ describe('Footer component', () => {
     expect(hubLink).toHaveAttribute('href', siteConfig.supportedBy.hubUrl)
   })
 
-  it('keeps the FFC donation policy label hardcoded (not siteConfig.name-branded)', () => {
+  it('links exactly the six policy pages of the footer standard, each branded to the site', () => {
     render(<Footer />)
-    // This page documents FFC's own donation policy, so its label must not
-    // pick up a fork's rebranded siteConfig.name.
-    const ffcPolicyLink = screen.getByText('Free For Charity Donation Policy').closest('a')
-    expect(ffcPolicyLink).toHaveAttribute('href', '/free-for-charity-donation-policy')
-    // The charity's own donation policy remains a separate entry.
-    const ownPolicyLink = screen.getByText('Donation Policy').closest('a')
-    expect(ownPolicyLink).toHaveAttribute('href', '/donation-policy')
+    const policyNav = screen.getByRole('navigation', { name: 'Policy links' })
+    const links = Array.from(policyNav.querySelectorAll('a')).map((a) => ({
+      name: a.textContent,
+      href: a.getAttribute('href'),
+    }))
+    expect(links).toEqual([
+      { name: `${siteConfig.name} Donation Policy`, href: '/donation-policy' },
+      { name: `${siteConfig.name} Privacy Policy`, href: '/privacy-policy' },
+      { name: `${siteConfig.name} Cookie Policy`, href: '/cookie-policy' },
+      { name: `${siteConfig.name} Terms of Service`, href: '/terms-of-service' },
+      {
+        name: `${siteConfig.name} Vulnerability Disclosure Policy`,
+        href: '/vulnerability-disclosure-policy',
+      },
+      { name: `${siteConfig.name} Security Acknowledgement`, href: '/security-acknowledgements' },
+    ])
+  })
+
+  it('no longer links a separate Free For Charity donation policy', () => {
+    const { container } = render(<Footer />)
+    // One donation policy per site: the retired FFC-branded page is gone. (On
+    // the template itself the site's own label reads "Free For Charity
+    // Donation Policy", so assert on the link target, not the text.)
+    expect(container.querySelector('a[href*="free-for-charity-donation-policy"]')).toBeNull()
+    expect(container.querySelectorAll('a[href="/donation-policy"]')).toHaveLength(1)
   })
 
   it('renders every configured office address with a maps link', () => {

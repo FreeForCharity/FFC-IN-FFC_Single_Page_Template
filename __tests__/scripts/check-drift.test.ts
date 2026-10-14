@@ -160,27 +160,69 @@ describe('check-drift: brand identity', () => {
   const findings = (files: { path: string; body: string }[], name = 'Riverbend Pantry') =>
     callInChild<IdentityFinding[]>('brandIdentityFindings', files, name)
 
-  it("exempts Free For Charity's own donation policy page, which is FFC's by design", () => {
+  // TRANSITIONAL: the retired second donation policy stays out of the identity
+  // scan during the fleet rollout, and is reported as a warning instead (see
+  // retiredDonationPolicyFindings below).
+  it('keeps the retired FFC donation policy page out of the identity scan during rollout', () => {
     expect(
       findings([{ path: 'src/app/free-for-charity-donation-policy/page.tsx', body: FFC_PAGE }])
     ).toEqual([])
   })
 
-  it('exempts that page by exact path only — the same text anywhere else is an error', () => {
+  it('tolerates that page by exact path only — the same text anywhere else is an error', () => {
     const out = findings([{ path: 'src/app/donation-policy/page.tsx', body: FFC_PAGE }])
     expect(out.map((f) => f.line)).toEqual([1, 2, 2])
     expect(out.map((f) => f.label).join(' ')).toMatch(/org name.*org name.*EIN/)
   })
 
-  it('accepts Windows separators for the exempt path', () => {
+  it('accepts Windows separators for the tolerated path', () => {
     expect(
       findings([{ path: 'src\\app\\free-for-charity-donation-policy\\page.tsx', body: FFC_PAGE }])
     ).toEqual([])
   })
 
+  it('tolerates the retired footer label only in the footer', () => {
+    const line = "name: 'Free For Charity Donation Policy',"
+    expect(findings([{ path: 'src/components/footer/index.tsx', body: line }])).toEqual([])
+    expect(findings([{ path: 'src/components/Nav.tsx', body: line }])).toHaveLength(1)
+  })
+
   it("stays dormant on the template itself, where FFC's identity is correct", () => {
     expect(
       findings([{ path: 'src/app/donation-policy/page.tsx', body: FFC_PAGE }], 'Free For Charity')
+    ).toEqual([])
+  })
+})
+
+type RetiredFinding = { path: string; line: number; message: string }
+
+describe('check-drift: the retired second donation policy', () => {
+  const retired = (files: { path: string; body: string }[]) =>
+    callInChild<RetiredFinding[]>('retiredDonationPolicyFindings', files)
+
+  it('warns about a leftover FFC donation policy page', () => {
+    const out = retired([{ path: 'src/app/free-for-charity-donation-policy/page.tsx', body: 'x' }])
+    expect(out).toHaveLength(1)
+    expect(out[0].message).toMatch(/one donation policy per site/)
+  })
+
+  it('warns about every link to the retired page, with its line', () => {
+    const footer = [
+      "{ name: 'Donation Policy', href: '/donation-policy' },",
+      "{ name: 'FFC Donation Policy', href: '/free-for-charity-donation-policy' },",
+    ].join('\n')
+    const out = retired([{ path: 'src/components/footer/index.tsx', body: footer }])
+    expect(out.map((f) => [f.path, f.line])).toEqual([['src/components/footer/index.tsx', 2]])
+  })
+
+  it('is silent on a site that publishes only its own /donation-policy', () => {
+    expect(
+      retired([
+        {
+          path: 'src/app/donation-policy/page.tsx',
+          body: "const CANONICAL_PATH = '/donation-policy'",
+        },
+      ])
     ).toEqual([])
   })
 })
