@@ -15,10 +15,10 @@
  *  6. Leftover Free For Charity brand identity (org name, freeforcharity.org
  *     URLs, EIN, phone, @freeforcharity.org emails) in rendered pages/
  *     components after a child site rebrands — the footer platform-credit
- *     attribution is the one allowlisted exception, and FFC's own donation
- *     policy page (src/app/free-for-charity-donation-policy/) is exempt as a
- *     document that is FFC's by design. This is the enforced
+ *     attribution is the one allowlisted exception. This is the enforced
  *     complement to the advisory `pnpm run check:rebrand` config/data checklist.
+ *     The retired "Free For Charity Donation Policy" page and footer link
+ *     (see check 9) are tolerated here, as warnings, during the fleet rollout.
  *  7. A workflow passing `static_site_generator: next` to
  *     actions/configure-pages while this repo's Next config is TypeScript —
  *     the action then writes its own next.config.js and the repo's real
@@ -27,6 +27,11 @@
  *     fonts.googleapis.com / fonts.gstatic.com reference under src/. The
  *     build must never contact Google; fonts are self-hosted via
  *     next/font/local.
+ *  9. The retired second donation policy. The FFC footer standard is ONE
+ *     donation policy per site, the site's own (/donation-policy). A
+ *     leftover src/app/free-for-charity-donation-policy/ page, or any link to
+ *     /free-for-charity-donation-policy, is reported as a WARNING so a site
+ *     made before the change is told to remove it without its CI going red.
  *
  * Run: `node scripts/check-drift.mjs` or `pnpm run check:drift`.
  * Always resolves paths relative to the repo root, so it works regardless
@@ -562,17 +567,17 @@ const FFC_IDENTITY_PATTERNS = [
 
 // A child site that customizes its footer with a hardcoded "Built with Free For
 // Charity" platform credit may keep it. Allow ONLY those specific lines (the
-// credit text, the exact attribution href, and the FFC donation-policy label —
-// that page documents FFC's own policy, so its label intentionally keeps FFC's
-// name after a rebrand) so any other freeforcharity.org URL — or an EIN, phone,
-// or email — is still flagged even inside the footer.
+// credit text and the exact attribution href) so any other freeforcharity.org
+// URL — or an EIN, phone, or email — is still flagged even inside the footer.
+// The retired FFC donation-policy label is tolerated separately, as a
+// transitional warning (see RETIRED_FFC_DONATION_POLICY_LABEL).
 function isAllowedIdentityLine(relPath, line) {
   const normalized = relPath.split(sep).join('/')
   if (normalized !== 'src/components/footer/index.tsx') return false
   return (
     /Built with Free For Charity/.test(line) ||
     /href="https:\/\/freeforcharity\.org"/i.test(line) ||
-    /Free For Charity Donation Policy/.test(line)
+    RETIRED_FFC_DONATION_POLICY_LABEL.test(line)
   )
 }
 
@@ -587,12 +592,21 @@ function withoutSupportedByBlock(relPath, body) {
   return body.replace(/supportedBy:\s*\{[^}]*\}/g, (block) => block.replace(/[^\n]/g, ' '))
 }
 
-// Pages that ARE Free For Charity's own documents, published on every site
-// under FFC's name by design — not leftover template branding. The footer's
-// "Free For Charity Donation Policy" link (allowlisted above) points at the
-// first. Exempted by exact path only, so the same identity anywhere else —
-// including the charity's own /donation-policy — is still an error.
-const FFC_OWN_DOCUMENTS = new Set(['src/app/free-for-charity-donation-policy/page.tsx'])
+// TRANSITIONAL — remove once no FFC-EX site carries the retired page.
+//
+// The FFC footer standard used to publish two donation policies on every site:
+// the charity's own and a "Free For Charity Donation Policy" page under FFC's
+// name. It now publishes ONE, the charity's own, so the template no longer
+// ships that page or its footer link. Sites made before the change still have
+// both, and this checker reaches them by copy. Treating that FFC-branded page
+// and label as leftover identity would turn every such site's CI red the
+// moment it took this file, before anyone had removed the page — so they stay
+// out of the identity scan (exact path / footer label only; the same text
+// anywhere else, including the charity's own /donation-policy, is still an
+// error) and `retiredDonationPolicyFindings` reports them as warnings instead.
+const RETIRED_FFC_DONATION_POLICY_PAGE = 'src/app/free-for-charity-donation-policy/page.tsx'
+const RETIRED_FFC_DONATION_POLICY_LABEL = /Free For Charity Donation Policy/
+const RETIRED_FFC_DONATION_POLICY_HREF = /\/free-for-charity-donation-policy\b/
 
 /**
  * Pure detector, exported for tests: every line in `files` that still carries
@@ -608,7 +622,7 @@ export function brandIdentityFindings(files, name) {
   const findings = []
   for (const { path, body } of files) {
     const rel = path.split(sep).join('/').split('\\').join('/')
-    if (FFC_OWN_DOCUMENTS.has(rel)) continue
+    if (rel === RETIRED_FFC_DONATION_POLICY_PAGE) continue
     const lines = withoutSupportedByBlock(rel, body).split('\n')
     for (let i = 0; i < lines.length; i++) {
       const line = lines[i]
@@ -665,6 +679,60 @@ async function checkBrandIdentity() {
       `${f.path}:${f.line} still references ${f.label} after this site rebranded to "${name}". ` +
         `Replace it with the new organization's details.`
     )
+  }
+}
+
+/**
+ * Pure detector, exported for tests: the retired second donation policy, as
+ * warnings. Reports the page itself and every line that links to it, whatever
+ * the site is named (the template must not carry it either).
+ *
+ * @param {{path: string, body: string}[]} files repo-relative paths, any separator
+ * @returns {{path: string, line: number, message: string}[]}
+ */
+export function retiredDonationPolicyFindings(files) {
+  const findings = []
+  for (const { path, body } of files) {
+    const rel = path.split(sep).join('/').split('\\').join('/')
+    if (rel === RETIRED_FFC_DONATION_POLICY_PAGE) {
+      findings.push({
+        path: rel,
+        line: 1,
+        message:
+          'is the retired "Free For Charity Donation Policy" page. The FFC footer standard is ' +
+          "one donation policy per site, the charity's own: fold anything still needed into " +
+          'src/app/donation-policy/page.tsx, then delete this page and its sitemap entry.',
+      })
+      continue
+    }
+    const lines = body.split('\n')
+    for (let i = 0; i < lines.length; i++) {
+      if (RETIRED_FFC_DONATION_POLICY_HREF.test(lines[i])) {
+        findings.push({
+          path: rel,
+          line: i + 1,
+          message:
+            'links the retired /free-for-charity-donation-policy page. Remove the link; the ' +
+            "footer's one donation policy is /donation-policy.",
+        })
+      }
+    }
+  }
+  return findings
+}
+
+async function checkRetiredDonationPolicy() {
+  const paths = await walk(SRC_DIR, (n) => /\.(tsx?|jsx?)$/.test(n))
+  const files = []
+  for (const full of paths) {
+    try {
+      files.push({ path: relative(ROOT, full), body: await readFile(full, 'utf8') })
+    } catch {
+      continue
+    }
+  }
+  for (const f of retiredDonationPolicyFindings(files)) {
+    warnings.push(`${f.path}:${f.line} ${f.message}`)
   }
 }
 
@@ -873,6 +941,7 @@ async function main() {
   await checkSecrets()
   await checkPlaceholderUrl()
   await checkBrandIdentity()
+  await checkRetiredDonationPolicy()
   await checkCspSync()
   await checkSecurityTxtSync()
   await checkPagesConfigDiscard()

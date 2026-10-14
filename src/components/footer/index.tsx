@@ -156,17 +156,13 @@ const Footer: React.FC = () => {
             <h3 className="text-[28px] text-white">{siteConfig.name} Policy</h3>
             <nav aria-label="Policy links">
               <ul className="space-y-1 text-sm lato-font">
+                {/* FFC footer standard: six policy pages, every one the site's
+                    own organization's. There is ONE donation policy, branded
+                    like the rest; the supporting organization's separate
+                    donation policy page and link were retired. */}
                 {[
                   {
-                    // Hardcoded on purpose: this page documents FFC's OWN
-                    // donation policy, so the label must keep FFC's name even
-                    // after a fork rebrands siteConfig.name. The adjacent
-                    // '/donation-policy' entry is the charity's own policy.
-                    name: 'Free For Charity Donation Policy',
-                    href: '/free-for-charity-donation-policy',
-                  },
-                  {
-                    name: 'Donation Policy',
+                    name: `${siteConfig.name} Donation Policy`,
                     href: '/donation-policy',
                   },
                   {

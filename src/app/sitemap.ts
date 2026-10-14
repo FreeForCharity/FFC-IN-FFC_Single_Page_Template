@@ -29,7 +29,6 @@ export const routes: readonly SitemapEntry[] = [
   { path: '/cookie-policy', changeFrequency: 'yearly', priority: 0.2 },
   { path: '/terms-of-service', changeFrequency: 'yearly', priority: 0.2 },
   { path: '/donation-policy', changeFrequency: 'yearly', priority: 0.2 },
-  { path: '/free-for-charity-donation-policy', changeFrequency: 'yearly', priority: 0.2 },
   { path: '/vulnerability-disclosure-policy', changeFrequency: 'yearly', priority: 0.2 },
   { path: '/security-acknowledgements', changeFrequency: 'monthly', priority: 0.2 },
 ]

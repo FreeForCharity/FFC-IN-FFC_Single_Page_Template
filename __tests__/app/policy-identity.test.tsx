@@ -7,7 +7,6 @@ import TermsPage from '../../src/app/terms-of-service/page'
 import VulnDisclosurePage from '../../src/app/vulnerability-disclosure-policy/page'
 import SecurityAckPage from '../../src/app/security-acknowledgements/page'
 import DonationPolicyPage from '../../src/app/donation-policy/page'
-import FfcDonationPolicyPage from '../../src/app/free-for-charity-donation-policy/page'
 import { siteConfig } from '../../src/lib/site.config'
 import {
   asCharitySite,
@@ -106,6 +105,34 @@ describe("policies a charity's site publishes as its own", () => {
     }
   })
 
+  it('publishes the charity’s city and state where the policies offer contact details', () => {
+    for (const Component of [PrivacyPage, CookiePolicyPage, TermsPage, DonationPolicyPage]) {
+      const { container, unmount } = render(<Component />)
+      expect(container.textContent).toContain('Location: Springfield, IL')
+      unmount()
+    }
+  })
+
+  it('publishes no street address or ZIP, only the city and state', () => {
+    asCharitySite({
+      addresses: [
+        { label: 'Main Address', lines: ['12 Elm Street', 'Springfield, IL 62701'], mapUrl: '' },
+      ],
+    })
+    for (const Component of [PrivacyPage, CookiePolicyPage, TermsPage, DonationPolicyPage]) {
+      const { container, unmount } = render(<Component />)
+      expect(container.textContent).toContain('Location: Springfield, IL')
+      expect(container.textContent).not.toMatch(/Elm Street|62701/)
+      unmount()
+    }
+  })
+
+  it('shows no location line when the charity has no address', () => {
+    asCharitySite({ addresses: [] })
+    const { container } = render(<DonationPolicyPage />)
+    expect(container.textContent).not.toContain('Location:')
+  })
+
   it('names no Data Protection Officer or emergency contact of the supporting organization', () => {
     for (const Component of [PrivacyPage, CookiePolicyPage]) {
       const { container, unmount } = render(<Component />)
@@ -195,15 +222,41 @@ describe("the supporting organization's own site", () => {
   })
 })
 
-describe('Free For Charity’s own donation policy', () => {
+describe('the one donation policy', () => {
   afterEach(restoreSiteConfig)
 
-  // Deliberately NOT charity-owned: every site links to it from the footer as
-  // FFC's document, so it keeps FFC's identity after a rebrand (and
-  // check:drift exempts exactly this page).
-  it('keeps FFC’s name on a charity’s site', () => {
+  it('is titled with the charity’s name', () => {
     asCharitySite()
-    const { container } = render(<FfcDonationPolicyPage />)
-    expect(container.textContent).toContain('Free For Charity Donation Policy')
+    const { container } = render(<DonationPolicyPage />)
+    expect(container.querySelector('h1')?.textContent).toBe(`${CHARITY.name} Donation Policy`)
+  })
+
+  // The FFC footer standard requires the charity's donation policy to cover
+  // these, now that it is the only donation policy the site publishes.
+  it.each(['Tax Deductibility', 'Receipts and Acknowledgment', 'Refunds'])(
+    'covers %s',
+    (heading) => {
+      asCharitySite()
+      const { container } = render(<DonationPolicyPage />)
+      const headings = Array.from(container.querySelectorAll('h2')).map((h) => h.textContent)
+      expect(headings).toContain(heading)
+    }
+  )
+
+  it('carries the gift-acceptance terms folded in from the retired FFC policy', () => {
+    asCharitySite()
+    const { container } = render(<DonationPolicyPage />)
+    const text = container.textContent ?? ''
+    expect(text).toContain(`${CHARITY.name} may decline any gift`)
+    expect(text).toMatch(/only\s+with their consent/)
+    expect(text).toMatch(/give anonymously/)
+  })
+
+  it('names the supporting organization on the template’s own site', () => {
+    asSupporterSite()
+    const { container } = render(<DonationPolicyPage />)
+    expect(container.querySelector('h1')?.textContent).toBe(
+      `${siteConfig.supportedBy.name} Donation Policy`
+    )
   })
 })
