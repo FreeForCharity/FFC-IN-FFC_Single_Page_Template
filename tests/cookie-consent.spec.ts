@@ -363,14 +363,55 @@ test.describe('Google Consent Mode bootstrap', () => {
     // REGION-SCOPED call granting a tracking signal: that is the single edit which
     // would start measuring EEA visitors before they consent, and every
     // positive assertion above would still pass with it in place.
+    // Written as an EXEMPT-list rather than an allow-list, deliberately.
+    //
+    // Two earlier shapes of this check were both weaker than they looked. It
+    // first exempted the legitimately-granted signals BY VALUE:
+    //
+    //   Object.values(d).some((v) => v === 'granted' && d.functionality_storage !== v)
+    //
+    // which could never be true — `functionality_storage` is itself 'granted'
+    // here, so every granted value hit 'granted' !== 'granted' and the
+    // `.some()` was false whatever else had been flipped.
+    //
+    // It was then narrowed to an allow-list of four: `analytics_storage`,
+    // `ad_storage`, `ad_user_data` and `ad_personalization`. Honest, but it
+    // added no coverage — those same four are each asserted 'denied'
+    // individually above, so the filter only repeated them. What stayed
+    // uncovered was everything NOT on that list: `personalization_storage`,
+    // which is in the scoped call and is asserted nowhere else, and any
+    // Consent Mode signal Google adds in future.
+    //
+    // Naming what MAY be granted inverts that: a new signal is caught by
+    // default, and the list only grows when a grant is genuinely intended.
+    const SCOPED_MAY_GRANT = new Set(['functionality_storage', 'security_storage'])
+    const grantedTrackingSignals = (d: Record<string, unknown>): string[] =>
+      Object.entries(d)
+        .filter(([key, value]) => value === 'granted' && !SCOPED_MAY_GRANT.has(key))
+        .map(([key]) => key)
+
     const scopedGrants = defaults.filter(
-      (d) =>
-        d.region !== undefined &&
-        ['analytics_storage', 'ad_storage', 'ad_user_data', 'ad_personalization'].some(
-          (key) => d[key] === 'granted'
-        )
+      (d) => d.region !== undefined && grantedTrackingSignals(d).length > 0
     )
-    expect(scopedGrants.map((d) => d.region)).toEqual([])
+    // Report WHICH signals, not just which regions: a failure reading
+    // `['personalization_storage']` points at the defect, where a bare region
+    // list only says something is wrong somewhere.
+    expect(
+      scopedGrants.map((d) => ({ region: d.region, granted: grantedTrackingSignals(d) }))
+    ).toEqual([])
+
+    // Self-check, because this assertion was genuinely vacuous once and
+    // nothing caught it. A synthetic scoped call granting a tracking signal
+    // MUST be flagged; if a later edit weakens the predicate back toward a
+    // tautology, this fails here rather than in production.
+    expect(
+      grantedTrackingSignals({
+        region: ['DE'],
+        personalization_storage: 'granted',
+        functionality_storage: 'granted',
+        security_storage: 'granted',
+      })
+    ).toEqual(['personalization_storage'])
 
     // And exactly one call may be unscoped. A second would silently shadow
     // the regional denial for whichever visitors it matched.
