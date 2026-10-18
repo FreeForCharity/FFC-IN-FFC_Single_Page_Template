@@ -14,8 +14,24 @@ jest.mock('swiper/modules', () => ({ Navigation: {}, Autoplay: {} }))
 jest.mock('swiper/css', () => ({}), { virtual: true })
 jest.mock('swiper/css/navigation', () => ({}), { virtual: true })
 
+// Fixture data, not the checked-in testimonials: a provisioned charity starts
+// with none (the section self-hides, covered at the end of this file).
+const SAMPLE = [
+  { heading: 'Sample Partner One', text: 'A sample testimonial body used by the tests.' },
+  { heading: 'Sample Partner Two', text: 'A second sample testimonial body.' },
+]
+let mockTestimonials = SAMPLE
+jest.mock('@/data/testimonials', () => ({
+  get testimonials() {
+    return mockTestimonials
+  },
+  get configuredTestimonials() {
+    return mockTestimonials
+  },
+}))
+
 import Testimonials from '@/components/home-page/Testimonials'
-import { testimonials } from '@/data/testimonials'
+const testimonials = SAMPLE
 
 describe('Testimonials component', () => {
   it('renders the section heading', () => {
@@ -35,5 +51,15 @@ describe('Testimonials component', () => {
     render(<Testimonials />)
     expect(screen.getByRole('button', { name: /previous testimonial/i })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: /next testimonial/i })).toBeInTheDocument()
+  })
+
+  it('renders nothing when no testimonial is configured', () => {
+    mockTestimonials = []
+    try {
+      const { container } = render(<Testimonials />)
+      expect(container).toBeEmptyDOMElement()
+    } finally {
+      mockTestimonials = SAMPLE
+    }
   })
 })
