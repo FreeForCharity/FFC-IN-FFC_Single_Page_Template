@@ -28,6 +28,7 @@ describe('public site trust profile', () => {
       nonprofitStatus: 'https://schema.org/Nonprofit501c3',
     })
     expect(profile.supportedBy.name).toBe(original.supportedBy.name)
+    expect(profile.trust.generatedBy).toBe(`${original.supportedBy.name} template factory`)
     expect(profile.contacts.primaryEmail).toBe('hello@example.org')
     expect(profile.siteId).toBe('https://example.org')
     expect(JSON.stringify(profile)).not.toContain('46-2471893')
