@@ -66,10 +66,29 @@ describe('TeamMemberCard', () => {
 
   it('links the whole card to LinkedIn with safe rel attributes when a URL is given', () => {
     render(<TeamMemberCard {...baseProps} />)
-    const link = screen.getByRole('link', { name: /Jane Doe on LinkedIn/i })
+    const link = screen.getByRole('link', { name: /Jane Doe/i })
     expect(link).toHaveAttribute('href', baseProps.linkedinUrl)
     expect(link).toHaveAttribute('target', '_blank')
     expect(link).toHaveAttribute('rel', expect.stringContaining('noopener'))
+  })
+
+  /**
+   * WCAG 2.5.3 "Label in Name" / axe `label-content-name-mismatch` (serious):
+   * the link's accessible name must CONTAIN its visible text, and the card's
+   * visible text is the name AND the role. An `aria-label` of
+   * `<name> on LinkedIn` replaced the name outright, dropping the role, so
+   * every linked card violated the rule — 5 nodes on the template homepage.
+   *
+   * `getByRole`'s `name` option computes the real accessible name (via
+   * dom-accessibility-api), so this asserts the rule rather than the markup:
+   * it fails for an accessible name that omits the role, however that name is
+   * produced, and passes for any spelling that keeps the visible text whole.
+   */
+  it('gives the link an accessible name containing all of its visible text', () => {
+    render(<TeamMemberCard {...baseProps} />)
+    expect(
+      screen.getByRole('link', { name: /Jane Doe\s+Executive Director\s+on LinkedIn/i })
+    ).toBeInTheDocument()
   })
 
   it('renders no link when linkedinUrl is omitted', () => {

@@ -78,10 +78,20 @@ export default function TeamMemberCard({ name, role, linkedinUrl }: TeamMemberCa
         href={safeUrl}
         target="_blank"
         rel="noopener noreferrer"
-        aria-label={`${name} on LinkedIn`}
         className="block focus:outline-none focus-visible:ring-2 focus-visible:ring-primary rounded-[20px]"
       >
         {content}
+        {/*
+         * WCAG 2.5.3 "Label in Name": a link's accessible name has to CONTAIN
+         * its visible text, and the visible text here is the name AND the role.
+         * An `aria-label` of `<name> on LinkedIn` REPLACED the whole name, so
+         * the role was dropped from it and axe's `label-content-name-mismatch`
+         * (serious) fired on every card carrying a LinkedIn URL. Appending the
+         * suffix as screen-reader-only text instead leaves the accessible name
+         * derived from the content, so it contains the visible text by
+         * construction and still announces where the link goes.
+         */}
+        <span className="sr-only"> on LinkedIn</span>
       </a>
     )
   }
