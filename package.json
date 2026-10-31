@@ -29,7 +29,7 @@
     "prepare": "husky"
   },
   "dependencies": {
-    "next": "^16.4.1",
+    "next": "^16.4.3",
     "postcss": "^8.5.28",
     "react": "19.3.0",
     "react-dom": "19.3.0",
