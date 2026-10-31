@@ -1,7 +1,12 @@
 # Dependency refresh
 
-The dependency refresh aligns Next.js and its lint/build tooling at 16.3.8,
-uses Node 24 in the smoke workflow, and preserves the seven-day release cooldown.
+The dependency refresh pins Next.js to the patched floor ^16.4.1, which resolves
+16.4.2, and holds its lint/build tooling at 16.3.8. The skew is deliberate:
+@next/bundle-analyzer declares no next peer dependency and eslint-config-next
+carries its own rule set, so nothing in the toolchain depends on matching the
+runtime version, and leaving it out holds the security bump to two files. The
+refresh uses Node 24 in the smoke workflow and preserves the seven-day release
+cooldown.
 Patched transitive versions are constrained by pnpm overrides so a new resolution
 cannot reinstall vulnerable source-map-js, Sharp, YAML, URI, brace-expansion,
 HTTP middleware, or browser-download dependencies.
@@ -13,7 +18,8 @@ They are development-only dependencies of lint/test tools; do not pass untrusted
 patterns or format strings to those tools. These findings are not suppressed.
 
 ESLint stays on version 9 because the React and accessibility plugins declare
-support through that major. Next.js 16.4.0 is inside the release cooldown.
+support through that major. Next.js 16.4.3 is inside the release cooldown until
+2026-10-30, so ^16.4.1 is the highest patched floor that resolves today.
 
 CI runs Jest with coverage, enforces the floors in jest.config.js, and retains
 the unit-coverage artifact. Browser tests verify the rendered static site;
