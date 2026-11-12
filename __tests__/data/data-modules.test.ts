@@ -1,4 +1,4 @@
-import { testimonials } from '@/data/testimonials'
+import { configuredTestimonials, testimonials } from '@/data/testimonials'
 import { configuredTeam, team } from '@/data/team'
 import { isPending } from '@/lib/site.config'
 import { faqs } from '@/data/faqs'
@@ -13,8 +13,10 @@ describe('data modules', () => {
       expect(Array.isArray(testimonials)).toBe(true)
       expect(testimonials.length).toBeGreaterThan(0)
     })
-    it('every entry has a heading and text', () => {
-      for (const t of testimonials) {
+    // A charity may have none yet: blanked entries self-hide the section, so
+    // only the configured ones must be complete.
+    it('every configured entry has a heading and text', () => {
+      for (const t of configuredTestimonials) {
         expect(typeof t.heading).toBe('string')
         expect(t.heading.length).toBeGreaterThan(0)
         expect(typeof t.text).toBe('string')
@@ -24,9 +26,9 @@ describe('data modules', () => {
   })
 
   describe('team', () => {
-    it('is a non-empty array', () => {
+    it('is an array, non-empty unless the roster is pending', () => {
       expect(Array.isArray(team)).toBe(true)
-      expect(team.length).toBeGreaterThan(0)
+      if (!isPending('team')) expect(team.length).toBeGreaterThan(0)
     })
     it('every member has a name and role; LinkedIn, when present, is an https://linkedin.com URL', () => {
       // A roster the charity has not supplied yet (siteConfig.pending includes
@@ -62,10 +64,10 @@ describe('data modules', () => {
   })
 
   describe('results', () => {
-    it('has a heading and a non-empty stats array', () => {
+    // No stats is allowed (the section self-hides); a heading always is required.
+    it('has a heading and a stats array', () => {
       expect(results.heading).toBeTruthy()
       expect(Array.isArray(results.stats)).toBe(true)
-      expect(results.stats.length).toBeGreaterThan(0)
     })
     it('every stat has a value and a label', () => {
       for (const s of results.stats) {
