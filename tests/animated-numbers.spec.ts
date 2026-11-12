@@ -11,6 +11,11 @@ import { testConfig } from './test.config'
  */
 
 test.describe('Results 2023 Animated Numbers', () => {
+  // The section renders only where resultsSectionVisible() holds (FFC's own
+  // numbers on FFC's own site, or a charity's own results). Elsewhere the
+  // absence spec below runs instead.
+  test.skip(!testConfig.animatedNumbers.rendered, 'No Results section on this site')
+
   // Helper selector for ResultCard components - uses the distinctive border class
   // to identify the card containing a specific description
   const getResultCard = (page: import('@playwright/test').Page, description: string) =>
@@ -106,5 +111,15 @@ test.describe('Results 2023 Animated Numbers', () => {
     await expect(firstCardNumber).toContainText(firstStat.value, { timeout: 1000 })
 
     await context.close()
+  })
+})
+
+test.describe('Results section absence', () => {
+  test.skip(testConfig.animatedNumbers.rendered, 'This site renders a Results section')
+
+  test("does not render another organization's results", async ({ page }) => {
+    await page.goto('/', { waitUntil: 'domcontentloaded' })
+    await expect(page.locator('h1').first()).toBeVisible()
+    await expect(page.locator('#results')).toHaveCount(0)
   })
 })

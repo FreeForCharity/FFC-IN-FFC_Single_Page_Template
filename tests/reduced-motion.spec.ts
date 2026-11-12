@@ -1,4 +1,11 @@
 import { test, expect } from '@playwright/test'
+import { testConfig } from './test.config'
+
+// The numeric stat cards in src/data/results.ts (non-numeric values render
+// statically). Zero when the site has no Results section (see test.config.ts).
+const numericStats = testConfig.animatedNumbers.rendered
+  ? testConfig.animatedNumbers.statistics.filter((s) => /^\d+$/.test(s.value)).length
+  : 0
 
 /**
  * WCAG 2.3.3 guardrail: when the user has prefers-reduced-motion: reduce,
@@ -15,6 +22,7 @@ test.describe('prefers-reduced-motion', () => {
   test.use({ reducedMotion: 'reduce' })
 
   test('Results-2023 stat numbers settle without a multi-frame animation', async ({ page }) => {
+    test.skip(numericStats === 0, 'No animated Results stats on this site')
     // Test local animation behavior with deterministic external frames. The
     // donation provider's availability is covered separately by smoke checks.
     await page.route('**/*', (route) => {
@@ -36,10 +44,10 @@ test.describe('prefers-reduced-motion', () => {
     // Scroll Results-2023 into view so AnimatedNumber's useInView fires.
     await page.locator('#results').scrollIntoViewIfNeeded()
 
-    // Find the four stat-card headings (the section title under #results is an <h2>;
-    // the four numeric stat cards are <h3>.
+    // Find the numeric stat-card headings (the section title under #results is
+    // an <h2>; each stat card is an <h3>).
     const statHeadings = page.locator('#results h3').filter({ hasText: /^\d/ })
-    await expect(statHeadings).toHaveCount(4)
+    await expect(statHeadings).toHaveCount(numericStats)
 
     // Poll until two consecutive reads match. Under reduced-motion the
     // component renders its final value as a plain <span> as soon as the
@@ -47,7 +55,7 @@ test.describe('prefers-reduced-motion', () => {
     // within a few hundred milliseconds. Under a full spring (the regular
     // motion path) the value would change on every frame for ~1s and this
     // loop would never converge inside the allotted window.
-    const settled = await page.evaluate(async () => {
+    const settled = await page.evaluate(async (expected) => {
       const reads = (): string[] =>
         Array.from(document.querySelectorAll('#results h3'))
           .map((el) => (el.textContent ?? '').trim())
@@ -58,16 +66,16 @@ test.describe('prefers-reduced-motion', () => {
       while (Date.now() < deadline) {
         await new Promise((r) => setTimeout(r, 75))
         const curr = reads()
-        if (curr.length === 4 && curr.every((v, i) => v === prev[i])) {
+        if (curr.length === expected && curr.every((v, i) => v === prev[i])) {
           return curr
         }
         prev = curr
       }
       return null
-    })
+    }, numericStats)
 
     expect(settled).not.toBeNull()
-    expect(settled).toHaveLength(4)
+    expect(settled).toHaveLength(numericStats)
     for (const v of settled as string[]) {
       expect(v).toMatch(/^\d+$/)
     }

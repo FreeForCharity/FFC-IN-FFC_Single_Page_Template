@@ -94,10 +94,20 @@ The configuration file is organized by sections. Here's what each section contro
 
 #### Animated Numbers (animated-numbers.spec.ts)
 
-- `animatedNumbers.sectionHeading`: Results section heading
-- `animatedNumbers.statistics`: Array of statistics with:
-  - `description`: Statistic description
-  - `value`: Expected value after animation
+All derived from `src/data/results.ts` — edit the data, not this file:
+
+- `animatedNumbers.rendered`: `resultsSectionVisible()`. Free For Charity's own
+  numbers (`supportingOrgOnly: true`) render only on its own site, so on a
+  charity site without results of its own the section is absent and the specs
+  assert that instead
+- `animatedNumbers.sectionHeading`: `results.heading`
+- `animatedNumbers.statistics`: `results.stats` as `{ description, value }`
+
+#### Testimonials (testimonials-navigation.spec.ts)
+
+- `testimonials.count`: `visibleTestimonials().length`. Free For Charity's own
+  testimonials (`supportingOrgOnly: true`) render only on its own site; with
+  none, the carousel is absent and the spec asserts that instead
 
 #### Google Tag Manager (google-tag-manager.spec.ts)
 
@@ -192,7 +202,8 @@ These tests use values from `test.config.ts`:
 **Solution**: Verify URLs in `test.config.ts` match your actual social media URLs
 
 **Issue**: Animated numbers test fails  
-**Solution**: Update the `statistics` array with your actual statistics and values
+**Solution**: The expectations come from `src/data/results.ts`; check that file, and that
+your own results do not carry `supportingOrgOnly: true`
 
 **Issue**: GTM tests fail  
 **Solution**: Update `googleTagManager.id` with your actual GTM container ID

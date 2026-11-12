@@ -9,15 +9,17 @@ import { MdOutlineArrowBackIos, MdOutlineArrowForwardIos } from 'react-icons/md'
 import Image from 'next/image'
 import QuoteLeft from '../../../../public/Svgs/quote-left.svg'
 import QuoteRight from '../../../../public/Svgs/quote-right.svg'
-import { configuredTestimonials } from '@/data/testimonials'
+import { visibleTestimonials } from '@/lib/section-visibility'
 
 // Testimonials are sourced from src/data/testimonials/*.json (aggregated in
 // src/data/testimonials.ts). To change them, edit those JSON files — no need to
-// touch this component.
+// touch this component. Testimonials about the supporting organization itself
+// render only on its own site (see visibleTestimonials()).
 
 const TestimonialSlider: React.FC = () => {
   const [swiperInstance, setSwiperInstance] = useState<SwiperInstance | null>(null)
   const [activeIndex, setActiveIndex] = useState(0)
+  const testimonials = visibleTestimonials()
   const handleSlideChange = (swiper: SwiperInstance) => {
     setActiveIndex(swiper.realIndex)
   }
@@ -26,7 +28,7 @@ const TestimonialSlider: React.FC = () => {
     swiperInstance?.slideToLoop(index)
   }
 
-  if (configuredTestimonials.length === 0) return null
+  if (testimonials.length === 0) return null
 
   return (
     <section id="testimonials" className="py-16 pb-25 bg-[#FCFCFC]">
@@ -57,7 +59,7 @@ const TestimonialSlider: React.FC = () => {
               pauseOnMouseEnter: true,
             }}
           >
-            {configuredTestimonials.map((t, idx) => (
+            {testimonials.map((t, idx) => (
               <SwiperSlide key={idx}>
                 <div className="px-12 md:px-20 relative">
                   {/* Left Quote */}
@@ -115,7 +117,7 @@ const TestimonialSlider: React.FC = () => {
           <button
             type="button"
             onClick={() => swiperInstance?.slideNext()}
-            disabled={activeIndex === configuredTestimonials.length - 1}
+            disabled={activeIndex === testimonials.length - 1}
             className="absolute right-2 md:right-4 top-1/2 -translate-y-1/2 z-10 flex items-center justify-center text-gray-600 hover:text-gray-800 transition-all disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer"
             aria-label="Next testimonial"
           >
@@ -125,7 +127,7 @@ const TestimonialSlider: React.FC = () => {
 
         {/* Dots */}
         <div className="flex justify-center mt-10 space-x-2">
-          {configuredTestimonials.map((_, i) => (
+          {testimonials.map((_, i) => (
             <button
               key={i}
               type="button"

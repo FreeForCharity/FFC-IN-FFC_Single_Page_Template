@@ -1,5 +1,7 @@
 import { isPending, isSupportingOrgSite, siteConfig } from '@/lib/site.config'
 import { configuredTeam } from '@/data/team'
+import { results } from '@/data/results'
+import { configuredTestimonials, type Testimonial } from '@/data/testimonials'
 
 /**
  * Self-hide predicates for the home-page sections whose copy is about the
@@ -39,4 +41,25 @@ export function faqSectionVisible(): boolean {
  */
 export function teamSectionVisible(): boolean {
   return configuredTeam.length > 0 || isPending('team')
+}
+
+/**
+ * The Results section: shown when it has stats, unless those stats are the
+ * supporting organization's own numbers (`results.supportingOrgOnly`) and this
+ * is not its site. A charity site therefore never presents FFC's results as
+ * its own, and shows the section as soon as it supplies results of its own.
+ */
+export function resultsSectionVisible(): boolean {
+  if (results.stats.length === 0) return false
+  return !results.supportingOrgOnly || isSupportingOrgSite()
+}
+
+/**
+ * The testimonials this site renders: every complete entry, minus the ones
+ * about the supporting organization itself (`supportingOrgOnly`) on any site
+ * but its own. The section self-hides when this is empty.
+ */
+export function visibleTestimonials(): Testimonial[] {
+  const own = isSupportingOrgSite()
+  return configuredTestimonials.filter((t) => own || !t.supportingOrgOnly)
 }

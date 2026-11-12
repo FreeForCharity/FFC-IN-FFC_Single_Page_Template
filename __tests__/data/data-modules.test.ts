@@ -9,16 +9,23 @@ import { results } from '@/data/results'
 // renders, so a malformed edit fails the suite instead of the live site.
 describe('data modules', () => {
   describe('testimonials', () => {
-    it('is a non-empty array', () => {
+    it('is an array', () => {
+      // May be empty, or all blanked: a charity with no testimonials of its own
+      // yet has none, and the section then self-hides.
       expect(Array.isArray(testimonials)).toBe(true)
-      expect(testimonials.length).toBeGreaterThan(0)
     })
-    it('every entry has a heading and text', () => {
+    it('every entry has both a heading and text, or is blanked entirely', () => {
+      // A half-filled entry (heading without text, or the reverse) is a
+      // malformed edit; the section would silently drop it.
       for (const t of testimonials) {
         expect(typeof t.heading).toBe('string')
-        expect(t.heading.length).toBeGreaterThan(0)
         expect(typeof t.text).toBe('string')
-        expect(t.text.length).toBeGreaterThan(0)
+        expect(t.heading.trim().length > 0).toBe(t.text.trim().length > 0)
+      }
+    })
+    it('supportingOrgOnly, when present, is a boolean', () => {
+      for (const t of testimonials) {
+        if (t.supportingOrgOnly !== undefined) expect(typeof t.supportingOrgOnly).toBe('boolean')
       }
     })
   })
@@ -62,10 +69,11 @@ describe('data modules', () => {
   })
 
   describe('results', () => {
-    it('has a heading and a non-empty stats array', () => {
-      expect(results.heading).toBeTruthy()
+    it('has a stats array, and a heading whenever it has stats', () => {
+      // An empty stats array is valid: the charity has no results of its own
+      // yet, and the section self-hides.
       expect(Array.isArray(results.stats)).toBe(true)
-      expect(results.stats.length).toBeGreaterThan(0)
+      if (results.stats.length > 0) expect(results.heading).toBeTruthy()
     })
     it('every stat has a value and a label', () => {
       for (const s of results.stats) {
