@@ -786,7 +786,7 @@ jobs:
                 const verification = classifyDonationResponse({ provider: s.provider, status: r.status, server: r.headers.get('server') || '', body: providerBody });
                 donationChecks.push({ ...s, status: r.status, verification });
                 if (verification === 'automation-blocked') {
-                  console.warn(`::warning::Zeffy blocked the automated donation probe with a Cloudflare challenge. Donation availability is UNVERIFIED by this run: ${s.url}`);
+                  console.warn(`::warning::${s.provider} blocked the automated donation probe with a bot challenge. Donation availability is UNVERIFIED by this run: ${s.url}`);
                 } else if (verification === 'unreachable') {
                   complianceFailures.push(`${s.provider} donation ${s.kind} unreachable (${r.status}): ${s.url}`);
                 }
