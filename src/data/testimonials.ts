@@ -4,10 +4,10 @@
 // Each testimonial needs a heading and text; name, location, and locationUrl
 // are optional (location renders as a link when locationUrl is present).
 // `supportingOrgOnly: true` marks a testimonial about the supporting
-// organization (Free For Charity) itself: it renders only on that
+// organization (`siteConfig.supportedBy`) itself: it renders only on that
 // organization's own site (see `visibleTestimonials()` in
-// src/lib/section-visibility.ts), so a charity site never shows FFC's
-// testimonials as its own. A charity's own testimonials leave it out.
+// src/lib/section-visibility.ts), so a charity site never shows the
+// supporting organization's testimonials as its own. A charity's own testimonials leave it out.
 
 import testimonial1 from './testimonials/testimonial-1.json'
 import testimonial2 from './testimonials/testimonial-2.json'
