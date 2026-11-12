@@ -33,6 +33,12 @@ async function holdApplicationForm(page: Page): Promise<() => void> {
 }
 
 test.describe('Application Form Button', () => {
+  // The button is in the Programs section, which a provisioned charity site
+  // does not render. Skip there instead of failing on FFC-only content.
+  test.skip(
+    !testConfig.applicationForm.rendered,
+    'Programs section (application form) not rendered on this site'
+  )
   test.beforeEach(async ({ page }) => {
     await page.goto('/')
     // Wait for page to be loaded
@@ -265,6 +271,12 @@ test.describe('Application Form Button', () => {
 })
 
 test.describe('Application Form Iframe Loading', () => {
+  // The button is in the Programs section, which a provisioned charity site
+  // does not render. Skip there instead of failing on FFC-only content.
+  test.skip(
+    !testConfig.applicationForm.rendered,
+    'Programs section (application form) not rendered on this site'
+  )
   test.beforeEach(async ({ page }) => {
     await page.goto('/')
     await page.waitForLoadState('domcontentloaded')

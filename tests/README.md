@@ -82,15 +82,12 @@ The configuration file is organized by sections. Here's what each section contro
 
 #### Social Media Links (social-links.spec.ts)
 
-- `socialLinks.facebook.url`: Your Facebook URL
-- `socialLinks.twitter.url`: Your Twitter/X URL
-- `socialLinks.linkedin.url`: Your LinkedIn URL
-- `socialLinks.github.url`: Your GitHub URL
-- Each has an `ariaLabel` for accessibility
+- `socialLinks.active`: derived from `siteConfig.social` (entries with an `href`), so it needs no
+  per-site edit
 
 #### Copyright Notice (copyright.spec.ts)
 
-- `copyright.text`: Full copyright text
+- `copyright.text`: derived from `siteConfig.name` and `siteConfig.taxStatusLabel`
 - `copyright.searchText`: Text to search for when locating copyright element (e.g., 'All Rights Are Reserved')
 - `copyright.linkUrl`: Organization website URL
 - `copyright.linkText`: Displayed link text
@@ -108,9 +105,13 @@ The configuration file is organized by sections. Here's what each section contro
 
 #### Logo and Images (logo.spec.ts, image-loading.spec.ts)
 
-- `logo.headerAlt`: Alt text for header logo
+- `logo.headerAlt`: derived from `siteConfig.name` (the header logo's alt)
 - `logo.heroAlt`: Alt text for hero section image
-- `logo.navBarAriaLabel`: Aria label for navbar home link
+- `logo.navBarAriaLabel`: `<siteConfig.name> home`
+
+The mission-video and application-form specs skip on a provisioned charity site
+(`testConfig.missionVideo.rendered` / `testConfig.applicationForm.rendered`), because those
+sections render only on the supporting organization's own site.
 
 #### Cookie Consent (cookie-consent.spec.ts)
 
