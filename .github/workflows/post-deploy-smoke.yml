@@ -783,7 +783,12 @@ jobs:
                 const r = await fetch(s.url.startsWith('http') ? s.url : 'https:' + s.url, { method: 'GET', redirect: 'follow' });
                 const { classifyDonationResponse } = require(process.env.GITHUB_WORKSPACE + '/scripts/classify-donation-response.cjs');
                 const providerBody = r.status === 403 ? await r.text() : '';
-                const verification = classifyDonationResponse({ provider: s.provider, status: r.status, server: r.headers.get('server') || '', body: providerBody });
+                const verification = classifyDonationResponse({ provider: s.provider, status: r.status, server: r.headers.get('server') || '', body: providerBody, mitigated: r.headers.get('cf-mitigated') || '' });
+                if (verification === 'unreachable' && r.status === 403) {
+                  // Record the block's shape so an unrecognised bot wall can be told apart from a dead form.
+                  const title = (providerBody.match(/<title>([^<]{0,80})<\/title>/i) || [])[1] || '';
+                  console.log(`${s.provider} 403 shape: server="${r.headers.get('server') || ''}" cf-mitigated="${r.headers.get('cf-mitigated') || ''}" title="${title.trim()}"`);
+                }
                 donationChecks.push({ ...s, status: r.status, verification });
                 if (verification === 'automation-blocked') {
                   console.warn(`::warning::${s.provider} blocked the automated donation probe with a bot challenge. Donation availability is UNVERIFIED by this run: ${s.url}`);
