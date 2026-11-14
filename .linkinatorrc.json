@@ -5,6 +5,7 @@
     "^https://twitter.com/.*",
     "^https://www.facebook.com/.*",
     "^https://forms.monday.com/.*",
+    "^https://www\\.zeffy\\.com/(embed/)?donation-form/.*",
     "^mailto:.*",
     "^tel:.*"
   ],
