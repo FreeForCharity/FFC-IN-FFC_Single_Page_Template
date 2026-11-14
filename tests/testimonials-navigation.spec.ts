@@ -1,4 +1,20 @@
 import { test, expect } from '@playwright/test'
+import { testConfig } from './test.config'
+
+// Navigation needs at least two slides. The carousel shows visibleTestimonials()
+// (FFC's own testimonials only on FFC's own site), so a charity site with none of
+// its own renders no carousel and the absence spec below runs instead.
+const navigable = testConfig.testimonials.count > 1
+
+test.describe('testimonials absence', () => {
+  test.skip(testConfig.testimonials.count > 0, 'This site renders testimonials')
+
+  test("does not render another organization's testimonials", async ({ page }) => {
+    await page.goto('/')
+    await expect(page.locator('h1').first()).toBeVisible()
+    await expect(page.locator('#testimonials')).toHaveCount(0)
+  })
+})
 
 for (const viewport of [
   { name: 'desktop', width: 1280, height: 800 },
@@ -6,6 +22,7 @@ for (const viewport of [
 ]) {
   test.describe(`testimonial navigation on ${viewport.name}`, () => {
     test.use({ viewport: { width: viewport.width, height: viewport.height } })
+    test.skip(!navigable, 'Fewer than two testimonials on this site')
 
     test('arrows change the visible testimonial and return to the first one', async ({ page }) => {
       await page.goto('/')
