@@ -241,3 +241,16 @@ body {
       content-visibility 0.8s ease-in-out allow-discrete;
   }
 }
+
+/* Native modal dialogs (Modern Web Guidance: ui-components/dialog and
+   prevent-page-scroll-under-modal-dialog). Both rules are needed: without
+   them, scrolling over the backdrop or inside the dialog scrolls the page
+   behind it. Do not lock scrolling with overflow:hidden on html/body. */
+dialog:modal {
+  overscroll-behavior: contain;
+}
+dialog::backdrop {
+  overflow: hidden;
+  overscroll-behavior: contain;
+  background-color: rgb(0 0 0 / 0.5);
+}
