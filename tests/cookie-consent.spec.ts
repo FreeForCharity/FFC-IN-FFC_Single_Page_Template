@@ -201,6 +201,48 @@ test.describe('Cookie Preferences Modal', () => {
     await expect(banner).toBeVisible()
   })
 
+  for (const [how, close] of [
+    [
+      'Cancel',
+      async (page: import('@playwright/test').Page) =>
+        page.getByRole('button', { name: testConfig.cookieConsent.buttons.cancel }).click(),
+    ],
+    ['Escape', async (page: import('@playwright/test').Page) => page.keyboard.press('Escape')],
+    ['a backdrop click', async (page: import('@playwright/test').Page) => page.mouse.click(5, 5)],
+  ] as const) {
+    test(`closing with ${how} discards unsaved toggles`, async ({ page }) => {
+      await page.getByRole('button', { name: testConfig.cookieConsent.buttons.customize }).click()
+      const modal = page.locator('dialog[open]')
+      const analyticsToggle = modal.getByRole('checkbox', { name: 'Enable analytics cookies' })
+      await analyticsToggle.click({ force: true })
+      await expect(analyticsToggle).toBeChecked()
+
+      await close(page)
+      await expect(modal).not.toBeVisible()
+      expect(await page.evaluate(() => localStorage.getItem('cookie-consent'))).toBeNull()
+
+      await page.getByRole('button', { name: testConfig.cookieConsent.buttons.customize }).click()
+      await expect(
+        page.locator('dialog[open]').getByRole('checkbox', { name: 'Enable analytics cookies' })
+      ).not.toBeChecked()
+    })
+  }
+
+  test('closes on a backdrop click through the script fallback when closedby is missing', async ({
+    page,
+  }) => {
+    await page.addInitScript(() => {
+      delete (HTMLDialogElement.prototype as unknown as Record<string, unknown>).closedBy
+    })
+    await page.reload()
+    expect(await page.evaluate(() => 'closedBy' in HTMLDialogElement.prototype)).toBe(false)
+    await page.getByRole('button', { name: testConfig.cookieConsent.buttons.customize }).click()
+    const modal = page.locator('dialog[open]')
+    await expect(modal).toBeVisible()
+    await page.mouse.click(5, 5)
+    await expect(modal).not.toBeVisible()
+  })
+
   test('should have necessary and functional cookies always checked and disabled', async ({
     page,
   }) => {

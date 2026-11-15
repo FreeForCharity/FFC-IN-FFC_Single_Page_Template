@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useRef, useCallback } from 'react'
 import { siteConfig } from '@/lib/site.config'
+import { useDialogLightDismiss } from '@/lib/useDialogLightDismiss'
 
 interface ApplicationFormButtonProps {
   text?: string
@@ -55,20 +56,8 @@ const ApplicationFormButton: React.FC<ApplicationFormButtonProps> = ({
     }
   }, [isOpen])
 
-  // Light dismiss fallback for browsers without <dialog closedby="any">
-  // (Safari): close when a click lands on the backdrop, i.e. outside the
-  // dialog box. Where closedby is supported the dialog is already closed.
-  const handleBackdropClick = (event: React.MouseEvent<HTMLDialogElement>) => {
-    const dialog = dialogRef.current
-    if (!dialog || event.target !== dialog) return
-    const rect = dialog.getBoundingClientRect()
-    const inside =
-      event.clientX >= rect.left &&
-      event.clientX <= rect.right &&
-      event.clientY >= rect.top &&
-      event.clientY <= rect.bottom
-    if (!inside) closePopup()
-  }
+  // Backdrop-click fallback for browsers without <dialog closedby="any">.
+  const lightDismiss = useDialogLightDismiss(dialogRef)
 
   return (
     <>
@@ -92,7 +81,7 @@ const ApplicationFormButton: React.FC<ApplicationFormButtonProps> = ({
           // passes the lowercase attribute through untouched.
           {...{ closedby: 'any' }}
           onClose={handleClose}
-          onClick={handleBackdropClick}
+          {...lightDismiss}
           aria-labelledby="application-form-title"
           className="m-auto w-[calc(100%-2rem)] max-w-5xl h-[90vh] p-0 bg-white rounded-lg shadow-xl"
         >

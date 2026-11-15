@@ -133,6 +133,34 @@ test.describe('Application Form Button', () => {
     await expect(modal).not.toBeVisible()
   })
 
+  test('should close on a backdrop click through the script fallback when closedby is missing', async ({
+    page,
+  }) => {
+    // Chromium supports closedby="any" natively; remove it so the fallback runs.
+    await page.addInitScript(() => {
+      delete (HTMLDialogElement.prototype as unknown as Record<string, unknown>).closedBy
+    })
+    await page.reload()
+    expect(await page.evaluate(() => 'closedBy' in HTMLDialogElement.prototype)).toBe(false)
+    await page.getByRole('button', { name: testConfig.applicationForm.buttonText }).click()
+
+    const modal = page.locator('dialog[open]')
+    await expect(modal).toBeVisible()
+
+    // A drag that starts inside the dialog and ends on the backdrop keeps it open.
+    const box = await modal.boundingBox()
+    if (!box) throw new Error('dialog has no box')
+    await page.mouse.move(box.x + 20, box.y + 20)
+    await page.mouse.down()
+    await page.mouse.move(5, 5, { steps: 5 })
+    await page.mouse.up()
+    await expect(modal).toBeVisible()
+
+    // A full click on the backdrop closes it.
+    await page.mouse.click(5, 5)
+    await expect(modal).not.toBeVisible()
+  })
+
   test('should have Microsoft Forms iframe with correct attributes', async ({ page }) => {
     // Open modal
     await page.getByRole('button', { name: testConfig.applicationForm.buttonText }).click()
