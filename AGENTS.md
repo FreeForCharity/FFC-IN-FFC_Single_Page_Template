@@ -108,6 +108,28 @@ The `NEXT_PUBLIC_BASE_PATH` environment variable controls the `basePath` in `nex
 
 ---
 
+## Modern Web Guidance (UI code)
+
+Before writing or changing HTML, CSS or browser JavaScript (components and pages under `src/`),
+consult Google's [Modern Web Guidance](https://developer.chrome.com/docs/modern-web-guidance): a
+maintained, eval-tested set of current web platform best practices. It does not apply to scripts,
+tests, CI or config.
+
+- **Baseline target:** This project's Baseline target is Baseline Widely available. Use a newer
+  feature only with a fallback that keeps today's behaviour in browsers without it.
+- **Look up the guide first** (version pinned; bump it only in a reviewed PR):
+
+  ```bash
+  DISABLE_TELEMETRY=1 npx -y modern-web-guidance@1.0.0 search "modal dialog"
+  DISABLE_TELEMETRY=1 npx -y modern-web-guidance@1.0.0 retrieve "<id from search>"
+  ```
+
+- **Prefer the platform to custom code:** native `<dialog>` with `showModal()` for modals,
+  `<details>`/`<summary>` for accordions and FAQs, the Popover API for menus and popups, CSS scroll
+  snap for carousels.
+- **Name the guide you followed in the PR description**, and keep the existing Playwright, axe and
+  Lighthouse checks green. The guidance informs the code; those checks remain the gate.
+
 ## Security
 
 - **NEVER** expose API tokens or secrets in code, comments, or documentation
