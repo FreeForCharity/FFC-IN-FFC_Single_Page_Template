@@ -1,6 +1,4 @@
-'use client'
-
-import React, { useState, useRef, useLayoutEffect, useId } from 'react'
+import React from 'react'
 import Image from 'next/image'
 import { assetPath } from '@/lib/assetPath'
 
@@ -9,78 +7,42 @@ interface AccordionItemProps {
   children: React.ReactNode
 }
 
+// Built on native <details>/<summary> (Modern Web Guidance:
+// ui-components/accordion). The browser handles the open/closed state, its
+// accessibility (summary is exposed as an expandable button), keyboard
+// support, and find-in-page / #fragment links that open the right answer,
+// so the component needs no client JavaScript. The open/close slide is CSS
+// (.faq-details in globals.css).
 const FrequentlyAskedQuestions: React.FC<AccordionItemProps> = ({ title, children }) => {
-  const [isOpen, setIsOpen] = useState(false)
-  const [height, setHeight] = useState('0px')
-  const contentRef = useRef<HTMLDivElement>(null)
-  // Stable, SSR-safe ids so the toggle button and its collapsible panel can be
-  // associated for assistive tech (aria-controls + aria-labelledby).
-  const baseId = useId()
-  const buttonId = `${baseId}-button`
-  const panelId = `${baseId}-panel`
-
-  // Using useLayoutEffect (not useEffect) for synchronous DOM measurement before paint
-  // This is the correct React pattern to avoid visual flicker when measuring and updating height
-  useLayoutEffect(() => {
-    if (contentRef.current) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      setHeight(isOpen ? `${contentRef.current.scrollHeight}px` : '0px')
-    }
-  }, [isOpen])
-
-  const toggle = () => setIsOpen(!isOpen)
-
   return (
-    <div className="mb-5 overflow-hidden lato-font">
-      {/* Header */}
-      <button
-        id={buttonId}
-        onClick={toggle}
-        className={`w-full px-4 py-3 flex items-center justify-between text-left cursor-pointer`}
-        aria-expanded={isOpen}
-        aria-controls={panelId}
-      >
+    <details className="faq-details group mb-5 border-b-[2px] border-[#B7B7B7] lato-font">
+      <summary className="w-full px-4 py-3 flex items-center justify-between text-left cursor-pointer list-none [&::-webkit-details-marker]:hidden">
         {/* Text takes remaining space */}
-        <span className={`font-[400] text-[20px] md:text-[32px] flex-1 pr-3 lato-font`}>
-          {title}
-        </span>
+        <span className="font-[400] text-[20px] md:text-[32px] flex-1 pr-3 lato-font">{title}</span>
 
-        {/* Icon container with fixed width */}
-        <span className="flex-shrink-0 w-8 h-8 flex items-center justify-center">
-          {isOpen ? (
-            <Image
-              src={assetPath('/Svgs/up-arrow.svg')}
-              alt="Collapse"
-              width={40}
-              height={13}
-            ></Image>
-          ) : (
-            <Image
-              src={assetPath('/Svgs/down-arrow.svg')}
-              alt="Expand"
-              width={40}
-              height={16}
-            ></Image>
-          )}
+        {/* Decorative icon; the open state is announced from <details> itself */}
+        <span className="flex-shrink-0 w-8 h-8 flex items-center justify-center" aria-hidden="true">
+          <Image
+            src={assetPath('/Svgs/down-arrow.svg')}
+            alt=""
+            width={40}
+            height={16}
+            className="group-open:hidden"
+          />
+          <Image
+            src={assetPath('/Svgs/up-arrow.svg')}
+            alt=""
+            width={40}
+            height={13}
+            className="hidden group-open:block"
+          />
         </span>
-      </button>
+      </summary>
 
-      {/* Content */}
-      <div
-        id={panelId}
-        role="region"
-        aria-labelledby={buttonId}
-        className={`border-b-[2px] border-[#B7B7B7] overflow-hidden transition-all duration-800 ease-in-out`}
-        style={{ maxHeight: height }}
-      >
-        <div
-          ref={contentRef}
-          className="px-4 pb-4 pt-2 transition-colors duration-300 text-[#555555] text-[20px] md:text-[25px] font-[400] lato-font"
-        >
-          {children}
-        </div>
+      <div className="px-4 pb-4 pt-2 text-[#555555] text-[20px] md:text-[25px] font-[400] lato-font">
+        {children}
       </div>
-    </div>
+    </details>
   )
 }
 

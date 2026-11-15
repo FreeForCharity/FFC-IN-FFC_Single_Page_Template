@@ -220,3 +220,24 @@ body {
     scroll-behavior: auto !important;
   }
 }
+
+/* FAQ accordions on native <details> (Modern Web Guidance:
+   ui-components/accordion, css/animate-to-intrinsic-sizes). The slide is a
+   progressive enhancement: browsers without interpolate-size open and close
+   instantly, which is still fully usable. Closed content stays findable by
+   the browser's find-in-page. */
+.faq-details::details-content {
+  interpolate-size: allow-keywords;
+  overflow: clip;
+  contain: layout;
+}
+.faq-details:not([open])::details-content {
+  block-size: 0;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .faq-details::details-content {
+    transition:
+      block-size 0.8s ease-in-out,
+      content-visibility 0.8s ease-in-out allow-discrete;
+  }
+}
