@@ -13,7 +13,7 @@ interface AccordionItemProps {
 // support, and keeps closed answers in the HTML (Chromium also opens the
 // matching answer for find-in-page), so the component needs no client
 // JavaScript. The open/close slide is CSS (.faq-details in globals.css) and is
-// progressive enhancement: browsers without ::details-content toggle instantly.
+// progressive enhancement: browsers without interpolate-size toggle instantly.
 const FrequentlyAskedQuestions: React.FC<AccordionItemProps> = ({ title, children }) => {
   return (
     <details className="faq-details group mb-5 border-b-[2px] border-[#B7B7B7] lato-font">
