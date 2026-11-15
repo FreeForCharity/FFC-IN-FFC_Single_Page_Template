@@ -75,8 +75,7 @@ export default function CookieConsent() {
   })
   const [savedPreferencesBackup, setSavedPreferencesBackup] =
     useState<CookiePreferences>(preferences)
-  const modalRef = useRef<HTMLDivElement>(null)
-  const previousFocusRef = useRef<HTMLElement | null>(null)
+  const dialogRef = useRef<HTMLDialogElement>(null)
 
   // Loads the direct GA4 tag. NOT gated on the analytics toggle: Google's
   // tags speak Consent Mode, so the bootstrap in src/lib/consent-mode.ts
@@ -522,37 +521,39 @@ export default function CookieConsent() {
     }
   }, [loadPreferencesFromLocalStorage, loadGoogleAnalytics, expireAdvertisingCookies])
 
-  // Focus management for modal
+  // Open the preferences as a native modal dialog (Modern Web Guidance:
+  // ui-components/dialog). showModal() makes the page behind inert, moves
+  // focus into the dialog, handles Escape and returns focus on close, so no
+  // hand-written focus trap or Escape listener is needed.
   useEffect(() => {
-    if (showPreferences && modalRef.current) {
-      // Store the previously focused element
-      previousFocusRef.current = document.activeElement as HTMLElement
-
-      // Focus the first focusable element in the modal
-      const focusableElements = modalRef.current.querySelectorAll(
-        'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
-      )
-      if (focusableElements.length > 0) {
-        ;(focusableElements[0] as HTMLElement).focus()
-      }
-
-      // Handle Escape key
-      const handleEscape = (e: KeyboardEvent) => {
-        if (e.key === 'Escape') {
-          handleCancelPreferences()
-        }
-      }
-      document.addEventListener('keydown', handleEscape)
-
-      return () => {
-        document.removeEventListener('keydown', handleEscape)
-        // Restore focus when modal closes
-        if (previousFocusRef.current) {
-          previousFocusRef.current.focus()
-        }
-      }
+    const dialog = dialogRef.current
+    if (showPreferences && dialog && !dialog.open) {
+      dialog.showModal()
     }
-  }, [showPreferences, handleCancelPreferences])
+  }, [showPreferences])
+
+  // Every close that is not "Save" (Escape, back gesture, backdrop click,
+  // Cancel) discards unsaved toggles, exactly as Cancel always did.
+  const handleDialogClose = useCallback(() => {
+    const dialog = dialogRef.current
+    const saved = dialog?.returnValue === 'save'
+    if (dialog) dialog.returnValue = ''
+    if (!saved) handleCancelPreferences()
+  }, [handleCancelPreferences])
+
+  // Light dismiss fallback for browsers without <dialog closedby="any">
+  // (Safari): close when the click lands on the backdrop, outside the box.
+  const handleDialogClick = (event: React.MouseEvent<HTMLDialogElement>) => {
+    const dialog = dialogRef.current
+    if (!dialog || event.target !== dialog) return
+    const rect = dialog.getBoundingClientRect()
+    const inside =
+      event.clientX >= rect.left &&
+      event.clientX <= rect.right &&
+      event.clientY >= rect.top &&
+      event.clientY <= rect.bottom
+    if (!inside) dialog.close()
+  }
 
   const handleAcceptAll = () => {
     const allAccepted: CookiePreferences = {
@@ -602,6 +603,9 @@ export default function CookieConsent() {
     }
     applyConsent(preferences)
     setSavedPreferencesBackup(preferences)
+    // Close the native dialog first so the browser restores focus; the
+    // 'save' return value tells the close handler not to discard changes.
+    dialogRef.current?.close('save')
     setShowBanner(false)
     setShowPreferences(false)
   }
@@ -618,22 +622,16 @@ export default function CookieConsent() {
 
   if (showPreferences) {
     return (
-      <div
-        className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-4"
-        role="dialog"
-        aria-modal="true"
+      <dialog
+        ref={dialogRef}
+        // closedby="any": click outside to close, natively where supported.
+        {...{ closedby: 'any' }}
         aria-labelledby="cookie-preferences-title"
-        onClick={(e) => {
-          // Only close if clicking the overlay itself, not the modal content
-          if (e.target === e.currentTarget) {
-            handleCancelPreferences()
-          }
-        }}
+        onClose={handleDialogClose}
+        onClick={handleDialogClick}
+        className="m-auto p-0 bg-white rounded-lg shadow-2xl max-w-2xl w-[calc(100%-2rem)] max-h-[90vh] overflow-y-auto"
       >
-        <div
-          ref={modalRef}
-          className="bg-white rounded-lg shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto"
-        >
+        <div>
           <div className="p-6">
             <h2 id="cookie-preferences-title" className="text-2xl font-bold text-gray-900 mb-4">
               Cookie Preferences
@@ -746,7 +744,7 @@ export default function CookieConsent() {
                 Save Preferences
               </button>
               <button
-                onClick={handleCancelPreferences}
+                onClick={() => dialogRef.current?.close()}
                 className="flex-1 px-6 py-3 bg-gray-200 text-gray-700 rounded-lg font-semibold hover:bg-gray-300 transition-colors"
               >
                 Cancel
@@ -754,7 +752,7 @@ export default function CookieConsent() {
             </div>
           </div>
         </div>
-      </div>
+      </dialog>
     )
   }
 
