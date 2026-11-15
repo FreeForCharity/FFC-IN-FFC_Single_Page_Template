@@ -233,6 +233,13 @@ test.describe('Cookie Preferences Modal', () => {
   }) => {
     await page.addInitScript(() => {
       delete (HTMLDialogElement.prototype as unknown as Record<string, unknown>).closedBy
+      // Deleting the property is not enough: Chromium still honours the closedby
+      // attribute, so strip it before the dialog opens.
+      const showModal = HTMLDialogElement.prototype.showModal
+      HTMLDialogElement.prototype.showModal = function (this: HTMLDialogElement) {
+        this.removeAttribute('closedby')
+        return showModal.call(this)
+      }
     })
     await page.reload()
     expect(await page.evaluate(() => 'closedBy' in HTMLDialogElement.prototype)).toBe(false)
