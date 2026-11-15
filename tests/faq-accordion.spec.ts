@@ -38,11 +38,31 @@ test.describe('FAQ accordion', () => {
     await expect(item).not.toHaveAttribute('open')
   })
 
-  test('keeps closed answers in the page so find-in-page can reach them', async ({ page }) => {
+  test('renders closed answers in the HTML, hidden until opened', async ({ page }) => {
     const item = page.locator('#faq details').first()
+    const answer = item.locator('summary + *')
     await expect(item).not.toHaveAttribute('open')
-    // Closed <details> content is hidden with content-visibility, not removed
-    const answerText = await item.evaluate((el) => el.textContent ?? '')
-    expect(answerText.length).toBeGreaterThan(100)
+    // The answer element is in the page with its text while closed, but not shown
+    const answerText = await answer.evaluate((el) => el.textContent?.trim() ?? '')
+    expect(answerText.length).toBeGreaterThan(40)
+    await expect(answer).toBeHidden()
+    await item.locator('summary').click()
+    await expect(answer).toBeVisible()
+  })
+})
+
+test.describe('Programs accordion', () => {
+  test.skip(!testConfig.applicationForm.rendered, 'Programs section not rendered on this site')
+
+  test('opens and closes from a click on the program name', async ({ page }) => {
+    await page.goto('/')
+    const item = page.locator('#programs details').first()
+    const summary = item.locator('summary')
+    await expect(item).not.toHaveAttribute('open')
+    await summary.click()
+    await expect(item).toHaveAttribute('open', '')
+    await expect(item.locator('summary + *')).toBeVisible()
+    await summary.click()
+    await expect(item).not.toHaveAttribute('open')
   })
 })

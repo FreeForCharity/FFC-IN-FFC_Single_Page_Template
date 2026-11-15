@@ -1,5 +1,5 @@
 import React from 'react'
-import { render, fireEvent } from '@testing-library/react'
+import { render } from '@testing-library/react'
 import FrequentlyAskedQuestions from '../../../src/components/ui/Frequently-Asked-Questions'
 import OrangeFaqItem from '../../../src/components/ui/OrangeFaqItem'
 
@@ -41,17 +41,5 @@ describe.each([
     // No hand-rolled ARIA: <details> exposes the expanded state itself
     expect(summary).not.toHaveAttribute('aria-expanded')
     expect(summary).not.toHaveAttribute('aria-controls')
-  })
-
-  it('opens when the open attribute is set (as a click on <summary> does)', () => {
-    const { container } = render(
-      <Accordion title="What is this?">
-        <p>Answer body</p>
-      </Accordion>
-    )
-    const details = container.querySelector('details')!
-    details.open = true
-    fireEvent(details, new Event('toggle'))
-    expect(details).toHaveAttribute('open')
   })
 })
