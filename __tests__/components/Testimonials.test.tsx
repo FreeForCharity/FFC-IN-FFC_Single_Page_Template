@@ -26,7 +26,9 @@ describe('Testimonials component', () => {
 
   it('marks each testimonial as a numbered slide', () => {
     render(<Testimonials />)
-    const slides = screen.getAllByRole('group')
+    const slides = screen
+      .getAllByRole('group')
+      .filter((el) => el.getAttribute('aria-roledescription') === 'slide')
     expect(slides).toHaveLength(testimonials.length)
     expect(slides[0]).toHaveAttribute('aria-roledescription', 'slide')
     expect(slides[0]).toHaveAccessibleName(`1 of ${testimonials.length}`)

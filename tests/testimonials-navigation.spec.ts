@@ -3,7 +3,7 @@ import { test, expect, type Page } from '@playwright/test'
 /** The testimonial headings, and which one is actually scrolled into view. */
 function carousel(page: Page) {
   const region = page.getByRole('region', { name: 'Testimonials' })
-  const slides = region.getByRole('group')
+  const slides = region.locator('[aria-roledescription="slide"]')
   return { region, slides }
 }
 
@@ -106,19 +106,21 @@ test.describe('testimonial rotation', () => {
 
     await region.getByRole('button', { name: 'Pause testimonials' }).click()
     await expect(region.getByRole('button', { name: 'Play testimonials' })).toBeVisible()
-    // The click moved focus into the carousel, which pauses it too. Move
-    // focus out and the pointer away so only the pause state is left.
-    await page.evaluate(() => (document.activeElement as HTMLElement | null)?.blur())
     await page.mouse.move(0, 0)
     await tick(page, 12_000)
     await expect(slides.nth(1)).toHaveAttribute('data-active', 'true')
 
-    // Play resumes it.
+    // Play resumes it, even though focus is still on the button.
     await region.getByRole('button', { name: 'Play testimonials' }).click()
-    await page.evaluate(() => (document.activeElement as HTMLElement | null)?.blur())
     await page.mouse.move(0, 0)
     await tick(page, 5500)
     await expect(slides.nth(2)).toHaveAttribute('data-active', 'true')
+  })
+
+  test('the pause button comes first in the carousel tab order', async ({ page }) => {
+    const { region } = carousel(page)
+    const first = region.locator('button, [tabindex="0"]').first()
+    await expect(first).toHaveAccessibleName(/Pause testimonials|Play testimonials/)
   })
 
   test('after the last testimonial it rotates back to the first', async ({ page }) => {
@@ -132,22 +134,39 @@ test.describe('testimonial rotation', () => {
     await expectShown(page, 0)
   })
 
-  test('focus inside the carousel stops rotation', async ({ page }) => {
+  test('keyboard focus moving in stops rotation until Play is pressed', async ({ page }) => {
     const { region, slides } = carousel(page)
     await waitForFirstRotation(page)
-    // A keyboard user tabbing in lands on the scrollable slides first.
-    await slides.nth(1).locator('xpath=..').focus()
-    await expect(slides.nth(1).locator('xpath=..')).toBeFocused()
+    const scroller = region.getByRole('group', { name: 'Testimonial slides' })
+    await scroller.focus()
+    await expect(region.getByRole('button', { name: 'Play testimonials' })).toBeVisible()
+    // Focus leaving does not restart it.
+    await page.evaluate(() => (document.activeElement as HTMLElement | null)?.blur())
     await tick(page, 12_000)
     await expect(slides.nth(1)).toHaveAttribute('data-active', 'true')
+
+    await region.getByRole('button', { name: 'Play testimonials' }).click()
+    await page.mouse.move(0, 0)
+    await tick(page, 5500)
+    await expect(slides.nth(2)).toHaveAttribute('data-active', 'true')
   })
 
-  test('the mouse over the carousel stops rotation', async ({ page }) => {
-    const { region, slides } = carousel(page)
+  test('the mouse over the carousel holds rotation, and leaving resumes it', async ({ page }) => {
+    const { slides } = carousel(page)
     await waitForFirstRotation(page)
     await slides.nth(1).hover()
     await tick(page, 12_000)
     await expect(slides.nth(1)).toHaveAttribute('data-active', 'true')
+    await page.mouse.move(0, 0)
+    await tick(page, 5500)
+    await expect(slides.nth(2)).toHaveAttribute('data-active', 'true')
+  })
+
+  test('automatic rotation is not announced', async ({ page }) => {
+    const { region } = carousel(page)
+    await waitForFirstRotation(page)
+    await tick(page, 5500)
+    await expect(region.locator('[aria-live="polite"]')).toHaveText('')
   })
 })
 
@@ -160,4 +179,51 @@ test('reduced motion: no rotation and no pause button', async ({ page }) => {
   await expect(region.getByRole('button', { name: /Pause testimonials/ })).toHaveCount(0)
   await tick(page, 12_000)
   await expect(slides.nth(0)).toHaveAttribute('data-active', 'true')
+})
+
+test('the target dot stays current for the whole of a smooth scroll', async ({ page }) => {
+  // Real clock and no reduced motion, so the jump really animates.
+  await page.setViewportSize({ width: 1280, height: 800 })
+  await page.goto('/')
+  const { region } = carousel(page)
+  const dot4 = region.getByRole('button', { name: 'Go to testimonial 4' })
+  // Wait for hydration: the pause button responds once it has happened.
+  await expect(async () => {
+    await region.getByRole('button', { name: /testimonials$/ }).click()
+    await expect(region.getByRole('button', { name: 'Play testimonials' })).toBeVisible({
+      timeout: 1000,
+    })
+  }).toPass({ timeout: 15_000 })
+
+  const samples = await dot4.evaluate(async (button: HTMLButtonElement) => {
+    const dots = [...document.querySelectorAll('[aria-label^="Go to testimonial"]')]
+    const seen: number[] = []
+    button.click()
+    const start = performance.now()
+    while (performance.now() - start < 1200) {
+      await new Promise((resolve) => setTimeout(resolve, 30))
+      seen.push(dots.findIndex((dot) => dot.getAttribute('aria-current') === 'true'))
+    }
+    return seen
+  })
+  expect(new Set(samples)).toEqual(new Set([3]))
+  await expectShown(page, 3)
+  await expect(region.locator('[aria-live="polite"]')).toHaveText('Testimonial 4 of 4')
+})
+
+test.describe('testimonials on a touch screen', () => {
+  test.use({ hasTouch: true, viewport: { width: 412, height: 915 } })
+
+  test('tapping the slides stops rotation', async ({ page }) => {
+    await page.goto('/')
+    const { region } = carousel(page)
+    const slides = region.getByRole('group', { name: 'Testimonial slides' })
+    await slides.scrollIntoViewIfNeeded()
+    await expect(async () => {
+      await slides.tap()
+      await expect(region.getByRole('button', { name: 'Play testimonials' })).toBeVisible({
+        timeout: 1000,
+      })
+    }).toPass({ timeout: 15_000 })
+  })
 })

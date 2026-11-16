@@ -26,10 +26,11 @@ const ROTATE_EVERY_MS = 5000
  * arrows, dots and optional rotation, so it works with touch, trackpad and
  * keyboard without a carousel library.
  *
- * Rotation follows the ARIA APG carousel pattern and WCAG 2.2.2: it stops
- * while the pointer is over the carousel or focus is inside it, it has a
- * visible pause button, and it never starts for visitors who ask for reduced
- * motion.
+ * Rotation follows the ARIA APG carousel pattern and WCAG 2.2.2: a pause
+ * button comes first in the tab order; rotation waits while the mouse is
+ * over the carousel; it stops for good once keyboard focus moves in or a
+ * touch moves the slides, until the visitor presses Play; and it never
+ * starts for visitors who ask for reduced motion.
  */
 const TestimonialSlider: React.FC = () => {
   const count = configuredTestimonials.length
@@ -38,9 +39,12 @@ const TestimonialSlider: React.FC = () => {
   const [activeIndex, setActiveIndex] = useState(0)
   const [paused, setPaused] = useState(false)
   const [hovered, setHovered] = useState(false)
-  const [focused, setFocused] = useState(false)
+  // What a screen reader hears after a move the visitor made themselves.
+  const [announcement, setAnnouncement] = useState('')
+  // The slide a programmatic scroll is heading to, while it is under way.
+  const targetRef = useRef<number | null>(null)
   const reducedMotion = useReducedMotion()
-  const rotating = count > 1 && !paused && !hovered && !focused && !reducedMotion
+  const rotating = count > 1 && !paused && !hovered && !reducedMotion
 
   // Track which slide is in view, whichever way it got there (arrow, dot,
   // swipe, trackpad or keyboard scroll).
@@ -51,11 +55,22 @@ const TestimonialSlider: React.FC = () => {
     // read from the scroll position, because one batch of entries can name
     // several slides during a fast scroll (for example the jump from the last
     // slide back to the first).
+    //
+    // While goTo's smooth scroll is under way, slides it passes are ignored,
+    // so the dots do not flicker back and a quick second press of Next
+    // counts from the right slide.
     const observer = new IntersectionObserver(
       () => {
         if (scroller.clientWidth === 0) return
-        const index = Math.round(scroller.scrollLeft / scroller.clientWidth)
-        setActiveIndex(Math.min(Math.max(index, 0), count - 1))
+        const index = Math.min(
+          Math.max(Math.round(Math.abs(scroller.scrollLeft) / scroller.clientWidth), 0),
+          count - 1
+        )
+        if (targetRef.current !== null) {
+          if (index !== targetRef.current) return
+          targetRef.current = null
+        }
+        setActiveIndex(index)
       },
       { root: scroller, threshold: 0.6 }
     )
@@ -63,11 +78,19 @@ const TestimonialSlider: React.FC = () => {
     return () => observer.disconnect()
   }, [count])
 
-  const goTo = (index: number) => {
+  const goTo = (index: number, byVisitor = false) => {
     const scroller = scrollerRef.current
     const slide = slideRefs.current[index]
     if (!scroller || !slide) return
     setActiveIndex(index)
+    if (byVisitor) setAnnouncement(`Testimonial ${index + 1} of ${count}`)
+    targetRef.current = index
+    // If the scroll is interrupted (say, by a swipe), stop waiting for it.
+    window.setTimeout(() => {
+      if (targetRef.current === index) targetRef.current = null
+    }, 1500)
+    // Scroll only the row of slides: scrollIntoView would also move the page
+    // whenever the carousel is partly off screen, even during rotation.
     scroller.scrollTo?.({
       left: slide.offsetLeft,
       behavior: reducedMotion ? 'instant' : 'smooth',
@@ -96,20 +119,38 @@ const TestimonialSlider: React.FC = () => {
           aria-label="Testimonials"
           onPointerEnter={(event) => event.pointerType === 'mouse' && setHovered(true)}
           onPointerLeave={(event) => event.pointerType === 'mouse' && setHovered(false)}
-          onFocus={() => setFocused(true)}
-          onBlur={(event) => {
-            if (!event.currentTarget.contains(event.relatedTarget as Node | null)) {
-              setFocused(false)
-            }
-          }}
+          // Focus moving in stops rotation until Play is pressed.
+          onFocus={() => setPaused(true)}
         >
+          {count > 1 && !reducedMotion && (
+            <div className="mb-2 flex justify-end">
+              <button
+                type="button"
+                onClick={() => setPaused((p) => !p)}
+                className="flex h-6 w-6 cursor-pointer items-center justify-center text-gray-600 hover:text-gray-800"
+                aria-label={paused ? 'Play testimonials' : 'Pause testimonials'}
+              >
+                {paused ? (
+                  <MdPlayArrow aria-hidden="true" className="h-5 w-5" />
+                ) : (
+                  <MdPause aria-hidden="true" className="h-5 w-5" />
+                )}
+              </button>
+            </div>
+          )}
+          {/* Announces moves the visitor makes (arrows and dots), never the
+              automatic rotation. */}
+          <p className="sr-only" aria-live="polite">
+            {announcement}
+          </p>
           <div className="relative">
-            {/* The slides. aria-live is off while rotating (it would announce
-                every change) and polite once the visitor is in control. */}
             <div
               ref={scrollerRef}
               tabIndex={0}
-              aria-live={rotating ? 'off' : 'polite'}
+              role="group"
+              aria-label="Testimonial slides"
+              // A touch on the slides is the visitor taking over.
+              onPointerDown={(event) => event.pointerType !== 'mouse' && setPaused(true)}
               className="relative flex overflow-x-auto snap-x snap-mandatory overscroll-x-contain scrollbar-hide rounded-sm focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#E16820]"
             >
               {configuredTestimonials.map((t, idx) => (
@@ -172,7 +213,7 @@ const TestimonialSlider: React.FC = () => {
             {/* Left Arrow */}
             <button
               type="button"
-              onClick={() => goTo((activeIndex - 1 + count) % count)}
+              onClick={() => goTo((activeIndex - 1 + count) % count, true)}
               className="absolute left-2 md:left-4 top-1/2 -translate-y-1/2 z-10 flex items-center justify-center text-gray-600 hover:text-gray-800 transition-all cursor-pointer"
               aria-label="Previous testimonial"
             >
@@ -182,7 +223,7 @@ const TestimonialSlider: React.FC = () => {
             {/* Right Arrow */}
             <button
               type="button"
-              onClick={() => goTo((activeIndex + 1) % count)}
+              onClick={() => goTo((activeIndex + 1) % count, true)}
               className="absolute right-2 md:right-4 top-1/2 -translate-y-1/2 z-10 flex items-center justify-center text-gray-600 hover:text-gray-800 transition-all cursor-pointer"
               aria-label="Next testimonial"
             >
@@ -190,27 +231,13 @@ const TestimonialSlider: React.FC = () => {
             </button>
           </div>
 
-          {/* Pause and dots */}
+          {/* Dots */}
           <div className="flex justify-center items-center mt-10 space-x-2">
-            {count > 1 && !reducedMotion && (
-              <button
-                type="button"
-                onClick={() => setPaused((p) => !p)}
-                className="mr-2 flex h-6 w-6 cursor-pointer items-center justify-center text-gray-600 hover:text-gray-800"
-                aria-label={paused ? 'Play testimonials' : 'Pause testimonials'}
-              >
-                {paused ? (
-                  <MdPlayArrow aria-hidden="true" className="h-5 w-5" />
-                ) : (
-                  <MdPause aria-hidden="true" className="h-5 w-5" />
-                )}
-              </button>
-            )}
             {configuredTestimonials.map((_, i) => (
               <button
                 key={i}
                 type="button"
-                onClick={() => goTo(i)}
+                onClick={() => goTo(i, true)}
                 className="group flex h-6 min-w-[24px] cursor-pointer items-center justify-center"
                 aria-label={`Go to testimonial ${i + 1}`}
                 aria-current={activeIndex === i ? 'true' : undefined}
