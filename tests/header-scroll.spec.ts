@@ -18,8 +18,11 @@ test.describe('Header scroll behaviour', () => {
     const header = page.locator('header#header')
     await expect(header).toHaveClass(/h-\[80px\]/)
 
-    await page.evaluate(() => window.scrollTo(0, 400))
-    await expect(header).toHaveClass(/h-\[55px\]/)
+    // Retry the scroll: until the page hydrates, Next.js may reset it to the top.
+    await expect(async () => {
+      await page.evaluate(() => window.scrollTo(0, 400))
+      await expect(header).toHaveClass(/h-\[55px\]/, { timeout: 1000 })
+    }).toPass({ timeout: 15_000 })
 
     await page.evaluate(() => window.scrollTo(0, 0))
     await expect(header).toHaveClass(/h-\[80px\]/)
@@ -41,8 +44,10 @@ test.describe('Header scroll behaviour', () => {
         window.scrollTo(0, el.getBoundingClientRect().top + window.scrollY - 80)
       }, id)
 
-    await scrollToSection('mission')
-    await expect(mission).toHaveClass(/text-blue-600/)
+    await expect(async () => {
+      await scrollToSection('mission')
+      await expect(mission).toHaveClass(/text-blue-600/, { timeout: 1000 })
+    }).toPass({ timeout: 15_000 })
     await expect(home).not.toHaveClass(/text-blue-600/)
 
     await scrollToSection('volunteer')
@@ -52,5 +57,25 @@ test.describe('Header scroll behaviour', () => {
     await page.evaluate(() => window.scrollTo(0, 0))
     await expect(home).toHaveClass(/text-blue-600/)
     await expect(volunteer).not.toHaveClass(/text-blue-600/)
+  })
+
+  test('keeps highlighting after moving from another page to the home page', async ({ page }) => {
+    // Header links on the policy pages are client-side links back to /#section.
+    await page.goto('/privacy-policy/')
+    const nav = page.getByRole('navigation', { name: 'Primary navigation' })
+    await nav.getByRole('link', { name: 'Mission', exact: true }).click()
+    await expect(page).toHaveURL(/\/#mission$/)
+    await expect(nav.getByRole('link', { name: 'Mission', exact: true })).toHaveClass(
+      /text-blue-600/
+    )
+
+    await page.evaluate(() => {
+      const el = document.getElementById('volunteer')
+      if (!el) throw new Error('#volunteer missing')
+      window.scrollTo(0, el.getBoundingClientRect().top + window.scrollY - 80)
+    })
+    await expect(nav.getByRole('link', { name: 'Volunteer', exact: true })).toHaveClass(
+      /text-blue-600/
+    )
   })
 })
