@@ -93,6 +93,10 @@ async function waitForFirstRotation(page: Page) {
 
 test.describe('testimonial rotation', () => {
   test.use({ viewport: { width: 1280, height: 800 } })
+  // Each test steps a fake clock through several rotations and smooth
+  // scrolls. That takes about 5 s here, but on a busy CI runner it has run
+  // past the default 30 s.
+  test.describe.configure({ timeout: 90_000 })
 
   test.beforeEach(async ({ page }) => {
     await page.clock.install()
