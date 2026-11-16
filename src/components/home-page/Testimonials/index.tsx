@@ -43,11 +43,32 @@ const TestimonialSlider: React.FC = () => {
   const [announcement, setAnnouncement] = useState('')
   // The slide a programmatic scroll is heading to, while it is under way.
   const targetRef = useRef<number | null>(null)
+  const settleTimerRef = useRef<number | undefined>(undefined)
   const reducedMotion = useReducedMotion()
   const rotating = count > 1 && !paused && !hovered && !reducedMotion
 
   // Track which slide is in view, whichever way it got there (arrow, dot,
   // swipe, trackpad or keyboard scroll).
+  /** The slide whose left edge is nearest the row's scroll position. */
+  const readIndex = () => {
+    const scroller = scrollerRef.current
+    if (!scroller || scroller.clientWidth === 0) return null
+    return Math.min(
+      Math.max(Math.round(Math.abs(scroller.scrollLeft) / scroller.clientWidth), 0),
+      count - 1
+    )
+  }
+
+  /** Stop waiting for goTo's scroll and trust the scroll position again. */
+  const settle = () => {
+    targetRef.current = null
+    window.clearTimeout(settleTimerRef.current)
+    const index = readIndex()
+    if (index !== null) setActiveIndex(index)
+  }
+
+  useEffect(() => () => window.clearTimeout(settleTimerRef.current), [])
+
   useEffect(() => {
     const scroller = scrollerRef.current
     if (!scroller || typeof IntersectionObserver === 'undefined') return
@@ -61,14 +82,12 @@ const TestimonialSlider: React.FC = () => {
     // counts from the right slide.
     const observer = new IntersectionObserver(
       () => {
-        if (scroller.clientWidth === 0) return
-        const index = Math.min(
-          Math.max(Math.round(Math.abs(scroller.scrollLeft) / scroller.clientWidth), 0),
-          count - 1
-        )
+        const index = readIndex()
+        if (index === null) return
         if (targetRef.current !== null) {
           if (index !== targetRef.current) return
-          targetRef.current = null
+          settle()
+          return
         }
         setActiveIndex(index)
       },
@@ -76,6 +95,8 @@ const TestimonialSlider: React.FC = () => {
     )
     slideRefs.current.forEach((slide) => slide && observer.observe(slide))
     return () => observer.disconnect()
+    // readIndex and settle only read refs and count.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [count])
 
   const goTo = (index: number, byVisitor = false) => {
@@ -84,11 +105,15 @@ const TestimonialSlider: React.FC = () => {
     if (!scroller || !slide) return
     setActiveIndex(index)
     if (byVisitor) setAnnouncement(`Testimonial ${index + 1} of ${count}`)
+    window.clearTimeout(settleTimerRef.current)
+    // Already there: nothing will scroll, so there is nothing to wait for.
+    if (Math.abs(Math.abs(scroller.scrollLeft) - slide.offsetLeft) < 2) {
+      targetRef.current = null
+      return
+    }
     targetRef.current = index
-    // If the scroll is interrupted (say, by a swipe), stop waiting for it.
-    window.setTimeout(() => {
-      if (targetRef.current === index) targetRef.current = null
-    }, 1500)
+    // If the scroll never arrives (interrupted, say), read where it stopped.
+    settleTimerRef.current = window.setTimeout(settle, 1500)
     // Scroll only the row of slides: scrollIntoView would also move the page
     // whenever the carousel is partly off screen, even during rotation.
     scroller.scrollTo?.({
@@ -119,13 +144,21 @@ const TestimonialSlider: React.FC = () => {
           aria-label="Testimonials"
           onPointerEnter={(event) => event.pointerType === 'mouse' && setHovered(true)}
           onPointerLeave={(event) => event.pointerType === 'mouse' && setHovered(false)}
-          // Focus moving in stops rotation until Play is pressed.
-          onFocus={() => setPaused(true)}
+          // Focus moving in stops rotation until Play is pressed. Not when it
+          // lands on the Pause/Play button: browsers that focus a button on
+          // mousedown would otherwise pause first and the click would then
+          // undo it.
+          onFocus={(event) => {
+            if (!(event.target as HTMLElement).closest('[data-rotation-control]')) {
+              setPaused(true)
+            }
+          }}
         >
           {count > 1 && !reducedMotion && (
             <div className="mb-2 flex justify-end">
               <button
                 type="button"
+                data-rotation-control
                 onClick={() => setPaused((p) => !p)}
                 className="flex h-6 w-6 cursor-pointer items-center justify-center text-gray-600 hover:text-gray-800"
                 aria-label={paused ? 'Play testimonials' : 'Pause testimonials'}
@@ -149,8 +182,13 @@ const TestimonialSlider: React.FC = () => {
               tabIndex={0}
               role="group"
               aria-label="Testimonial slides"
-              // A touch on the slides is the visitor taking over.
-              onPointerDown={(event) => event.pointerType !== 'mouse' && setPaused(true)}
+              // A touch on the slides is the visitor taking over, and any press
+              // or wheel on them overrides a scroll goTo started.
+              onPointerDown={(event) => {
+                if (targetRef.current !== null) settle()
+                if (event.pointerType !== 'mouse') setPaused(true)
+              }}
+              onWheel={() => targetRef.current !== null && settle()}
               className="relative flex overflow-x-auto snap-x snap-mandatory overscroll-x-contain scrollbar-hide rounded-sm focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#E16820]"
             >
               {configuredTestimonials.map((t, idx) => (

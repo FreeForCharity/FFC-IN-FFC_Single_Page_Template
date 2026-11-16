@@ -117,6 +117,21 @@ test.describe('testimonial rotation', () => {
     await expect(slides.nth(2)).toHaveAttribute('data-active', 'true')
   })
 
+  test('Pause still pauses when the button takes focus before the click', async ({ page }) => {
+    // Chrome on Android, and desktop browsers on mousedown, focus the button
+    // first; focus moving into the carousel must not undo the press.
+    const { region, slides } = carousel(page)
+    await waitForFirstRotation(page)
+    const pause = region.getByRole('button', { name: 'Pause testimonials' })
+    await pause.focus()
+    await expect(pause).toHaveAccessibleName('Pause testimonials')
+    await pause.click()
+    await expect(region.getByRole('button', { name: 'Play testimonials' })).toBeVisible()
+    await page.mouse.move(0, 0)
+    await tick(page, 12_000)
+    await expect(slides.nth(1)).toHaveAttribute('data-active', 'true')
+  })
+
   test('the pause button comes first in the carousel tab order', async ({ page }) => {
     const { region } = carousel(page)
     const first = region.locator('button, [tabindex="0"]').first()
@@ -226,4 +241,35 @@ test.describe('testimonials on a touch screen', () => {
       })
     }).toPass({ timeout: 15_000 })
   })
+})
+
+test('an interrupted jump leaves the dots on the slide where it stopped', async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 800 })
+  await page.goto('/')
+  const { region } = carousel(page)
+  await expect(async () => {
+    await region.getByRole('button', { name: /testimonials$/ }).click()
+    await expect(region.getByRole('button', { name: 'Play testimonials' })).toBeVisible({
+      timeout: 1000,
+    })
+  }).toPass({ timeout: 15_000 })
+
+  // Start a smooth jump to the last slide, then cut it short on slide 2,
+  // as a swipe would.
+  await region.getByRole('button', { name: 'Go to testimonial 4' }).evaluate(
+    (button: HTMLButtonElement) =>
+      new Promise<void>((resolve) => {
+        button.click()
+        setTimeout(() => {
+          const row = document.querySelector('[aria-label="Testimonial slides"]') as HTMLElement
+          row.scrollTo({ left: row.clientWidth, behavior: 'instant' })
+          resolve()
+        }, 80)
+      })
+  )
+  await expectShown(page, 1)
+  await expect(region.getByRole('button', { name: 'Go to testimonial 2' })).toHaveAttribute(
+    'aria-current',
+    'true'
+  )
 })
