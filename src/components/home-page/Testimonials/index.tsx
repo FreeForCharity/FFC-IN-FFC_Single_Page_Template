@@ -163,10 +163,14 @@ const TestimonialSlider: React.FC = () => {
                 className="flex h-6 w-6 cursor-pointer items-center justify-center text-gray-600 hover:text-gray-800"
                 aria-label={paused ? 'Play testimonials' : 'Pause testimonials'}
               >
+                {/* The icon swaps on every press. Without pointer-events-none
+                    the pointer sits on an icon that is then removed, and the
+                    browser never tells React the pointer left the carousel,
+                    so rotation would stay held after Play. */}
                 {paused ? (
-                  <MdPlayArrow aria-hidden="true" className="h-5 w-5" />
+                  <MdPlayArrow aria-hidden="true" className="pointer-events-none h-5 w-5" />
                 ) : (
-                  <MdPause aria-hidden="true" className="h-5 w-5" />
+                  <MdPause aria-hidden="true" className="pointer-events-none h-5 w-5" />
                 )}
               </button>
             </div>
