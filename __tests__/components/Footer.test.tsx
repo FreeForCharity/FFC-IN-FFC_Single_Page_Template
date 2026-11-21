@@ -3,6 +3,7 @@ import { render, screen } from '@testing-library/react'
 import { axe, toHaveNoViolations } from 'jest-axe'
 import Footer from '../../src/components/footer'
 import { PENDING_TEXT, isPending, siteConfig } from '../../src/lib/site.config'
+import { asCharitySite, restoreSiteConfig } from '../helpers/site-identity'
 
 // Extend Jest matchers
 expect.extend(toHaveNoViolations)
@@ -62,12 +63,19 @@ describe('Footer component', () => {
     }
   )
 
+  // The contact tests below pin a charity identity with every field supplied,
+  // so a fork whose own email or phone is still pending exercises them too.
   it('should have email contact link', () => {
-    render(<Footer />)
-    // Look for email link
-    const links = screen.getAllByRole('link')
-    const emailLink = links.find((link) => link.getAttribute('href')?.includes('mailto:'))
-    expect(emailLink).toBeDefined()
+    asCharitySite()
+    try {
+      render(<Footer />)
+      // Look for email link
+      const links = screen.getAllByRole('link')
+      const emailLink = links.find((link) => link.getAttribute('href')?.includes('mailto:'))
+      expect(emailLink).toBeDefined()
+    } finally {
+      restoreSiteConfig()
+    }
   })
 
   it('renders the EIN from siteConfig', () => {
@@ -76,17 +84,22 @@ describe('Footer component', () => {
   })
 
   it('renders the phone number from siteConfig as a tel link', () => {
-    render(<Footer />)
-    const telLink = screen
-      .getAllByRole('link')
-      .find((link) => link.getAttribute('href') === `tel:${siteConfig.phone.tel}`)
-    expect(telLink).toBeDefined()
-    expect(telLink).toHaveTextContent(siteConfig.phone.display)
+    asCharitySite()
+    try {
+      render(<Footer />)
+      const telLink = screen
+        .getAllByRole('link')
+        .find((link) => link.getAttribute('href') === `tel:${siteConfig.phone.tel}`)
+      expect(telLink).toBeDefined()
+      expect(telLink).toHaveTextContent(siteConfig.phone.display)
+    } finally {
+      restoreSiteConfig()
+    }
   })
 
   it('omits the Call Us block when the charity publishes no phone number', () => {
-    const saved = { ...siteConfig.phone }
-    siteConfig.phone = { display: '', tel: '' }
+    // No phone and NOT pending: the charity has none, so nothing renders.
+    asCharitySite({ phone: { display: '', tel: '' } })
     try {
       render(<Footer />)
       expect(screen.queryByText('Call Us Today')).not.toBeInTheDocument()
@@ -95,7 +108,7 @@ describe('Footer component', () => {
         .filter((link) => link.getAttribute('href')?.startsWith('tel:'))
       expect(telLinks).toHaveLength(0)
     } finally {
-      siteConfig.phone = saved
+      restoreSiteConfig()
     }
   })
 
