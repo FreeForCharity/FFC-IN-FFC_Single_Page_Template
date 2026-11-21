@@ -729,7 +729,7 @@ Vercel automatically enables PR preview deployments and comments.
 - **Modern Styling:** Tailwind CSS 4.x with utility-first approach
 - **Animation:** Framer Motion for smooth transitions
 - **Icons:** Lucide React and React Icons libraries
-- **Carousels:** Swiper for image carousels and sliders
+- **Carousels:** CSS scroll-snap (no carousel library); see `src/components/home-page/Testimonials`
 
 **Note:**
 

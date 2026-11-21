@@ -12,14 +12,35 @@
  */
 
 import { analyticsConfig, isConfigured } from '../src/lib/analytics.config'
-import { siteConfig } from '../src/lib/site.config'
+import { isSupportingOrgSite, siteConfig } from '../src/lib/site.config'
+
+/**
+ * These specs run in the template AND in every charity site provisioned from
+ * it, and provisioning rewrites src/lib/site.config.ts but not this file. So
+ * anything that differs between the two is read from siteConfig here, and the
+ * specs for FFC-only content (the mission video, the application form in the
+ * Programs section) skip when the build does not render it — using the same
+ * predicates the components use, so a spec skips exactly when its section is
+ * absent.
+ */
+const supportingOrgSite = isSupportingOrgSite()
+const taxStatusLabel = siteConfig.taxStatusLabel.trim()
 
 export const testConfig = {
+  /**
+   * True on the supporting organization's own site (the template as shipped),
+   * false on a provisioned charity site. Mirrors isSupportingOrgSite().
+   */
+  supportingOrgSite,
+
   /**
    * Mission Video Configuration
    * Used in: tests/mission-video.spec.ts
    */
   missionVideo: {
+    // The video is FFC's own; a charity site's Mission section has none
+    // (src/components/home-page/Mission/index.tsx).
+    rendered: supportingOrgSite,
     ariaLabel: 'Free For Charity mission video',
     playLabel: 'Play the Free For Charity mission video',
     title: "Learn about Free For Charity's mission to help nonprofits reduce costs",
@@ -30,6 +51,9 @@ export const testConfig = {
    * Used in: tests/application-form.spec.ts
    */
   applicationForm: {
+    // The button lives in the Programs section, which renders only on the
+    // supporting org's site (programsSectionVisible in section-visibility.ts).
+    rendered: siteConfig.sections.showPrograms && supportingOrgSite,
     buttonText: 'Apply to Become a Supported Charity',
     modalTitle: 'Charity Application Form',
     loadingText: 'Loading application form...',
@@ -58,22 +82,11 @@ export const testConfig = {
    * Used in: tests/social-links.spec.ts
    */
   socialLinks: {
-    facebook: {
-      url: 'facebook.com/freeforcharity',
-      ariaLabel: 'Facebook',
-    },
-    twitter: {
-      url: 'x.com/freeforcharity1',
-      ariaLabel: 'X (Twitter)',
-    },
-    linkedin: {
-      url: 'linkedin.com/company/freeforcharity',
-      ariaLabel: 'LinkedIn',
-    },
-    github: {
-      url: 'github.com/FreeForCharity/FFC-IN-FFC_Single_Page_Template',
-      ariaLabel: 'GitHub',
-    },
+    // Exactly the links the footer renders: every siteConfig.social entry with
+    // an href, labelled by its `label` (src/components/footer/index.tsx).
+    active: siteConfig.social
+      .filter((s) => s.href.trim())
+      .map((s) => ({ href: s.href, ariaLabel: s.label })),
   },
 
   /**
@@ -81,7 +94,8 @@ export const testConfig = {
    * Used in: tests/copyright.spec.ts
    */
   copyright: {
-    text: 'All Rights Are Reserved by Free For Charity a US 501c3 Non Profit',
+    // Mirrors the footer bottom bar: "All Rights Are Reserved by <name> <taxStatusLabel>".
+    text: ['All Rights Are Reserved by', siteConfig.name, taxStatusLabel].filter(Boolean).join(' '),
     searchText: 'All Rights Are Reserved',
     // The permanent "Supported by" attribution (FFC footer standard) — sourced
     // from siteConfig.supportedBy, which is required and always rendered.
@@ -131,9 +145,10 @@ export const testConfig = {
    * Used in: tests/logo.spec.ts
    */
   logo: {
-    headerAlt: 'Free For Charity',
+    // The header logo's alt is siteConfig.name (src/components/header/index.tsx).
+    headerAlt: siteConfig.name,
     heroAlt: 'Hero image',
-    navBarAriaLabel: 'Free For Charity home',
+    navBarAriaLabel: `${siteConfig.name} home`,
   },
 
   /**
