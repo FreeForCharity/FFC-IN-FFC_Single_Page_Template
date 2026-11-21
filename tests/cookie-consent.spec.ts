@@ -131,7 +131,7 @@ test.describe('Cookie Preferences Modal', () => {
     await page.getByRole('button', { name: testConfig.cookieConsent.buttons.customize }).click()
 
     // Modal should be visible
-    const modal = page.locator('[role="dialog"][aria-modal="true"]')
+    const modal = page.locator('dialog[open]')
     await expect(modal).toBeVisible()
 
     // Verify modal has the correct heading
@@ -157,7 +157,7 @@ test.describe('Cookie Preferences Modal', () => {
     // Open the preferences modal
     await page.getByRole('button', { name: testConfig.cookieConsent.buttons.customize }).click()
 
-    const modal = page.locator('[role="dialog"][aria-modal="true"]')
+    const modal = page.locator('dialog[open]')
     await expect(modal).toBeVisible()
 
     // Click Cancel
@@ -173,7 +173,7 @@ test.describe('Cookie Preferences Modal', () => {
     // Open the preferences modal
     await page.getByRole('button', { name: testConfig.cookieConsent.buttons.customize }).click()
 
-    const modal = page.locator('[role="dialog"][aria-modal="true"]')
+    const modal = page.locator('dialog[open]')
     await expect(modal).toBeVisible()
 
     // Press Escape
@@ -189,16 +189,65 @@ test.describe('Cookie Preferences Modal', () => {
     // Open the preferences modal
     await page.getByRole('button', { name: testConfig.cookieConsent.buttons.customize }).click()
 
-    const modal = page.locator('[role="dialog"][aria-modal="true"]')
+    const modal = page.locator('dialog[open]')
     await expect(modal).toBeVisible()
 
-    // Click on the overlay (outside the modal content)
-    await page.locator('[role="dialog"]').click({ position: { x: 10, y: 10 } })
+    // Click the backdrop, outside the dialog box (light dismiss)
+    await page.mouse.click(5, 5)
 
     // Modal should be hidden but banner should still be visible
     await expect(modal).not.toBeVisible()
     const banner = page.locator('[role="region"][aria-label="Cookie consent notice"]')
     await expect(banner).toBeVisible()
+  })
+
+  for (const [how, close] of [
+    [
+      'Cancel',
+      async (page: import('@playwright/test').Page) =>
+        page.getByRole('button', { name: testConfig.cookieConsent.buttons.cancel }).click(),
+    ],
+    ['Escape', async (page: import('@playwright/test').Page) => page.keyboard.press('Escape')],
+    ['a backdrop click', async (page: import('@playwright/test').Page) => page.mouse.click(5, 5)],
+  ] as const) {
+    test(`closing with ${how} discards unsaved toggles`, async ({ page }) => {
+      await page.getByRole('button', { name: testConfig.cookieConsent.buttons.customize }).click()
+      const modal = page.locator('dialog[open]')
+      const analyticsToggle = modal.getByRole('checkbox', { name: 'Enable analytics cookies' })
+      await analyticsToggle.click({ force: true })
+      await expect(analyticsToggle).toBeChecked()
+
+      await close(page)
+      await expect(modal).not.toBeVisible()
+      expect(await page.evaluate(() => localStorage.getItem('cookie-consent'))).toBeNull()
+
+      await page.getByRole('button', { name: testConfig.cookieConsent.buttons.customize }).click()
+      await expect(
+        page.locator('dialog[open]').getByRole('checkbox', { name: 'Enable analytics cookies' })
+      ).not.toBeChecked()
+    })
+  }
+
+  test('closes on a backdrop click through the script fallback when closedby is missing', async ({
+    page,
+  }) => {
+    await page.addInitScript(() => {
+      delete (HTMLDialogElement.prototype as unknown as Record<string, unknown>).closedBy
+      // Deleting the property is not enough: Chromium still honours the closedby
+      // attribute, so strip it before the dialog opens.
+      const showModal = HTMLDialogElement.prototype.showModal
+      HTMLDialogElement.prototype.showModal = function (this: HTMLDialogElement) {
+        this.removeAttribute('closedby')
+        return showModal.call(this)
+      }
+    })
+    await page.reload()
+    expect(await page.evaluate(() => 'closedBy' in HTMLDialogElement.prototype)).toBe(false)
+    await page.getByRole('button', { name: testConfig.cookieConsent.buttons.customize }).click()
+    const modal = page.locator('dialog[open]')
+    await expect(modal).toBeVisible()
+    await page.mouse.click(5, 5)
+    await expect(modal).not.toBeVisible()
   })
 
   test('should have necessary and functional cookies always checked and disabled', async ({
@@ -207,7 +256,7 @@ test.describe('Cookie Preferences Modal', () => {
     // Open the preferences modal
     await page.getByRole('button', { name: testConfig.cookieConsent.buttons.customize }).click()
 
-    const modal = page.locator('[role="dialog"][aria-modal="true"]')
+    const modal = page.locator('dialog[open]')
     await expect(modal).toBeVisible()
 
     // Find disabled checkboxes by their section heading (more specific selector)
@@ -237,7 +286,7 @@ test.describe('Cookie Preferences Modal', () => {
     // Open the preferences modal
     await page.getByRole('button', { name: testConfig.cookieConsent.buttons.customize }).click()
 
-    const modal = page.locator('[role="dialog"][aria-modal="true"]')
+    const modal = page.locator('dialog[open]')
     await expect(modal).toBeVisible()
 
     // Find analytics toggle (the checkbox with aria-label)
@@ -261,7 +310,7 @@ test.describe('Cookie Preferences Modal', () => {
     // Open the preferences modal
     await page.getByRole('button', { name: testConfig.cookieConsent.buttons.customize }).click()
 
-    const modal = page.locator('[role="dialog"][aria-modal="true"]')
+    const modal = page.locator('dialog[open]')
     await expect(modal).toBeVisible()
 
     // Enable only analytics (not marketing) - use force: true because the toggle switch has an overlay div
@@ -453,9 +502,12 @@ test.describe('Cookie Consent Accessibility', () => {
     // Open the preferences modal
     await page.getByRole('button', { name: 'Customize' }).click()
 
-    const modal = page.locator('[role="dialog"]')
-    await expect(modal).toHaveAttribute('aria-modal', 'true')
+    // Native modal <dialog>: modality comes from showModal(), not attributes
+    const modal = page.locator('dialog[open]')
+    expect(await modal.evaluate((el) => el.matches(':modal'))).toBe(true)
+    await expect(modal).not.toHaveAttribute('aria-modal')
     await expect(modal).toHaveAttribute('aria-labelledby', 'cookie-preferences-title')
+    await expect(page.getByRole('dialog', { name: 'Cookie Preferences' })).toBeVisible()
   })
 
   test('banner should have proper ARIA attributes', async ({ page }) => {

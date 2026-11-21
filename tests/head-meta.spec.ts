@@ -66,14 +66,18 @@ test.describe('head metadata and security claims', () => {
     expect(manifestHref).toMatch(/manifest\.webmanifest|site\.webmanifest/)
   })
 
-  // The branded /_not-found page is verified by inspecting the static
-  // export artifact directly — Playwright's `serve -s` preview falls back
-  // to index.html for non-existent routes, so we can't navigate to a 404
-  // in test (GitHub Pages serves 404.html correctly in production).
   test('404 page is built with the branded heading', async () => {
     const { readFile } = await import('node:fs/promises')
     const body = await readFile('out/404.html', 'utf8')
     expect(body).toMatch(/can[&#x27;']?t find that page/i)
+  })
+
+  // The preview server (`serve out`, no SPA fallback) answers an unknown path
+  // with out/404.html and a 404 status, as GitHub Pages does in production.
+  test('an unknown path serves the branded 404 with a 404 status', async ({ page }) => {
+    const response = await page.goto('/this-page-does-not-exist')
+    expect(response?.status()).toBe(404)
+    await expect(page.locator('h1')).toHaveText(/can.t find that page/i)
   })
 })
 
@@ -109,10 +113,9 @@ test.describe('static artifacts shipped to /out', () => {
 
   test('manifest is served with the required fields', async ({ request }) => {
     // The dynamic route from #259 lives at /manifest.webmanifest while
-    // older deploys may still serve the static /site.webmanifest. The
-    // `serve -s` preview SPA-falls-back to index.html for unknown paths,
-    // so we use the response content-type (not status) to detect a real
-    // manifest vs an HTML fallback.
+    // older deploys may still serve the static /site.webmanifest. A host
+    // with an HTML fallback answers unknown paths with a page, so we use the
+    // response content-type (not status) to detect a real manifest.
     async function tryManifest(path: string) {
       const r = await request.get(path)
       const ct = r.headers()['content-type'] || ''

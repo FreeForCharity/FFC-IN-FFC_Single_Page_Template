@@ -59,7 +59,7 @@ This analysis compares FFC-IN-FFC_Single_Page_Template against three sister repo
 
 ### Key Findings
 
-**FFC-IN-FFC_Single_Page_Template** is a single-page Next.js application with 23 component files (after removing unused scaffolding) covering the homepage sections, plus 7 policy pages.
+**FFC-IN-FFC_Single_Page_Template** is a single-page Next.js application with 23 component files (after removing unused scaffolding) covering the homepage sections, plus 6 policy pages.
 
 **Note:** As of Phase 5 completion, most critical gaps have been addressed. The items listed below were the original gaps identified, many of which have now been implemented. However, compared to sister sites, some differences remain:
 
@@ -95,7 +95,7 @@ This analysis compares FFC-IN-FFC_Single_Page_Template against three sister repo
 | **framer-motion**    | ❌ not a dependency             | ✅ 12.23.24        | ❌           | ❌       |
 | **lucide-react**     | ❌ removed (use react-icons)    | ✅ 0.469.0         | ❌           | ❌       |
 | **react-icons**      | ✅ 5.5.0                        | ✅ 5.5.0           | ❌           | ❌       |
-| **swiper**           | ✅ 12.0.3                       | ✅ 12.0.3          | ❌           | ❌       |
+| **swiper**           | ❌ removed (CSS scroll-snap)    | ✅ 12.0.3          | ❌           | ❌       |
 | **@playwright/test** | ✅ 1.62.1                       | ✅ 1.56.0          | ❌           | ❌       |
 
 **Observation:** FFC-IN-FFC_Single_Page_Template and freeforcharity-web are nearly identical in their dependency stacks, suggesting they share similar feature sets.

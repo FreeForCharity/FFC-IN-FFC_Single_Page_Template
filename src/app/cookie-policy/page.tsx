@@ -4,6 +4,7 @@ import BreadcrumbSchema from '@/components/seo/BreadcrumbSchema'
 import { pageMetadata } from '@/lib/page-metadata'
 import { legalContact, publishedPhone, siteConfig } from '@/lib/site.config'
 import ContactEmail from '@/components/ui/ContactEmail'
+import ContactLocation, { hasContactLocation } from '@/components/ui/ContactLocation'
 
 const PAGE_NAME = 'Cookie Policy'
 const CANONICAL_PATH = '/cookie-policy'
@@ -596,6 +597,11 @@ export default function CookiePolicy() {
                 <a href={`tel:${phone.tel}`} className="text-blue-600 underline">
                   {phone.display}
                 </a>
+              </li>
+            )}
+            {hasContactLocation() && (
+              <li className="text-[14px] text-[#666] leading-[24px] font-[500]">
+                <strong>Location:</strong> <ContactLocation />
               </li>
             )}
           </ul>

@@ -4,6 +4,7 @@ import BreadcrumbSchema from '@/components/seo/BreadcrumbSchema'
 import { pageMetadata } from '@/lib/page-metadata'
 import { legalContact, publishedPhone, siteConfig, siteUrl } from '@/lib/site.config'
 import ContactEmail from '@/components/ui/ContactEmail'
+import ContactLocation, { hasContactLocation } from '@/components/ui/ContactLocation'
 
 const PAGE_NAME = 'Privacy Policy'
 const CANONICAL_PATH = '/privacy-policy'
@@ -638,6 +639,11 @@ export default function PrivacyPolicy() {
                 <a href={`tel:${phone.tel}`} className={link}>
                   {phone.display}
                 </a>
+              </li>
+            )}
+            {hasContactLocation() && (
+              <li className="text-[14px] text-[#666] leading-[24px] font-[500]">
+                <strong>Location:</strong> <ContactLocation />
               </li>
             )}
           </ul>

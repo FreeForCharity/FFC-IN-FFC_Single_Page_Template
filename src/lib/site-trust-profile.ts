@@ -30,7 +30,9 @@ export function getSiteTrustProfile() {
       robots: siteUrl('/robots.txt'),
     },
     trust: {
-      generatedBy: 'Free For Charity template factory',
+      // From supportedBy, not a literal: a rebranded site's drift check refuses the
+      // template org name anywhere outside supportedBy (check-drift.mjs).
+      generatedBy: `${siteConfig.supportedBy.name} template factory`,
       hosting: 'github-pages-static-export',
       requiresHttps: true,
       managesSecrets: false,

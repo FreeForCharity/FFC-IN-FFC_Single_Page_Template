@@ -72,7 +72,7 @@ jurisdiction:
 
 - `privacy-policy/` · `terms-of-service/` · `cookie-policy/`
 - `vulnerability-disclosure-policy/` · `security-acknowledgements/`
-- `donation-policy/` (and any variant) — see delete-unused.
+- `donation-policy/` — the site's one donation policy; see delete-unused.
 
 For each: fix the `metadata` (bare `title`, org-correct `description`, add
 `alternates.canonical`), then the body — org name, `freeforcharity.org` → new
@@ -119,10 +119,13 @@ Keep brand-neutral, reusable UI primitives (cards, buttons) even if unused.
   identity exception.
 - Footer attribution that is NOT a rebrand target: `siteConfig.supportedBy`
   (the permanent "Supported by Free For Charity" bottom-bar clause and the
-  "Supported Charity Login" hub link) and the hardcoded "Free For Charity
-  Donation Policy" label. These are part of the FFC footer standard — leave
-  them exactly as shipped; `check:drift` and `check:rebrand` deliberately
-  exempt them.
+  "Supported Charity Login" hub link). These are part of the FFC footer
+  standard — leave them exactly as shipped; `check:drift` and `check:rebrand`
+  deliberately exempt them. The footer links six policy pages with ONE
+  donation policy (`/donation-policy`, the org's own). A fork made before
+  that change may still carry `src/app/free-for-charity-donation-policy/`
+  and its footer link: delete both (and the sitemap entry) — `check:drift`
+  warns until they are gone.
 
 ### 6b. Full docs & metadata cleanup — the whole repo, not just `src/`
 

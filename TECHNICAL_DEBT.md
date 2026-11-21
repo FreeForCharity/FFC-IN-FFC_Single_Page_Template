@@ -82,27 +82,9 @@ The project has **1 React Hooks ESLint warning** remaining after recent refactor
 
 ---
 
-### Category 3: `react-hooks/immutability` (1 occurrence)
+### Category 3: `react-hooks/immutability` (resolved)
 
-**Issue:** Direct mutation of state values in Swiper carousel setup.
-
-**Affected Files:**
-
-- `src/components/home-page/Testimonials/index.tsx` (1 remaining - ClientTestimonials was refactored to not use Swiper)
-
-**Why it's acceptable now:**
-
-- Swiper library requires direct manipulation of navigation parameters
-- Carousels function correctly
-- This is a known pattern with Swiper.js integration
-
-**Recommended fix:**
-
-- Use Swiper's React-specific API instead of direct DOM manipulation
-- OR create a custom carousel component that follows React patterns
-- OR use a more React-friendly carousel library
-
-**Priority:** Low - Works correctly, only a code style issue
+The last occurrence was the Swiper setup in `src/components/home-page/Testimonials/index.tsx`. The testimonials carousel now uses CSS scroll-snap with no carousel library, and Swiper is no longer a dependency.
 
 ---
 
@@ -376,7 +358,7 @@ These architectural patterns are not needed for this static site:
 
 **Short Term (Next Quarter):**
 
-- [ ] Evaluate Swiper.js alternative or React-specific API usage for Testimonials component (1 remaining immutability warning)
+- [x] Replace Swiper in the Testimonials component (now CSS scroll-snap)
 
 **Long Term (Next 6 Months):**
 

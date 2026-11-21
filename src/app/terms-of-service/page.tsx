@@ -1,8 +1,10 @@
+import Link from 'next/link'
 import type { Metadata } from 'next'
 import BreadcrumbSchema from '@/components/seo/BreadcrumbSchema'
 import { pageMetadata } from '@/lib/page-metadata'
 import { legalContact, publishedPhone, siteConfig } from '@/lib/site.config'
 import ContactEmail from '@/components/ui/ContactEmail'
+import ContactLocation, { hasContactLocation } from '@/components/ui/ContactLocation'
 
 const PAGE_NAME = 'Terms of Service'
 const CANONICAL_PATH = '/terms-of-service'
@@ -103,8 +105,12 @@ export default function TermsOfService() {
           {/* Donations */}
           <h2 className="text-[30px] text-[#333] pb-[10px] leading-[1em] font-[500]">Donations</h2>
           <p className="text-[14px] text-[#666] pb-[10px] leading-[24px] font-[500]">
-            All donations made to {name} are voluntary and non-refundable. By making a donation, you
-            agree to our Donation Policy, which is incorporated by reference into these Terms.
+            All donations made to {name} are voluntary and, except as our Donation Policy provides,
+            non-refundable. By making a donation, you agree to our{' '}
+            <Link href="/donation-policy" className="text-[#0062CC] underline">
+              Donation Policy
+            </Link>
+            , which is incorporated by reference into these Terms.
           </p>
 
           {/* Payments */}
@@ -249,6 +255,11 @@ export default function TermsOfService() {
           {phone && (
             <p className="text-[14px] text-[#666] pb-[10px] leading-[24px] font-[500]">
               Phone: {phone.display}
+            </p>
+          )}
+          {hasContactLocation() && (
+            <p className="text-[14px] text-[#666] pb-[10px] leading-[24px] font-[500]">
+              Location: <ContactLocation />
             </p>
           )}
           <p className="text-[14px] text-[#666] pb-[10px] leading-[24px] font-[500]">

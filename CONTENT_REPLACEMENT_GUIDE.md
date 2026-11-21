@@ -409,21 +409,19 @@ The footer appears at the bottom of every page and contains important links and 
 | ------- | ---------------------- | -------------------------------------------------- | ------------------------------------ |
 | Footer  | Policy Section Heading | "Free For Charity Policy"                          | _(e.g., "[Your Charity] Policies")_  |
 | Footer  | Policy Link 1 - Text   | "Free For Charity Donation Policy"                 | _(Customize with your charity name)_ |
-| Footer  | Policy Link 1 - URL    | "/free-for-charity-donation-policy"                | "/donation-policy"                   |
-| Footer  | Policy Link 2 - Text   | "Donation Policy"                                  |                                      |
-| Footer  | Policy Link 2 - URL    | "/donation-policy"                                 |                                      |
-| Footer  | Policy Link 3 - Text   | "Free For Charity Privacy Policy"                  | _(Customize with your charity name)_ |
-| Footer  | Policy Link 3 - URL    | "/privacy-policy"                                  |                                      |
-| Footer  | Policy Link 4 - Text   | "Free For Charity Cookie Policy"                   | _(Customize with your charity name)_ |
-| Footer  | Policy Link 4 - URL    | "/cookie-policy"                                   |                                      |
-| Footer  | Policy Link 5 - Text   | "Free For Charity Terms of Service"                | _(Customize with your charity name)_ |
-| Footer  | Policy Link 5 - URL    | "/terms-of-service"                                |                                      |
-| Footer  | Policy Link 6 - Text   | "Free For Charity Vulnerability Disclosure Policy" | _(Customize with your charity name)_ |
-| Footer  | Policy Link 6 - URL    | "/vulnerability-disclosure-policy"                 |                                      |
-| Footer  | Policy Link 7 - Text   | "Free For Charity Security Acknowledgement"        | _(Customize with your charity name)_ |
-| Footer  | Policy Link 7 - URL    | "/security-acknowledgements"                       |                                      |
+| Footer  | Policy Link 1 - URL    | "/donation-policy"                                 |                                      |
+| Footer  | Policy Link 2 - Text   | "Free For Charity Privacy Policy"                  | _(Customize with your charity name)_ |
+| Footer  | Policy Link 2 - URL    | "/privacy-policy"                                  |                                      |
+| Footer  | Policy Link 3 - Text   | "Free For Charity Cookie Policy"                   | _(Customize with your charity name)_ |
+| Footer  | Policy Link 3 - URL    | "/cookie-policy"                                   |                                      |
+| Footer  | Policy Link 4 - Text   | "Free For Charity Terms of Service"                | _(Customize with your charity name)_ |
+| Footer  | Policy Link 4 - URL    | "/terms-of-service"                                |                                      |
+| Footer  | Policy Link 5 - Text   | "Free For Charity Vulnerability Disclosure Policy" | _(Customize with your charity name)_ |
+| Footer  | Policy Link 5 - URL    | "/vulnerability-disclosure-policy"                 |                                      |
+| Footer  | Policy Link 6 - Text   | "Free For Charity Security Acknowledgement"        | _(Customize with your charity name)_ |
+| Footer  | Policy Link 6 - URL    | "/security-acknowledgements"                       |                                      |
 
-_Note: These policy pages will need to be created with your charity's specific policies._
+_Note: Every label is `siteConfig.name` followed by the page name, so it rebrands with the config. The FFC footer standard is these six pages, with one donation policy (the site's own); there is no separate "Free For Charity Donation Policy" page. The pages take the organization's name, contact email and city/state from `siteConfig`; have the charity's counsel review the text._
 
 ### Column 3 - Contact Information
 

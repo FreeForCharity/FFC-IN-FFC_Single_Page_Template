@@ -61,7 +61,7 @@ JSON-LD structured data. Components check a field with `isPending(field)`.
 | -------------- | ----------------------------------------------------- | -------------------------------------------------------------- |
 | `email`        | `contactEmail: ''`                                    | Footer E-mail; policy-page contact emails                      |
 | `phone`        | `phone: { display: '', tel: '' }`                     | Footer "Call Us Today"                                         |
-| `address`      | `addresses: []`                                       | Footer Address                                                 |
+| `address`      | `addresses: []`                                       | Footer Address; policy-page contact Location (city/state)      |
 | `ein`          | `ein: ''`                                             | Footer EIN line, Donation Policy EIN clause                    |
 | `guidestar`    | `guidestar: { profileUrl: '', directProfileUrl: '' }` | Footer Endorsements                                            |
 | `social`       | every `social[].href` `''`                            | Footer Social Media                                            |

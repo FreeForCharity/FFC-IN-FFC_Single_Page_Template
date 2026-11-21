@@ -8,7 +8,7 @@
     "prebuild": "node scripts/fetch-events.mjs && node scripts/generate-site-profile.cjs",
     "build": "next build",
     "analyze": "ANALYZE=true next build --webpack",
-    "preview": "pnpm exec serve -s out -l 3000",
+    "preview": "pnpm exec serve out -l 3000",
     "lint": "eslint",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
@@ -29,12 +29,11 @@
     "prepare": "husky"
   },
   "dependencies": {
-    "next": "^16.3.8",
+    "next": "^16.4.1",
     "postcss": "^8.5.28",
     "react": "19.3.0",
     "react-dom": "19.3.0",
-    "react-icons": "^5.7.0",
-    "swiper": "^14.2.0"
+    "react-icons": "^5.7.0"
   },
   "devDependencies": {
     "@axe-core/playwright": "^4.13.0",

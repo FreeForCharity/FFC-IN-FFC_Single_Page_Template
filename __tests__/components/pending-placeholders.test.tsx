@@ -334,3 +334,23 @@ describe('ContactEmail', () => {
     expect(container.textContent).toBe('')
   })
 })
+
+// The policy pages' contact blocks name the organization's city and state.
+// While the address is pending it is empty, and the placeholder shows instead.
+describe('pending city and state on the policy pages', () => {
+  afterEach(restoreSiteConfig)
+
+  const pages: [string, () => React.JSX.Element][] = [
+    ['Cookie Policy', CookiePolicyPage],
+    ['Donation Policy', DonationPolicyPage],
+    ['Privacy Policy', PrivacyPolicyPage],
+    ['Terms of Service', TermsPage],
+  ]
+
+  it.each(pages)('%s shows the placeholder as its location', (_, Page) => {
+    asCharitySite({ addresses: [], pending: ['address'] })
+    const { container } = render(<Page />)
+    expect(container.textContent).toContain(`Location: ${PENDING_TEXT}`)
+    expect(placeholders(container)).toHaveLength(1)
+  })
+})

@@ -72,6 +72,14 @@ export const CHARITY: Partial<SiteConfig> = {
   contactEmail: 'hello@riverbend-pantry.example',
   ein: '12-3456789',
   phone: { display: '(555) 010-0101', tel: '15550100101' },
+  // What provisioning writes from the application's public "city & state".
+  addresses: [
+    {
+      label: 'Main Address',
+      lines: ['Springfield, IL'],
+      mapUrl: 'https://www.google.com/maps/search/?api=1&query=Springfield+IL',
+    },
+  ],
   taxStatusLabel: 'a US 501c3 Non Profit',
 }
 

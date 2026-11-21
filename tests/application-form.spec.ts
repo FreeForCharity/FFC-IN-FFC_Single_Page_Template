@@ -33,6 +33,12 @@ async function holdApplicationForm(page: Page): Promise<() => void> {
 }
 
 test.describe('Application Form Button', () => {
+  // The button is in the Programs section, which a provisioned charity site
+  // does not render. Skip there instead of failing on FFC-only content.
+  test.skip(
+    !testConfig.applicationForm.rendered,
+    'Programs section (application form) not rendered on this site'
+  )
   test.beforeEach(async ({ page }) => {
     await page.goto('/')
     // Wait for page to be loaded
@@ -50,11 +56,13 @@ test.describe('Application Form Button', () => {
     await page.getByRole('button', { name: testConfig.applicationForm.buttonText }).click()
 
     // Modal should be visible
-    const modal = page.locator('[role="dialog"][aria-modal="true"]')
+    const modal = page.locator('dialog[open]')
     await expect(modal).toBeVisible()
 
-    // Verify modal has proper ARIA attributes
-    await expect(modal).toHaveAttribute('aria-modal', 'true')
+    // Native modal <dialog>: the browser exposes it as a modal dialog
+    await expect(
+      page.getByRole('dialog', { name: testConfig.applicationForm.modalTitle })
+    ).toBeVisible()
     await expect(modal).toHaveAttribute('aria-labelledby', 'application-form-title')
   })
 
@@ -85,7 +93,7 @@ test.describe('Application Form Button', () => {
     // Open modal
     await page.getByRole('button', { name: testConfig.applicationForm.buttonText }).click()
 
-    const modal = page.locator('[role="dialog"][aria-modal="true"]')
+    const modal = page.locator('dialog[open]')
     await expect(modal).toBeVisible()
 
     // Click close button
@@ -101,7 +109,7 @@ test.describe('Application Form Button', () => {
     // Open modal
     await page.getByRole('button', { name: testConfig.applicationForm.buttonText }).click()
 
-    const modal = page.locator('[role="dialog"][aria-modal="true"]')
+    const modal = page.locator('dialog[open]')
     await expect(modal).toBeVisible()
 
     // Press Escape
@@ -115,13 +123,48 @@ test.describe('Application Form Button', () => {
     // Open modal
     await page.getByRole('button', { name: testConfig.applicationForm.buttonText }).click()
 
-    const modal = page.locator('[role="dialog"][aria-modal="true"]')
+    const modal = page.locator('dialog[open]')
     await expect(modal).toBeVisible()
 
-    // Click on the overlay (outside the modal content)
-    await page.locator('[role="dialog"]').click({ position: { x: 10, y: 10 } })
+    // Click the backdrop, outside the dialog box (light dismiss)
+    await page.mouse.click(5, 5)
 
     // Modal should be hidden
+    await expect(modal).not.toBeVisible()
+  })
+
+  test('should close on a backdrop click through the script fallback when closedby is missing', async ({
+    page,
+  }) => {
+    // Chromium supports closedby="any" natively; remove it so the fallback runs.
+    await page.addInitScript(() => {
+      delete (HTMLDialogElement.prototype as unknown as Record<string, unknown>).closedBy
+      // Deleting the property is not enough: Chromium still honours the closedby
+      // attribute, so strip it before the dialog opens.
+      const showModal = HTMLDialogElement.prototype.showModal
+      HTMLDialogElement.prototype.showModal = function (this: HTMLDialogElement) {
+        this.removeAttribute('closedby')
+        return showModal.call(this)
+      }
+    })
+    await page.reload()
+    expect(await page.evaluate(() => 'closedBy' in HTMLDialogElement.prototype)).toBe(false)
+    await page.getByRole('button', { name: testConfig.applicationForm.buttonText }).click()
+
+    const modal = page.locator('dialog[open]')
+    await expect(modal).toBeVisible()
+
+    // A drag that starts inside the dialog and ends on the backdrop keeps it open.
+    const box = await modal.boundingBox()
+    if (!box) throw new Error('dialog has no box')
+    await page.mouse.move(box.x + 20, box.y + 20)
+    await page.mouse.down()
+    await page.mouse.move(5, 5, { steps: 5 })
+    await page.mouse.up()
+    await expect(modal).toBeVisible()
+
+    // A full click on the backdrop closes it.
+    await page.mouse.click(5, 5)
     await expect(modal).not.toBeVisible()
   })
 
@@ -130,7 +173,7 @@ test.describe('Application Form Button', () => {
     await page.getByRole('button', { name: testConfig.applicationForm.buttonText }).click()
 
     // Wait for modal to be visible
-    const modal = page.locator('[role="dialog"][aria-modal="true"]')
+    const modal = page.locator('dialog[open]')
     await expect(modal).toBeVisible()
 
     // Find the iframe element
@@ -163,26 +206,24 @@ test.describe('Application Form Button', () => {
     expect(src).toContain('forms.office.com/r/')
   })
 
-  test('should lock body scroll when modal is open', async ({ page }) => {
-    // Get initial body overflow style
+  test('should open as a modal without locking body scroll by hand', async ({ page }) => {
     const initialOverflow = await page.evaluate(() => document.body.style.overflow)
 
     // Open modal
     await page.getByRole('button', { name: testConfig.applicationForm.buttonText }).click()
 
-    const modal = page.locator('[role="dialog"][aria-modal="true"]')
+    const modal = page.locator('dialog[open]')
     await expect(modal).toBeVisible()
 
-    // Body overflow should be set to 'hidden'
-    const modalOverflow = await page.evaluate(() => document.body.style.overflow)
-    expect(modalOverflow).toBe('hidden')
+    // showModal() puts the dialog in the top layer and makes the page inert;
+    // scroll chaining is contained by CSS (overscroll-behavior), not by
+    // setting overflow:hidden on <body>.
+    expect(await modal.evaluate((el) => el.matches(':modal'))).toBe(true)
+    expect(await page.evaluate(() => document.body.style.overflow)).toBe(initialOverflow)
 
     // Close modal
     await page.keyboard.press('Escape')
-
-    // Body overflow should be restored
-    const restoredOverflow = await page.evaluate(() => document.body.style.overflow)
-    expect(restoredOverflow).toBe(initialOverflow)
+    await expect(modal).not.toBeVisible()
   })
 
   test('should manage focus properly when modal opens', async ({ page }) => {
@@ -192,7 +233,7 @@ test.describe('Application Form Button', () => {
     // Open modal
     await openButton.click()
 
-    const modal = page.locator('[role="dialog"][aria-modal="true"]')
+    const modal = page.locator('dialog[open]')
     await expect(modal).toBeVisible()
 
     // Focus should move to the first focusable element (close button)
@@ -209,7 +250,7 @@ test.describe('Application Form Button', () => {
     // Open modal
     await openButton.click()
 
-    const modal = page.locator('[role="dialog"][aria-modal="true"]')
+    const modal = page.locator('dialog[open]')
     await expect(modal).toBeVisible()
 
     // Close modal with Escape
@@ -224,13 +265,17 @@ test.describe('Application Form Button', () => {
     // Open modal
     await page.getByRole('button', { name: testConfig.applicationForm.buttonText }).click()
 
-    const modal = page.locator('[role="dialog"]')
+    const modal = page.locator('dialog[open]')
     await expect(modal).toBeVisible()
 
-    // Verify ARIA attributes
-    await expect(modal).toHaveAttribute('role', 'dialog')
-    await expect(modal).toHaveAttribute('aria-modal', 'true')
+    // Native modal <dialog>: role and modality come from the element itself,
+    // so no hand-written role/aria-modal attributes
+    expect(await modal.evaluate((el) => el.matches(':modal'))).toBe(true)
+    await expect(modal).not.toHaveAttribute('aria-modal')
     await expect(modal).toHaveAttribute('aria-labelledby', 'application-form-title')
+    await expect(
+      page.getByRole('dialog', { name: testConfig.applicationForm.modalTitle })
+    ).toBeVisible()
 
     // Verify screen reader heading exists
     const heading = modal.locator('#application-form-title')
@@ -240,7 +285,7 @@ test.describe('Application Form Button', () => {
 
   test('should handle multiple open/close cycles correctly', async ({ page }) => {
     const button = page.getByRole('button', { name: testConfig.applicationForm.buttonText })
-    const modal = page.locator('[role="dialog"][aria-modal="true"]')
+    const modal = page.locator('dialog[open]')
 
     // First open/close cycle
     await button.click()
@@ -259,12 +304,18 @@ test.describe('Application Form Button', () => {
     // Third open/close cycle
     await button.click()
     await expect(modal).toBeVisible()
-    await page.locator('[role="dialog"]').click({ position: { x: 10, y: 10 } })
+    await page.mouse.click(5, 5)
     await expect(modal).not.toBeVisible()
   })
 })
 
 test.describe('Application Form Iframe Loading', () => {
+  // The button is in the Programs section, which a provisioned charity site
+  // does not render. Skip there instead of failing on FFC-only content.
+  test.skip(
+    !testConfig.applicationForm.rendered,
+    'Programs section (application form) not rendered on this site'
+  )
   test.beforeEach(async ({ page }) => {
     await page.goto('/')
     await page.waitForLoadState('domcontentloaded')
@@ -276,7 +327,7 @@ test.describe('Application Form Iframe Loading', () => {
     const iframe = page.locator(`iframe[title="${testConfig.applicationForm.modalTitle}"]`)
     try {
       await page.getByRole('button', { name: testConfig.applicationForm.buttonText }).click()
-      const modal = page.locator('[role="dialog"][aria-modal="true"]')
+      const modal = page.locator('dialog[open]')
       await expect(modal).toBeVisible()
       await expect(loadingIndicator).toBeVisible()
       await expect(iframe).toBeVisible()
