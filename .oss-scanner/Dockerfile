@@ -14,7 +14,7 @@
 #
 # The base image is pinned by digest; Dependabot (docker ecosystem,
 # directory /.oss-scanner) keeps the digest current.
-FROM node:24-bookworm@sha256:3d27e5c11e5786e309ec3e03f93ae536eb36e6e5eb3714d5eb3300a36157add0
+FROM node:26-bookworm@sha256:f1233c415b41ffcf237c717b3dea92e9d4ea006e0e4c71edcb790605d74f5404
 
 ENV CI=true \
     NEXT_TELEMETRY_DISABLED=1 \
@@ -25,7 +25,12 @@ COPY . /src
 WORKDIR /src
 
 # pnpm version comes from package.json "packageManager", exactly as CI uses it.
-RUN corepack enable && corepack install
+#
+# Corepack is NOT bundled with Node 25+ (nodejs/node@004ecc12), so on this base
+# image `corepack` is not on PATH and the bare `corepack enable` that worked on
+# node:24-bookworm exits 127. Install it from npm first; this RUN is the last
+# point at which the network is still available, per the contract above.
+RUN npm install --global corepack@latest && corepack enable && corepack install
 
 # Same install CI runs. --frozen-lockfile: the audit must see the locked
 # dependency tree, not whatever resolves today.
