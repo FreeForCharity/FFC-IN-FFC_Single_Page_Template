@@ -25,7 +25,12 @@ describe('ApplicationFormButton', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Apply to Become a Supported Charity' }))
     const dialog = screen.getByRole('dialog')
     expect(dialog).toBeInTheDocument()
-    expect(dialog).toHaveAttribute('aria-modal', 'true')
+    // Native <dialog> opened with showModal(): the browser supplies the modal
+    // semantics, so no role/aria-modal attributes are hand-written.
+    expect(dialog.tagName).toBe('DIALOG')
+    expect(dialog).toHaveAttribute('open')
+    expect(dialog).not.toHaveAttribute('aria-modal')
+    expect(dialog).toHaveAttribute('aria-labelledby', 'application-form-title')
 
     const iframe = dialog.querySelector('iframe')
     expect(iframe).not.toBeNull()
