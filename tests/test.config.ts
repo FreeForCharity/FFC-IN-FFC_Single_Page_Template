@@ -13,6 +13,8 @@
 
 import { analyticsConfig, isConfigured } from '../src/lib/analytics.config'
 import { isSupportingOrgSite, siteConfig } from '../src/lib/site.config'
+import { results } from '../src/data/results'
+import { resultsSectionVisible, visibleTestimonials } from '../src/lib/section-visibility'
 
 /**
  * These specs run in the template AND in every charity site provisioned from
@@ -112,16 +114,24 @@ export const testConfig = {
    * Used in: tests/animated-numbers.spec.ts
    */
   animatedNumbers: {
-    sectionHeading: 'Results - 2023',
-    statistics: [
-      { description: 'Organizational partners', value: '221' },
-      { description: 'Total volunteers', value: '3' },
-      {
-        description: 'Organizations accessing technical assistance offerings',
-        value: '221',
-      },
-      { description: 'Volunteer hours contributed to the organization', value: '25' },
-    ],
+    // Sourced from src/data/results.ts, and `rendered` from the predicate the
+    // Results component uses: FFC's own numbers (supportingOrgOnly) show only
+    // on its own site, so a charity site without results of its own has no
+    // section and these specs expect its absence instead.
+    rendered: resultsSectionVisible(),
+    sectionHeading: results.heading,
+    statistics: results.stats.map((s) => ({ description: s.label, value: s.value })),
+  },
+
+  /**
+   * Testimonials Configuration
+   * Used in: tests/testimonials-navigation.spec.ts
+   *
+   * How many testimonials the carousel shows, from the same visibleTestimonials()
+   * the component renders: FFC's own (supportingOrgOnly) only on its own site.
+   */
+  testimonials: {
+    count: visibleTestimonials().length,
   },
 
   /**

@@ -10,12 +10,13 @@ import {
 import Image from 'next/image'
 import QuoteLeft from '../../../../public/Svgs/quote-left.svg'
 import QuoteRight from '../../../../public/Svgs/quote-right.svg'
-import { configuredTestimonials } from '@/data/testimonials'
+import { visibleTestimonials } from '@/lib/section-visibility'
 import { useReducedMotion } from '@/hooks/useReducedMotion'
 
 // Testimonials are sourced from src/data/testimonials/*.json (aggregated in
 // src/data/testimonials.ts). To change them, edit those JSON files — no need to
-// touch this component.
+// touch this component. Testimonials about the supporting organization itself
+// render only on its own site (see visibleTestimonials()).
 
 // How long each testimonial shows before the next one, while rotating.
 const ROTATE_EVERY_MS = 5000
@@ -33,7 +34,8 @@ const ROTATE_EVERY_MS = 5000
  * starts for visitors who ask for reduced motion.
  */
 const TestimonialSlider: React.FC = () => {
-  const count = configuredTestimonials.length
+  const testimonials = visibleTestimonials()
+  const count = testimonials.length
   const scrollerRef = useRef<HTMLDivElement>(null)
   const slideRefs = useRef<(HTMLDivElement | null)[]>([])
   const [activeIndex, setActiveIndex] = useState(0)
@@ -195,7 +197,7 @@ const TestimonialSlider: React.FC = () => {
               onWheel={() => targetRef.current !== null && settle()}
               className="relative flex overflow-x-auto snap-x snap-mandatory overscroll-x-contain scrollbar-hide rounded-sm focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#E16820]"
             >
-              {configuredTestimonials.map((t, idx) => (
+              {testimonials.map((t, idx) => (
                 <div
                   key={idx}
                   ref={(el) => {
@@ -275,7 +277,7 @@ const TestimonialSlider: React.FC = () => {
 
           {/* Dots */}
           <div className="flex justify-center items-center mt-10 space-x-2">
-            {configuredTestimonials.map((_, i) => (
+            {testimonials.map((_, i) => (
               <button
                 key={i}
                 type="button"

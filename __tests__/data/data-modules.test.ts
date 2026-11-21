@@ -1,4 +1,4 @@
-import { configuredTestimonials, testimonials } from '@/data/testimonials'
+import { testimonials } from '@/data/testimonials'
 import { configuredTeam, team } from '@/data/team'
 import { isPending } from '@/lib/site.config'
 import { faqs } from '@/data/faqs'
@@ -9,18 +9,23 @@ import { results } from '@/data/results'
 // renders, so a malformed edit fails the suite instead of the live site.
 describe('data modules', () => {
   describe('testimonials', () => {
-    it('is a non-empty array', () => {
+    it('is an array', () => {
+      // May be empty, or all blanked: a charity with no testimonials of its own
+      // yet has none, and the section then self-hides.
       expect(Array.isArray(testimonials)).toBe(true)
-      expect(testimonials.length).toBeGreaterThan(0)
     })
-    // A charity may have none yet: blanked entries self-hide the section, so
-    // only the configured ones must be complete.
-    it('every configured entry has a heading and text', () => {
-      for (const t of configuredTestimonials) {
+    it('every entry has both a heading and text, or is blanked entirely', () => {
+      // A half-filled entry (heading without text, or the reverse) is a
+      // malformed edit; the section would silently drop it.
+      for (const t of testimonials) {
         expect(typeof t.heading).toBe('string')
-        expect(t.heading.length).toBeGreaterThan(0)
         expect(typeof t.text).toBe('string')
-        expect(t.text.length).toBeGreaterThan(0)
+        expect(t.heading.trim().length > 0).toBe(t.text.trim().length > 0)
+      }
+    })
+    it('supportingOrgOnly, when present, is a boolean', () => {
+      for (const t of testimonials) {
+        if (t.supportingOrgOnly !== undefined) expect(typeof t.supportingOrgOnly).toBe('boolean')
       }
     })
   })
