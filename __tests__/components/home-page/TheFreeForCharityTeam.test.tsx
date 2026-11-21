@@ -3,10 +3,15 @@ import { render, screen } from '@testing-library/react'
 import Team, { teamHeading } from '../../../src/components/home-page/TheFreeForCharityTeam'
 import { configuredTeam } from '@/data/team'
 import { siteConfig } from '@/lib/site.config'
+import { teamSectionVisible } from '@/lib/section-visibility'
 import { asCharitySite, CHARITY, restoreSiteConfig } from '../../helpers/site-identity'
 
+// The section renders when the checked-in roster has a member (or is pending);
+// a charity with neither gets nothing, covered by the empty-roster tests.
+const itWhenVisible = teamSectionVisible() ? it : it.skip
+
 describe('TheFreeForCharityTeam', () => {
-  it('renders the section heading', () => {
+  itWhenVisible('renders the section heading', () => {
     render(<Team />)
     expect(screen.getByRole('heading', { name: teamHeading(siteConfig.name) })).toBeInTheDocument()
   })
@@ -23,12 +28,12 @@ describe('TheFreeForCharityTeam', () => {
     }
   })
 
-  it('mounts under the #team section landmark id', () => {
+  itWhenVisible('mounts under the #team section landmark id', () => {
     const { container } = render(<Team />)
     expect(container.querySelector('#team')).not.toBeNull()
   })
 
-  it('renders a card per member with initials monograms and no photos', () => {
+  itWhenVisible('renders a card per member with initials monograms and no photos', () => {
     const { container } = render(<Team />)
     // One card per configured member, each exposing its name as a heading.
     // Counted from the data rather than from the template's sample roster: a
