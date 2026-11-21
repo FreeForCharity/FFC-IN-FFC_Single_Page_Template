@@ -41,6 +41,8 @@ describe('nav links respect section visibility', () => {
   })
 
   it('Header drops Team (empty data) and Programs (flag off) links', () => {
+    // Nothing pending: a pending team keeps its section (and link) visible.
+    asCharitySite()
     siteConfig.sections.showPrograms = false
     render(<Header />)
     expect(screen.queryAllByText('Team')).toHaveLength(0)
@@ -86,6 +88,8 @@ describe('nav links respect section visibility', () => {
   })
 
   it('Footer drops Team, Programs, and Events links when hidden', () => {
+    // Nothing pending: a pending team keeps its section (and link) visible.
+    asCharitySite()
     siteConfig.sections.showPrograms = false
     siteConfig.sections.showEvents = false
     // Even with a configured source the flag alone must drop the link.
