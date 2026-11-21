@@ -96,6 +96,27 @@ async function tick(page: Page, ms: number) {
 }
 
 /**
+ * Step the fake clock until slide `index` is the active one, after something
+ * the visitor did (Play, the pointer leaving) should restart rotation.
+ *
+ * The rotation timer is created by a React effect that runs only after that
+ * event has been handled, so on a slow CI runner one big `runFor` can run out
+ * before the timer exists, and the slide never moves. Small steps let the
+ * effect land first. The step (250 ms) is far shorter than a rotation
+ * (5 s), so this stops on `index` and cannot skip past it, and the cap (two
+ * rotations) still fails a carousel that never resumes.
+ */
+async function tickUntilActive(page: Page, index: number) {
+  const slide = carousel(page).slides.nth(index)
+  for (let elapsed = 0; elapsed < 10_000; elapsed += 250) {
+    await page.clock.runFor(250)
+    await page.waitForTimeout(20)
+    if ((await slide.getAttribute('data-active')) === 'true') break
+  }
+  await expect(slide).toHaveAttribute('data-active', 'true')
+}
+
+/**
  * Advance the fake clock until the carousel rotates to slide 2. The first
  * rotation is also the sign the page has hydrated: before that, the timer
  * does not exist yet.
@@ -134,8 +155,7 @@ test.describe('testimonial rotation', () => {
     // Play resumes it, even though focus is still on the button.
     await region.getByRole('button', { name: 'Play testimonials' }).click()
     await page.mouse.move(0, 0)
-    await tick(page, 5500)
-    await expect(slides.nth(2)).toHaveAttribute('data-active', 'true')
+    await tickUntilActive(page, 2)
   })
 
   test('Pause still pauses when the button takes focus before the click', async ({ page }) => {
@@ -183,8 +203,7 @@ test.describe('testimonial rotation', () => {
 
     await region.getByRole('button', { name: 'Play testimonials' }).click()
     await page.mouse.move(0, 0)
-    await tick(page, 5500)
-    await expect(slides.nth(2)).toHaveAttribute('data-active', 'true')
+    await tickUntilActive(page, 2)
   })
 
   test('the mouse over the carousel holds rotation, and leaving resumes it', async ({ page }) => {
@@ -194,8 +213,7 @@ test.describe('testimonial rotation', () => {
     await tick(page, 12_000)
     await expect(slides.nth(1)).toHaveAttribute('data-active', 'true')
     await page.mouse.move(0, 0)
-    await tick(page, 5500)
-    await expect(slides.nth(2)).toHaveAttribute('data-active', 'true')
+    await tickUntilActive(page, 2)
   })
 
   test('automatic rotation is not announced', async ({ page }) => {
