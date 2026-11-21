@@ -495,3 +495,18 @@ export function publishedPhone(): { display: string; tel: string } | null {
   const tel = siteConfig.phone.tel.trim()
   return display && tel ? { display, tel } : null
 }
+
+/**
+ * Footer "verify our 501(c)(3) status" link: the charity's own record on
+ * ProPublica's Nonprofit Explorer, which republishes the IRS exempt-organization
+ * data for that EIN. Derived from `ein`, so it always points at this charity's
+ * own record. It backs the 501(c)(3) claim, so it is returned only when the
+ * site makes that claim (`taxStatusLabel` set) and has a real 9-digit EIN;
+ * otherwise ''.
+ */
+export function irsStatusHref(): string {
+  if (!siteConfig.taxStatusLabel.trim() || isPending('ein')) return ''
+  const digits = siteConfig.ein.replace(/\D/g, '')
+  if (digits.length !== 9) return ''
+  return `https://projects.propublica.org/nonprofits/organizations/${digits}`
+}
