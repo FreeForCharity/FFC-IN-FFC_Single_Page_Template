@@ -31,9 +31,9 @@ describe('data modules', () => {
   })
 
   describe('team', () => {
-    it('is a non-empty array', () => {
+    it('is an array, non-empty unless the roster is pending', () => {
       expect(Array.isArray(team)).toBe(true)
-      expect(team.length).toBeGreaterThan(0)
+      if (!isPending('team')) expect(team.length).toBeGreaterThan(0)
     })
     it('every member has a name and role; LinkedIn, when present, is an https://linkedin.com URL', () => {
       // A roster the charity has not supplied yet (siteConfig.pending includes
@@ -69,11 +69,10 @@ describe('data modules', () => {
   })
 
   describe('results', () => {
-    it('has a stats array, and a heading whenever it has stats', () => {
-      // An empty stats array is valid: the charity has no results of its own
-      // yet, and the section self-hides.
+    // No stats is allowed (the section self-hides); a heading always is required.
+    it('has a heading and a stats array', () => {
+      expect(results.heading).toBeTruthy()
       expect(Array.isArray(results.stats)).toBe(true)
-      if (results.stats.length > 0) expect(results.heading).toBeTruthy()
     })
     it('every stat has a value and a label', () => {
       for (const s of results.stats) {

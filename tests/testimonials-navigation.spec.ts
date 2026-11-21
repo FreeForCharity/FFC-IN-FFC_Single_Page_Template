@@ -10,7 +10,7 @@ const navigable = count > 1
 const rotatable = count >= 3
 
 test.describe('testimonials absence', () => {
-  test.skip(testConfig.testimonials.count > 0, 'This site renders testimonials')
+  test.skip(count > 0, 'This site renders testimonials')
 
   test("does not render another organization's testimonials", async ({ page }) => {
     await page.goto('/')
@@ -186,10 +186,10 @@ test.describe('testimonial rotation', () => {
   test('after the last testimonial it rotates back to the first', async ({ page }) => {
     const { slides } = carousel(page)
     await waitForFirstRotation(page)
-    const count = await slides.count()
-    for (let i = 2; i <= count; i++) {
+    const total = await slides.count()
+    for (let i = 2; i <= total; i++) {
       await tick(page, 5500)
-      await expect(slides.nth(i % count)).toHaveAttribute('data-active', 'true')
+      await expect(slides.nth(i % total)).toHaveAttribute('data-active', 'true')
     }
     await expectShown(page, 0)
   })

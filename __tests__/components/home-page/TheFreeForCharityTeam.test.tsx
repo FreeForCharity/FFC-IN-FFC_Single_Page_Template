@@ -16,8 +16,10 @@ describe('TheFreeForCharityTeam', () => {
     expect(screen.getByRole('heading', { name: teamHeading(siteConfig.name) })).toBeInTheDocument()
   })
 
-  itWhenVisible("names a charity's team after the charity", () => {
-    asCharitySite()
+  // A pending team renders the heading whatever the roster holds, so these
+  // heading tests hold on the template and on a fork that has no members yet.
+  it("names a charity's team after the charity", () => {
+    asCharitySite({ pending: ['team'] })
     try {
       render(<Team />)
       expect(screen.getByRole('heading', { name: teamHeading(CHARITY.name!) })).toBeInTheDocument()
@@ -52,6 +54,9 @@ describe('TheFreeForCharityTeam with an empty roster', () => {
   it('renders nothing when the team array is empty', () => {
     jest.isolateModules(() => {
       jest.doMock('@/data/team', () => ({ team: [], configuredTeam: [] }))
+      // This registry loads its own site.config: clear a fork's checked-in
+      // `pending`, since a pending team keeps the section visible.
+      require('@/lib/site.config').siteConfig.pending = []
       const EmptyTeam = require('../../../src/components/home-page/TheFreeForCharityTeam').default
       const { container } = render(<EmptyTeam />)
       expect(container.firstChild).toBeNull()
@@ -76,8 +81,8 @@ describe('teamHeading', () => {
     expect(teamHeading('  THE Example Society ')).toBe('THE Example Society Team')
   })
 
-  itWhenVisible('renders the heading once for a charity whose name starts with "The"', () => {
-    asCharitySite({ name: 'The Example Society' })
+  it('renders the heading once for a charity whose name starts with "The"', () => {
+    asCharitySite({ name: 'The Example Society', pending: ['team'] })
     try {
       render(<Team />)
       expect(screen.getByRole('heading', { name: 'The Example Society Team' })).toBeInTheDocument()

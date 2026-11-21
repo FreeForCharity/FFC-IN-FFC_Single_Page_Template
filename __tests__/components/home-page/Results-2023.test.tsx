@@ -4,6 +4,24 @@ import { render, screen } from '@testing-library/react'
 // Results-2023 renders one ResultCard per stat → AnimatedNumber, which now uses
 // native IntersectionObserver + matchMedia (stubbed in jest.setup.js to report
 // prefers-reduced-motion: reduce), so the static value path is taken here.
+// Fixture data, not the checked-in results: a provisioned charity starts with
+// no stats (the section self-hides, covered at the end of this file).
+const SAMPLE = {
+  heading: 'Results - 2023',
+  stats: [
+    { value: '10', label: 'Sample stat one' },
+    { value: '20', label: 'Sample stat two' },
+    { value: '30', label: 'Sample stat three' },
+    { value: '40', label: 'Sample stat four' },
+  ],
+}
+let mockResults = SAMPLE
+jest.mock('@/data/results', () => ({
+  get results() {
+    return mockResults
+  },
+}))
+
 import Results from '../../../src/components/home-page/Results-2023'
 import { results } from '@/data/results'
 import { asCharitySite, asSupporterSite, restoreSiteConfig } from '../../helpers/site-identity'
@@ -45,5 +63,15 @@ describe('Results-2023', () => {
     const { container } = render(<Results />)
     const expectShown = results.stats.length > 0 && !results.supportingOrgOnly
     expect(container.querySelector('#results') !== null).toBe(expectShown)
+  })
+
+  it('renders nothing when there are no stats', () => {
+    mockResults = { heading: 'Results', stats: [] }
+    try {
+      const { container } = render(<Results />)
+      expect(container).toBeEmptyDOMElement()
+    } finally {
+      mockResults = SAMPLE
+    }
   })
 })
