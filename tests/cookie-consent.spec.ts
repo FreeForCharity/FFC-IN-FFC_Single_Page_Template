@@ -131,7 +131,7 @@ test.describe('Cookie Preferences Modal', () => {
     await page.getByRole('button', { name: testConfig.cookieConsent.buttons.customize }).click()
 
     // Modal should be visible
-    const modal = page.locator('[role="dialog"][aria-modal="true"]')
+    const modal = page.locator('dialog[open]')
     await expect(modal).toBeVisible()
 
     // Verify modal has the correct heading
@@ -157,7 +157,7 @@ test.describe('Cookie Preferences Modal', () => {
     // Open the preferences modal
     await page.getByRole('button', { name: testConfig.cookieConsent.buttons.customize }).click()
 
-    const modal = page.locator('[role="dialog"][aria-modal="true"]')
+    const modal = page.locator('dialog[open]')
     await expect(modal).toBeVisible()
 
     // Click Cancel
@@ -173,7 +173,7 @@ test.describe('Cookie Preferences Modal', () => {
     // Open the preferences modal
     await page.getByRole('button', { name: testConfig.cookieConsent.buttons.customize }).click()
 
-    const modal = page.locator('[role="dialog"][aria-modal="true"]')
+    const modal = page.locator('dialog[open]')
     await expect(modal).toBeVisible()
 
     // Press Escape
@@ -189,16 +189,65 @@ test.describe('Cookie Preferences Modal', () => {
     // Open the preferences modal
     await page.getByRole('button', { name: testConfig.cookieConsent.buttons.customize }).click()
 
-    const modal = page.locator('[role="dialog"][aria-modal="true"]')
+    const modal = page.locator('dialog[open]')
     await expect(modal).toBeVisible()
 
-    // Click on the overlay (outside the modal content)
-    await page.locator('[role="dialog"]').click({ position: { x: 10, y: 10 } })
+    // Click the backdrop, outside the dialog box (light dismiss)
+    await page.mouse.click(5, 5)
 
     // Modal should be hidden but banner should still be visible
     await expect(modal).not.toBeVisible()
     const banner = page.locator('[role="region"][aria-label="Cookie consent notice"]')
     await expect(banner).toBeVisible()
+  })
+
+  for (const [how, close] of [
+    [
+      'Cancel',
+      async (page: import('@playwright/test').Page) =>
+        page.getByRole('button', { name: testConfig.cookieConsent.buttons.cancel }).click(),
+    ],
+    ['Escape', async (page: import('@playwright/test').Page) => page.keyboard.press('Escape')],
+    ['a backdrop click', async (page: import('@playwright/test').Page) => page.mouse.click(5, 5)],
+  ] as const) {
+    test(`closing with ${how} discards unsaved toggles`, async ({ page }) => {
+      await page.getByRole('button', { name: testConfig.cookieConsent.buttons.customize }).click()
+      const modal = page.locator('dialog[open]')
+      const analyticsToggle = modal.getByRole('checkbox', { name: 'Enable analytics cookies' })
+      await analyticsToggle.click({ force: true })
+      await expect(analyticsToggle).toBeChecked()
+
+      await close(page)
+      await expect(modal).not.toBeVisible()
+      expect(await page.evaluate(() => localStorage.getItem('cookie-consent'))).toBeNull()
+
+      await page.getByRole('button', { name: testConfig.cookieConsent.buttons.customize }).click()
+      await expect(
+        page.locator('dialog[open]').getByRole('checkbox', { name: 'Enable analytics cookies' })
+      ).not.toBeChecked()
+    })
+  }
+
+  test('closes on a backdrop click through the script fallback when closedby is missing', async ({
+    page,
+  }) => {
+    await page.addInitScript(() => {
+      delete (HTMLDialogElement.prototype as unknown as Record<string, unknown>).closedBy
+      // Deleting the property is not enough: Chromium still honours the closedby
+      // attribute, so strip it before the dialog opens.
+      const showModal = HTMLDialogElement.prototype.showModal
+      HTMLDialogElement.prototype.showModal = function (this: HTMLDialogElement) {
+        this.removeAttribute('closedby')
+        return showModal.call(this)
+      }
+    })
+    await page.reload()
+    expect(await page.evaluate(() => 'closedBy' in HTMLDialogElement.prototype)).toBe(false)
+    await page.getByRole('button', { name: testConfig.cookieConsent.buttons.customize }).click()
+    const modal = page.locator('dialog[open]')
+    await expect(modal).toBeVisible()
+    await page.mouse.click(5, 5)
+    await expect(modal).not.toBeVisible()
   })
 
   test('should have necessary and functional cookies always checked and disabled', async ({
@@ -207,7 +256,7 @@ test.describe('Cookie Preferences Modal', () => {
     // Open the preferences modal
     await page.getByRole('button', { name: testConfig.cookieConsent.buttons.customize }).click()
 
-    const modal = page.locator('[role="dialog"][aria-modal="true"]')
+    const modal = page.locator('dialog[open]')
     await expect(modal).toBeVisible()
 
     // Find disabled checkboxes by their section heading (more specific selector)
@@ -237,7 +286,7 @@ test.describe('Cookie Preferences Modal', () => {
     // Open the preferences modal
     await page.getByRole('button', { name: testConfig.cookieConsent.buttons.customize }).click()
 
-    const modal = page.locator('[role="dialog"][aria-modal="true"]')
+    const modal = page.locator('dialog[open]')
     await expect(modal).toBeVisible()
 
     // Find analytics toggle (the checkbox with aria-label)
@@ -261,7 +310,7 @@ test.describe('Cookie Preferences Modal', () => {
     // Open the preferences modal
     await page.getByRole('button', { name: testConfig.cookieConsent.buttons.customize }).click()
 
-    const modal = page.locator('[role="dialog"][aria-modal="true"]')
+    const modal = page.locator('dialog[open]')
     await expect(modal).toBeVisible()
 
     // Enable only analytics (not marketing) - use force: true because the toggle switch has an overlay div
@@ -363,14 +412,55 @@ test.describe('Google Consent Mode bootstrap', () => {
     // REGION-SCOPED call granting a tracking signal: that is the single edit which
     // would start measuring EEA visitors before they consent, and every
     // positive assertion above would still pass with it in place.
+    // Written as an EXEMPT-list rather than an allow-list, deliberately.
+    //
+    // Two earlier shapes of this check were both weaker than they looked. It
+    // first exempted the legitimately-granted signals BY VALUE:
+    //
+    //   Object.values(d).some((v) => v === 'granted' && d.functionality_storage !== v)
+    //
+    // which could never be true — `functionality_storage` is itself 'granted'
+    // here, so every granted value hit 'granted' !== 'granted' and the
+    // `.some()` was false whatever else had been flipped.
+    //
+    // It was then narrowed to an allow-list of four: `analytics_storage`,
+    // `ad_storage`, `ad_user_data` and `ad_personalization`. Honest, but it
+    // added no coverage — those same four are each asserted 'denied'
+    // individually above, so the filter only repeated them. What stayed
+    // uncovered was everything NOT on that list: `personalization_storage`,
+    // which is in the scoped call and is asserted nowhere else, and any
+    // Consent Mode signal Google adds in future.
+    //
+    // Naming what MAY be granted inverts that: a new signal is caught by
+    // default, and the list only grows when a grant is genuinely intended.
+    const SCOPED_MAY_GRANT = new Set(['functionality_storage', 'security_storage'])
+    const grantedTrackingSignals = (d: Record<string, unknown>): string[] =>
+      Object.entries(d)
+        .filter(([key, value]) => value === 'granted' && !SCOPED_MAY_GRANT.has(key))
+        .map(([key]) => key)
+
     const scopedGrants = defaults.filter(
-      (d) =>
-        d.region !== undefined &&
-        ['analytics_storage', 'ad_storage', 'ad_user_data', 'ad_personalization'].some(
-          (key) => d[key] === 'granted'
-        )
+      (d) => d.region !== undefined && grantedTrackingSignals(d).length > 0
     )
-    expect(scopedGrants.map((d) => d.region)).toEqual([])
+    // Report WHICH signals, not just which regions: a failure reading
+    // `['personalization_storage']` points at the defect, where a bare region
+    // list only says something is wrong somewhere.
+    expect(
+      scopedGrants.map((d) => ({ region: d.region, granted: grantedTrackingSignals(d) }))
+    ).toEqual([])
+
+    // Self-check, because this assertion was genuinely vacuous once and
+    // nothing caught it. A synthetic scoped call granting a tracking signal
+    // MUST be flagged; if a later edit weakens the predicate back toward a
+    // tautology, this fails here rather than in production.
+    expect(
+      grantedTrackingSignals({
+        region: ['DE'],
+        personalization_storage: 'granted',
+        functionality_storage: 'granted',
+        security_storage: 'granted',
+      })
+    ).toEqual(['personalization_storage'])
 
     // And exactly one call may be unscoped. A second would silently shadow
     // the regional denial for whichever visitors it matched.
@@ -412,9 +502,12 @@ test.describe('Cookie Consent Accessibility', () => {
     // Open the preferences modal
     await page.getByRole('button', { name: 'Customize' }).click()
 
-    const modal = page.locator('[role="dialog"]')
-    await expect(modal).toHaveAttribute('aria-modal', 'true')
+    // Native modal <dialog>: modality comes from showModal(), not attributes
+    const modal = page.locator('dialog[open]')
+    expect(await modal.evaluate((el) => el.matches(':modal'))).toBe(true)
+    await expect(modal).not.toHaveAttribute('aria-modal')
     await expect(modal).toHaveAttribute('aria-labelledby', 'cookie-preferences-title')
+    await expect(page.getByRole('dialog', { name: 'Cookie Preferences' })).toBeVisible()
   })
 
   test('banner should have proper ARIA attributes', async ({ page }) => {
