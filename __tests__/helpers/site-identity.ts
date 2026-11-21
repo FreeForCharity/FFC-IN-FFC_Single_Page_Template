@@ -40,7 +40,7 @@ export function withFooterFieldsPending(): void {
     phone: { display: '', tel: '' },
     addresses: [],
     ein: '',
-    guidestar: { profileUrl: '', directProfileUrl: '' },
+    guidestar: { sealUrl: '', profileUrl: '', directProfileUrl: '' },
     social: siteConfig.social.map((s) => ({ ...s, href: '' })),
     donationUrl: '',
     volunteerUrl: '',
