@@ -4,7 +4,10 @@ import { testConfig } from './test.config'
 // Navigation needs at least two slides. The carousel shows visibleTestimonials()
 // (FFC's own testimonials only on FFC's own site), so a charity site with none of
 // its own renders no carousel and the absence spec below runs instead.
-const navigable = testConfig.testimonials.count > 1
+const count = testConfig.testimonials.count
+const navigable = count > 1
+// Rotating from slide 1 to slide 2 and on to a third needs at least three.
+const rotatable = count >= 3
 
 test.describe('testimonials absence', () => {
   test.skip(testConfig.testimonials.count > 0, 'This site renders testimonials')
@@ -131,6 +134,7 @@ async function waitForFirstRotation(page: Page) {
 
 test.describe('testimonial rotation', () => {
   test.use({ viewport: { width: 1280, height: 800 } })
+  test.skip(!rotatable, 'Fewer than three testimonials on this site')
   // Each test steps a fake clock through several rotations and smooth
   // scrolls. That takes about 5 s here, but on a busy CI runner it has run
   // past the default 30 s.
@@ -225,6 +229,7 @@ test.describe('testimonial rotation', () => {
 })
 
 test('reduced motion: no rotation and no pause button', async ({ page }) => {
+  test.skip(!navigable, 'Fewer than two testimonials on this site')
   await page.emulateMedia({ reducedMotion: 'reduce' })
   await page.clock.install()
   await page.goto('/')
@@ -236,11 +241,12 @@ test('reduced motion: no rotation and no pause button', async ({ page }) => {
 })
 
 test('the target dot stays current for the whole of a smooth scroll', async ({ page }) => {
+  test.skip(!navigable, 'Fewer than two testimonials on this site')
   // Real clock and no reduced motion, so the jump really animates.
   await page.setViewportSize({ width: 1280, height: 800 })
   await page.goto('/')
   const { region } = carousel(page)
-  const dot4 = region.getByRole('button', { name: 'Go to testimonial 4' })
+  const lastDot = region.getByRole('button', { name: `Go to testimonial ${count}` })
   // Wait for hydration: the pause button responds once it has happened.
   await expect(async () => {
     await region.getByRole('button', { name: /testimonials$/ }).click()
@@ -249,7 +255,7 @@ test('the target dot stays current for the whole of a smooth scroll', async ({ p
     })
   }).toPass({ timeout: 15_000 })
 
-  const samples = await dot4.evaluate(async (button: HTMLButtonElement) => {
+  const samples = await lastDot.evaluate(async (button: HTMLButtonElement) => {
     const dots = [...document.querySelectorAll('[aria-label^="Go to testimonial"]')]
     const seen: number[] = []
     button.click()
@@ -260,13 +266,16 @@ test('the target dot stays current for the whole of a smooth scroll', async ({ p
     }
     return seen
   })
-  expect(new Set(samples)).toEqual(new Set([3]))
-  await expectShown(page, 3)
-  await expect(region.locator('[aria-live="polite"]')).toHaveText('Testimonial 4 of 4')
+  expect(new Set(samples)).toEqual(new Set([count - 1]))
+  await expectShown(page, count - 1)
+  await expect(region.locator('[aria-live="polite"]')).toHaveText(
+    `Testimonial ${count} of ${count}`
+  )
 })
 
 test.describe('testimonials on a touch screen', () => {
   test.use({ hasTouch: true, viewport: { width: 412, height: 915 } })
+  test.skip(!navigable, 'Fewer than two testimonials on this site')
 
   test('tapping the slides stops rotation', async ({ page }) => {
     await page.goto('/')
@@ -283,6 +292,8 @@ test.describe('testimonials on a touch screen', () => {
 })
 
 test('an interrupted jump leaves the dots on the slide where it stopped', async ({ page }) => {
+  // A jump to the last slide has to pass slide 2 to be cut short there.
+  test.skip(!rotatable, 'Fewer than three testimonials on this site')
   await page.setViewportSize({ width: 1280, height: 800 })
   await page.goto('/')
   const { region } = carousel(page)
@@ -295,7 +306,7 @@ test('an interrupted jump leaves the dots on the slide where it stopped', async 
 
   // Start a smooth jump to the last slide, then cut it short on slide 2,
   // as a swipe would.
-  await region.getByRole('button', { name: 'Go to testimonial 4' }).evaluate(
+  await region.getByRole('button', { name: `Go to testimonial ${count}` }).evaluate(
     (button: HTMLButtonElement) =>
       new Promise<void>((resolve) => {
         button.click()
