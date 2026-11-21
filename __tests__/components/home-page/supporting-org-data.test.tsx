@@ -1,18 +1,6 @@
 import React from 'react'
 import { render, screen } from '@testing-library/react'
 
-// Swiper ships ESM that jest's transform doesn't process; stub it exactly as
-// Testimonials.test.tsx does.
-jest.mock('swiper/react', () => ({
-  Swiper: ({ children }: { children: React.ReactNode }) => (
-    <div data-testid="swiper">{children}</div>
-  ),
-  SwiperSlide: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
-}))
-jest.mock('swiper/modules', () => ({ Navigation: {}, Autoplay: {} }))
-jest.mock('swiper/css', () => ({}), { virtual: true })
-jest.mock('swiper/css/navigation', () => ({}), { virtual: true })
-
 // Fixed data for this file, so both directions are exercised whatever the
 // checked-in src/data says: one results set and testimonials of each kind.
 jest.mock('@/data/results', () => ({
