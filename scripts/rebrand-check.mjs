@@ -95,6 +95,14 @@ async function checkSiteConfig() {
     // identity, not its own.
     ['Site URL still the template default (freeforcharity.github.io)', 'freeforcharity.github.io'],
     ['EIN (tax ID) still 46-2471893', '46-2471893'],
+    // FFC's Candid organization id and shareable-link pkId: a fork that keeps
+    // them shows FFC's live transparency seal and profile as its own.
+    ['Candid seal / profile still FFC (Candid id 9326392)', '/9326392/'],
+    ['Candid profile link still FFC (pkId 7232730a-...)', '7232730a-03b5-467f-a82c-443dcd2122ed'],
+    [
+      'GuideStar direct link still FFC (shared/bbbe173a-...)',
+      'bbbe173a-87b9-4af9-a8a2-cae255a95742',
+    ],
     ['Phone still (520) 222-8104', '5202228104'],
     ['Contact email still clarkemoyer@freeforcharity.org', 'clarkemoyer@freeforcharity.org'],
     // Match the twitterHandle assignment specifically — a bare "freeforcharity"

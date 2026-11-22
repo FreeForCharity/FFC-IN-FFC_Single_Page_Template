@@ -117,7 +117,7 @@ These are services we directly integrate into our application code.
 - **Data Collected:** Minimal (widget display only)
 - **Privacy Policy:** https://www.guidestar.org/privacy
 
-**Getting your own profile links:** Claim or look up your nonprofit's profile at https://www.guidestar.org (now Candid). Copy the public profile URL into `siteConfig.guidestar.profileUrl` and the shared-seal URL into `siteConfig.guidestar.directProfileUrl` in `src/lib/site.config.ts`. These are ordinary outbound links (to `www.guidestar.org`), so no CSP change is needed. The CSP already allow-lists the `widgets.guidestar.org` origin separately — that only matters if you later embed an interactive GuideStar/Candid widget rather than the static seal.
+**Getting your own seal and profile links:** Claim or look up your nonprofit's profile at https://app.candid.org. Set `siteConfig.guidestar.sealUrl` to Candid's live seal widget for your Candid organization id (the number in your app.candid.org profile link): `https://widgets.guidestar.org/prod/v1/pdp/transparency-seal/<id>/svg`. Set `profileUrl` to your shareable app.candid.org profile link, the one with `pkId`, which shows the full profile to visitors who are not signed in. Set `directProfileUrl` to your shared GuideStar profile link. The seal is a remote image loaded on each page view (lazily, with no referrer), which the CSP's `img-src https:` already allows.
 
 ### External Volunteer Platforms
 

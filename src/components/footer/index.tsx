@@ -54,13 +54,14 @@ const Footer: React.FC = () => {
           <h2 className="text-[28px] text-white">Endorsements</h2>
 
           <div className="space-y-4">
-            {/* The seal and the direct link are transparency claims: each renders
-                only when its own GuideStar URL is configured, so a charity with no
-                profile shows neither rather than linking to someone else's. */}
+            {/* The seal and the direct link are transparency claims. The seal
+                renders only when both its widget URL and the profile link are
+                configured, the direct link only when its own URL is, so a
+                charity with no profile shows neither rather than someone else's. */}
             {guidestarProfileUrl && guidestarSealUrl && (
               <a
                 href={guidestarProfileUrl}
-                aria-label={`${siteConfig.name} Candid Seal of Transparency`}
+                aria-label={`View ${siteConfig.name} Candid profile (opens in a new tab)`}
                 target="_blank"
                 rel="noopener noreferrer"
               >
@@ -72,6 +73,8 @@ const Footer: React.FC = () => {
                   alt="Candid Seal of Transparency"
                   width={108}
                   height={108}
+                  loading="lazy"
+                  referrerPolicy="no-referrer"
                 />
               </a>
             )}

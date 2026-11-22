@@ -39,7 +39,7 @@ export type SiteAddress = {
  *
  * What "empty" means per field: `email` → `contactEmail`; `phone` → both
  * `phone.display` and `phone.tel`; `address` → `addresses: []`; `ein` → `ein`;
- * `guidestar` → both `guidestar` URLs; `social` → every `social[].href`;
+ * `guidestar` → all three `guidestar` URLs; `social` → every `social[].href`;
  * `team` → no member in src/data/team/*.json has a name; `donationUrl` /
  * `volunteerUrl` → that URL.
  */

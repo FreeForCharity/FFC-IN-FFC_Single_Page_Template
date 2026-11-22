@@ -561,6 +561,13 @@ const FFC_IDENTITY_PATTERNS = [
   { re: /Free For Charity|Free for Charity/, label: 'the template org name "Free For Charity"' },
   { re: /freeforcharity\.org/i, label: 'a freeforcharity.org URL' },
   { re: /46-?2471893/, label: "Free For Charity's EIN (46-2471893)" },
+  // FFC's Candid profile: its organization id (the seal widget and profile
+  // link), the pkId of its shareable link, and its direct GuideStar link. A
+  // fork that keeps any of these shows FFC's transparency seal as its own.
+  {
+    re: /candid\.org\/profile\/9326392\b|transparency-seal\/9326392\b|TransparencySeal\/9326392\b|7232730a-03b5-467f-a82c-443dcd2122ed|bbbe173a-87b9-4af9-a8a2-cae255a95742/i,
+    label: "Free For Charity's Candid seal or profile link",
+  },
   { re: /520[\s.-]?222[\s.-]?8104/, label: "Free For Charity's phone number (520-222-8104)" },
   { re: /[A-Za-z0-9._%+-]+@freeforcharity\.org/i, label: 'a @freeforcharity.org email address' },
 ]

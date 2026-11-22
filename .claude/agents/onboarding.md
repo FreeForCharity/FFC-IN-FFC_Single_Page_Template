@@ -29,7 +29,7 @@ You are helping a Free For Charity volunteer or charity admin stand up a new sit
 
 6. **Swap branded assets** in `public/Images/` and `public/Svgs/`. Keep filenames where possible so the LCP preload in `layout.tsx` and the manifest icons still hit real files.
 
-7. **Footer** — no per-charity CODE edits needed. EIN, addresses, phone, GuideStar links, parent-org link, social rail, and email all come from `siteConfig` (set in step 2). The only footer-related swap is the GuideStar / endorsement seal IMAGE asset in `public/Svgs/` if the charity's endorsements differ.
+7. **Footer** — no per-charity CODE edits needed. EIN, addresses, phone, GuideStar links, parent-org link, social rail, and email all come from `siteConfig` (set in step 2). The Candid seal is Candid's live widget (`siteConfig.guidestar.sealUrl`), so there is no seal image to swap.
 
 8. **Replace or DELETE demo content.** Update the home-page sections under `src/components/home-page/` and `src/data/` (testimonials, FAQs, team) the charity keeps — and **delete the ones it doesn't**. Any `src/components/home-page/*` section not imported by `src/app/home-page/index.tsx` is dead; remove it and its test rather than leaving FFC content in the tree. Delete `src/data/{team,testimonials,faqs}` if nothing imports them. Keep brand-neutral reusable UI primitives.
 
