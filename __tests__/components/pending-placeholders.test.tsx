@@ -27,7 +27,7 @@ expect.extend(toHaveNoViolations)
 // link. The template itself sets no `pending`, so every case here sets the
 // state it is about and restores the config afterwards.
 
-const SEAL_ALT = 'GuideStar Platinum Seal of Transparency'
+const SEAL_ALT = 'Candid Seal of Transparency'
 const DIRECT_LINK_TEXT = 'Direct GuideStar Profile Link'
 
 /** Every placeholder rendered in `container`, each asserted to be plain text. */
@@ -126,35 +126,48 @@ describe('pending footer fields', () => {
   })
 })
 
-describe('GuideStar seal and direct link', () => {
+describe('Candid seal and direct link', () => {
   afterEach(restoreSiteConfig)
 
-  const PROFILE = 'https://www.guidestar.org/profile/12-3456789'
+  const SEAL = 'https://widgets.guidestar.org/prod/v1/pdp/transparency-seal/12345678/svg'
+  const PROFILE = 'https://app.candid.org/profile/12345678/riverbend-test/?pkId=abc'
   const DIRECT = 'https://www.guidestar.org/profile/shared/riverbend-test'
 
-  it('shows both when both URLs are configured', () => {
-    asCharitySite({ guidestar: { profileUrl: PROFILE, directProfileUrl: DIRECT } })
+  it("shows the charity's live Candid seal, linked to its profile, and the direct link", () => {
+    asCharitySite({ guidestar: { sealUrl: SEAL, profileUrl: PROFILE, directProfileUrl: DIRECT } })
     render(<Footer />)
-    expect(screen.getByAltText(SEAL_ALT).closest('a')).toHaveAttribute('href', PROFILE)
+    const seal = screen.getByAltText(SEAL_ALT)
+    expect(seal).toHaveAttribute('src', SEAL)
+    expect(seal.closest('a')).toHaveAttribute('href', PROFILE)
     expect(screen.getByText(DIRECT_LINK_TEXT).closest('a')).toHaveAttribute('href', DIRECT)
   })
 
-  it('gates the seal on profileUrl alone', () => {
-    asCharitySite({ guidestar: { profileUrl: PROFILE, directProfileUrl: '' } })
+  it('never shows a fixed seal picture that claims a level', () => {
+    asCharitySite({ guidestar: { sealUrl: SEAL, profileUrl: PROFILE, directProfileUrl: '' } })
+    const { container } = render(<Footer />)
+    expect(container.innerHTML).not.toContain('footerImage')
+    expect(container.innerHTML).not.toMatch(/Platinum/i)
+  })
+
+  it('needs both sealUrl and profileUrl for the seal', () => {
+    asCharitySite({ guidestar: { sealUrl: SEAL, profileUrl: '', directProfileUrl: '' } })
     render(<Footer />)
-    expect(screen.getByAltText(SEAL_ALT)).toBeInTheDocument()
-    expect(screen.queryByText(DIRECT_LINK_TEXT)).not.toBeInTheDocument()
+    expect(screen.queryByAltText(SEAL_ALT)).not.toBeInTheDocument()
+    restoreSiteConfig()
+    asCharitySite({ guidestar: { sealUrl: '  ', profileUrl: PROFILE, directProfileUrl: '' } })
+    render(<Footer />)
+    expect(screen.queryByAltText(SEAL_ALT)).not.toBeInTheDocument()
   })
 
   it('gates the direct link on directProfileUrl alone', () => {
-    asCharitySite({ guidestar: { profileUrl: '', directProfileUrl: DIRECT } })
+    asCharitySite({ guidestar: { sealUrl: '', profileUrl: '', directProfileUrl: DIRECT } })
     render(<Footer />)
     expect(screen.queryByAltText(SEAL_ALT)).not.toBeInTheDocument()
     expect(screen.getByText(DIRECT_LINK_TEXT).closest('a')).toHaveAttribute('href', DIRECT)
   })
 
   it('hides both, with no placeholder, when the charity has no profile (not pending)', () => {
-    asCharitySite({ guidestar: { profileUrl: '   ', directProfileUrl: '' } })
+    asCharitySite({ guidestar: { sealUrl: '', profileUrl: '   ', directProfileUrl: '' } })
     const { container } = render(<Footer />)
     expect(screen.queryByAltText(SEAL_ALT)).not.toBeInTheDocument()
     expect(screen.queryByText(DIRECT_LINK_TEXT)).not.toBeInTheDocument()
@@ -163,7 +176,10 @@ describe('GuideStar seal and direct link', () => {
   })
 
   it('shows only the placeholder while GuideStar is pending', () => {
-    asCharitySite({ guidestar: { profileUrl: '', directProfileUrl: '' }, pending: ['guidestar'] })
+    asCharitySite({
+      guidestar: { sealUrl: '', profileUrl: '', directProfileUrl: '' },
+      pending: ['guidestar'],
+    })
     const { container } = render(<Footer />)
     expect(screen.queryByAltText(SEAL_ALT)).not.toBeInTheDocument()
     expect(screen.queryByText(DIRECT_LINK_TEXT)).not.toBeInTheDocument()

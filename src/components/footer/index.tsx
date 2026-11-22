@@ -2,7 +2,6 @@
 
 import React from 'react'
 import Link from 'next/link'
-import Image from 'next/image'
 import { FiMail, FiPhone, FiMapPin, FiArrowRight, FiLink2 } from 'react-icons/fi'
 import { FaFacebookF, FaLinkedinIn, FaGithub } from 'react-icons/fa'
 import { FaXTwitter } from 'react-icons/fa6'
@@ -10,7 +9,6 @@ import type { IconType } from 'react-icons'
 import { SaleShareOptOut } from '@/components/sale-share-opt-out'
 
 import { irsStatusHref, isPending, mailtoHref, publishedPhone, siteConfig } from '@/lib/site.config'
-import { assetPath } from '@/lib/assetPath'
 import { eventsSectionVisible } from '@/lib/events/visibility'
 import {
   faqSectionVisible,
@@ -41,6 +39,7 @@ const Footer: React.FC = () => {
   const socialLinks = siteConfig.social.filter((s) => s.href.trim())
   const ein = siteConfig.ein.trim()
   const guidestarProfileUrl = siteConfig.guidestar.profileUrl.trim()
+  const guidestarSealUrl = siteConfig.guidestar.sealUrl.trim()
   const guidestarDirectUrl = siteConfig.guidestar.directProfileUrl.trim()
   // Trim so whitespace-only config behaves like empty (link/clause self-hides).
   const taxStatusLabel = siteConfig.taxStatusLabel.trim()
@@ -55,19 +54,27 @@ const Footer: React.FC = () => {
           <h2 className="text-[28px] text-white">Endorsements</h2>
 
           <div className="space-y-4">
-            {/* The seal and the direct link are transparency claims: each renders
-                only when its own GuideStar URL is configured, so a charity with no
-                profile shows neither rather than linking to someone else's. */}
-            {guidestarProfileUrl && (
+            {/* The seal and the direct link are transparency claims. The seal
+                renders only when both its widget URL and the profile link are
+                configured, the direct link only when its own URL is, so a
+                charity with no profile shows neither rather than someone else's. */}
+            {guidestarProfileUrl && guidestarSealUrl && (
               <a
                 href={guidestarProfileUrl}
-                aria-label={`View ${siteConfig.name} GuideStar Profile`}
+                aria-label={`View ${siteConfig.name}'s Candid Seal of Transparency profile (opens in a new tab)`}
+                target="_blank"
+                rel="noopener noreferrer"
               >
-                <Image
-                  src={assetPath('/Svgs/footerImage.svg')}
-                  alt="GuideStar Platinum Seal of Transparency"
+                {/* Candid's live seal widget: it shows the level Candid awards
+                    today, so the footer never claims a stale or wrong level. */}
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={guidestarSealUrl}
+                  alt="Candid Seal of Transparency"
                   width={108}
                   height={108}
+                  loading="lazy"
+                  referrerPolicy="no-referrer"
                 />
               </a>
             )}
