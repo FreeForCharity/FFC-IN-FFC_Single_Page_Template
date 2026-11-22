@@ -114,9 +114,12 @@ You don't have to edit either workflow when you rename the repo.
       the template's default URL or out of sync
 - [ ] Set the EIN, mailing addresses, phone number, and GuideStar
       profile links in `src/lib/site.config.ts` — `ein`, `phone`,
-      `addresses`, and `guidestar.profileUrl` / `guidestar.directProfileUrl`.
+      `addresses`, and `guidestar.sealUrl` / `guidestar.profileUrl` /
+      `guidestar.directProfileUrl`. `sealUrl` is Candid's live seal widget,
+      `https://widgets.guidestar.org/prod/v1/pdp/transparency-seal/<Candid id>/svg`,
+      and `profileUrl` the shareable app.candid.org link (with `pkId`).
       The footer reads these from siteConfig; no footer code edit needed.
-      No GuideStar / Candid profile? Leave both URLs `''` (the seal hides) —
+      No GuideStar / Candid profile? Leave all three `''` (the seal hides) —
       never copy another organization's. A value the charity hasn't sent
       yet stays empty and is listed in `pending` (see TEMPLATE_CUSTOMIZATION.md).
 

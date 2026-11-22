@@ -39,7 +39,7 @@ export type SiteAddress = {
  *
  * What "empty" means per field: `email` → `contactEmail`; `phone` → both
  * `phone.display` and `phone.tel`; `address` → `addresses: []`; `ein` → `ein`;
- * `guidestar` → both `guidestar` URLs; `social` → every `social[].href`;
+ * `guidestar` → all three `guidestar` URLs; `social` → every `social[].href`;
  * `team` → no member in src/data/team/*.json has a name; `donationUrl` /
  * `volunteerUrl` → that URL.
  */
@@ -135,8 +135,21 @@ export type SiteConfig = {
   phone: { display: string; tel: string }
   /** Physical office addresses shown in the footer contact column. */
   addresses: readonly SiteAddress[]
-  /** GuideStar / Candid transparency profile links shown in the footer. */
-  guidestar: { profileUrl: string; directProfileUrl: string }
+  /**
+   * Candid (GuideStar) transparency seal and profile links shown in the footer.
+   * `sealUrl` is Candid's live seal widget for the charity's own Candid
+   * organization id (the number in its app.candid.org profile link), so the
+   * seal always shows the level Candid currently awards instead of a static
+   * image that goes stale or claims a level the charity does not hold. Each is
+   * a transparency claim: the seal renders only when both `sealUrl` and
+   * `profileUrl` are set, and the direct-link button only when
+   * `directProfileUrl` is set. `profileUrl` should be the shareable
+   * app.candid.org link (with its `pkId`), which shows the full profile to
+   * visitors who are not signed in. Leave all three '' until the charity has
+   * its own Candid profile (never copy another organization's), and list
+   * 'guidestar' in `pending` if one is coming.
+   */
+  guidestar: { sealUrl: string; profileUrl: string; directProfileUrl: string }
   /**
    * Permanent attribution to the supporting organization (FFC). Drives the
    * always-rendered "Supported by" clause in the footer bottom bar and the
@@ -293,7 +306,9 @@ export const siteConfig: SiteConfig = {
     },
   ],
   guidestar: {
-    profileUrl: 'https://www.guidestar.org/profile/46-2471893',
+    sealUrl: 'https://widgets.guidestar.org/prod/v1/pdp/transparency-seal/9326392/svg',
+    profileUrl:
+      'https://app.candid.org/profile/9326392/free-for-charity/?pkId=7232730a-03b5-467f-a82c-443dcd2122ed&isActive=true',
     directProfileUrl:
       'https://www.guidestar.org/profile/shared/bbbe173a-87b9-4af9-a8a2-cae255a95742',
   },

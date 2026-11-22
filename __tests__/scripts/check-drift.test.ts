@@ -169,6 +169,18 @@ describe('check-drift: brand identity', () => {
     ).toEqual([])
   })
 
+  it("flags a fork that keeps FFC's Candid seal and profile links", () => {
+    const cfg = [
+      "    sealUrl: 'https://widgets.guidestar.org/prod/v1/pdp/transparency-seal/9326392/svg',",
+      "      'https://app.candid.org/profile/9326392/free-for-charity/?pkId=7232730a-03b5-467f-a82c-443dcd2122ed&isActive=true',",
+      "      'https://www.guidestar.org/profile/shared/bbbe173a-87b9-4af9-a8a2-cae255a95742',",
+      "    sealUrl: 'https://widgets.guidestar.org/prod/v1/pdp/transparency-seal/16766185/svg',",
+    ].join('\n')
+    const out = findings([{ path: 'src/lib/site.config.ts', body: cfg }])
+    expect(out.map((f) => f.line)).toEqual([1, 2, 3])
+    expect(out.every((f) => /Candid/.test(f.label))).toBe(true)
+  })
+
   it('tolerates that page by exact path only — the same text anywhere else is an error', () => {
     const out = findings([{ path: 'src/app/donation-policy/page.tsx', body: FFC_PAGE }])
     expect(out.map((f) => f.line)).toEqual([1, 2, 2])

@@ -266,6 +266,7 @@ const PENDING_IS_EMPTY: Record<PendingField, () => boolean> = {
   address: () => siteConfig.addresses.length === 0,
   ein: () => siteConfig.ein.trim() === '',
   guidestar: () =>
+    siteConfig.guidestar.sealUrl.trim() === '' &&
     siteConfig.guidestar.profileUrl.trim() === '' &&
     siteConfig.guidestar.directProfileUrl.trim() === '',
   social: () => siteConfig.social.every((s) => s.href.trim() === ''),
@@ -325,7 +326,11 @@ describe('siteConfig contract', () => {
   })
 
   it('carries https GuideStar URLs, or empty ones for "no profile yet"', () => {
-    for (const url of [siteConfig.guidestar.profileUrl, siteConfig.guidestar.directProfileUrl]) {
+    for (const url of [
+      siteConfig.guidestar.sealUrl,
+      siteConfig.guidestar.profileUrl,
+      siteConfig.guidestar.directProfileUrl,
+    ]) {
       expect(url).toMatch(/^(https:\/\/\S+)?$/)
     }
   })
@@ -371,6 +376,7 @@ describe('siteConfig.pending contract', () => {
       'guidestar',
       {
         guidestar: {
+          sealUrl: '',
           profileUrl: 'https://www.guidestar.org/profile/12-3456789',
           directProfileUrl: '',
         },
