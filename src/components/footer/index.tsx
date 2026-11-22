@@ -8,7 +8,7 @@ import { FaXTwitter } from 'react-icons/fa6'
 import type { IconType } from 'react-icons'
 import { SaleShareOptOut } from '@/components/sale-share-opt-out'
 
-import { isPending, mailtoHref, publishedPhone, siteConfig } from '@/lib/site.config'
+import { irsStatusHref, isPending, mailtoHref, publishedPhone, siteConfig } from '@/lib/site.config'
 import { eventsSectionVisible } from '@/lib/events/visibility'
 import {
   faqSectionVisible,
@@ -110,6 +110,20 @@ const Footer: React.FC = () => {
                   {isPending('ein') ? `${siteConfig.name} EIN:` : `${siteConfig.name} EIN: ${ein}`}
                 </span>
                 {isPending('ein') && <PendingNote className={PENDING_NOTE_CLASS} />}
+              </p>
+            )}
+            {/* The 501(c)(3) claim's evidence: this EIN's own IRS record on
+                ProPublica. Rendered only when the site makes that claim. */}
+            {irsStatusHref() && (
+              <p>
+                <a
+                  href={irsStatusHref()}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="underline text-[18px] aria-font"
+                >
+                  Verify our IRS 501(c)(3) status (ProPublica)
+                </a>
               </p>
             )}
           </div>
