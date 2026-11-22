@@ -61,7 +61,7 @@ const Footer: React.FC = () => {
             {guidestarProfileUrl && guidestarSealUrl && (
               <a
                 href={guidestarProfileUrl}
-                aria-label={`View ${siteConfig.name} Candid profile (opens in a new tab)`}
+                aria-label={`View ${siteConfig.name}'s Candid Seal of Transparency profile (opens in a new tab)`}
                 target="_blank"
                 rel="noopener noreferrer"
               >

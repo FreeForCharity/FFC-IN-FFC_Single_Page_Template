@@ -105,4 +105,5 @@ export const FFC_IDENTITY: RegExp[] = [
   /freeforcharity\.org/i,
   /46-?2471893/,
   /520[\s.-]?222[\s.-]?8104/,
+  /candid\.org\/profile\/9326392\b|transparency-seal\/9326392\b|TransparencySeal\/9326392\b|7232730a-03b5-467f-a82c-443dcd2122ed|bbbe173a-87b9-4af9-a8a2-cae255a95742/i,
 ]
