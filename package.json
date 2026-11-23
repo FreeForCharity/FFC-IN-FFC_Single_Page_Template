@@ -64,7 +64,7 @@
     "prettier": "^3.9.10",
     "serve": "^14.2.7",
     "tailwindcss": "^4.3.5",
-    "typescript": "^5"
+    "typescript": "^6"
   },
   "pnpm": {
     "overrides": {
